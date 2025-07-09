@@ -28,14 +28,18 @@ interface SidebarProps {
 }
 
 const menuItems = [
-  { icon: Home, label: 'Dashboard', href: '/dashboard' },
-  { icon: Search, label: 'Discover', href: '/discover' },
+  { icon: Home, label: 'Dashboard', href: '/individual-dashboard' },
+  // { icon: Search, label: 'Discover', href: '/discover' },
   { icon: Briefcase, label: 'Jobs', href: '/jobs' },
-  { icon: Building, label: 'Services', href: '/services' },
-  { icon: BookOpen, label: 'Learning', href: '/learn' },
-  { icon: BarChart3, label: 'Analytics', href: '/analytics' },
-  { icon: MessageCircle, label: 'Messages', href: '/messages' },
-  { icon: DollarSign, label: 'Earnings', href: '/earnings' },
+  { icon: Briefcase, label: 'Identity Verification', href: '/verification' },
+  { icon: Briefcase, label: 'Portfolio', href: '/portfolio' },
+  { icon: Briefcase, label: 'Profile', href: '/jobs' },
+  { icon: Briefcase, label: 'Skills', href: '/skills' },
+  // { icon: Building, label: 'Services', href: '/services' },
+  // { icon: BookOpen, label: 'Learning', href: '/learn' },
+  // { icon: BarChart3, label: 'Analytics', href: '/analytics' },
+  // { icon: MessageCircle, label: 'Messages', href: '/messages' },
+  // { icon: DollarSign, label: 'Earnings', href: '/earnings' },
 ];
 
 const bottomMenuItems = [
@@ -64,6 +68,26 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
   const router = useRouter();
   const isMobile = useIsMobile();
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [user, setUser] = useState<{ name: string; email: string; userType?: string; company?: string } | null>(null);
+
+  useEffect(() => {
+    // Get user info from localStorage on component mount
+    const getUserInfo = () => {
+      if (typeof window !== 'undefined') {
+        const userInfoStr = localStorage.getItem('userInfo');
+        if (userInfoStr) {
+          try {
+            const userInfo = JSON.parse(userInfoStr);
+            setUser(userInfo);
+          } catch (error) {
+            console.error('Error parsing user info:', error);
+          }
+        }
+      }
+    };
+    
+    getUserInfo();
+  }, []);
 
   // On mobile, force expanded when visible
   useEffect(() => {
@@ -184,8 +208,8 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                   className="w-10 h-10 rounded-full object-cover"
                 />
                 <div>
-                  <p className="font-semibold text-gray-900">Alex Johnson</p>
-                  <p className="text-sm text-gray-600">Full Stack Developer</p>
+                  <p className="font-semibold text-gray-900">{user?.name || 'User'}</p>
+                  <p className="text-sm text-gray-600">{user?.userType === 'business' ? (user?.company || 'Business') : 'Individual'}</p>
                 </div>
               </div>
             </div>
@@ -198,7 +222,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                 src="https://images.pexels.com/photos/1222271/pexels-photo-1222271.jpeg?auto=compress&cs=tinysrgb&w=100&h=100&fit=crop"
                 alt="User"
                 className="w-8 h-8 rounded-full object-cover"
-                title="Alex Johnson"
+                title={user?.name || 'User'}
               />
             </div>
           )}

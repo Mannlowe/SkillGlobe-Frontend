@@ -1,6 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import Image from 'next/image';
+import { useRouter } from 'next/navigation';
 import { Menu, Search, Bell, MessageCircle, ChevronDown } from 'lucide-react';
 
 interface DashboardHeaderProps {
@@ -8,8 +10,29 @@ interface DashboardHeaderProps {
 }
 
 export default function DashboardHeader({ onMenuClick }: DashboardHeaderProps) {
+  const router = useRouter();
   const [showNotifications, setShowNotifications] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
+  const [user, setUser] = useState<{ name: string; email: string; userType?: string; company?: string } | null>(null);
+
+  useEffect(() => {
+    // Get user info from localStorage on component mount
+    const getUserInfo = () => {
+      if (typeof window !== 'undefined') {
+        const userInfoStr = localStorage.getItem('userInfo');
+        if (userInfoStr) {
+          try {
+            const userInfo = JSON.parse(userInfoStr);
+            setUser(userInfo);
+          } catch (error) {
+            console.error('Error parsing user info:', error);
+          }
+        }
+      }
+    };
+    
+    getUserInfo();
+  }, []);
 
   const notifications = [
     { id: 1, title: 'New job match found', time: '5 min ago', unread: true },
@@ -96,11 +119,15 @@ export default function DashboardHeader({ onMenuClick }: DashboardHeaderProps) {
               onClick={() => setShowProfile(!showProfile)}
               className="flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-100 transition-colors"
             >
-              <img
-                src="https://images.pexels.com/photos/1222271/pexels-photo-1222271.jpeg?auto=compress&cs=tinysrgb&w=40&h=40&fit=crop"
-                alt="Profile"
-                className="w-8 h-8 rounded-full object-cover"
-              />
+              <div className="relative w-8 h-8 rounded-full overflow-hidden">
+                <Image
+                  src="https://images.pexels.com/photos/1222271/pexels-photo-1222271.jpeg?auto=compress&cs=tinysrgb&w=40&h=40&fit=crop"
+                  alt="Profile"
+                  fill
+                  sizes="32px"
+                  className="object-cover"
+                />
+              </div>
               <ChevronDown size={16} className="text-gray-500" />
             </button>
 
@@ -108,8 +135,11 @@ export default function DashboardHeader({ onMenuClick }: DashboardHeaderProps) {
             {showProfile && (
               <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-50">
                 <div className="p-4 border-b border-gray-200">
-                  <p className="font-semibold text-gray-900">Alex Johnson</p>
-                  <p className="text-sm text-gray-600">alex@example.com</p>
+                  <p className="font-semibold text-gray-900">{user?.name || 'User'}</p>
+                  <p className="text-sm text-gray-600">{user?.email || 'user@example.com'}</p>
+                  {user?.company && (
+                    <p className="text-xs text-gray-500 mt-1">{user.company}</p>
+                  )}
                 </div>
                 <div className="py-2">
                   <a href="/profile" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
@@ -122,7 +152,15 @@ export default function DashboardHeader({ onMenuClick }: DashboardHeaderProps) {
                     Help & Support
                   </a>
                   <hr className="my-2" />
-                  <button className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100">
+                  <button 
+                    onClick={() => {
+                      // Clear user data from localStorage
+                      localStorage.removeItem('userInfo');
+                      // Redirect to login page
+                      router.push('/auth/login');
+                    }}
+                    className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
+                  >
                     Sign Out
                   </button>
                 </div>

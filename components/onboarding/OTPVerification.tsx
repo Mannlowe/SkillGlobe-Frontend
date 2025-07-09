@@ -70,7 +70,7 @@ export default function OTPVerification({ data, updateData, nextStep }: OTPVerif
           Verify Your Details
         </h1>
         <p className="text-gray-600">
-          We've sent verification codes to secure your account
+          We&apos;ve sent verification codes to secure your account
         </p>
       </div>
 
@@ -161,7 +161,7 @@ export default function OTPVerification({ data, updateData, nextStep }: OTPVerif
       </button>
 
       <div className="text-center text-sm text-gray-500">
-        Didn't receive the codes? Check your spam folder or try resending
+        Didn&apos;t receive the codes? Check your spam folder or try resending
       </div>
     </div>
   );

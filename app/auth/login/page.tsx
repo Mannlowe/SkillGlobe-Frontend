@@ -14,16 +14,45 @@ export default function AuthLoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
 
+  const [error, setError] = useState('');
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+    setError('');
     
-    // Simulate API call
+    // Check credentials based on email and password
     setTimeout(() => {
       setIsLoading(false);
-      // Redirect to dashboard after successful login
-      router.push('/dashboard');
-    }, 2000);
+      
+      // Individual user login
+      if (email === 'kedar@gmail.com' && password === 'kedar@123') {
+        // Store user info in localStorage
+        localStorage.setItem('userInfo', JSON.stringify({
+          name: 'Kedar Saraf',
+          email: 'kedar@gmail.com',
+          userType: 'individual'
+        }));
+        // Redirect to individual dashboard
+        router.push('/individual-dashboard');
+      } 
+      // Business user login
+      else if (email === 'kedar@mannlowe.com' && password === 'kedar@123') {
+        // Store user info in localStorage
+        localStorage.setItem('userInfo', JSON.stringify({
+          name: 'Kedar Saraf',
+          email: 'kedar@mannlowe.com',
+          userType: 'business',
+          company: 'Mann Lowe Technologies'
+        }));
+        // Redirect to business dashboard
+        router.push('/business-dashboard');
+      } 
+      // Invalid credentials
+      else {
+        setError('Invalid email or password. Please try again.');
+      }
+    }, 1500);
   };
 
   return (
@@ -46,7 +75,7 @@ export default function AuthLoginPage() {
         </div>
         
         <h2 className="mt-6 text-center text-3xl font-bold text-gray-900 font-rubik">
-          Sign in to your account
+          Log in to your account
         </h2>
         <p className="mt-2 text-center text-sm text-gray-600 font-rubik">
           Or{' '}
@@ -59,6 +88,11 @@ export default function AuthLoginPage() {
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
         <div className="bg-white py-8 px-4 shadow-lg sm:rounded-lg sm:px-10">
           <form className="space-y-6" onSubmit={handleSubmit}>
+            {error && (
+              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
+                {error}
+              </div>
+            )}
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700">
                 Email address
@@ -137,7 +171,7 @@ export default function AuthLoginPage() {
                 {isLoading ? (
                   <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                 ) : (
-                  'Sign in'
+                  'Log in'
                 )}
               </button>
             </div>

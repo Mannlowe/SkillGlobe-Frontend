@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Sidebar from '@/components/dashboard/Sidebar';
 import DashboardHeader from '@/components/dashboard/DashboardHeader';
 import { BarChart3, Users, Briefcase, TrendingUp, Calendar, Bell, Star, ArrowUpRight } from 'lucide-react';
@@ -101,6 +101,26 @@ const upcomingEvents = [
 
 export default function DashboardPage() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [userName, setUserName] = useState('User');
+  
+  useEffect(() => {
+    // Get user info from localStorage on component mount
+    const getUserInfo = () => {
+      if (typeof window !== 'undefined') {
+        const userInfoStr = localStorage.getItem('userInfo');
+        if (userInfoStr) {
+          try {
+            const userInfo = JSON.parse(userInfoStr);
+            setUserName(userInfo.name);
+          } catch (error) {
+            console.error('Error parsing user info:', error);
+          }
+        }
+      }
+    };
+    
+    getUserInfo();
+  }, []);
 
   return (
     <div className="flex h-screen bg-gray-50">
@@ -114,10 +134,10 @@ export default function DashboardPage() {
             {/* Welcome Section */}
             <div className="mb-8">
               <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">
-                Welcome back, Alex! 👋
+                Welcome back, {userName}! 👋
               </h1>
               <p className="text-gray-600">
-                Here's what's happening with your career journey today.
+                Here&apos;s what&apos;s happening with your career journey today.
               </p>
             </div>
 

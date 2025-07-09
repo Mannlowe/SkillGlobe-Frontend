@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Sidebar from '@/components/dashboard/Sidebar';
 import DashboardHeader from '@/components/dashboard/DashboardHeader';
 import { 
@@ -113,6 +113,30 @@ const recentApplications = [
 
 export default function BusinessDashboardPage() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [userName, setUserName] = useState('User');
+  const [companyName, setCompanyName] = useState('');
+  
+  useEffect(() => {
+    // Get user info from localStorage on component mount
+    const getUserInfo = () => {
+      if (typeof window !== 'undefined') {
+        const userInfoStr = localStorage.getItem('userInfo');
+        if (userInfoStr) {
+          try {
+            const userInfo = JSON.parse(userInfoStr);
+            setUserName(userInfo.name);
+            if (userInfo.company) {
+              setCompanyName(userInfo.company);
+            }
+          } catch (error) {
+            console.error('Error parsing user info:', error);
+          }
+        }
+      }
+    };
+    
+    getUserInfo();
+  }, []);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -137,10 +161,11 @@ export default function BusinessDashboardPage() {
             {/* Welcome Section */}
             <div className="mb-8">
               <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">
-                Welcome to your Business Dashboard! 🚀
+                Welcome, {userName}! 🚀
               </h1>
               <p className="text-gray-600">
-                Manage your opportunities, review applications, and grow your team.
+                {companyName ? `Manage ${companyName}'s opportunities, review applications, and grow your team.` : 
+                'Manage your opportunities, review applications, and grow your team.'}
               </p>
             </div>
 

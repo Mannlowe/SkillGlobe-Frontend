@@ -62,10 +62,7 @@ const individualSteps = [
   { id: 'basicInfo', title: 'Basic Info', component: BasicInformation },
   { id: 'otpVerification', title: 'Verification', component: OTPVerification },
   { id: 'terms', title: 'Terms', component: TermsAcceptance },
-  { id: 'identity', title: 'Identity', component: IdentityVerification },
-  { id: 'portfolio', title: 'Portfolio', component: PortfolioSetup },
-  { id: 'skills', title: 'Skills', component: SkillsSetup },
-  { id: 'profile', title: 'Profile', component: ProfileCreation },
+  // { id: 'profile', title: 'Profile', component: ProfileCreation },
 ];
 
 const businessSteps = [
@@ -128,7 +125,7 @@ export default function OnboardingPage() {
       if (onboardingData.userType === 'business') {
         router.push('/business-dashboard');
       } else {
-        router.push('/dashboard');
+        router.push('/individual-dashboard');
       }
     }
   };
@@ -200,9 +197,9 @@ export default function OnboardingPage() {
             data={onboardingData}
             updateData={updateData}
             nextStep={nextStep}
-            prevStep={prevStep}
-            isFirstStep={currentStep === 0}
-            isLastStep={currentStep === steps.length - 1}
+            // prevStep={prevStep}
+            // isFirstStep={currentStep === 0}
+            // isLastStep={currentStep === steps.length - 1}
           />
         </div>
       </div>

@@ -3,13 +3,13 @@
 import { useState } from 'react';
 import { Upload, User, GraduationCap, Briefcase, Award, FileText, Plus } from 'lucide-react';
 
-interface PortfolioSetupProps {
-  data: any;
-  updateData: (data: any) => void;
-  nextStep: () => void;
+interface PortfolioProps {
+  onPortfolioComplete?: () => void;
+  onSkip?: () => void;
+  className?: string;
 }
 
-export default function PortfolioSetup({ data, updateData, nextStep }: PortfolioSetupProps) {
+export default function Portfolio({ onPortfolioComplete, onSkip, className = '' }: PortfolioProps) {
   const [activeSection, setActiveSection] = useState('resume');
   const [resumeUploaded, setResumeUploaded] = useState(false);
 
@@ -27,22 +27,28 @@ export default function PortfolioSetup({ data, updateData, nextStep }: Portfolio
       setResumeUploaded(true);
       // Simulate parsing
       setTimeout(() => {
-        updateData({ portfolioCompleted: true });
+        // Call the callback if provided
+        if (onPortfolioComplete) {
+          onPortfolioComplete();
+        }
       }, 1000);
     }
   };
 
   const handleSkip = () => {
-    updateData({ portfolioCompleted: false });
-    nextStep();
+    if (onSkip) {
+      onSkip();
+    }
   };
 
   const handleContinue = () => {
-    nextStep();
+    if (onPortfolioComplete) {
+      onPortfolioComplete();
+    }
   };
 
   return (
-    <div className="space-y-6">
+    <div className={`bg-white rounded-xl shadow-sm p-3 space-y-6 w-full ${className}`}>
       <div className="text-center">
         <h1 className="text-2xl font-bold text-gray-900 mb-2">
           Build Your Portfolio
@@ -171,15 +177,15 @@ export default function PortfolioSetup({ data, updateData, nextStep }: Portfolio
       </div>
 
       <div className="flex space-x-3">
-        <button
+        {/* <button
           onClick={handleSkip}
           className="flex-1 border-2 border-gray-300 text-gray-700 font-semibold py-3 px-6 rounded-xl hover:bg-gray-50 transition-all duration-300"
         >
           Skip for Now
-        </button>
+        </button> */}
         <button
           onClick={handleContinue}
-          className="flex-1 bg-blue-500 text-white font-semibold py-3 px-6 rounded-xl hover:shadow-lg transition-all duration-300"
+          className="max-w-xs mx-auto flex-1 bg-blue-500 text-white font-semibold py-3 px-6 rounded-xl hover:shadow-lg transition-all duration-300"
         >
           Continue
         </button>

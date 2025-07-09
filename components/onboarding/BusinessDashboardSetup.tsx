@@ -115,7 +115,7 @@ export default function BusinessDashboardSetup({ data, updateData, nextStep }: B
                 <select
                   value={selectedRoles[index]}
                   onChange={(e) => updateInviteRole(index, e.target.value)}
-                  className="flex-1 px-3 py-2 bg-gray-50 rounded-lg border-0 focus:ring-2 focus:ring-orange-500 focus:bg-white transition-all appearance-none"
+                  className="flex-1 px-3 py-2 w-11 bg-gray-50 rounded-lg border-0 focus:ring-2 focus:ring-orange-500 focus:bg-white transition-all appearance-none"
                 >
                   <option value="">Select role</option>
                   {userRoles.map((role) => (
@@ -209,7 +209,7 @@ export default function BusinessDashboardSetup({ data, updateData, nextStep }: B
         </button>
         <button
           onClick={handleComplete}
-          className="flex-1 bg-gradient-to-r from-orange-500 to-blue-500 text-white font-semibold py-3 px-6 rounded-xl hover:shadow-lg transition-all duration-300"
+          className="flex-1 bg-blue-500 text-white font-semibold py-3 px-6 rounded-xl hover:shadow-lg transition-all duration-300"
         >
           Complete Setup & Enter Dashboard
         </button>

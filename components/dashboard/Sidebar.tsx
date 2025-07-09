@@ -5,19 +5,10 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { 
   Home, 
-  Search, 
   Briefcase, 
-  BookOpen, 
   User, 
   Settings, 
-  BarChart3, 
-  MessageCircle, 
-  Bell,
-  LogOut,
   X,
-  ChevronDown,
-  Building,
-  DollarSign,
   ChevronLeft,
   ChevronRight
 } from 'lucide-react';
@@ -29,22 +20,11 @@ interface SidebarProps {
 
 const menuItems = [
   { icon: Home, label: 'Dashboard', href: '/individual-dashboard' },
-  // { icon: Search, label: 'Discover', href: '/discover' },
   { icon: Briefcase, label: 'Jobs', href: '/jobs' },
   { icon: Briefcase, label: 'Identity Verification', href: '/verification' },
   { icon: Briefcase, label: 'Portfolio', href: '/portfolio' },
   { icon: Briefcase, label: 'Profile', href: '/jobs' },
   { icon: Briefcase, label: 'Skills', href: '/skills' },
-  // { icon: Building, label: 'Services', href: '/services' },
-  // { icon: BookOpen, label: 'Learning', href: '/learn' },
-  // { icon: BarChart3, label: 'Analytics', href: '/analytics' },
-  // { icon: MessageCircle, label: 'Messages', href: '/messages' },
-  // { icon: DollarSign, label: 'Earnings', href: '/earnings' },
-];
-
-const bottomMenuItems = [
-  { icon: User, label: 'Profile', href: '/profile' },
-  { icon: Settings, label: 'Settings', href: '/settings' },
 ];
 
 // Custom hook to detect mobile
@@ -254,47 +234,6 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
               );
             })}
           </nav>
-
-          {/* Bottom Menu */}
-          <div className={`border-t border-gray-200 space-y-2 ${isCollapsed && !isMobile ? 'p-2' : 'p-4'}`}>
-            {bottomMenuItems.map((item) => {
-              const Icon = item.icon;
-              const isActive = pathname === item.href;
-              
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  onClick={handleNavigate}
-                  className={`
-                    flex items-center rounded-lg transition-colors
-                    ${isCollapsed && !isMobile ? 'justify-center p-3' : 'space-x-3 px-4 py-3'}
-                    ${isActive 
-                      ? 'bg-orange-50 text-orange-600' 
-                      : 'text-gray-700 hover:bg-gray-100'
-                    }
-                  `}
-                  title={isCollapsed && !isMobile ? item.label : undefined}
-                >
-                  <Icon size={20} />
-                  {(!isCollapsed || isMobile) && <span className="font-medium">{item.label}</span>}
-                </Link>
-              );
-            })}
-            
-            <button 
-              type="button"
-              onClick={handleLogout}
-              className={`
-                flex items-center rounded-lg text-gray-700 hover:bg-gray-100 transition-colors w-full
-                ${isCollapsed && !isMobile ? 'justify-center p-3' : 'space-x-3 px-4 py-3'}
-              `}
-              title={isCollapsed && !isMobile ? 'Logout' : undefined}
-            >
-              <LogOut size={20} />
-              {(!isCollapsed || isMobile) && <span className="font-medium">Logout</span>}
-            </button>
-          </div>
         </div>
       </div>
     </>

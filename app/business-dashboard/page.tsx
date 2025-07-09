@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import Sidebar from '@/components/dashboard/Sidebar';
-import DashboardHeader from '@/components/dashboard/DashboardHeader';
+import BusinessSidebar from '@/components/dashboard/BusinessSidebar';
+import BusinessDashboardHeader from '@/components/dashboard/BusinessDashboardHeader';
 import { 
   Users, 
   Briefcase, 
@@ -150,11 +150,11 @@ export default function BusinessDashboardPage() {
   };
 
   return (
-    <div className="flex h-screen bg-gray-50">
-      <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+    <div className="min-h-screen bg-gray-50">
+      <BusinessSidebar />
       
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <DashboardHeader onMenuClick={() => setSidebarOpen(true)} />
+      <div className="lg:pl-64 pt-1">
+        <BusinessDashboardHeader title="Business Dashboard" />
         
         <main className="flex-1 overflow-x-hidden overflow-y-auto bg-gray-50">
           <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6">

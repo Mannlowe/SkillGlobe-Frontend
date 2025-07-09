@@ -267,7 +267,7 @@ export default function BusinessDocumentVerification({ data, updateData, nextSte
         <button
           onClick={handleContinue}
           disabled={isVerifying}
-          className="flex-1 bg-gradient-to-r from-orange-500 to-blue-500 text-white font-semibold py-3 px-6 rounded-xl hover:shadow-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="flex-1 bg-blue-500 text-white font-semibold py-3 px-6 rounded-xl hover:shadow-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           Continue
         </button>

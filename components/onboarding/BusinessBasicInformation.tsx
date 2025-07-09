@@ -2,6 +2,8 @@
 
 import { useState } from 'react';
 import { Building, User, Mail, Phone, Lock, Eye, EyeOff } from 'lucide-react';
+import PhoneInput from 'react-phone-input-2';
+import 'react-phone-input-2/lib/style.css';
 
 interface BusinessBasicInformationProps {
   data: any;
@@ -36,10 +38,9 @@ export default function BusinessBasicInformation({ data, updateData, nextStep }:
       newErrors.email = 'Please use a business domain email (e.g., @yourcompany.com)';
     }
 
-    // Mobile validation (10 digits)
-    const mobileRegex = /^\d{10}$/;
-    if (data.mobile && !mobileRegex.test(data.mobile.replace(/\D/g, ''))) {
-      newErrors.mobile = 'Please enter a valid 10-digit mobile number';
+    // Mobile validation
+    if (!data.mobile) {
+      newErrors.mobile = 'Mobile number is required';
     }
 
     // Password validation
@@ -142,16 +143,25 @@ export default function BusinessBasicInformation({ data, updateData, nextStep }:
           <label className="block text-sm font-medium text-gray-700 mb-1">
             Mobile Number <span className="text-red-500">*</span>
           </label>
-          <div className="relative">
-            <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
-            <input
-              type="tel"
-              value={data.mobile || ''}
-              onChange={(e) => updateData({ mobile: e.target.value })}
-              className={`w-full pl-10 pr-4 py-3 bg-gray-50 rounded-xl border-0 focus:ring-2 focus:ring-orange-500 focus:bg-white transition-all ${
+          <div className="phone-input-container">
+            <PhoneInput
+              country={'in'}
+              value={data.mobile}
+              onChange={(phone) => updateData({ mobile: phone })}
+              inputClass={`w-full py-3 bg-gray-50 rounded-xl border-0 focus:ring-2 focus:ring-orange-500 focus:bg-white transition-all ${
                 errors.mobile ? 'ring-2 ring-red-500' : ''
               }`}
-              placeholder="1234567890"
+              containerClass="phone-input-container"
+              buttonClass="phone-input-button"
+              dropdownClass="phone-input-dropdown"
+              enableSearch={true}
+              disableSearchIcon={false}
+              searchPlaceholder="Search country..."
+              inputProps={{
+                name: 'phone',
+                required: true,
+                autoFocus: false
+              }}
             />
           </div>
           {errors.mobile && <p className="text-red-500 text-xs mt-1">{errors.mobile}</p>}
@@ -214,7 +224,7 @@ export default function BusinessBasicInformation({ data, updateData, nextStep }:
 
         <button
           type="submit"
-          className="w-full bg-gradient-to-r from-orange-500 to-blue-500 text-white font-semibold py-3 px-6 rounded-xl hover:shadow-lg transition-all duration-300"
+          className="w-full bg-blue-500 text-white font-semibold py-3 px-6 rounded-xl hover:shadow-lg transition-all duration-300"
         >
           Continue
         </button>

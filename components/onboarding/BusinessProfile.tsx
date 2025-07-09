@@ -272,7 +272,7 @@ export default function BusinessProfile({ data, updateData, nextStep }: Business
           </button>
           <button
             type="submit"
-            className="flex-1 bg-gradient-to-r from-orange-500 to-blue-500 text-white font-semibold py-3 px-6 rounded-xl hover:shadow-lg transition-all duration-300"
+            className="flex-1 bg-blue-500 text-white font-semibold py-3 px-6 rounded-xl hover:shadow-lg transition-all duration-300"
           >
             Continue
           </button>

@@ -71,8 +71,8 @@ const businessSteps = [
   { id: 'otpVerification', title: 'Verification', component: OTPVerification },
   { id: 'terms', title: 'Terms', component: BusinessTermsAcceptance },
   { id: 'businessProfile', title: 'Profile', component: BusinessProfile },
-  { id: 'documentVerification', title: 'Documents', component: BusinessDocumentVerification },
-  { id: 'dashboardSetup', title: 'Dashboard', component: BusinessDashboardSetup },
+  // { id: 'documentVerification', title: 'Documents', component: BusinessDocumentVerification },
+  // { id: 'dashboardSetup', title: 'Dashboard', component: BusinessDashboardSetup },
 ];
 
 export default function OnboardingPage() {

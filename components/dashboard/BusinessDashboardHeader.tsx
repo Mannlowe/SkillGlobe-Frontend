@@ -18,9 +18,10 @@ import useOutsideClick from '@/hooks/useOutsideClick';
 
 interface BusinessDashboardHeaderProps {
   title?: string;
+  onMenuClick?: () => void;
 }
 
-export default function BusinessDashboardHeader({ title }: BusinessDashboardHeaderProps) {
+export default function BusinessDashboardHeader({ title, onMenuClick }: BusinessDashboardHeaderProps) {
   const router = useRouter();
   const [showNotifications, setShowNotifications] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
@@ -36,13 +37,61 @@ export default function BusinessDashboardHeader({ title }: BusinessDashboardHead
     // Get user info from localStorage on component mount
     const getUserInfo = () => {
       if (typeof window !== 'undefined') {
-        const userInfoStr = localStorage.getItem('userInfo');
-        if (userInfoStr) {
-          try {
-            const userInfo = JSON.parse(userInfoStr);
-            setUser(userInfo);
-          } catch (error) {
-            console.error('Error parsing user info:', error);
+        // Try different possible storage keys
+        const possibleKeys = ['userInfo', 'user', 'businessUser', 'authUser', 'userData'];
+        let userFound = false;
+        
+        // First check localStorage
+        for (const key of possibleKeys) {
+          if (userFound) break;
+          
+          const userInfoStr = localStorage.getItem(key);
+          if (userInfoStr) {
+            try {
+              const userInfo = JSON.parse(userInfoStr);
+              // Check if we have the necessary fields
+              if (userInfo && (userInfo.name || userInfo.firstName || userInfo.email)) {
+                // Format the user object with consistent properties
+                setUser({
+                  name: userInfo.name || `${userInfo.firstName || ''} ${userInfo.lastName || ''}`.trim(),
+                  email: userInfo.email || userInfo.emailAddress || '',
+                  userType: userInfo.userType || 'business',
+                  // company: userInfo.company || userInfo.businessName || userInfo.companyName || ''
+                });
+                console.log('Found user info in localStorage:', userInfo);
+                userFound = true;
+                break;
+              }
+            } catch (error) {
+              console.error(`Error parsing user info from ${key}:`, error);
+            }
+          }
+        }
+        
+        // If no user info was found in localStorage, check sessionStorage
+        if (!userFound) {
+          for (const key of possibleKeys) {
+            if (userFound) break;
+            
+            const userInfoStr = sessionStorage.getItem(key);
+            if (userInfoStr) {
+              try {
+                const userInfo = JSON.parse(userInfoStr);
+                if (userInfo && (userInfo.name || userInfo.firstName || userInfo.email)) {
+                  setUser({
+                    name: userInfo.name || `${userInfo.firstName || ''} ${userInfo.lastName || ''}`.trim(),
+                    email: userInfo.email || userInfo.emailAddress || '',
+                    userType: userInfo.userType || 'business',
+                    company: userInfo.company || userInfo.businessName || userInfo.companyName || ''
+                  });
+                  console.log('Found user info in sessionStorage:', userInfo);
+                  userFound = true;
+                  break;
+                }
+              } catch (error) {
+                console.error(`Error parsing user info from sessionStorage ${key}:`, error);
+              }
+            }
           }
         }
       }
@@ -160,7 +209,7 @@ export default function BusinessDashboardHeader({ title }: BusinessDashboardHead
                 </div>
                 <div className="py-2">
                   <button 
-                    onClick={() => router.push('/business-dashboard/profile')}
+                    onClick={() => router.push('/business-dashboard/company-profile')}
                     className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                   >
                     <User size={16} className="mr-3 text-gray-500" />

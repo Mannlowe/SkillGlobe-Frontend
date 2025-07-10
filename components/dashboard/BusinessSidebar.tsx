@@ -9,12 +9,16 @@ import {
   Briefcase,
   X,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  Shield,
+  Settings
 } from 'lucide-react';
 
 const menuItems = [
   { icon: Home, label: 'Dashboard', href: '/business-dashboard' },
   { icon: Briefcase, label: 'Job Postings', href: '/business-dashboard/job-postings' },
+  { icon: Shield, label: 'Document Verify', href: '/business-dashboard/document-verify' },
+  { icon: Settings, label: 'Admin Access', href: '/business-dashboard/dashboard-setup' },
 ];
 
 // Custom hook to detect mobile

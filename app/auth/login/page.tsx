@@ -26,22 +26,22 @@ export default function AuthLoginPage() {
       setIsLoading(false);
       
       // Individual user login
-      if (email === 'kedar@gmail.com' && password === 'kedar@123') {
+      if (email === 'user@gmail.com' && password === 'user@123') {
         // Store user info in localStorage
         localStorage.setItem('userInfo', JSON.stringify({
-          name: 'Kedar Saraf',
-          email: 'kedar@gmail.com',
+          name: 'User',
+          email: 'user@gmail.com',
           userType: 'individual'
         }));
         // Redirect to individual dashboard
         router.push('/individual-dashboard');
       } 
       // Business user login
-      else if (email === 'kedar@mannlowe.com' && password === 'kedar@123') {
+      else if (email === 'hr@mannlowe.com' && password === 'hr@123') {
         // Store user info in localStorage
         localStorage.setItem('userInfo', JSON.stringify({
-          name: 'Kedar Saraf',
-          email: 'kedar@mannlowe.com',
+          name: 'HR',
+          email: 'hr@mannlowe.com',
           userType: 'business',
           company: 'Mann Lowe Technologies'
         }));

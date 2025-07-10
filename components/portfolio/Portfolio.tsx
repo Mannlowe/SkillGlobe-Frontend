@@ -2,6 +2,10 @@
 
 import { useState } from 'react';
 import { Upload, User, GraduationCap, Briefcase, Award, FileText, Plus } from 'lucide-react';
+import PersonalInfoForm from './PersonalInfoForm';
+import EducationForm from './EducationForm';
+import ExperienceForm from './ExperienceForm';
+import CertificateForm from './CertificateForm';
 
 interface PortfolioProps {
   onPortfolioComplete?: () => void;
@@ -12,26 +16,61 @@ interface PortfolioProps {
 export default function Portfolio({ onPortfolioComplete, onSkip, className = '' }: PortfolioProps) {
   const [activeSection, setActiveSection] = useState('resume');
   const [resumeUploaded, setResumeUploaded] = useState(false);
+  const [personalInfoCompleted, setPersonalInfoCompleted] = useState(false);
+  const [personalInfo, setPersonalInfo] = useState({});
+  const [educationCompleted, setEducationCompleted] = useState(false);
+  const [education, setEducation] = useState([]);
+  const [experienceCompleted, setExperienceCompleted] = useState(false);
+  const [experience, setExperience] = useState([]);
+  const [certificatesCompleted, setCertificatesCompleted] = useState(false);
+  const [certificates, setCertificates] = useState([]);
 
   const sections = [
     { id: 'resume', name: 'Resume Upload', icon: FileText, completed: resumeUploaded },
-    { id: 'personal', name: 'Personal Info', icon: User, completed: false },
-    { id: 'education', name: 'Education', icon: GraduationCap, completed: false },
-    { id: 'experience', name: 'Experience', icon: Briefcase, completed: false },
-    { id: 'certificates', name: 'Certificates', icon: Award, completed: false },
+    { id: 'personal', name: 'Personal Info', icon: User, completed: personalInfoCompleted },
+    { id: 'education', name: 'Education', icon: GraduationCap, completed: educationCompleted },
+    { id: 'experience', name: 'Experience', icon: Briefcase, completed: experienceCompleted },
+    { id: 'certificates', name: 'Certificates', icon: Award, completed: certificatesCompleted },
   ];
 
   const handleResumeUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       setResumeUploaded(true);
-      // Simulate parsing
+      // After resume is uploaded, automatically switch to personal info section
       setTimeout(() => {
-        // Call the callback if provided
-        if (onPortfolioComplete) {
-          onPortfolioComplete();
-        }
+        setActiveSection('personal');
       }, 1000);
+    }
+  };
+  
+  const handlePersonalInfoSave = (data: any) => {
+    setPersonalInfo(data);
+    setPersonalInfoCompleted(true);
+    // Move to next section after completing personal info
+    setActiveSection('education');
+  };
+  
+  const handleEducationSave = (data: any) => {
+    setEducation(data);
+    setEducationCompleted(true);
+    // Move to next section after completing education
+    setActiveSection('experience');
+  };
+  
+  const handleExperienceSave = (data: any) => {
+    setExperience(data);
+    setExperienceCompleted(true);
+    // Move to next section after completing experience
+    setActiveSection('certificates');
+  };
+  
+  const handleCertificatesSave = (data: any) => {
+    setCertificates(data);
+    setCertificatesCompleted(true);
+    // Portfolio is complete
+    if (onPortfolioComplete) {
+      onPortfolioComplete();
     }
   };
 
@@ -56,9 +95,9 @@ export default function Portfolio({ onPortfolioComplete, onSkip, className = '' 
         <p className="text-gray-600">
           Create a comprehensive profile to showcase your skills and experience
         </p>
-        <div className="inline-flex items-center px-3 py-1 bg-blue-100 text-blue-800 text-sm font-medium rounded-full mt-2">
+        {/* <div className="inline-flex items-center px-3 py-1 bg-blue-100 text-blue-800 text-sm font-medium rounded-full mt-2">
           Optional - Complete later
-        </div>
+        </div> */}
       </div>
 
       {/* Progress Overview */}
@@ -77,7 +116,7 @@ export default function Portfolio({ onPortfolioComplete, onSkip, className = '' 
               <button
                 key={section.id}
                 onClick={() => setActiveSection(section.id)}
-                className={`p-3 rounded-lg border transition-all ${
+                className={`p-3 rounded-lg border transition-all h-16 ${
                   activeSection === section.id
                     ? 'border-orange-500 bg-orange-50'
                     : section.completed
@@ -85,14 +124,16 @@ export default function Portfolio({ onPortfolioComplete, onSkip, className = '' 
                     : 'border-gray-200 bg-white hover:border-gray-300'
                 }`}
               >
-                <Icon 
-                  className={
-                    section.completed ? 'text-green-600' :
-                    activeSection === section.id ? 'text-orange-600' : 'text-gray-600'
-                  } 
-                  size={16} 
-                />
-                <p className="text-xs font-medium text-gray-900 mt-1">{section.name}</p>
+                <div className="flex items-center justify-center space-x-2">
+                  <Icon 
+                    className={
+                      section.completed ? 'text-green-600' :
+                      activeSection === section.id ? 'text-blue-600' : 'text-gray-600'
+                    } 
+                    size={24} 
+                  />
+                  <p className="text-sm font-medium text-gray-900">{section.name}</p>
+                </div>
                 {section.completed && (
                   <div className="w-2 h-2 bg-green-500 rounded-full mx-auto mt-1"></div>
                 )}
@@ -141,17 +182,65 @@ export default function Portfolio({ onPortfolioComplete, onSkip, className = '' 
           </div>
         )}
 
-        {activeSection !== 'resume' && (
+        {activeSection === 'personal' && (
+          <PersonalInfoForm 
+            initialData={personalInfo}
+            onSave={handlePersonalInfoSave}
+            onCancel={() => setActiveSection('resume')}
+          />
+        )}
+        
+        {activeSection === 'education' && (
+          <EducationForm
+            initialData={education}
+            onSave={handleEducationSave}
+            onCancel={() => setActiveSection('personal')}
+          />
+        )}
+        
+        {activeSection === 'experience' && (
+          <ExperienceForm
+            initialData={experience}
+            onSave={handleExperienceSave}
+            onCancel={() => setActiveSection('education')}
+          />
+        )}
+        
+        {activeSection === 'certificates' && (
+          <CertificateForm
+            initialData={certificates}
+            onSave={handleCertificatesSave}
+            onCancel={() => setActiveSection('experience')}
+          />
+        )}
+        
+        {(activeSection !== 'resume' && activeSection !== 'personal' && 
+          activeSection !== 'education' && activeSection !== 'experience' && 
+          activeSection !== 'certificates') && (
           <div className="text-center py-8">
             <Plus className="mx-auto text-gray-400 mb-3" size={32} />
             <h3 className="font-semibold text-gray-900 mb-2">
               {sections.find(s => s.id === activeSection)?.name}
             </h3>
             <p className="text-gray-600 text-sm mb-4">
-              This section will be available after you complete the initial setup
+              This section will be available after you complete the previous sections
             </p>
-            <button className="text-orange-600 hover:text-orange-700 font-medium text-sm">
-              Complete Later
+            <button 
+              onClick={() => {
+                // Navigate to the appropriate previous section
+                if (!personalInfoCompleted) {
+                  setActiveSection('personal');
+                } else if (!educationCompleted && activeSection === 'experience') {
+                  setActiveSection('education');
+                } else if (!experienceCompleted && activeSection === 'certificates') {
+                  setActiveSection('experience');
+                } else {
+                  setActiveSection('personal');
+                }
+              }}
+              className="text-blue-600 hover:text-blue-700 font-medium text-sm"
+            >
+              Go to Previous Section
             </button>
           </div>
         )}
@@ -187,7 +276,7 @@ export default function Portfolio({ onPortfolioComplete, onSkip, className = '' 
           onClick={handleContinue}
           className="max-w-xs mx-auto flex-1 bg-blue-500 text-white font-semibold py-3 px-6 rounded-xl hover:shadow-lg transition-all duration-300"
         >
-          Continue
+          Submit
         </button>
       </div>
     </div>

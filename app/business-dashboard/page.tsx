@@ -197,10 +197,10 @@ export default function BusinessDashboardPage() {
                   <div className="p-6 border-b border-gray-100">
                     <div className="flex items-center justify-between">
                       <h2 className="text-lg font-semibold text-gray-900">Recent Opportunities</h2>
-                      <button className="bg-orange-500 text-white px-4 py-2 rounded-lg hover:bg-orange-600 transition-colors flex items-center">
+                      {/* <button className="bg-orange-500 text-white px-4 py-2 rounded-lg hover:bg-orange-600 transition-colors flex items-center">
                         <Plus size={16} className="mr-2" />
                         Post New
-                      </button>
+                      </button> */}
                     </div>
                   </div>
                   <div className="p-6">

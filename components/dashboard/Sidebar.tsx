@@ -10,8 +10,12 @@ import {
   Settings, 
   X,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  Shield,
+  FileText,
+  Award
 } from 'lucide-react';
+import Image from 'next/image';
 
 interface SidebarProps {
   isOpen: boolean;
@@ -21,10 +25,10 @@ interface SidebarProps {
 const menuItems = [
   { icon: Home, label: 'Dashboard', href: '/individual-dashboard' },
   { icon: Briefcase, label: 'Jobs', href: '/jobs' },
-  { icon: Briefcase, label: 'Identity Verification', href: '/verification' },
-  { icon: Briefcase, label: 'Portfolio', href: '/portfolio' },
-  { icon: Briefcase, label: 'Profile', href: '/jobs' },
-  { icon: Briefcase, label: 'Skills', href: '/skills' },
+  { icon: Shield, label: 'Identity Verification', href: '/verification' },
+  { icon: FileText, label: 'Portfolio', href: '/portfolio' },
+  { icon: Award, label: 'Skills', href: '/skills' },
+  { icon: User, label: 'Profile', href: '/jobs' },
 ];
 
 // Custom hook to detect mobile
@@ -131,17 +135,18 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
       `}>
         <div className="flex flex-col h-full">
           {/* Header */}
-          <div className={`flex items-center justify-between p-6 border-b border-gray-200 ${isCollapsed && !isMobile ? 'px-4' : ''}`}>
+          <div className={`flex items-center h-[82px] justify-between border-b border-gray-200 ${isCollapsed && !isMobile ? 'p-3' : 'p-4'}`}>
             {(!isCollapsed || isMobile) && (
-              <div className="flex items-center space-x-2">
-                <div className="w-8 h-8 bg-gradient-to-r from-orange-500 to-blue-500 rounded-xl flex items-center justify-center">
-                  <span className="text-white font-bold text-sm">SG</span>
-                </div>
-                <span className="text-xl font-bold">
-                  <span className="text-orange-500">Skill</span>
-                  <span className="text-blue-500">Globe</span>
-                </span>
+              <Link href="/business-dashboard" className="flex items-center space-x-2">
+              <div className="relative w-40 h-40">
+                <Image 
+                  src="/Images/logo_image.png" 
+                  alt="SkillGlobe Logo" 
+                  fill 
+                  className="object-contain"
+                />
               </div>
+            </Link>
             )}
             
             {isCollapsed && !isMobile && (
@@ -177,35 +182,6 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
               )}
             </div>
           </div>
-
-          {/* User Info */}
-          {(!isCollapsed || isMobile) && (
-            <div className="p-6 border-b border-gray-200">
-              <div className="flex items-center space-x-3">
-                <img
-                  src="https://images.pexels.com/photos/1222271/pexels-photo-1222271.jpeg?auto=compress&cs=tinysrgb&w=100&h=100&fit=crop"
-                  alt="User"
-                  className="w-10 h-10 rounded-full object-cover"
-                />
-                <div>
-                  <p className="font-semibold text-gray-900">{user?.name || 'User'}</p>
-                  <p className="text-sm text-gray-600">{user?.userType === 'business' ? (user?.company || 'Business') : 'Individual'}</p>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Collapsed User Avatar */}
-          {isCollapsed && !isMobile && (
-            <div className="p-4 border-b border-gray-200 flex justify-center">
-              <img
-                src="https://images.pexels.com/photos/1222271/pexels-photo-1222271.jpeg?auto=compress&cs=tinysrgb&w=100&h=100&fit=crop"
-                alt="User"
-                className="w-8 h-8 rounded-full object-cover"
-                title={user?.name || 'User'}
-              />
-            </div>
-          )}
 
           {/* Navigation */}
           <nav className={`flex-1 py-6 space-y-2 overflow-y-auto ${isCollapsed && !isMobile ? 'px-2' : 'px-4'}`}>

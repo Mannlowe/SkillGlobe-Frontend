@@ -12,11 +12,11 @@ export default function Header() {
           {/* Logo */}
           <Link href="/" className="flex items-center">
             <div className="bg-white rounded-lg overflow-hidden">
-              <Image 
-                src="/Images/logo_image.png" 
-                alt="SkillGlobe Logo" 
-                width={180} 
-                height={30} 
+              <Image
+                src="/Images/logo_image.png"
+                alt="SkillGlobe Logo"
+                width={180}
+                height={30}
                 priority
                 className="mix-blend-multiply"
               />
@@ -42,24 +42,32 @@ export default function Header() {
           {/* Right Side Actions */}
           <div className="flex items-center space-x-4">
             {/* Login Button */}
-            <Link 
+            <Link
               href="/auth/login"
               className="hidden sm:inline-flex items-center px-4 py-2 border border-orange-500 text-orange-600 font-medium rounded-lg hover:bg-orange-50 transition-all duration-300"
             >
               Sign In
             </Link>
-            
+
             {/* Get Started Button */}
-            <Link 
+            <Link
               href="/auth/login"
-              className="skillglobe-button"
+              className="relative border-0 font-semibold py-2 px-6 rounded-xl hover:shadow-lg transition-all duration-300 transform hover:scale-105"
             >
-              <span className="hidden sm:inline">Get Started</span>
-              <span className="sm:hidden">Login</span>
+              {/* Gradient border using pseudo-element */}
+              <span className="absolute inset-0 bg-gradient-to-r from-orange-500 to-blue-500 rounded-xl -z-10"></span>
+              {/* White background slightly smaller to show gradient border */}
+              <span className="absolute inset-[1px] bg-white rounded-lg -z-5"></span>
+              {/* Text with gradient */}
+              <span className="relative bg-gradient-to-r from-orange-500 to-blue-500 bg-clip-text text-transparent">
+                <span className="hidden sm:inline">Get Started</span>
+                <span className="sm:hidden">Login</span>
+              </span>
             </Link>
-            
+
+
             {/* Mobile Login (when Get Started is hidden) */}
-            <Link 
+            <Link
               href="/auth/login"
               className="sm:hidden p-2 text-gray-600 hover:text-orange-500 transition-colors"
             >

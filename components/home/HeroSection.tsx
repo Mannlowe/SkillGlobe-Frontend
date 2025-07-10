@@ -25,7 +25,7 @@ export default function HeroSection() {
 
         {/* Search Section */}
         <div className="max-w-4xl mx-auto">
-          <div className="bg-white rounded-2xl shadow-2xl p-4 md:p-6">
+          <div className="bg-white rounded-2xl shadow-2xl p-4 md:p-6 h-24">
             <div className="flex flex-col md:flex-row gap-4">
               {/* Search Input */}
               <div className="flex-1 relative">
@@ -58,9 +58,16 @@ export default function HeroSection() {
               </button>
 
               {/* Search Button */}
-              <button className="skillglobe-button">
-                <span className="md:hidden">Search Opportunities</span>
-                <span className="hidden md:inline">Search</span>
+              <button className="relative border-0 font-semibold py-2 px-6 rounded-xl hover:shadow-lg transition-all duration-300 transform hover:scale-105">
+                {/* Gradient border using pseudo-element */}
+                <span className="absolute inset-0 bg-gradient-to-r from-orange-500 to-blue-500 rounded-xl -z-10"></span>
+                {/* White background slightly smaller to show gradient border */}
+                <span className="absolute inset-[1px] bg-white rounded-lg -z-5"></span>
+                {/* Text with gradient */}
+                <span className="relative bg-gradient-to-r from-orange-500 to-blue-500 bg-clip-text text-transparent">
+                  <span className="md:hidden">Search Opportunities</span>
+                  <span className="hidden md:inline">Search</span>
+                </span>
               </button>
             </div>
           </div>

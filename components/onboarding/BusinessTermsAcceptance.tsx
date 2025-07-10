@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Shield, FileText, Eye, Upload } from 'lucide-react';
+import { Shield, FileText, Eye, Upload, Download, Check } from 'lucide-react';
 import Link from 'next/link';
 
 interface BusinessTermsAcceptanceProps {
@@ -12,6 +12,7 @@ interface BusinessTermsAcceptanceProps {
 
 export default function BusinessTermsAcceptance({ data, updateData, nextStep }: BusinessTermsAcceptanceProps) {
   const [authDocument, setAuthDocument] = useState<File | null>(null);
+  const [agreementDownloaded, setAgreementDownloaded] = useState<boolean>(false);
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -19,6 +20,19 @@ export default function BusinessTermsAcceptance({ data, updateData, nextStep }: 
       setAuthDocument(file);
       updateData({ authDocument: file.name });
     }
+  };
+  
+  const handleDownloadAgreement = () => {
+    // Create a link to download the agreement.pdf file
+    const link = document.createElement('a');
+    link.href = '/documents/agreement.pdf'; // Path to your agreement PDF
+    link.download = 'SkillGlobe_Agreement.pdf';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    // Set state to indicate agreement has been downloaded
+    setAgreementDownloaded(true);
   };
 
   const handleAccept = () => {
@@ -96,32 +110,64 @@ export default function BusinessTermsAcceptance({ data, updateData, nextStep }: 
           </Link>
         </div>
 
-        {/* Authorized Signatory Document (Optional) */}
+        {/* Authorization Agreement Document */}
         <div className="bg-blue-50 p-4 rounded-xl border border-blue-200">
-          <h3 className="font-semibold text-blue-900 mb-3">Authorized Signatory Document (Optional)</h3>
-          <p className="text-sm text-blue-700 mb-3">
-            Upload a scanned letter with authorized signature for enhanced verification
-          </p>
+          <h3 className="font-semibold text-blue-900 mb-3">Authorization Agreement</h3>
           
-          {!authDocument ? (
-            <label className="block">
-              <div className="border-2 border-dashed border-blue-300 rounded-xl p-4 text-center hover:border-blue-500 transition-colors cursor-pointer">
-                <Upload className="mx-auto text-blue-400 mb-2" size={20} />
-                <p className="text-sm font-medium text-blue-900">Upload Authorization Letter</p>
-                <p className="text-xs text-blue-600 mt-1">PDF, JPG, PNG (max 5MB)</p>
+          {!agreementDownloaded ? (
+            <>
+              <p className="text-sm text-blue-700 mb-3">
+                Please download the authorization agreement form, sign it, and upload the scanned copy.
+              </p>
+              
+              <div className="bg-white border border-blue-200 rounded-lg p-4 mb-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center">
+                    <FileText className="text-blue-500 mr-2" size={20} />
+                    <span className="text-sm font-medium">SkillGlobe_Agreement.pdf</span>
+                  </div>
+                  <button 
+                    onClick={handleDownloadAgreement}
+                    className="flex items-center space-x-1 text-sm font-medium text-blue-600 hover:text-blue-800 transition-colors"
+                  >
+                    <Download size={16} />
+                    <span>Download</span>
+                  </button>
+                </div>
               </div>
-              <input
-                type="file"
-                accept=".pdf,.jpg,.jpeg,.png"
-                onChange={handleFileUpload}
-                className="hidden"
-              />
-            </label>
+            </>
           ) : (
-            <div className="bg-blue-100 p-3 rounded-lg">
-              <p className="text-sm font-medium text-blue-900">✓ {authDocument.name}</p>
-              <p className="text-xs text-blue-700">Document uploaded successfully</p>
-            </div>
+            <>
+              <div className="flex items-center mb-4 bg-green-50 p-3 rounded-lg border border-green-200">
+                <Check className="text-green-500 mr-2" size={18} />
+                <span className="text-sm font-medium text-green-700">Agreement downloaded successfully</span>
+              </div>
+              
+              <p className="text-sm text-blue-700 mb-3">
+                Please upload the signed authorization document for verification
+              </p>
+              
+              {!authDocument ? (
+                <label className="block">
+                  <div className="border-2 border-dashed border-blue-300 rounded-xl p-4 text-center hover:border-blue-500 transition-colors cursor-pointer">
+                    <Upload className="mx-auto text-blue-400 mb-2" size={20} />
+                    <p className="text-sm font-medium text-blue-900">Upload Signed Authorization</p>
+                    <p className="text-xs text-blue-600 mt-1">PDF, JPG, PNG (max 5MB)</p>
+                  </div>
+                  <input
+                    type="file"
+                    accept=".pdf,.jpg,.jpeg,.png"
+                    onChange={handleFileUpload}
+                    className="hidden"
+                  />
+                </label>
+              ) : (
+                <div className="bg-blue-100 p-3 rounded-lg">
+                  <p className="text-sm font-medium text-blue-900">✓ {authDocument.name}</p>
+                  <p className="text-xs text-blue-700">Document uploaded successfully</p>
+                </div>
+              )}
+            </>
           )}
         </div>
 

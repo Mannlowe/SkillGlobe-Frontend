@@ -28,7 +28,7 @@ const menuItems = [
   { icon: Shield, label: 'Identity Verification', href: '/verification' },
   { icon: FileText, label: 'Portfolio', href: '/portfolio' },
   { icon: Award, label: 'Skills', href: '/skills' },
-  { icon: User, label: 'Profile', href: '/jobs' },
+  { icon: User, label: 'Profile', href: '/profile' },
 ];
 
 // Custom hook to detect mobile

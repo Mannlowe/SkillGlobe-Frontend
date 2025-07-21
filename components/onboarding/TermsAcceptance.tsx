@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { Shield, FileText, Eye } from 'lucide-react';
 import Link from 'next/link';
+import { useRegistrationStore } from '@/store/registration';
 
 interface TermsAcceptanceProps {
   data: any;
@@ -12,13 +13,33 @@ interface TermsAcceptanceProps {
 
 export default function TermsAcceptance({ data, updateData, nextStep }: TermsAcceptanceProps) {
   const [hasRead, setHasRead] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  
+  // Get registration store state and actions
+  const { completeRegistration, isLoading, error: apiError, request_id, password } = useRegistrationStore();
 
-  const handleAccept = () => {
+  const handleAccept = async () => {
     if (!data.termsAccepted) {
-      alert('Please accept the terms and conditions to continue');
+      setError('Please accept the terms and conditions to continue');
       return;
     }
-    nextStep();
+    
+    // Check if request_id and password exist
+    if (!request_id || !password) {
+      setError('Registration information is missing. Please complete previous steps first.');
+      return;
+    }
+    
+    try {
+      // Call API to complete registration
+      await completeRegistration();
+      
+      // Proceed to next step on success
+      nextStep();
+    } catch (error) {
+      console.error('Error completing registration:', error);
+      // Error is handled by the store
+    }
   };
 
   return (
@@ -107,12 +128,22 @@ export default function TermsAcceptance({ data, updateData, nextStep }: TermsAcc
         </div>
       </div>
 
+      {(apiError || error) && (
+        <div className="text-center text-sm text-red-500 p-2 bg-red-50 rounded-md mb-4">
+          {apiError || error}
+        </div>
+      )}
+
       <button
         onClick={handleAccept}
-        disabled={!data.termsAccepted}
-        className="w-full bg-blue-500 text-white font-semibold py-3 px-6 rounded-xl hover:shadow-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+        disabled={isLoading || !data.termsAccepted}
+        className="w-full bg-blue-500 text-white font-semibold py-3 px-6 rounded-xl hover:shadow-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
       >
-        Accept & Continue
+        {isLoading ? (
+          <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+        ) : (
+          'Accept & Continue'
+        )}
       </button>
 
       <div className="text-center text-sm text-gray-500">

@@ -87,7 +87,7 @@ export default function Portfolio({ onPortfolioComplete, onSkip, className = '' 
   };
 
   return (
-    <div className={`bg-white rounded-xl shadow-sm p-3 space-y-6 w-full ${className}`}>
+      <div className="bg-white rounded-xl max-w-full shadow-sm p-3 space-y-6 font-rubik">
       <div className="text-center">
         <h1 className="text-2xl font-bold text-gray-900 mb-2">
           Build Your Portfolio

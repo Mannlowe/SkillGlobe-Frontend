@@ -3,7 +3,10 @@
 import { useState, useEffect } from 'react';
 import Sidebar from '@/components/dashboard/Sidebar';
 import DashboardHeader from '@/components/dashboard/DashboardHeader';
-import { BarChart3, Users, Briefcase, TrendingUp, Calendar, Bell, Star, ArrowUpRight } from 'lucide-react';
+import { BarChart3, Users, Briefcase, TrendingUp, Calendar, Bell, Star, ArrowUpRight, Check as CheckIcon } from 'lucide-react';
+import { useAuthStore } from '@/store/authStore';
+import { useToast } from '@/hooks/use-toast';
+import { useRouter } from 'next/navigation';
 
 const stats = [
   {
@@ -102,25 +105,64 @@ const upcomingEvents = [
 export default function DashboardPage() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [userName, setUserName] = useState('User');
+  const { user, isAuthenticated } = useAuthStore();
+  const { toast } = useToast();
+  const router = useRouter();
   
   useEffect(() => {
-    // Get user info from localStorage on component mount
-    const getUserInfo = () => {
-      if (typeof window !== 'undefined') {
-        const userInfoStr = localStorage.getItem('userInfo');
-        if (userInfoStr) {
-          try {
-            const userInfo = JSON.parse(userInfoStr);
-            setUserName(userInfo.name);
-          } catch (error) {
-            console.error('Error parsing user info:', error);
-          }
-        }
+    // Check if user is authenticated
+    // Add a small delay to allow the auth state to be loaded from localStorage
+    const checkAuth = setTimeout(() => {
+      if (!isAuthenticated) {
+        router.push('/auth/login');
       }
-    };
+    }, 100); // Short delay to ensure auth state is loaded
     
-    getUserInfo();
-  }, []);
+    return () => clearTimeout(checkAuth);
+  }, [isAuthenticated, router]);
+  
+  // Separate effect for toast to ensure it only runs once after login
+  useEffect(() => {
+    // Only show toast when user is authenticated and we're actually on the dashboard page
+    // This prevents the toast from showing on redirects
+    if (isAuthenticated && user && window.location.pathname.includes('individual-dashboard')) {
+      setUserName(user.full_name || user.name);
+      
+      // Show toast notification for Individual Seller
+      const roles = user.roles;
+      let isIndividualSeller = false;
+      
+      // Check roles in different formats
+      if (Array.isArray(roles)) {
+        isIndividualSeller = roles.includes('Individual Seller');
+      } else if (typeof roles === 'string') {
+        isIndividualSeller = (roles as string).indexOf('Individual Seller') >= 0;
+      }
+      
+      // Use URL parameter to detect fresh login vs refresh
+      const urlParams = new URLSearchParams(window.location.search);
+      const fromLogin = urlParams.get('fromLogin') === 'true';
+      
+      // Show toast on fresh login or if fromLogin parameter is present
+      if (isIndividualSeller && fromLogin) {
+        // Create toast with custom timeout
+        const { dismiss } = toast({
+          title: "Login Successful",
+          description: "You are logged in as individual seller",
+          variant: "success",
+          action: <div className="h-6 w-6 rounded-full bg-green-100 flex items-center justify-center"><CheckIcon className="h-4 w-4 text-green-600" /></div>,
+        });
+        
+        // Set custom timeout (e.g., 3000ms = 3 seconds)
+        setTimeout(() => {
+          dismiss();
+        }, 20000);
+        
+        // Remove the fromLogin parameter from URL without refreshing
+        window.history.replaceState({}, document.title, window.location.pathname);
+      }
+    }
+  }, [isAuthenticated, user, toast]);
 
   return (
     <div className="flex h-screen bg-gray-50">

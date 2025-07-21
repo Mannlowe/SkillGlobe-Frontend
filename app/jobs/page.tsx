@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Sidebar from '@/components/dashboard/Sidebar';
 import DashboardHeader from '@/components/dashboard/DashboardHeader';
-import { Search, MapPin, Briefcase, DollarSign, Clock, Users } from 'lucide-react';
+import { Search, MapPin, Briefcase, Banknote, Clock, Users } from 'lucide-react';
 
 const jobs = [
   {
@@ -11,7 +11,7 @@ const jobs = [
     title: 'Senior Full Stack Developer',
     company: 'TechFlow Solutions',
     location: 'Remote',
-    salary: '$120,000 - $160,000',
+    salary: 'Rs.120,000 - Rs.160,000',
     type: 'Full-time',
     experience: '5+ years',
     applicants: 23,
@@ -25,7 +25,7 @@ const jobs = [
     title: 'Product Designer',
     company: 'Creative Labs',
     location: 'San Francisco, CA',
-    salary: '$90,000 - $130,000',
+    salary: 'Rs.90,000 - Rs.130,000',
     type: 'Full-time',
     experience: '3+ years',
     applicants: 45,
@@ -39,7 +39,7 @@ const jobs = [
     title: 'DevOps Engineer',
     company: 'CloudTech Inc.',
     location: 'Austin, TX',
-    salary: '$110,000 - $150,000',
+    salary: 'Rs.110,000 - Rs.150,000',
     type: 'Full-time',
     experience: '4+ years',
     applicants: 18,
@@ -62,7 +62,7 @@ export default function JobsPage() {
       <div className="flex-1 flex flex-col overflow-hidden">
         <DashboardHeader onMenuClick={() => setSidebarOpen(true)} />
         
-        <main className="flex-1 overflow-x-hidden overflow-y-auto bg-gray-50">
+        <main className="flex-1 overflow-x-hidden overflow-y-auto bg-gray-50 font-rubik">
           <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6">
             <div className="mb-8">
               <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">
@@ -74,7 +74,7 @@ export default function JobsPage() {
             </div>
 
             {/* Search Bar */}
-            <div className="bg-white rounded-2xl shadow-sm p-4 md:p-6 mb-6">
+            {/* <div className="bg-white rounded-2xl shadow-sm p-4 md:p-6 mb-6">
               <div className="flex flex-col md:flex-row gap-4">
                 <div className="flex-1 relative">
                   <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
@@ -98,7 +98,7 @@ export default function JobsPage() {
                   Search Jobs
                 </button>
               </div>
-            </div>
+            </div> */}
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               {/* Job List */}
@@ -171,7 +171,7 @@ export default function JobsPage() {
                         </div>
                       </div>
                     </div>
-                    <button className="bg-gradient-to-r from-orange-500 to-blue-500 text-white font-semibold py-3 px-6 rounded-xl hover:shadow-lg transition-all duration-300">
+                    <button className="btn-gradient-border py-3 px-6 rounded-xl hover:shadow-lg transition-all duration-300">
                       Apply Now
                     </button>
                   </div>
@@ -179,19 +179,19 @@ export default function JobsPage() {
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
                     <div className="bg-green-50 p-4 rounded-xl">
                       <div className="flex items-center mb-2">
-                        <DollarSign className="text-green-600" size={20} />
+                        <Banknote className="text-green-600" size={20} />
                         <span className="ml-2 font-semibold text-green-800">Salary</span>
                       </div>
                       <p className="text-green-700">{selectedJob.salary}</p>
                     </div>
                     
-                    <div className="bg-blue-50 p-4 rounded-xl">
+                    {/* <div className="bg-blue-50 p-4 rounded-xl">
                       <div className="flex items-center mb-2">
                         <Users className="text-blue-600" size={20} />
                         <span className="ml-2 font-semibold text-blue-800">Applicants</span>
                       </div>
                       <p className="text-blue-700">{selectedJob.applicants} applied</p>
-                    </div>
+                    </div> */}
                     
                     <div className="bg-orange-50 p-4 rounded-xl">
                       <div className="flex items-center mb-2">
@@ -221,14 +221,14 @@ export default function JobsPage() {
                     </div>
                   </div>
 
-                  <div className="flex flex-col sm:flex-row gap-4">
-                    <button className="bg-gradient-to-r from-orange-500 to-blue-500 text-white font-semibold py-3 px-6 rounded-xl hover:shadow-lg transition-all duration-300 flex-1">
+                  {/* <div className="flex flex-col sm:flex-row gap-4">
+                    <button className="btn-gradient-border py-3 px-6 rounded-xl hover:shadow-lg transition-all duration-300">
                       Apply for this Job
                     </button>
                     <button className="border-2 border-orange-500 text-orange-600 font-semibold py-3 px-6 rounded-xl hover:bg-orange-50 transition-all duration-300">
                       Save Job
                     </button>
-                  </div>
+                  </div> */}
                 </div>
               </div>
             </div>

@@ -5,6 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { Eye, EyeOff, Mail, Lock, ArrowLeft } from 'lucide-react';
+import { useAuthStore } from '@/store/authStore';
 
 export default function AuthLoginPage() {
   const [showPassword, setShowPassword] = useState(false);
@@ -16,43 +17,37 @@ export default function AuthLoginPage() {
 
   const [error, setError] = useState('');
 
+  const login = useAuthStore((state: any) => state.login);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setError('');
     
-    // Check credentials based on email and password
-    setTimeout(() => {
-      setIsLoading(false);
+    try {
+      console.log('Login attempt with:', { email, password: '****' });
       
-      // Individual user login
-      if (email === 'user@gmail.com' && password === 'user@123') {
-        // Store user info in localStorage
-        localStorage.setItem('userInfo', JSON.stringify({
-          name: 'User',
-          email: 'user@gmail.com',
-          userType: 'individual'
-        }));
-        // Redirect to individual dashboard
-        router.push('/individual-dashboard');
-      } 
-      // Business user login
-      else if (email === 'hr@mannlowe.com' && password === 'hr@123') {
-        // Store user info in localStorage
-        localStorage.setItem('userInfo', JSON.stringify({
-          name: 'HR',
-          email: 'hr@mannlowe.com',
-          userType: 'business',
-          company: 'Mann Lowe Technologies'
-        }));
-        // Redirect to business dashboard
-        router.push('/business-dashboard');
-      } 
-      // Invalid credentials
-      else {
-        setError('Invalid email or password. Please try again.');
+      // Call the login function from our auth store
+      const result = await login(email, password);
+      
+      if (result.success) {
+        console.log('Login successful, user role:', result.userRole);
+        // Redirect based on user role with fromLogin parameter to trigger toast
+        if (result.userRole === 'Individual Seller') {
+          router.push('/individual-dashboard?fromLogin=true');
+        } else {
+          // For other roles, redirect to business dashboard or other appropriate page
+          router.push('/business-dashboard?fromLogin=true');
+        }
+      } else {
+        setError('Login failed. Please check your credentials and try again.');
       }
-    }, 1500);
+    } catch (error: any) {
+      console.error('Login error in component:', error);
+      
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (

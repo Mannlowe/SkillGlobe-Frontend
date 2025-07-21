@@ -1,6 +1,7 @@
 'use client';
 
 import { User, Building } from 'lucide-react';
+import { useRegistrationStore } from '@/store/registration';
 
 interface UserTypeSelectionProps {
   data: any;
@@ -9,12 +10,25 @@ interface UserTypeSelectionProps {
 }
 
 export default function UserTypeSelection({ data, updateData, nextStep }: UserTypeSelectionProps) {
-  const handleUserTypeSelect = (userType: 'individual' | 'business') => {
+  // Get registration state and actions from store
+  const { setUserType, isLoading, error } = useRegistrationStore();
+  
+  const handleUserTypeSelect = async (userType: 'individual' | 'business') => {
+    // Update local state
     updateData({ userType });
-    // Auto-advance after selection
-    setTimeout(() => {
-      nextStep();
-    }, 300);
+    
+    try {
+      // Call store action to handle API request
+      await setUserType(userType);
+      
+      // Auto-advance after selection
+      setTimeout(() => {
+        nextStep();
+      }, 300);
+    } catch (err) {
+      console.error('Error selecting user type:', err);
+      // Error is handled by the store
+    }
   };
 
   return (
@@ -24,7 +38,7 @@ export default function UserTypeSelection({ data, updateData, nextStep }: UserTy
           Welcome to SkillGlobe
         </h1>
         <p className="text-gray-600 text-lg">
-          Let's get started by understanding how you'll use our platform
+          Let&apos;s get started by understanding how you&apos;ll use our platform
         </p>
       </div>
 
@@ -46,7 +60,8 @@ export default function UserTypeSelection({ data, updateData, nextStep }: UserTy
             <div className="text-left">
               <h3 className="text-lg font-semibold text-gray-900">Individual</h3>
               <p className="text-gray-600 text-sm">
-                I'm looking for jobs, freelance work, or want to learn new skills
+                I&apos;m looking for jobs, freelance work, or want to learn new skills
+                {/* <span className="text-xs text-blue-500 block mt-1">(Default: Seller)</span> */}
               </p>
             </div>
           </div>
@@ -69,15 +84,22 @@ export default function UserTypeSelection({ data, updateData, nextStep }: UserTy
             <div className="text-left">
               <h3 className="text-lg font-semibold text-gray-900">Business / Organization</h3>
               <p className="text-gray-600 text-sm">
-                I'm hiring talent, need services, or want to train my team
+                I&apos;m hiring talent, need services, or want to train my team
+                {/* <span className="text-xs text-blue-500 block mt-1">(Default: Buyer)</span> */}
               </p>
             </div>
           </div>
         </button>
       </div>
 
+      {error && (
+        <div className="text-center text-sm text-red-500 p-2 bg-red-50 rounded-md">
+          {error}
+        </div>
+      )}
+      
       <div className="text-center text-sm text-gray-500">
-        You can change this later in your account settings
+        {isLoading ? 'Processing...' : 'You can change this later in your account settings'}
       </div>
     </div>
   );

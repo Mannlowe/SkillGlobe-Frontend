@@ -47,7 +47,7 @@ export default function Skills({ onSkillsComplete, onSkip, className = '' }: Ski
   );
 
   return (
-    <div className={`bg-white rounded-xl shadow-sm p-3 space-y-6 w-full ${className}`}>
+    <div className={`bg-white rounded-xl shadow-sm p-3 space-y-6 w-full font-rubik ${className}`}>
       <div className="text-center">
         <h1 className="text-2xl font-bold text-gray-900 mb-2">
           What are you good at?

@@ -1,13 +1,13 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Shield, Upload, CreditCard, FileText, CheckCircle, X } from 'lucide-react';
+import { Shield, Upload, CreditCard, FileText, CheckCircle, X, IdCard } from 'lucide-react';
 
 const documentTypes = [
-  { id: 'aadhaar', name: 'Aadhaar Card', icon: CreditCard, description: 'Most trusted verification' },
-  { id: 'pan', name: 'PAN Card', icon: FileText, description: 'Alternative verification' },
+  { id: 'aadhaar', name: 'Aadhaar Card', icon: IdCard, description: 'Most trusted verification' },
+  { id: 'pan', name: 'PAN Card', icon: IdCard, description: 'Alternative verification' },
   { id: 'passport', name: 'Passport', icon: FileText, description: 'International ID' },
-  { id: 'voter', name: 'Voter ID', icon: FileText, description: 'Government issued ID' },
+  { id: 'voter', name: 'Voter ID', icon: IdCard, description: 'Government issued ID' },
 ];
 
 interface IdentityVerificationProps {
@@ -65,7 +65,7 @@ export default function IdentityVerification({
   }, [previewUrl]);
 
   return (
-    <div className={`bg-white rounded-xl shadow-sm p-3 space-y-6 w-full ${className}`}>
+    <div className={`bg-white rounded-xl shadow-sm p-3 space-y-6 w-full font-rubik ${className}`}>
       <div className="text-center">
         <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
           <Shield className="text-green-600" size={32} />
@@ -93,15 +93,15 @@ export default function IdentityVerification({
                   <button
                     key={doc.id}
                     onClick={() => setSelectedDoc(doc.id)}
-                    className={`p-3 rounded-xl border-2 transition-all ${
+                    className={`p-4 rounded-xl border-2 transition-all flex flex-col items-center justify-center h-full ${
                       selectedDoc === doc.id
                         ? 'border-orange-500 bg-orange-50'
                         : 'border-gray-200 bg-white hover:border-orange-300'
                     }`}
                   >
-                    <Icon className={selectedDoc === doc.id ? 'text-orange-600' : 'text-gray-600'} size={20} />
-                    <p className="text-sm font-medium text-gray-900 mt-1">{doc.name}</p>
-                    <p className="text-xs text-gray-500">{doc.description}</p>
+                    <Icon className={`${selectedDoc === doc.id ? 'text-orange-600' : 'text-gray-600'} mb-3`} size={30} />
+                    <p className="text-sm font-medium text-gray-900">{doc.name}</p>
+                    <p className="text-xs text-gray-500 text-center">{doc.description}</p>
                   </button>
                 );
               })}

@@ -28,7 +28,7 @@ export default function PortfolioPage() {
         <main className="flex-1 overflow-y-auto p-4">
           <div className="max-w-7xl mx-auto">
             <div className="flex justify-center">
-              <div className="w-full md:w-2/3">
+              <div className="w-full md:w-11/12">
                 <Portfolio 
                   onPortfolioComplete={handlePortfolioComplete}
                   onSkip={handleSkip}

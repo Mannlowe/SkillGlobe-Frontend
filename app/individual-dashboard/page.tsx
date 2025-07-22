@@ -281,13 +281,34 @@ export default function CompactDashboardPage() {
   );
 
   return (
-    <div className="flex h-screen bg-gray-50">
+    <div className="flex min-h-screen bg-gray-50">
       <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
       
       <div className="flex-1 flex flex-col overflow-hidden">
         <DashboardHeader onMenuClick={() => setSidebarOpen(true)} />
         
-        <main className="flex-1 overflow-hidden">
+        <main className="flex-1 overflow-y-auto scrollbar-custom">
+          {/* Custom scrollbar styles */}
+          <style jsx global>{`
+            .scrollbar-custom::-webkit-scrollbar {
+              width: 8px;
+            }
+            .scrollbar-custom::-webkit-scrollbar-track {
+              background: transparent;
+            }
+            .scrollbar-custom::-webkit-scrollbar-thumb {
+              background-color: rgba(255, 255, 255, 0.7);
+              border-radius: 20px;
+            }
+            .scrollbar-custom::-webkit-scrollbar-thumb:hover {
+              background-color: rgba(255, 255, 255, 0.9);
+            }
+            /* For Firefox */
+            .scrollbar-custom {
+              scrollbar-width: thin;
+              scrollbar-color: rgba(255, 255, 255, 0.7) transparent;
+            }
+          `}</style>
           {/* Welcome Section - Minimal */}
           <div className="bg-white border-b border-gray-200">
             <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4">

@@ -3,166 +3,282 @@
 import { useState, useEffect } from 'react';
 import Sidebar from '@/components/dashboard/Sidebar';
 import DashboardHeader from '@/components/dashboard/DashboardHeader';
-import { BarChart3, Users, Briefcase, TrendingUp, Calendar, Bell, Star, ArrowUpRight, Check as CheckIcon } from 'lucide-react';
+import CompactDashboardLayout from '@/components/dashboard/CompactDashboardLayout';
+import CompactMarketMetrics from '@/components/dashboard/CompactMarketMetrics';
+import CompactOpportunityCard from '@/components/dashboard/CompactOpportunityCard';
+import EnhancedStatsGrid from '@/components/dashboard/EnhancedStatsGrid';
+import OpportunityDiscoveryHub from '@/components/dashboard/OpportunityDiscoveryHub';
+import ApplicationPipelineManager from '@/components/dashboard/ApplicationPipelineManager';
+import CommunicationCenter from '@/components/dashboard/CommunicationCenter';
+import StrategicProfileOptimizer from '@/components/dashboard/StrategicProfileOptimizer';
+import FloatingCareerCoach from '@/components/dashboard/FloatingCareerCoach';
+import ProfileAnalytics from '@/components/dashboard/ProfileAnalytics';
+import ProfileLevelIndicator from '@/components/dashboard/ProfileLevelIndicator';
+import AchievementShowcase from '@/components/dashboard/AchievementBadges';
+import WeeklyChallenges from '@/components/dashboard/WeeklyChallenges';
+import SocialRecognition from '@/components/dashboard/SocialRecognition';
+import StreakTracker from '@/components/dashboard/StreakTracker';
+import { BarChart3, Users, Briefcase, TrendingUp, Calendar, Bell, Star, ArrowUpRight, Check as CheckIcon, Eye, Filter } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
+import { mockHeaderMetrics, mockEnhancedStats, mockJobOpportunities } from '@/lib/mockDashboardData';
+import { mockSavedSearches, mockApplications, mockConversations } from '@/lib/mockPhase2Data';
+import { mockProfileOptimizationHub, mockFloatingCareerCoach, mockProfileAnalytics } from '@/lib/mockPhase3Data';
+import { mockGamificationHub, mockLeaderboard } from '@/lib/mockPhase4Data';
 
-const stats = [
-  {
-    title: 'Active Applications',
-    value: '12',
-    change: '+2.5%',
-    trend: 'up',
-    icon: Briefcase,
-    color: 'bg-blue-500',
-  },
-  {
-    title: 'Profile Views',
-    value: '1,247',
-    change: '+12.3%',
-    trend: 'up',
-    icon: Users,
-    color: 'bg-green-500',
-  },
-  {
-    title: 'Skill Rating',
-    value: '4.8',
-    change: '+0.2',
-    trend: 'up',
-    icon: Star,
-    color: 'bg-yellow-500',
-  },
-  {
-    title: 'Earnings',
-    value: '$3,240',
-    change: '+18.7%',
-    trend: 'up',
-    icon: TrendingUp,
-    color: 'bg-orange-500',
-  },
-];
-
+// Mock data for recent activities (compact version)
 const recentActivities = [
-  {
-    id: 1,
-    type: 'application',
-    title: 'Applied to Senior React Developer',
-    company: 'TechCorp Inc.',
-    time: '2 hours ago',
-    status: 'pending',
-  },
-  {
-    id: 2,
-    type: 'interview',
-    title: 'Interview scheduled',
-    company: 'StartupXYZ',
-    time: '1 day ago',
-    status: 'scheduled',
-  },
-  {
-    id: 3,
-    type: 'course',
-    title: 'Completed Advanced React Course',
-    company: 'SkillGlobe Academy',
-    time: '3 days ago',
-    status: 'completed',
-  },
-  {
-    id: 4,
-    type: 'offer',
-    title: 'Job offer received',
-    company: 'Design Studio',
-    time: '5 days ago',
-    status: 'received',
-  },
+  { id: 1, type: 'application', title: 'Applied to Senior React Developer', company: 'TechCorp', time: '2 hours ago', status: 'pending' },
+  { id: 2, type: 'interview', title: 'Interview scheduled', company: 'StartupXYZ', time: '1 day ago', status: 'scheduled' },
+  { id: 3, type: 'course', title: 'Completed Advanced React Course', company: 'SkillGlobe', time: '3 days ago', status: 'completed' },
 ];
 
-const upcomingEvents = [
-  {
-    id: 1,
-    title: 'Technical Interview',
-    company: 'TechFlow Solutions',
-    time: 'Today, 3:00 PM',
-    type: 'interview',
-  },
-  {
-    id: 2,
-    title: 'Skill Assessment',
-    company: 'SkillGlobe',
-    time: 'Tomorrow, 10:00 AM',
-    type: 'assessment',
-  },
-  {
-    id: 3,
-    title: 'Project Deadline',
-    company: 'Freelance Client',
-    time: 'Friday, 5:00 PM',
-    type: 'deadline',
-  },
-];
-
-export default function DashboardPage() {
+export default function CompactDashboardPage() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [userName, setUserName] = useState('User');
+  const [showCareerCoach, setShowCareerCoach] = useState(true);
   const { user, isAuthenticated } = useAuthStore();
   const { toast } = useToast();
   const router = useRouter();
   
   useEffect(() => {
-    // Check if user is authenticated
-    // Add a small delay to allow the auth state to be loaded from localStorage
     const checkAuth = setTimeout(() => {
       if (!isAuthenticated) {
         router.push('/auth/login');
       }
-    }, 100); // Short delay to ensure auth state is loaded
+    }, 100);
     
     return () => clearTimeout(checkAuth);
   }, [isAuthenticated, router]);
   
-  // Separate effect for toast to ensure it only runs once after login
   useEffect(() => {
-    // Only show toast when user is authenticated and we're actually on the dashboard page
-    // This prevents the toast from showing on redirects
     if (isAuthenticated && user && window.location.pathname.includes('individual-dashboard')) {
       setUserName(user.full_name || user.name);
-      
-      // Show toast notification for Individual Seller
-      const roles = user.roles;
-      let isIndividualSeller = false;
-      
-      // Check roles in different formats
-      if (Array.isArray(roles)) {
-        isIndividualSeller = roles.includes('Individual Seller');
-      } else if (typeof roles === 'string') {
-        isIndividualSeller = (roles as string).indexOf('Individual Seller') >= 0;
-      }
-      
-      // Use URL parameter to detect fresh login vs refresh
-      const urlParams = new URLSearchParams(window.location.search);
-      const fromLogin = urlParams.get('fromLogin') === 'true';
-      
-      // Show toast on fresh login or if fromLogin parameter is present
-      if (isIndividualSeller && fromLogin) {
-        // Create toast with custom timeout
-        const { dismiss } = toast({
-          title: "Login Successful",
-          description: "You are logged in as individual seller",
-          variant: "success",
-          action: <div className="h-6 w-6 rounded-full bg-green-100 flex items-center justify-center"><CheckIcon className="h-4 w-4 text-green-600" /></div>,
-        });
-        
-        // Set custom timeout (e.g., 3000ms = 3 seconds)
-        setTimeout(() => {
-          dismiss();
-        }, 20000);
-        
-        // Remove the fromLogin parameter from URL without refreshing
-        window.history.replaceState({}, document.title, window.location.pathname);
-      }
     }
-  }, [isAuthenticated, user, toast]);
+  }, [isAuthenticated, user]);
+
+  // Tab content components
+  const overviewContent = (
+    <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+      {/* Compact Market Metrics */}
+      <CompactMarketMetrics 
+        metrics={mockHeaderMetrics}
+        onViewDetails={() => console.log('View market details')}
+      />
+
+      {/* Two Column Layout */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Top Opportunities */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold text-gray-900">Top Matches</h3>
+            <button className="text-sm text-blue-600 hover:text-blue-700">View all →</button>
+          </div>
+          <div className="space-y-3">
+            {mockJobOpportunities.slice(0, 2).map((job) => (
+              <CompactOpportunityCard 
+                key={job.id}
+                opportunity={job}
+                onApply={(id) => console.log('Apply:', id)}
+                onSave={(id) => console.log('Save:', id)}
+                onViewDetails={(id) => console.log('Details:', id)}
+              />
+            ))}
+          </div>
+        </div>
+
+        {/* Recent Activity */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold text-gray-900">Recent Activity</h3>
+            <button className="text-sm text-blue-600 hover:text-blue-700">View all →</button>
+          </div>
+          <div className="space-y-3">
+            {recentActivities.map((activity) => (
+              <div key={activity.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                <div className="flex items-center gap-3">
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                    activity.type === 'application' ? 'bg-blue-100' :
+                    activity.type === 'interview' ? 'bg-green-100' :
+                    'bg-purple-100'
+                  }`}>
+                    {activity.type === 'application' && <Briefcase className="text-blue-600" size={16} />}
+                    {activity.type === 'interview' && <Calendar className="text-green-600" size={16} />}
+                    {activity.type === 'course' && <BarChart3 className="text-purple-600" size={16} />}
+                  </div>
+                  <div>
+                    <p className="font-medium text-sm text-gray-900">{activity.title}</p>
+                    <p className="text-xs text-gray-600">{activity.company} • {activity.time}</p>
+                  </div>
+                </div>
+                <span className={`px-2 py-1 text-xs font-medium rounded-full ${
+                  activity.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                  activity.status === 'scheduled' ? 'bg-blue-100 text-blue-800' :
+                  'bg-green-100 text-green-800'
+                }`}>
+                  {activity.status}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+    </div>
+  );
+
+  const opportunitiesContent = (
+    <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <OpportunityDiscoveryHub
+        opportunities={mockJobOpportunities}
+        savedSearches={mockSavedSearches}
+        onSearch={(filters) => console.log('Search with filters:', filters)}
+        onSaveSearch={(search) => console.log('Save search:', search)}
+        onApply={(jobId) => console.log('Apply to job:', jobId)}
+        onSave={(jobId) => console.log('Save job:', jobId)}
+        onViewDetails={(jobId) => console.log('View job details:', jobId)}
+      />
+    </div>
+  );
+
+  const activityContent = (
+    <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-8">
+      {/* Application Pipeline */}
+      <ApplicationPipelineManager
+        applications={mockApplications}
+        onUpdateApplication={(id, updates) => console.log('Update application:', id, updates)}
+        onAddNote={(id, note) => console.log('Add note:', id, note)}
+        onScheduleFollowup={(id, date, type) => console.log('Schedule followup:', id, date, type)}
+      />
+      
+      {/* Enhanced Stats - Secondary */}
+      <EnhancedStatsGrid 
+        stats={mockEnhancedStats}
+        onActionClick={(action) => console.log('Action:', action)}
+        timeframe="30d"
+      />
+    </div>
+  );
+
+  const messagesContent = (
+    <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <div style={{ height: 'calc(100vh - 200px)' }}>
+        <CommunicationCenter
+          conversations={mockConversations}
+          onSendMessage={(threadId, message) => console.log('Send message:', threadId, message)}
+          onScheduleInterview={(threadId, details) => console.log('Schedule interview:', threadId, details)}
+          onMarkAsRead={(messageId) => console.log('Mark as read:', messageId)}
+          onArchive={(messageId) => console.log('Archive:', messageId)}
+        />
+      </div>
+    </div>
+  );
+
+  const profileContent = (
+    <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+      {/* Strategic Profile Optimizer */}
+      <StrategicProfileOptimizer
+        profileData={mockProfileOptimizationHub}
+        completionTasks={mockProfileOptimizationHub.strategic_completion.completion_priorities}
+        onTaskComplete={(taskId) => {
+          console.log('Task completed:', taskId);
+          toast({
+            title: "Task Completed!",
+            description: "Your profile has been updated successfully.",
+          });
+        }}
+        onSkillAdd={(skill) => console.log('Add skill:', skill)}
+        marketImpactMode={true}
+      />
+      
+      {/* Profile Analytics */}
+      <ProfileAnalytics
+        analytics={mockProfileAnalytics}
+        onViewDetails={(section) => console.log('View details:', section)}
+      />
+    </div>
+  );
+
+  const insightsContent = (
+    <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+      {/* Profile Level and Achievements Row */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Profile Level */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 flex items-center justify-center">
+          <ProfileLevelIndicator
+            level={mockGamificationHub.user_stats.current_level}
+            size="large"
+            animated={true}
+          />
+        </div>
+
+        {/* Achievement Showcase */}
+        <AchievementShowcase
+          achievements={mockGamificationHub.achievements.earned.concat(mockGamificationHub.achievements.available)}
+          title="Recent Achievements"
+          maxDisplay={6}
+          onViewAll={() => console.log('View all achievements')}
+          onAchievementClick={(achievement) => {
+            console.log('Achievement clicked:', achievement);
+            toast({
+              title: achievement.name,
+              description: achievement.description,
+            });
+          }}
+        />
+      </div>
+
+      {/* Weekly Challenges */}
+      <WeeklyChallenges
+        challenges={mockGamificationHub.weekly_challenges.active}
+        onAcceptChallenge={(challengeId) => {
+          console.log('Accept challenge:', challengeId);
+          toast({
+            title: "Challenge Accepted!",
+            description: "Good luck achieving your goal!",
+          });
+        }}
+        onCompleteChallenge={(challengeId) => {
+          console.log('Complete challenge:', challengeId);
+          toast({
+            title: "Challenge Completed!",
+            description: "Congratulations! You've earned bonus points!",
+          });
+        }}
+        onViewAll={() => console.log('View all challenges')}
+      />
+
+      {/* Social Recognition & Streaks Row */}
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+        {/* Social Recognition */}
+        <SocialRecognition
+          socialData={mockGamificationHub.social_recognition}
+          leaderboard={mockLeaderboard}
+          onShareAchievement={(achievementName) => {
+            console.log('Share achievement:', achievementName);
+            toast({
+              title: "Shared!",
+              description: `Your ${achievementName} achievement has been shared!`,
+            });
+          }}
+          onViewProfile={(userId) => console.log('View profile:', userId)}
+        />
+
+        {/* Streak Tracker */}
+        <StreakTracker
+          streaks={mockGamificationHub.streaks}
+          onStreakClick={(type) => {
+            console.log('Streak clicked:', type);
+            toast({
+              title: "Streak Details",
+              description: `View your ${type.replace('_', ' ')} streak progress`,
+            });
+          }}
+        />
+      </div>
+    </div>
+  );
 
   return (
     <div className="flex h-screen bg-gray-50">
@@ -171,136 +287,61 @@ export default function DashboardPage() {
       <div className="flex-1 flex flex-col overflow-hidden">
         <DashboardHeader onMenuClick={() => setSidebarOpen(true)} />
         
-        <main className="flex-1 overflow-x-hidden overflow-y-auto bg-gray-50">
-          <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6">
-            {/* Welcome Section */}
-            <div className="mb-8">
-              <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">
-                Welcome back, {userName}! 👋
-              </h1>
-              <p className="text-gray-600">
-                Here&apos;s what&apos;s happening with your career journey today.
-              </p>
-            </div>
-
-            {/* Stats Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-              {stats.map((stat, index) => {
-                const Icon = stat.icon;
-                return (
-                  <div key={index} className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm font-medium text-gray-600 mb-1">{stat.title}</p>
-                        <p className="text-2xl font-bold text-gray-900">{stat.value}</p>
-                        <div className="flex items-center mt-2">
-                          <ArrowUpRight className="text-green-500 mr-1" size={16} />
-                          <span className="text-sm text-green-600 font-medium">{stat.change}</span>
-                        </div>
-                      </div>
-                      <div className={`w-12 h-12 ${stat.color} rounded-xl flex items-center justify-center`}>
-                        <Icon className="text-white" size={24} />
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-              {/* Recent Activity */}
-              <div className="lg:col-span-2">
-                <div className="bg-white rounded-xl shadow-sm border border-gray-100">
-                  <div className="p-6 border-b border-gray-100">
-                    <h2 className="text-lg font-semibold text-gray-900">Recent Activity</h2>
-                  </div>
-                  <div className="p-6">
-                    <div className="space-y-4">
-                      {recentActivities.map((activity) => (
-                        <div key={activity.id} className="flex items-center space-x-4 p-4 bg-gray-50 rounded-lg">
-                          <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                            activity.type === 'application' ? 'bg-blue-100' :
-                            activity.type === 'interview' ? 'bg-green-100' :
-                            activity.type === 'course' ? 'bg-purple-100' :
-                            'bg-orange-100'
-                          }`}>
-                            {activity.type === 'application' && <Briefcase className="text-blue-600" size={20} />}
-                            {activity.type === 'interview' && <Calendar className="text-green-600" size={20} />}
-                            {activity.type === 'course' && <BarChart3 className="text-purple-600" size={20} />}
-                            {activity.type === 'offer' && <TrendingUp className="text-orange-600" size={20} />}
-                          </div>
-                          <div className="flex-1">
-                            <p className="font-medium text-gray-900">{activity.title}</p>
-                            <p className="text-sm text-gray-600">{activity.company}</p>
-                          </div>
-                          <div className="text-right">
-                            <p className="text-sm text-gray-500">{activity.time}</p>
-                            <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${
-                              activity.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                              activity.status === 'scheduled' ? 'bg-blue-100 text-blue-800' :
-                              activity.status === 'completed' ? 'bg-green-100 text-green-800' :
-                              'bg-orange-100 text-orange-800'
-                            }`}>
-                              {activity.status}
-                            </span>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
+        <main className="flex-1 overflow-hidden">
+          {/* Welcome Section - Minimal */}
+          <div className="bg-white border-b border-gray-200">
+            <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h1 className="text-xl md:text-2xl font-bold text-gray-900">
+                    Welcome back, {userName}!
+                  </h1>
+                  <p className="text-sm text-gray-600">
+                    Your career marketplace overview
+                  </p>
                 </div>
-              </div>
-
-              {/* Upcoming Events */}
-              <div className="lg:col-span-1">
-                <div className="bg-white rounded-xl shadow-sm border border-gray-100 mb-6">
-                  <div className="p-6 border-b border-gray-100">
-                    <h2 className="text-lg font-semibold text-gray-900">Upcoming Events</h2>
-                  </div>
-                  <div className="p-6">
-                    <div className="space-y-4">
-                      {upcomingEvents.map((event) => (
-                        <div key={event.id} className="flex items-start space-x-3">
-                          <div className={`w-3 h-3 rounded-full mt-2 ${
-                            event.type === 'interview' ? 'bg-green-500' :
-                            event.type === 'assessment' ? 'bg-blue-500' :
-                            'bg-orange-500'
-                          }`}></div>
-                          <div className="flex-1">
-                            <p className="font-medium text-gray-900 text-sm">{event.title}</p>
-                            <p className="text-xs text-gray-600">{event.company}</p>
-                            <p className="text-xs text-gray-500 mt-1">{event.time}</p>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Quick Actions */}
-                <div className="bg-white rounded-xl shadow-sm border border-gray-100">
-                  <div className="p-6 border-b border-gray-100">
-                    <h2 className="text-lg font-semibold text-gray-900">Quick Actions</h2>
-                  </div>
-                  <div className="p-6">
-                    <div className="space-y-3">
-                      <button className="w-full bg-gradient-to-r from-orange-500 to-blue-500 text-white font-semibold py-3 px-4 rounded-lg hover:shadow-lg transition-all duration-300">
-                        Find New Jobs
-                      </button>
-                      <button className="w-full border-2 border-orange-500 text-orange-600 font-semibold py-3 px-4 rounded-lg hover:bg-orange-50 transition-all duration-300">
-                        Update Profile
-                      </button>
-                      <button className="w-full border-2 border-blue-500 text-blue-600 font-semibold py-3 px-4 rounded-lg hover:bg-blue-50 transition-all duration-300">
-                        Take Skill Test
-                      </button>
-                    </div>
-                  </div>
+                <div className="flex items-center gap-2">
+                  <button className="px-4 py-2 bg-gradient-to-r from-orange-500 to-blue-500 text-white font-medium rounded-lg hover:shadow-lg transition-all duration-300 text-sm">
+                    Quick Apply
+                  </button>
+                  <button className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg">
+                    <Bell size={20} />
+                  </button>
                 </div>
               </div>
             </div>
           </div>
+
+          {/* Tab-based Layout */}
+          <CompactDashboardLayout>
+            {{
+              overview: overviewContent,
+              opportunities: opportunitiesContent,
+              activity: activityContent,
+              messages: messagesContent,
+              profile: profileContent,
+              insights: insightsContent,
+            }}
+          </CompactDashboardLayout>
         </main>
       </div>
+      
+      {/* Floating Career Coach */}
+      {showCareerCoach && (
+        <FloatingCareerCoach
+          coachData={mockFloatingCareerCoach}
+          onClose={() => setShowCareerCoach(false)}
+          onMinimize={() => console.log('Minimize coach')}
+          onActionClick={(actionType, actionId) => {
+            console.log('Coach action:', actionType, actionId);
+            if (actionType === 'full-optimization') {
+              // Navigate to profile tab
+              const profileTab = document.querySelector('[role="tab"]:nth-child(5)') as HTMLButtonElement;
+              profileTab?.click();
+            }
+          }}
+        />
+      )}
     </div>
   );
 }

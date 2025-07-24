@@ -34,7 +34,7 @@ export default function DashboardHeader({ onMenuClick, title }: DashboardHeaderP
   ];
 
   return (
-    <header className="bg-white shadow-sm border-b border-gray-200 relative z-30">
+    <header className="bg-white shadow-sm border-b border-gray-200 relative z-30 font-rubik h-[82px]">
       <div className="flex items-center justify-between px-4 sm:px-6 lg:px-8 py-4">
         {/* Left Side */}
         <div className="flex items-center space-x-4">

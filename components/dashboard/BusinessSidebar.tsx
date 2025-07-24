@@ -41,11 +41,23 @@ const useIsMobile = () => {
   return isMobile;
 };
 
-export default function BusinessSidebar() {
+interface BusinessSidebarProps {
+  mobileOpen?: boolean;
+}
+
+export default function BusinessSidebar({ mobileOpen }: BusinessSidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
   const isMobile = useIsMobile();
+  // Use mobileOpen prop if provided, otherwise default to true
   const [isOpen, setIsOpen] = useState(true);
+  
+  // Update isOpen when mobileOpen prop changes
+  useEffect(() => {
+    if (mobileOpen !== undefined && isMobile) {
+      setIsOpen(mobileOpen);
+    }
+  }, [mobileOpen, isMobile]);
   const [isCollapsed, setIsCollapsed] = useState(false);
   
   // Close sidebar on mobile when navigating
@@ -73,7 +85,7 @@ export default function BusinessSidebar() {
           ${isCollapsed && !isMobile ? 'w-20' : 'w-64'}
         `}
       >
-        <div className="flex flex-col h-full">
+        <div className="flex flex-col h-full font-rubik">
           {/* Header */}
           <div className={`flex items-center h-[85px] justify-between border-b border-gray-200 ${isCollapsed && !isMobile ? 'p-3' : 'p-4'}`}>
             {(!isCollapsed || isMobile) && (
@@ -92,7 +104,7 @@ export default function BusinessSidebar() {
             {isCollapsed && !isMobile && (
               <div className="relative w-8 h-8 mx-auto">
                 <Image 
-                  src="/Images/logo_image.png" 
+                  src="/Images/favicon/apple-touch-icon.png"
                   alt="SkillGlobe Logo" 
                   fill 
                   className="object-contain"

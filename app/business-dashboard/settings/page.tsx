@@ -22,7 +22,7 @@ export default function BusinessSettingsPage() {
 
   const tabs = [
     { id: 'company', label: 'Company Details', icon: Building2 },
-    { id: 'team', label: 'Team Members', icon: Users },
+    // { id: 'team', label: 'Team Members', icon: Users },
     { id: 'admin', label: 'Admin Access', icon: KeyRound },
   ];
 
@@ -56,7 +56,7 @@ export default function BusinessSettingsPage() {
     switch (activeTab) {
       case 'company':
         return (
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="bg-white rounded-lg shadow p-6 font-rubik">
             <h2 className="text-xl font-semibold mb-6">Company Details</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
@@ -122,7 +122,7 @@ export default function BusinessSettingsPage() {
         );
       case 'team':
         return (
-          <div className="bg-white rounded-lg shadow">
+          <div className="bg-white rounded-lg shadow font-rubik">
             <div className="p-6 border-b border-gray-200">
               <div className="flex justify-between items-center">
                 <h2 className="text-xl font-semibold">Team Members</h2>
@@ -188,7 +188,7 @@ export default function BusinessSettingsPage() {
         );
       case 'admin':
         return (
-          <div className="bg-white rounded-lg shadow">
+          <div className="bg-white rounded-lg shadow font-rubik">
             <div className="p-6 border-b border-gray-200">
               <div className="flex justify-between items-center">
                 <h2 className="text-xl font-semibold">Admin Access Roles</h2>
@@ -257,7 +257,7 @@ export default function BusinessSettingsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 font-rubik">
       <BusinessSidebar />
       
       <div className="lg:pl-64 pt-1">

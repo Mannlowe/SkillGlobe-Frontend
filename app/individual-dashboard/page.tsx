@@ -60,7 +60,7 @@ export default function CompactDashboardPage() {
 
   // Tab content components
   const overviewContent = (
-    <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+    <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6 font-rubik">
       {/* Compact Market Metrics */}
       <CompactMarketMetrics 
         metrics={mockHeaderMetrics}

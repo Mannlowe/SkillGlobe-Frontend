@@ -173,12 +173,23 @@ export default function BusinessDashboardPage() {
     }
   };
 
+  // State for mobile sidebar toggle
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  // Toggle mobile menu
+  const toggleMobileMenu = () => {
+    setMobileMenuOpen(!mobileMenuOpen);
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 font-rubik">
-      <BusinessSidebar />
+      <BusinessSidebar mobileOpen={mobileMenuOpen} />
       
       <div className="lg:pl-64 pt-1">
-        <BusinessDashboardHeader title="Business Dashboard" />
+        <BusinessDashboardHeader 
+          title="Business Dashboard" 
+          onMenuClick={toggleMobileMenu}
+        />
         
         <main className="flex-1 overflow-x-hidden overflow-y-auto bg-gray-50">
           <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6">

@@ -3,16 +3,17 @@
 import { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import { 
-  Search, 
-  Bell, 
-  MessageCircle, 
+import {
+  Search,
+  Bell,
+  MessageCircle,
   ChevronDown,
   Settings,
   User,
   HelpCircle,
   LogOut,
-  Building2
+  Building2,
+  Menu
 } from 'lucide-react';
 import useOutsideClick from '@/hooks/useOutsideClick';
 import { useAuthStore } from '@/store/authStore';
@@ -26,10 +27,10 @@ export default function BusinessDashboardHeader({ title, onMenuClick }: Business
   const router = useRouter();
   const [showNotifications, setShowNotifications] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
-  
+
   // Get user data from auth store
   const { user: authUser, isAuthenticated } = useAuthStore();
-  
+
   const profileRef = useRef<HTMLDivElement>(null);
   const notificationsRef = useRef<HTMLDivElement>(null);
 
@@ -42,24 +43,58 @@ export default function BusinessDashboardHeader({ title, onMenuClick }: Business
     { id: 3, title: 'Job posting expires tomorrow', time: '2 hours ago', unread: false },
   ];
 
+  const useIsMobile = () => {
+    const [isMobile, setIsMobile] = useState(false);
+
+    useEffect(() => {
+      const checkIsMobile = () => {
+        setIsMobile(window.innerWidth < 768);
+      };
+
+      checkIsMobile();
+      window.addEventListener('resize', checkIsMobile);
+
+      return () => {
+        window.removeEventListener('resize', checkIsMobile);
+      };
+    }, []);
+
+    return isMobile;
+  };
+
+  const isMobile = useIsMobile();
+
   return (
     <header className="bg-white shadow-sm border-b border-gray-200 relative z-30">
       <div className="flex items-center justify-between px-4 sm:px-6 lg:px-8 py-4">
         {/* Left Side */}
         <div className="flex items-center space-x-4">
-          {title && (
-            <h1 className="text-xl font-semibold text-gray-900">{title}</h1>
+          {/* Mobile Menu Button */}
+          <button
+            onClick={onMenuClick}
+            className="md:block lg:hidden p-2 rounded-lg hover:bg-gray-100 transition-colors"
+          >
+            <Menu size={20} />
+          </button>
+
+          {!isMobile && (
+            <>
+              {title && (
+                <h1 className="text-xl font-semibold text-gray-900">{title}</h1>
+              )}
+
+              {/* Search Bar */}
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+                <input
+                  type="text"
+                  placeholder="Search jobs, applicants, team members..."
+                  className="pl-10 pr-4 py-2 w-80 bg-gray-50 rounded-lg border-0 focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all"
+                />
+              </div>
+            </>
           )}
-          
-          {/* Search Bar */}
-          <div className="hidden md:block relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
-            <input
-              type="text"
-              placeholder="Search jobs, applicants, team members..."
-              className="pl-10 pr-4 py-2 w-80 bg-gray-50 rounded-lg border-0 focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all"
-            />
-          </div>
+
         </div>
 
         {/* Right Side */}
@@ -79,7 +114,7 @@ export default function BusinessDashboardHeader({ title, onMenuClick }: Business
 
           {/* Notifications */}
           <div className="relative" ref={notificationsRef}>
-            <button 
+            <button
               onClick={() => setShowNotifications(!showNotifications)}
               className="p-2 rounded-lg hover:bg-gray-100 transition-colors relative"
             >
@@ -114,7 +149,7 @@ export default function BusinessDashboardHeader({ title, onMenuClick }: Business
 
           {/* Profile Dropdown */}
           <div className="relative" ref={profileRef}>
-            <button 
+            <button
               onClick={() => setShowProfile(!showProfile)}
               className="flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-100 transition-colors"
             >
@@ -144,33 +179,33 @@ export default function BusinessDashboardHeader({ title, onMenuClick }: Business
                   )} */}
                 </div>
                 <div className="py-2">
-                  <button 
+                  <button
                     onClick={() => router.push('/business-dashboard/company-profile')}
                     className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                   >
                     <User size={16} className="mr-3 text-gray-500" />
                     Company Profile
                   </button>
-                  
-                  <button 
+
+                  <button
                     onClick={() => router.push('/business-dashboard/settings')}
                     className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                   >
                     <Settings size={16} className="mr-3 text-gray-500" />
                     Settings
                   </button>
-                  
-                  <button 
+
+                  <button
                     onClick={() => router.push('/help')}
                     className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                   >
                     <HelpCircle size={16} className="mr-3 text-gray-500" />
                     Help & Support
                   </button>
-                  
+
                   <hr className="my-2" />
-                  
-                  <button 
+
+                  <button
                     onClick={() => {
                       // Use the logout function from auth store
                       useAuthStore.getState().logout();

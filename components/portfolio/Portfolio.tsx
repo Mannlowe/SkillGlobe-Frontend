@@ -8,24 +8,88 @@ import ExperienceForm from './ExperienceForm';
 import CertificateForm from './CertificateForm';
 
 interface PortfolioProps {
+  activeSection?: string;
+  setActiveSection?: (section: string) => void;
+  sections?: {
+    id: string;
+    name: string;
+    icon: any;
+    completed: boolean;
+  }[];
+  setResumeUploaded?: (value: boolean) => void;
+  setPersonalInfoCompleted?: (value: boolean) => void;
+  setEducationCompleted?: (value: boolean) => void;
+  setExperienceCompleted?: (value: boolean) => void;
+  setCertificatesCompleted?: (value: boolean) => void;
   onPortfolioComplete?: () => void;
   onSkip?: () => void;
   className?: string;
 }
 
-export default function Portfolio({ onPortfolioComplete, onSkip, className = '' }: PortfolioProps) {
-  const [activeSection, setActiveSection] = useState('resume');
-  const [resumeUploaded, setResumeUploaded] = useState(false);
-  const [personalInfoCompleted, setPersonalInfoCompleted] = useState(false);
+export default function Portfolio({ 
+  activeSection: propActiveSection, 
+  setActiveSection: propSetActiveSection,
+  sections: propSections,
+  setResumeUploaded: propSetResumeUploaded,
+  setPersonalInfoCompleted: propSetPersonalInfoCompleted,
+  setEducationCompleted: propSetEducationCompleted,
+  setExperienceCompleted: propSetExperienceCompleted,
+  setCertificatesCompleted: propSetCertificatesCompleted,
+  onPortfolioComplete, 
+  onSkip, 
+  className = '' 
+}: PortfolioProps) {
+  // Use local state if props are not provided
+  const [localActiveSection, setLocalActiveSection] = useState('resume');
+  const [localResumeUploaded, setLocalResumeUploaded] = useState(false);
+  const [localPersonalInfoCompleted, setLocalPersonalInfoCompleted] = useState(false);
+  const [localEducationCompleted, setLocalEducationCompleted] = useState(false);
+  const [localExperienceCompleted, setLocalExperienceCompleted] = useState(false);
+  const [localCertificatesCompleted, setLocalCertificatesCompleted] = useState(false);
+  
+  // Use props if provided, otherwise use local state
+  const activeSection = propActiveSection || localActiveSection;
+  const setActiveSection = propSetActiveSection || setLocalActiveSection;
+  const resumeUploaded = propSections ? propSections[0].completed : localResumeUploaded;
+  const personalInfoCompleted = propSections ? propSections[1].completed : localPersonalInfoCompleted;
+  const educationCompleted = propSections ? propSections[2].completed : localEducationCompleted;
+  const experienceCompleted = propSections ? propSections[3].completed : localExperienceCompleted;
+  const certificatesCompleted = propSections ? propSections[4].completed : localCertificatesCompleted;
+  
+  // Set completion functions that update both local state and parent state if provided
+  const updateResumeUploaded = (value: boolean) => {
+    setLocalResumeUploaded(value);
+    if (propSetResumeUploaded) propSetResumeUploaded(value);
+  };
+  
+  const updatePersonalInfoCompleted = (value: boolean) => {
+    setLocalPersonalInfoCompleted(value);
+    if (propSetPersonalInfoCompleted) propSetPersonalInfoCompleted(value);
+  };
+  
+  const updateEducationCompleted = (value: boolean) => {
+    setLocalEducationCompleted(value);
+    if (propSetEducationCompleted) propSetEducationCompleted(value);
+  };
+  
+  const updateExperienceCompleted = (value: boolean) => {
+    setLocalExperienceCompleted(value);
+    if (propSetExperienceCompleted) propSetExperienceCompleted(value);
+  };
+  
+  const updateCertificatesCompleted = (value: boolean) => {
+    setLocalCertificatesCompleted(value);
+    if (propSetCertificatesCompleted) propSetCertificatesCompleted(value);
+  };
+  
+  // Other state
   const [personalInfo, setPersonalInfo] = useState({});
-  const [educationCompleted, setEducationCompleted] = useState(false);
   const [education, setEducation] = useState([]);
-  const [experienceCompleted, setExperienceCompleted] = useState(false);
   const [experience, setExperience] = useState([]);
-  const [certificatesCompleted, setCertificatesCompleted] = useState(false);
   const [certificates, setCertificates] = useState([]);
 
-  const sections = [
+  // Use provided sections or create local ones
+  const sections = propSections || [
     { id: 'resume', name: 'Resume Upload', icon: FileText, completed: resumeUploaded },
     { id: 'personal', name: 'Personal Info', icon: User, completed: personalInfoCompleted },
     { id: 'education', name: 'Education', icon: GraduationCap, completed: educationCompleted },
@@ -36,7 +100,7 @@ export default function Portfolio({ onPortfolioComplete, onSkip, className = '' 
   const handleResumeUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      setResumeUploaded(true);
+      updateResumeUploaded(true);
       // After resume is uploaded, automatically switch to personal info section
       setTimeout(() => {
         setActiveSection('personal');
@@ -46,28 +110,28 @@ export default function Portfolio({ onPortfolioComplete, onSkip, className = '' 
   
   const handlePersonalInfoSave = (data: any) => {
     setPersonalInfo(data);
-    setPersonalInfoCompleted(true);
+    updatePersonalInfoCompleted(true);
     // Move to next section after completing personal info
     setActiveSection('education');
   };
   
   const handleEducationSave = (data: any) => {
     setEducation(data);
-    setEducationCompleted(true);
+    updateEducationCompleted(true);
     // Move to next section after completing education
     setActiveSection('experience');
   };
   
   const handleExperienceSave = (data: any) => {
     setExperience(data);
-    setExperienceCompleted(true);
+    updateExperienceCompleted(true);
     // Move to next section after completing experience
     setActiveSection('certificates');
   };
   
   const handleCertificatesSave = (data: any) => {
     setCertificates(data);
-    setCertificatesCompleted(true);
+    updateCertificatesCompleted(true);
     // Portfolio is complete
     if (onPortfolioComplete) {
       onPortfolioComplete();
@@ -87,61 +151,7 @@ export default function Portfolio({ onPortfolioComplete, onSkip, className = '' 
   };
 
   return (
-      <div className="bg-white rounded-xl max-w-full shadow-sm p-3 space-y-6 font-rubik">
-      <div className="text-center">
-        <h1 className="text-2xl font-bold text-gray-900 mb-2">
-          Build Your Portfolio
-        </h1>
-        <p className="text-gray-600">
-          Create a comprehensive profile to showcase your skills and experience
-        </p>
-        {/* <div className="inline-flex items-center px-3 py-1 bg-blue-100 text-blue-800 text-sm font-medium rounded-full mt-2">
-          Optional - Complete later
-        </div> */}
-      </div>
-
-      {/* Progress Overview */}
-      <div className="bg-white p-4 rounded-xl border border-gray-200">
-        <div className="flex items-center justify-between mb-3">
-          <h3 className="font-semibold text-gray-900">Portfolio Completion</h3>
-          <span className="text-sm text-gray-500">
-            {sections.filter(s => s.completed).length}/{sections.length} sections
-          </span>
-        </div>
-        
-        <div className="grid grid-cols-2 gap-2">
-          {sections.map((section) => {
-            const Icon = section.icon;
-            return (
-              <button
-                key={section.id}
-                onClick={() => setActiveSection(section.id)}
-                className={`p-3 rounded-lg border transition-all h-16 ${
-                  activeSection === section.id
-                    ? 'border-orange-500 bg-orange-50'
-                    : section.completed
-                    ? 'border-green-500 bg-green-50'
-                    : 'border-gray-200 bg-white hover:border-gray-300'
-                }`}
-              >
-                <div className="flex items-center justify-center space-x-2">
-                  <Icon 
-                    className={
-                      section.completed ? 'text-green-600' :
-                      activeSection === section.id ? 'text-blue-600' : 'text-gray-600'
-                    } 
-                    size={24} 
-                  />
-                  <p className="text-sm font-medium text-gray-900">{section.name}</p>
-                </div>
-                {section.completed && (
-                  <div className="w-2 h-2 bg-green-500 rounded-full mx-auto mt-1"></div>
-                )}
-              </button>
-            );
-          })}
-        </div>
-      </div>
+      <div className={`bg-white rounded-xl max-w-full shadow-sm p-3 space-y-6 font-rubik ${className}`}>
 
       {/* Active Section Content */}
       <div className="bg-white p-4 rounded-xl border border-gray-200">

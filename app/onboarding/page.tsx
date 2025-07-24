@@ -20,8 +20,6 @@ import ProfileCreation from '@/components/onboarding/ProfileCreation';
 import BusinessBasicInformation from '@/components/onboarding/BusinessBasicInformation';
 import BusinessTermsAcceptance from '@/components/onboarding/BusinessTermsAcceptance';
 import BusinessProfile from '@/components/onboarding/BusinessProfile';
-import BusinessDocumentVerification from '@/components/onboarding/BusinessDocumentVerification';
-import BusinessDashboardSetup from '@/components/onboarding/BusinessDashboardSetup';
 
 export interface OnboardingData {
   userType: 'individual' | 'business' | '';

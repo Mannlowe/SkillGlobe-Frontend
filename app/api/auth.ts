@@ -93,6 +93,7 @@ export const storeAuthData = (authData: LoginResponse): void => {
   if (typeof window !== 'undefined') {
     localStorage.setItem('auth_token', authData.message.auth.token);
     localStorage.setItem('user_data', JSON.stringify(authData.message.user));
+    localStorage.setItem('entity_data', JSON.stringify(authData.message.entity));
     localStorage.setItem('auth_expires', authData.message.auth.expires_on);
   }
 };
@@ -104,6 +105,7 @@ export const clearAuthData = (): void => {
   if (typeof window !== 'undefined') {
     localStorage.removeItem('auth_token');
     localStorage.removeItem('user_data');
+    localStorage.removeItem('entity_data');
     localStorage.removeItem('auth_expires');
   }
 };

@@ -1,15 +1,12 @@
 // Complete Registration API functions
 import axios from 'axios';
 
-// Base URL for API calls
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://skillglobedev.m.frappe.cloud';
-
-// Interface for complete registration request
 export interface CompleteRegistrationRequest {
   request_id: string;
   password: string;
+  agreed?: number; // 1 for accepted, 0 for not accepted
 }
-
 // Interface for complete registration response
 export interface CompleteRegistrationResponse {
   message: {
@@ -24,15 +21,10 @@ export interface CompleteRegistrationResponse {
   };
 }
 
-/**
- * Complete the registration process
- * @param requestId Registration request ID
- * @param password User password
- * @returns Promise with complete registration response
- */
 export const completeRegistration = async (
   requestId: string,
-  password: string
+  password: string,
+  agreed: number = 1 // Default to 1 (accepted)
 ): Promise<CompleteRegistrationResponse> => {
   try {
     console.log('Completing registration with:', { request_id: requestId });
@@ -41,7 +33,8 @@ export const completeRegistration = async (
       `${API_BASE_URL}/api/method/skillglobe_be.api.register.complete_registration`,
       {
         request_id: requestId,
-        password: password
+        password: password,
+        agreed: agreed
       },
       {
         headers: {

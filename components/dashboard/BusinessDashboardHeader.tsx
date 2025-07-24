@@ -15,6 +15,7 @@ import {
   Building2
 } from 'lucide-react';
 import useOutsideClick from '@/hooks/useOutsideClick';
+import { useAuthStore } from '@/store/authStore';
 
 interface BusinessDashboardHeaderProps {
   title?: string;
@@ -25,80 +26,15 @@ export default function BusinessDashboardHeader({ title, onMenuClick }: Business
   const router = useRouter();
   const [showNotifications, setShowNotifications] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
-  const [user, setUser] = useState<{ name: string; email: string; userType?: string; company?: string } | null>(null);
+  
+  // Get user data from auth store
+  const { user: authUser, isAuthenticated } = useAuthStore();
   
   const profileRef = useRef<HTMLDivElement>(null);
   const notificationsRef = useRef<HTMLDivElement>(null);
 
-    useOutsideClick(profileRef, () => setShowProfile(false));
-    useOutsideClick(notificationsRef, () => setShowNotifications(false));
-
-  useEffect(() => {
-    // Get user info from localStorage on component mount
-    const getUserInfo = () => {
-      if (typeof window !== 'undefined') {
-        // Try different possible storage keys
-        const possibleKeys = ['userInfo', 'user', 'businessUser', 'authUser', 'userData'];
-        let userFound = false;
-        
-        // First check localStorage
-        for (const key of possibleKeys) {
-          if (userFound) break;
-          
-          const userInfoStr = localStorage.getItem(key);
-          if (userInfoStr) {
-            try {
-              const userInfo = JSON.parse(userInfoStr);
-              // Check if we have the necessary fields
-              if (userInfo && (userInfo.name || userInfo.firstName || userInfo.email)) {
-                // Format the user object with consistent properties
-                setUser({
-                  name: userInfo.name || `${userInfo.firstName || ''} ${userInfo.lastName || ''}`.trim(),
-                  email: userInfo.email || userInfo.emailAddress || '',
-                  userType: userInfo.userType || 'business',
-                  // company: userInfo.company || userInfo.businessName || userInfo.companyName || ''
-                });
-                console.log('Found user info in localStorage:', userInfo);
-                userFound = true;
-                break;
-              }
-            } catch (error) {
-              console.error(`Error parsing user info from ${key}:`, error);
-            }
-          }
-        }
-        
-        // If no user info was found in localStorage, check sessionStorage
-        if (!userFound) {
-          for (const key of possibleKeys) {
-            if (userFound) break;
-            
-            const userInfoStr = sessionStorage.getItem(key);
-            if (userInfoStr) {
-              try {
-                const userInfo = JSON.parse(userInfoStr);
-                if (userInfo && (userInfo.name || userInfo.firstName || userInfo.email)) {
-                  setUser({
-                    name: userInfo.name || `${userInfo.firstName || ''} ${userInfo.lastName || ''}`.trim(),
-                    email: userInfo.email || userInfo.emailAddress || '',
-                    userType: userInfo.userType || 'business',
-                    company: userInfo.company || userInfo.businessName || userInfo.companyName || ''
-                  });
-                  console.log('Found user info in sessionStorage:', userInfo);
-                  userFound = true;
-                  break;
-                }
-              } catch (error) {
-                console.error(`Error parsing user info from sessionStorage ${key}:`, error);
-              }
-            }
-          }
-        }
-      }
-    };
-    
-    getUserInfo();
-  }, []);
+  useOutsideClick(profileRef, () => setShowProfile(false));
+  useOutsideClick(notificationsRef, () => setShowNotifications(false));
 
   const notifications = [
     { id: 1, title: 'New applicant for Frontend Developer', time: '5 min ago', unread: true },
@@ -198,14 +134,14 @@ export default function BusinessDashboardHeader({ title, onMenuClick }: Business
             {showProfile && (
               <div className="absolute right-0 mt-2 w-64 bg-white rounded-lg shadow-lg border border-gray-200 z-50">
                 <div className="p-4 border-b border-gray-200">
-                  <p className="font-semibold text-gray-900">{user?.name || 'Business User'}</p>
-                  <p className="text-sm text-gray-600">{user?.email || 'business@example.com'}</p>
-                  {user?.company && (
+                  <p className="font-semibold text-gray-900">{authUser?.full_name || authUser?.name || 'Business User'}</p>
+                  <p className="text-sm text-gray-600">{authUser?.email || 'business@example.com'}</p>
+                  {/* {authUser?.user_type && (
                     <div className="flex items-center mt-1 text-xs text-gray-500">
                       <Building2 size={12} className="mr-1" />
-                      <span>{user.company}</span>
+                      <span>{authUser.user_type}</span>
                     </div>
-                  )}
+                  )} */}
                 </div>
                 <div className="py-2">
                   <button 
@@ -236,8 +172,8 @@ export default function BusinessDashboardHeader({ title, onMenuClick }: Business
                   
                   <button 
                     onClick={() => {
-                      // Clear user data from localStorage
-                      localStorage.removeItem('userInfo');
+                      // Use the logout function from auth store
+                      useAuthStore.getState().logout();
                       // Redirect to login page
                       router.push('/auth/login');
                     }}

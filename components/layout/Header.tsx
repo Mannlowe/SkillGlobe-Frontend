@@ -6,14 +6,14 @@ import Link from 'next/link';
 
 export default function Header() {
   return (
-    <header className="bg-white shadow-sm border-b border-gray-100 sticky top-0 z-30">
+    <header className="bg-white shadow-sm border-b border-gray-100 sticky top-0 z-30 h-20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-18">
+        <div className="flex justify-between items-center h-20">
           {/* Logo */}
-          <Link href="/" className="flex items-center">
+          <Link href="/" className="flex items-center justify-center">
             <div className="bg-white rounded-lg overflow-hidden">
               <Image
-                src="/Images/logo_image.png"
+                src="/Images/logo_image.jpg"
                 alt="SkillGlobe Logo"
                 width={180}
                 height={30}

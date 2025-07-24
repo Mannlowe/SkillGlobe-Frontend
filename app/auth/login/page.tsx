@@ -58,7 +58,7 @@ export default function AuthLoginPage() {
           <Link href="/" className="flex items-center">
             <div className="bg-gray-50 rounded-lg overflow-hidden">
               <Image 
-                src="/Images/logo_image.png" 
+                src="/Images/logo_image.jpg" 
                 alt="SkillGlobe Logo" 
                 width={220} 
                 height={30} 

@@ -80,7 +80,7 @@ export default function BusinessSidebar() {
               <Link href="/business-dashboard" className="flex items-center space-x-2">
                 <div className="relative w-40 h-40">
                   <Image 
-                    src="/Images/logo_image.png" 
+                    src="/Images/logo_image.jpg" 
                     alt="SkillGlobe Logo" 
                     fill 
                     className="object-contain"

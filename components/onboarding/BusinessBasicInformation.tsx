@@ -1,6 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useBusinessRegistrationStore } from '@/store/businessRegistrationStore';
+import { useRegistrationStore } from '@/store/registration';
 import { Building, User, Mail, Phone, Lock, Eye, EyeOff } from 'lucide-react';
 import PhoneInput from 'react-phone-input-2';
 import 'react-phone-input-2/lib/style.css';
@@ -15,6 +17,22 @@ export default function BusinessBasicInformation({ data, updateData, nextStep }:
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [errors, setErrors] = useState<any>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  // Business registration store
+  const { 
+    updateBusinessData, 
+    submitBusinessDetails, 
+    isLoading, 
+    error: apiError 
+  } = useBusinessRegistrationStore();
+  
+  // Get request_id from registration store
+  const { request_id } = useRegistrationStore();
+  
+  useEffect(() => {
+    console.log('Current request_id from registration store:', request_id);
+  }, [request_id]);
 
   const validateForm = () => {
     const newErrors: any = {};
@@ -55,10 +73,57 @@ export default function BusinessBasicInformation({ data, updateData, nextStep }:
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  // Effect to sync component data with store
+  useEffect(() => {
+    updateBusinessData({
+      businessName: data.businessName,
+      businessEmail: data.email,
+      businessPhone: data.mobile,
+      contactPersonName: data.contactPersonName,
+      contactPersonEmail: data.contactPersonEmail || data.email, // Default to business email if not provided
+      contactPersonPhone: data.contactPersonPhone || data.mobile, // Default to business phone if not provided
+      password: data.password,
+      confirmPassword: data.confirmPassword
+    });
+  }, [data, updateBusinessData]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (validateForm()) {
-      nextStep();
+      setIsSubmitting(true);
+      try {
+        // Update store with latest form data
+        updateBusinessData({
+          businessName: data.businessName,
+          businessEmail: data.email,
+          businessPhone: data.mobile,
+          contactPersonName: data.contactPersonName,
+          contactPersonEmail: data.contactPersonEmail || data.email,
+          contactPersonPhone: data.contactPersonPhone || data.mobile,
+          password: data.password
+        });
+        
+        // Submit business details to API
+        const response = await submitBusinessDetails();
+        
+        // Update data with response information if needed
+        updateData({
+          emailVerificationId: response.message.email_verification_id,
+          phoneVerificationId: response.message.phone_verification_id,
+          registrationStep: response.message.registration_step
+        });
+        
+        // Move to next step
+        nextStep();
+      } catch (error: any) {
+        console.error('Error submitting business details:', error);
+        setErrors((prev: Record<string, string>) => ({
+          ...prev,
+          apiError: error.message || 'Failed to submit business details. Please try again.'
+        }));
+      } finally {
+        setIsSubmitting(false);
+      }
     }
   };
 
@@ -222,11 +287,19 @@ export default function BusinessBasicInformation({ data, updateData, nextStep }:
           {errors.confirmPassword && <p className="text-red-500 text-xs mt-1">{errors.confirmPassword}</p>}
         </div>
 
+        {/* API Error Message */}
+        {(errors.apiError || apiError) && (
+          <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-red-600 text-sm mb-4">
+            {errors.apiError || apiError}
+          </div>
+        )}
+        
         <button
           type="submit"
-          className="w-full bg-blue-500 text-white font-semibold py-3 px-6 rounded-xl hover:shadow-lg transition-all duration-300"
+          disabled={isSubmitting || isLoading}
+          className={`w-full bg-blue-500 text-white font-semibold py-3 px-6 rounded-xl hover:shadow-lg transition-all duration-300 ${(isSubmitting || isLoading) ? 'opacity-70 cursor-not-allowed' : ''}`}
         >
-          Continue
+          {isSubmitting || isLoading ? 'Submitting...' : 'Continue'}
         </button>
       </form>
     </div>

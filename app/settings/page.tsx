@@ -13,7 +13,7 @@ export default function SettingsPage() {
     { id: 'profile', label: 'Profile', icon: User },
     { id: 'notifications', label: 'Notifications', icon: Bell },
     { id: 'security', label: 'Security', icon: Shield },
-    { id: 'billing', label: 'Billing', icon: CreditCard },
+    { id: 'role', label: 'Role', icon: CreditCard },
     { id: 'preferences', label: 'Preferences', icon: Globe },
   ];
 
@@ -225,9 +225,9 @@ export default function SettingsPage() {
                     </div>
                   )}
 
-                  {activeTab === 'billing' && (
+                  {activeTab === 'role' && (
                     <div>
-                      <h2 className="text-xl font-semibold text-gray-900 mb-6">Billing & Payments</h2>
+                      <h2 className="text-xl font-semibold text-gray-900 mb-6">Role & Permissions</h2>
                       <div className="space-y-6">
                         <div>
                           <h3 className="font-medium text-gray-900 mb-4">Payment Methods</h3>

@@ -13,8 +13,11 @@ import {
   CheckCircle,
   Clock,
   AlertCircle,
-  BarChart3
+  BarChart3,
+  Check as CheckIcon
 } from 'lucide-react';
+import { useAuthStore } from '@/store/authStore';
+import { useToast } from '@/hooks/use-toast';
 
 const stats = [
   {
@@ -113,30 +116,51 @@ const recentApplications = [
 
 export default function BusinessDashboardPage() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [userName, setUserName] = useState('User');
-  const [companyName, setCompanyName] = useState('');
+  const { user, entity, isAuthenticated } = useAuthStore();
+  const { toast } = useToast();
+  
+  // Get business name from entity details or fall back to user name
+  const businessName = entity?.details?.name || 'Your Business';
+  // const userName = user?.full_name || user?.name || 'User';
+  // const userEmail = user?.email || 'business@example.com';
   
   useEffect(() => {
-    // Get user info from localStorage on component mount
-    const getUserInfo = () => {
-      if (typeof window !== 'undefined') {
-        const userInfoStr = localStorage.getItem('userInfo');
-        if (userInfoStr) {
-          try {
-            const userInfo = JSON.parse(userInfoStr);
-            setUserName(userInfo.name);
-            if (userInfo.company) {
-              setCompanyName(userInfo.company);
-            }
-          } catch (error) {
-            console.error('Error parsing user info:', error);
-          }
-        }
+    if (isAuthenticated && user && window.location.pathname.includes('business-dashboard')) {      
+      // Show toast notification for Business Buyer
+      const roles = user.roles;
+      let isBusinessBuyer = false;
+      
+      // Check roles in different formats
+      if (Array.isArray(roles)) {
+        isBusinessBuyer = roles.includes('Business Buyer');
+      } else if (typeof roles === 'string') {
+        isBusinessBuyer = (roles as string).indexOf('Business Buyer') >= 0;
       }
-    };
-    
-    getUserInfo();
-  }, []);
+      
+      // Use URL parameter to detect fresh login vs refresh
+      const urlParams = new URLSearchParams(window.location.search);
+      const fromLogin = urlParams.get('fromLogin') === 'true';
+      
+      // Show toast on fresh login or if fromLogin parameter is present
+      if (isBusinessBuyer && fromLogin) {
+        // Create toast with custom timeout
+        const { dismiss } = toast({
+          title: "Login Successful",
+          description: `You are logged in as ${user.full_name || user.name}`,
+          variant: "default",
+          action: <div className="h-6 w-6 rounded-full bg-green-100 flex items-center justify-center"><CheckIcon className="h-4 w-4 text-green-600" /></div>,
+        });
+        
+        // Set custom timeout (e.g., 3000ms = 3 seconds)
+        setTimeout(() => {
+          dismiss();
+        }, 20000);
+        
+        // Remove the fromLogin parameter from URL without refreshing
+        window.history.replaceState({}, document.title, window.location.pathname);
+      }
+    }
+  }, [isAuthenticated, user, toast]);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -150,7 +174,7 @@ export default function BusinessDashboardPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 font-rubik">
       <BusinessSidebar />
       
       <div className="lg:pl-64 pt-1">
@@ -161,11 +185,11 @@ export default function BusinessDashboardPage() {
             {/* Welcome Section */}
             <div className="mb-8">
               <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">
-                Welcome, {userName}! 🚀
+                Welcome to {businessName}! 🚀
               </h1>
+              {/* <p className="text-gray-600">{userName} ({userEmail})</p> */}
               <p className="text-gray-600">
-                {companyName ? `Manage ${companyName}'s opportunities, review applications, and grow your team.` : 
-                'Manage your opportunities, review applications, and grow your team.'}
+                Manage your opportunities, review applications, and grow your team.
               </p>
             </div>
 

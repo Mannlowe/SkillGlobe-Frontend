@@ -41,7 +41,7 @@ interface RegistrationState {
   setEntityCategory: (category: 'Buyer' | 'Seller' | 'Enhancer') => void;
   updatePersonalDetails: (firstName: string, lastName: string, email: string, mobile: string, password: string) => Promise<any>;
   verifyOtpCodes: (emailOtp: string, phoneOtp: string) => Promise<any>;
-  completeRegistration: () => Promise<any>;
+  completeRegistration: (agreed?: number) => Promise<any>;
   resetRegistration: () => void;
 }
 
@@ -187,7 +187,7 @@ export const useRegistrationStore = create<RegistrationState>()(
       },
       
       // Complete registration
-      completeRegistration: async () => {
+      completeRegistration: async (agreed: number = 1) => {
         set({ isLoading: true, error: null });
         
         try {
@@ -204,7 +204,8 @@ export const useRegistrationStore = create<RegistrationState>()(
           // Call the API to complete registration
           const response = await completeRegistration(
             request_id,
-            password
+            password,
+            agreed
           );
           
           // Update state with response data

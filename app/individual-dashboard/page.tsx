@@ -27,6 +27,8 @@ import { mockHeaderMetrics, mockEnhancedStats, mockJobOpportunities } from '@/li
 import { mockSavedSearches, mockApplications, mockConversations } from '@/lib/mockPhase2Data';
 import { mockProfileOptimizationHub, mockFloatingCareerCoach, mockProfileAnalytics } from '@/lib/mockPhase3Data';
 import { mockGamificationHub, mockLeaderboard } from '@/lib/mockPhase4Data';
+import SlideInDetailPane from '@/components/layout/SlideInDetailPane';
+import type { JobOpportunity } from '@/types/dashboard';
 
 // Mock data for recent activities (compact version)
 const recentActivities = [
@@ -39,6 +41,8 @@ export default function CompactDashboardPage() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [userName, setUserName] = useState('User');
   const [showCareerCoach, setShowCareerCoach] = useState(true);
+  const [selectedOpportunity, setSelectedOpportunity] = useState<JobOpportunity | null>(null);
+  const [isDetailPaneOpen, setIsDetailPaneOpen] = useState(false);
   const { user, isAuthenticated } = useAuthStore();
   const { toast } = useToast();
   const router = useRouter();
@@ -58,6 +62,93 @@ export default function CompactDashboardPage() {
       setUserName(user.full_name || user.name);
     }
   }, [isAuthenticated, user]);
+
+  // Convert JobOpportunity to SlideInDetailPane format
+  const convertToDetailPaneFormat = (job: JobOpportunity) => {
+    // Mock required skills based on job title and common tech skills
+    const mockRequiredSkills = [
+      'React', 'TypeScript', 'JavaScript', 'Node.js', 'CSS', 'HTML',
+      'Git', 'REST APIs', 'MongoDB', 'PostgreSQL'
+    ];
+    
+    // Create a realistic set of requirements
+    const selectedSkills = mockRequiredSkills.slice(0, 6 + Math.floor(Math.random() * 4));
+    
+    return {
+      id: job.id,
+      title: job.title,
+      company: job.company,
+      location: job.location,
+      salary: {
+        min: Math.floor(job.salary_range[0] / 1000),
+        max: Math.floor(job.salary_range[1] / 1000),
+        currency: '$'
+      },
+      postedDate: new Date(Date.now() - Math.random() * 14 * 24 * 60 * 60 * 1000), // Random date within 2 weeks
+      matchScore: job.match_score,
+      requirements: selectedSkills.map((skill, index) => ({
+        skill,
+        level: index < 3 ? 'required' : index < 6 ? 'preferred' : 'nice-to-have',
+        userHas: Math.random() > 0.3, // Mock data - 70% chance user has the skill
+        userLevel: ['beginner', 'intermediate', 'advanced', 'expert'][Math.floor(Math.random() * 4)] as any
+      })),
+      description: job.match_reasons.join(' ') + ' This is a great opportunity to work with cutting-edge technologies and contribute to meaningful projects that impact millions of users. You will collaborate with cross-functional teams, participate in code reviews, and help build scalable applications.',
+      highlights: [
+        'Competitive salary and benefits package',
+        'Remote-first work culture with flexible hours',
+        'Professional development budget ($3,000/year)',
+        'Health, dental, and vision insurance',
+        'Stock options and equity participation',
+        'Modern tech stack and development tools'
+      ],
+      applicationStatus: 'not-applied' as const,
+      aiInsights: {
+        summary: `You're a ${job.match_score}% match for this role. Your technical skills align well with their requirements, and your experience level matches what they're seeking.`,
+        strengths: job.match_reasons.slice(0, 3),
+        improvements: job.skill_gaps.length > 0 ? job.skill_gaps : ['Consider expanding cloud platform knowledge', 'Explore modern testing frameworks']
+      }
+    };
+  };
+
+  const handleViewDetails = (jobId: string) => {
+    const job = mockJobOpportunities.find(j => j.id === jobId);
+    if (job) {
+      const detailJob = convertToDetailPaneFormat(job);
+      setSelectedOpportunity(detailJob as any);
+      setIsDetailPaneOpen(true);
+      console.log('Opening detail pane for job:', jobId);
+    }
+  };
+
+  const handleCloseDetailPane = () => {
+    setIsDetailPaneOpen(false);
+    setSelectedOpportunity(null);
+  };
+
+  const handleApplyFromDetail = (opportunityId: string, type: 'quick' | 'custom') => {
+    console.log(`${type} apply for job:`, opportunityId);
+    toast({
+      title: "Application Submitted!",
+      description: `Your ${type} application has been sent successfully.`,
+    });
+    handleCloseDetailPane();
+  };
+
+  const handleSaveFromDetail = (opportunityId: string) => {
+    console.log('Save job from detail:', opportunityId);
+    toast({
+      title: "Job Saved!",
+      description: "This opportunity has been added to your saved jobs.",
+    });
+  };
+
+  const handleAskAI = (opportunityId: string, question: string) => {
+    console.log('Ask AI:', question, 'for job:', opportunityId);
+    toast({
+      title: "AI Question Submitted!",
+      description: "Our AI will analyze this role and provide insights shortly.",
+    });
+  };
 
   // Tab content components
   const overviewContent = (
@@ -81,9 +172,21 @@ export default function CompactDashboardPage() {
               <CompactOpportunityCard 
                 key={job.id}
                 opportunity={job}
-                onApply={(id) => console.log('Apply:', id)}
-                onSave={(id) => console.log('Save:', id)}
-                onViewDetails={(id) => console.log('Details:', id)}
+                onApply={(id) => {
+                  console.log('Apply:', id);
+                  toast({
+                    title: "Application Submitted!",
+                    description: "Your application has been sent successfully.",
+                  });
+                }}
+                onSave={(id) => {
+                  console.log('Save:', id);
+                  toast({
+                    title: "Job Saved!",
+                    description: "This opportunity has been added to your saved jobs.",
+                  });
+                }}
+                onViewDetails={handleViewDetails}
               />
             ))}
           </div>
@@ -354,6 +457,17 @@ export default function CompactDashboardPage() {
           }}
         />
       )}
+
+      {/* Job Detail Slide-in Pane */}
+      <SlideInDetailPane
+        isOpen={isDetailPaneOpen}
+        onClose={handleCloseDetailPane}
+        opportunity={selectedOpportunity}
+        onApply={handleApplyFromDetail}
+        onSave={handleSaveFromDetail}
+        onAskAI={handleAskAI}
+        isMobile={false}
+      />
     </ModernLayoutWrapper>
   );
 }

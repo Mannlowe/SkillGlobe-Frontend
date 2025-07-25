@@ -46,6 +46,7 @@ export default function CompactOpportunityCard({ opportunity, onApply, onSave, o
   };
 
   const handleCardClick = () => {
+    console.log('Card clicked for job:', opportunity.id);
     onViewDetails?.(opportunity.id);
   };
 
@@ -145,6 +146,7 @@ export default function CompactOpportunityCard({ opportunity, onApply, onSave, o
           <StandardizedButton
             onClick={(e) => {
               e.stopPropagation();
+              console.log('View button clicked for job:', opportunity.id);
               onViewDetails?.(opportunity.id);
             }}
             variant="ghost"

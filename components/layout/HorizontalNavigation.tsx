@@ -176,13 +176,17 @@ export default function HorizontalNavigation({
           </Button>
           
           {/* Logo */}
-          <div className="flex items-center cursor-pointer ml-2" onClick={() => router.push('/')}>
+          <button 
+            className="flex items-center ml-2 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 rounded-md p-1" 
+            onClick={() => router.push('/')}
+            aria-label="Go to homepage"
+          >
             <img 
               src="/Images/logo_image.png" 
               alt="SkillGlobe" 
               className="h-12 w-auto object-contain max-w-[200px]"
             />
-          </div>
+          </button>
         </div>
 
         {/* Main Navigation */}

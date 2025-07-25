@@ -2,6 +2,7 @@
 
 import { MapPin, DollarSign, Target, Clock, Zap, Bookmark, Send } from 'lucide-react';
 import type { JobOpportunity } from '@/types/dashboard';
+import { StandardizedButton } from '@/components/ui/StandardizedButton';
 
 interface CompactOpportunityCardProps {
   opportunity: JobOpportunity;
@@ -69,26 +70,30 @@ export default function CompactOpportunityCard({ opportunity, onApply, onSave, o
 
       {/* Actions Row */}
       <div className="flex items-center gap-2">
-        <button
+        <StandardizedButton
           onClick={() => onApply?.(opportunity.id)}
-          className="flex-1 bg-gradient-to-r from-orange-500 to-blue-500 text-white font-medium py-2 px-3 rounded-lg hover:shadow-md transition-all duration-300 text-sm flex items-center justify-center gap-1"
+          variant="primary"
+          size="sm"
+          leftIcon={<Send size={14} />}
+          className="flex-1"
         >
-          <Send size={14} />
           Apply
-        </button>
-        <button
+        </StandardizedButton>
+        <StandardizedButton
           onClick={() => onSave?.(opportunity.id)}
-          className="p-2 border border-gray-300 text-gray-600 rounded-lg hover:bg-gray-50 transition-colors"
-          title="Save for later"
+          variant="outline"
+          size="icon-sm"
+          aria-label="Save job for later"
         >
           <Bookmark size={16} />
-        </button>
-        <button
+        </StandardizedButton>
+        <StandardizedButton
           onClick={() => onViewDetails?.(opportunity.id)}
-          className="text-xs text-blue-600 hover:text-blue-700 font-medium"
+          variant="link"
+          size="sm"
         >
           Details
-        </button>
+        </StandardizedButton>
       </div>
     </div>
   );

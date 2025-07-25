@@ -74,7 +74,7 @@ export default function CompactDashboardPage() {
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-semibold text-gray-900">Top Matches</h3>
-            <button className="text-sm text-blue-600 hover:text-blue-700">View all →</button>
+            <button className="text-sm text-blue-600 hover:text-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded-md px-2 py-1">View all →</button>
           </div>
           <div className="space-y-3">
             {mockJobOpportunities.slice(0, 2).map((job) => (
@@ -93,7 +93,7 @@ export default function CompactDashboardPage() {
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-semibold text-gray-900">Recent Activity</h3>
-            <button className="text-sm text-blue-600 hover:text-blue-700">View all →</button>
+            <button className="text-sm text-blue-600 hover:text-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded-md px-2 py-1">View all →</button>
           </div>
           <div className="space-y-3">
             {recentActivities.map((activity) => (
@@ -295,14 +295,6 @@ export default function CompactDashboardPage() {
                 <p className="text-sm text-gray-600">
                   Your career marketplace overview
                 </p>
-              </div>
-              <div className="flex items-center gap-2">
-                <button className="px-4 py-2 bg-gradient-to-r from-orange-500 to-blue-500 text-white font-medium rounded-lg hover:shadow-lg transition-all duration-300 text-sm">
-                  Quick Apply
-                </button>
-                <button className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg">
-                  <Bell size={20} />
-                </button>
               </div>
             </div>
           </div>

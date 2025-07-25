@@ -83,7 +83,8 @@ export function Toast({ id, type, title, message, action }: ToastProps) {
           <div className="ml-4 flex-shrink-0 flex">
             <button
               onClick={handleClose}
-              className="inline-flex text-gray-400 hover:text-gray-600 focus:outline-none"
+              className="inline-flex text-gray-400 hover:text-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 rounded-md p-1"
+              aria-label="Close notification"
             >
               <X className="h-4 w-4" />
             </button>

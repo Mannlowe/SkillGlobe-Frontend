@@ -2,6 +2,7 @@
 
 import { Search, MapPin, Filter } from 'lucide-react';
 import { useState } from 'react';
+import { StandardizedButton } from '@/components/ui/StandardizedButton';
 
 export default function HeroSection() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -52,23 +53,25 @@ export default function HeroSection() {
               </div>
 
               {/* Filter Button */}
-              <button className="md:w-auto px-6 py-4 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-colors flex items-center justify-center">
-                <Filter size={20} />
-                <span className="ml-2 md:hidden">Filters</span>
-              </button>
+              <StandardizedButton
+                variant="secondary"
+                size="lg"
+                leftIcon={<Filter size={20} />}
+                className="md:w-auto"
+                aria-label="Open filters"
+              >
+                <span className="md:hidden">Filters</span>
+              </StandardizedButton>
 
               {/* Search Button */}
-              <button className="relative border-0 font-semibold py-2 px-6 rounded-xl hover:shadow-lg transition-all duration-300 transform hover:scale-105">
-                {/* Gradient border using pseudo-element */}
-                <span className="absolute inset-0 bg-gradient-to-r from-orange-500 to-blue-500 rounded-xl -z-10"></span>
-                {/* White background slightly smaller to show gradient border */}
-                <span className="absolute inset-[1px] bg-white rounded-lg -z-5"></span>
-                {/* Text with gradient */}
-                <span className="relative bg-gradient-to-r from-orange-500 to-blue-500 bg-clip-text text-transparent">
-                  <span className="md:hidden">Search Opportunities</span>
-                  <span className="hidden md:inline">Search</span>
-                </span>
-              </button>
+              <StandardizedButton
+                variant="outline"
+                size="lg"
+                className="md:w-auto border-2 border-gradient-to-r from-orange-500 to-blue-500 bg-gradient-to-r from-orange-500 to-blue-500 bg-clip-text text-transparent hover:shadow-lg hover:scale-105"
+              >
+                <span className="md:hidden">Search Opportunities</span>
+                <span className="hidden md:inline">Search</span>
+              </StandardizedButton>
             </div>
           </div>
         </div>

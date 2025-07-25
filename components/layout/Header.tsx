@@ -3,6 +3,7 @@
 import { Bell, MessageCircle } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { StandardizedButton } from '@/components/ui/StandardizedButton';
 
 export default function Header() {
   return (
@@ -42,38 +43,24 @@ export default function Header() {
           {/* Right Side Actions */}
           <div className="flex items-center space-x-4">
             {/* Login Button */}
-            <Link
-              href="/auth/login"
-              className="hidden sm:inline-flex items-center px-4 py-2 border border-orange-500 text-orange-600 font-medium rounded-lg hover:bg-orange-50 transition-all duration-300"
-            >
-              Log In
+            <Link href="/auth/login" className="hidden sm:inline-flex">
+              <StandardizedButton variant="outline" size="default">
+                Log In
+              </StandardizedButton>
             </Link>
 
             {/* Get Started Button - Desktop */}
-            <Link
-              href="/onboarding"
-              className="hidden sm:inline-block relative border-0 font-semibold py-2 px-6 rounded-xl hover:shadow-lg transition-all duration-300 transform hover:scale-105"
-            >
-              {/* Gradient border using pseudo-element */}
-              <span className="absolute inset-0 bg-gradient-to-r from-orange-500 to-blue-500 rounded-xl -z-10"></span>
-              {/* White background slightly smaller to show gradient border */}
-              <span className="absolute inset-[1px] bg-white rounded-lg -z-5"></span>
-              {/* Text with gradient */}
-              <span className="relative bg-gradient-to-r from-orange-500 to-blue-500 bg-clip-text text-transparent">
+            <Link href="/onboarding" className="hidden sm:inline-block">
+              <StandardizedButton variant="primary" size="default">
                 Get Started
-              </span>
+              </StandardizedButton>
             </Link>
             
             {/* Login Button - Mobile */}
-            <Link
-              href="/auth/login"
-              className="sm:hidden relative border-0 font-semibold py-2 px-6 rounded-xl hover:shadow-lg transition-all duration-300 transform hover:scale-105"
-            >
-              <span className="absolute inset-0 bg-gradient-to-r from-orange-500 to-blue-500 rounded-xl -z-10"></span>
-              <span className="absolute inset-[1px] bg-white rounded-lg -z-5"></span> 
-              <span className="relative bg-gradient-to-r from-orange-500 to-blue-500 bg-clip-text text-transparent">
+            <Link href="/auth/login" className="sm:hidden">
+              <StandardizedButton variant="primary" size="default">
                 Login
-              </span>
+              </StandardizedButton>
             </Link>
 
 

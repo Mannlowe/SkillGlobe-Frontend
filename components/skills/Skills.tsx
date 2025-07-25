@@ -70,7 +70,8 @@ export default function Skills({ onSkillsComplete, onSkip, className = '' }: Ski
                 <span className="text-sm font-medium">{skill}</span>
                 <button
                   onClick={() => removeSkill(skill)}
-                  className="text-orange-600 hover:text-orange-800"
+                  className="text-orange-600 hover:text-orange-800 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 rounded-sm p-1"
+                  aria-label={`Remove ${skill} skill`}
                 >
                   <X size={14} />
                 </button>

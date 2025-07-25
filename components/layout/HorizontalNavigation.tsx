@@ -14,7 +14,8 @@ import {
   Bell,
   MessageSquare,
   Settings,
-  Menu
+  Menu,
+  Shield
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -94,6 +95,13 @@ export default function HorizontalNavigation({
       label: 'My Identity',
       icon: <User className="w-4 h-4" />,
       children: [
+        {
+          id: 'verification',
+          label: 'Verification',
+          icon: <Shield className="w-4 h-4" />,
+          href: '/verification',
+          description: 'Verify your identity for premium opportunities'
+        },
         {
           id: 'skills',
           label: 'Skills',
@@ -216,22 +224,38 @@ export default function HorizontalNavigation({
                         onClick={() => handleNavigation(child.href)}
                         className={cn(
                           "cursor-pointer",
+                          child.id === 'verification' 
+                            ? "border border-orange-200 bg-gradient-to-r from-orange-50 to-red-50 hover:from-orange-100 hover:to-red-100" 
+                            : "",
                           isChildActive(child.href) && "bg-[#FF6B35]/10"
                         )}
                       >
                         <div className="flex items-start space-x-3 py-1">
                           <div className={cn(
                             "mt-0.5",
-                            isChildActive(child.href) ? "text-[#FF6B35]" : "text-gray-500"
+                            child.id === 'verification' 
+                              ? "text-orange-600" 
+                              : isChildActive(child.href) 
+                                ? "text-[#FF6B35]" 
+                                : "text-gray-500"
                           )}>
                             {child.icon}
                           </div>
                           <div className="flex-1">
                             <div className={cn(
-                              "font-medium text-sm",
-                              isChildActive(child.href) ? "text-[#FF6B35]" : "text-gray-900"
+                              "font-medium text-sm flex items-center gap-2",
+                              child.id === 'verification' 
+                                ? "text-orange-700" 
+                                : isChildActive(child.href) 
+                                  ? "text-[#FF6B35]" 
+                                  : "text-gray-900"
                             )}>
                               {child.label}
+                              {child.id === 'verification' && (
+                                <span className="px-1.5 py-0.5 text-xs bg-orange-200 text-orange-800 rounded-full font-medium">
+                                  Important
+                                </span>
+                              )}
                             </div>
                             {child.description && (
                               <div className="text-xs text-gray-500 mt-0.5">

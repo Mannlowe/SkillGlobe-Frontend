@@ -118,7 +118,7 @@ export default function InsightsPage() {
         <EnhancedStatsGrid 
           stats={mockEnhancedStats}
           onActionClick={(action) => console.log('Action:', action)}
-          timeframe={timeRange}
+          timeframe={timeRange as "7d" | "30d" | "90d" | "1y"}
         />
 
         {/* Charts Section */}

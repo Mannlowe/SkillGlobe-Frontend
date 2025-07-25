@@ -6,6 +6,7 @@ import { UILayoutProvider } from '@/contexts/UILayoutContext';
 import { NotificationProvider } from '@/contexts/NotificationContext';
 import { NavigationProvider } from '@/contexts/SimpleNavigationContext';
 import { VerificationProvider } from '@/contexts/VerificationContext';
+import { UIPreferencesProvider } from '@/contexts/UIPreferencesContext';
 
 interface ModernLayoutWrapperProps {
   children: React.ReactNode;
@@ -14,16 +15,18 @@ interface ModernLayoutWrapperProps {
 
 export default function ModernLayoutWrapper({ children, className }: ModernLayoutWrapperProps) {
   return (
-    <UILayoutProvider>
-      <NotificationProvider>
-        <NavigationProvider>
-          <VerificationProvider>
-            <ModernLayout className={className}>
-              {children}
-            </ModernLayout>
-          </VerificationProvider>
-        </NavigationProvider>
-      </NotificationProvider>
-    </UILayoutProvider>
+    <UIPreferencesProvider>
+      <UILayoutProvider>
+        <NotificationProvider>
+          <NavigationProvider>
+            <VerificationProvider>
+              <ModernLayout className={className}>
+                {children}
+              </ModernLayout>
+            </VerificationProvider>
+          </NavigationProvider>
+        </NotificationProvider>
+      </UILayoutProvider>
+    </UIPreferencesProvider>
   );
 }

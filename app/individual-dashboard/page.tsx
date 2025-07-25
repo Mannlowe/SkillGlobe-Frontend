@@ -2,6 +2,9 @@
 
 import { useState, useEffect } from 'react';
 import ModernLayoutWrapper from '@/components/layout/ModernLayoutWrapper';
+import { ProgressiveGrid, ProgressiveList } from '@/components/ui/ProgressiveLoader';
+import { DashboardStatsSkeleton, OpportunityCardSkeleton, ProfileCardSkeleton } from '@/components/ui/SkeletonLoader';
+import LazyImage, { LazyAvatar } from '@/components/ui/LazyImage';
 import CompactMarketMetrics from '@/components/dashboard/CompactMarketMetrics';
 import CompactOpportunityCard from '@/components/dashboard/CompactOpportunityCard';
 import EnhancedStatsGrid from '@/components/dashboard/EnhancedStatsGrid';

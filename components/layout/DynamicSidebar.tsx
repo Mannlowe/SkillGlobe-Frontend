@@ -49,6 +49,8 @@ interface ContextualAction {
   progress?: number;
   action?: () => void;
   actionUrl?: string;
+  decay?: boolean; // For skill decay warnings
+  trending?: boolean; // For trending indicators
 }
 
 export default function DynamicSidebar({ isOpen, onClose, isMobile = false }: DynamicSidebarProps) {
@@ -64,6 +66,9 @@ export default function DynamicSidebar({ isOpen, onClose, isMobile = false }: Dy
     opportunities: ContextualAction[];
     insights: ContextualAction[];
     careerCoach: ContextualAction[];
+    skillAlerts: ContextualAction[];
+    trendingSkills: ContextualAction[];
+    interviewPipeline: ContextualAction[];
     loading: boolean;
   }>({
     profileHealth: 85,
@@ -73,6 +78,9 @@ export default function DynamicSidebar({ isOpen, onClose, isMobile = false }: Dy
     opportunities: [],
     insights: [],
     careerCoach: [],
+    skillAlerts: [],
+    trendingSkills: [],
+    interviewPipeline: [],
     loading: false
   });
 
@@ -110,12 +118,20 @@ export default function DynamicSidebar({ isOpen, onClose, isMobile = false }: Dy
         stats: [
           { id: '1', title: 'Profile views today', icon: '👁️', priority: 'low' as const, value: '12' },
           { id: '2', title: 'New opportunity matches', icon: '🎯', priority: 'low' as const, value: '3' },
-          { id: '3', title: 'React trending', icon: '🔥', priority: 'low' as const, value: '+25%' }
+          { id: '3', title: 'React trending', icon: '🔥', priority: 'low' as const, value: '+25%', trending: true }
         ],
         smartActions: [
           { id: '1', title: 'Apply to Frontend roles', icon: '🚀', priority: 'high' as const, actionUrl: '/opportunities' },
           { id: '2', title: 'Schedule skill assessment', icon: '📅', priority: 'medium' as const },
           { id: '3', title: 'Update availability', icon: '✅', priority: 'low' as const }
+        ],
+        skillAlerts: [
+          { id: '1', title: 'Angular skills expiring', icon: '⚠️', priority: 'high' as const, description: 'No activity in 6 months', decay: true, actionUrl: '/skills' },
+          { id: '2', title: 'Python certification expiring', icon: '⏳', priority: 'medium' as const, description: 'Expires in 30 days', decay: true }
+        ],
+        trendingSkills: [
+          { id: '1', title: 'TypeScript', icon: '📈', priority: 'low' as const, value: '+45%', trending: true, description: 'High demand in your area' },
+          { id: '2', title: 'Next.js', icon: '🔥', priority: 'low' as const, value: '+32%', trending: true, description: 'Growing fast' }
         ]
       };
     }
@@ -136,6 +152,11 @@ export default function DynamicSidebar({ isOpen, onClose, isMobile = false }: Dy
           { id: '1', title: 'Interview: TechCorp (2 days)', icon: '🎯', priority: 'high' as const },
           { id: '2', title: 'Application: StartupXYZ', icon: '📄', priority: 'medium' as const },
           { id: '3', title: 'Follow-up: Design Co', icon: '🔗', priority: 'low' as const }
+        ],
+        interviewPipeline: [
+          { id: '1', title: 'TechCorp - Technical Round', icon: '💻', priority: 'high' as const, description: 'Tomorrow 2:00 PM', actionUrl: '/opportunities/interview/1' },
+          { id: '2', title: 'StartupXYZ - Cultural Fit', icon: '🤝', priority: 'medium' as const, description: 'Next week', actionUrl: '/opportunities/interview/2' },
+          { id: '3', title: 'Design Co - Portfolio Review', icon: '🎨', priority: 'low' as const, description: 'Pending schedule', actionUrl: '/opportunities/interview/3' }
         ]
       };
     }
@@ -209,8 +230,14 @@ export default function DynamicSidebar({ isOpen, onClose, isMobile = false }: Dy
 
     const content = (
       <div className="flex items-start space-x-3 p-3 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer">
-        <div className={cn("flex-shrink-0 mt-0.5", getPriorityColor(item.priority))}>
+        <div className={cn("flex-shrink-0 mt-0.5 relative", getPriorityColor(item.priority))}>
           {getIconFromString(item.icon)}
+          {item.decay && (
+            <div className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full animate-pulse" />
+          )}
+          {item.trending && (
+            <div className="absolute -top-1 -right-1 w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+          )}
         </div>
         <div className="flex-1 min-w-0 overflow-hidden">
           <p className="text-sm font-medium text-gray-900 truncate">{item.title}</p>
@@ -464,6 +491,47 @@ export default function DynamicSidebar({ isOpen, onClose, isMobile = false }: Dy
                   </h3>
                   <div className="space-y-1">
                     {contextualData.opportunities.map(renderActionItem)}
+                  </div>
+                </div>
+              )}
+
+              {/* Skill Alerts */}
+              {contextualData.skillAlerts.length > 0 && (
+                <div>
+                  <h3 className="text-sm font-semibold text-gray-700 mb-2 flex items-center">
+                    <span>Skill Alerts</span>
+                    <span className="ml-2 text-red-600 text-xs">⚠️</span>
+                  </h3>
+                  <div className="space-y-1">
+                    {contextualData.skillAlerts.map(renderActionItem)}
+                  </div>
+                </div>
+              )}
+
+              {/* Trending Skills */}
+              {contextualData.trendingSkills.length > 0 && (
+                <div>
+                  <h3 className="text-sm font-semibold text-gray-700 mb-2 flex items-center">
+                    <span>Trending Skills</span>
+                    <span className="ml-2 text-green-600 text-xs">🔥</span>
+                  </h3>
+                  <div className="space-y-1">
+                    {contextualData.trendingSkills.map(renderActionItem)}
+                  </div>
+                </div>
+              )}
+
+              {/* Interview Pipeline */}
+              {contextualData.interviewPipeline.length > 0 && (
+                <div>
+                  <h3 className="text-sm font-semibold text-gray-700 mb-2 flex items-center">
+                    <span>Interview Pipeline</span>
+                    <Badge variant="secondary" className="ml-2 text-xs">
+                      {contextualData.interviewPipeline.length}
+                    </Badge>
+                  </h3>
+                  <div className="space-y-1">
+                    {contextualData.interviewPipeline.map(renderActionItem)}
                   </div>
                 </div>
               )}

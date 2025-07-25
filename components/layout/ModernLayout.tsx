@@ -6,9 +6,11 @@ import DynamicSidebar from './DynamicSidebar';
 import HorizontalNavigation from './HorizontalNavigation';
 import QuickToolsPanel from './QuickToolsPanel';
 import SlideInDetailPane from './SlideInDetailPane';
+import GlobalSearch from '@/components/ui/GlobalSearch';
 import { useUILayout } from '@/contexts/UILayoutContext';
 import { useNotifications } from '@/contexts/NotificationContext';
 import { useNavigation } from '@/contexts/SimpleNavigationContext';
+import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 import { cn } from '@/lib/utils';
 
 interface ModernLayoutProps {
@@ -43,6 +45,19 @@ export default function ModernLayout({ children, className }: ModernLayoutProps)
 
   // Mock opportunity data for detail pane
   const [currentOpportunity, setCurrentOpportunity] = useState<any>(null);
+
+  // Global search state
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+
+  // Initialize keyboard shortcuts
+  useKeyboardShortcuts();
+
+  // Listen for global search keyboard shortcut
+  useEffect(() => {
+    const handleGlobalSearch = () => setIsSearchOpen(true);
+    window.addEventListener('openGlobalSearch', handleGlobalSearch);
+    return () => window.removeEventListener('openGlobalSearch', handleGlobalSearch);
+  }, []);
 
   useEffect(() => {
     setNotificationCount(notifications.length);
@@ -271,17 +286,12 @@ export default function ModernLayout({ children, className }: ModernLayoutProps)
         isMobile={isMobile}
       />
 
-      {/* Context-aware header integration (mobile) */}
-      {isMobile && (
-        <div className="fixed top-0 left-0 right-0 bg-white border-b border-gray-200 px-4 py-2 z-30 lg:hidden">
-          <div className="flex items-center justify-between text-xs text-gray-600">
-            <span>📊 85%</span>
-            <span>🔥 React +25%</span>
-            <span>🎯 3</span>
-            <span>⚡ 2</span>
-          </div>
-        </div>
-      )}
+      {/* Global Search */}
+      <GlobalSearch 
+        isOpen={isSearchOpen}
+        onClose={() => setIsSearchOpen(false)}
+      />
+
     </div>
   );
 }

@@ -3,7 +3,9 @@
 import { useState } from 'react';
 import ModernLayoutWrapper from '@/components/layout/ModernLayoutWrapper';
 import OpportunityDiscoveryHub from '@/components/dashboard/OpportunityDiscoveryHub';
-import { mockJobOpportunities } from '@/lib/mockDashboardData';
+import { ProgressiveCard } from '@/components/ui/ProgressiveLoader';
+import { DashboardStatsSkeleton, OpportunityCardSkeleton } from '@/components/ui/SkeletonLoader';
+import { dataService } from '@/lib/dataService';
 import { mockSavedSearches } from '@/lib/mockPhase2Data';
 
 export default function OpportunitiesPage() {
@@ -41,16 +43,44 @@ export default function OpportunitiesPage() {
           </div>
         </div>
 
-        {/* Opportunity Discovery Hub */}
-        <OpportunityDiscoveryHub
-          opportunities={mockJobOpportunities}
-          savedSearches={mockSavedSearches}
-          onSearch={handleSearch}
-          onSaveSearch={handleSaveSearch}
-          onApply={handleApply}
-          onSave={handleSave}
-          onViewDetails={handleViewDetails}
-        />
+        {/* Opportunity Discovery Hub - Progressive Loading */}
+        <ProgressiveCard
+          loadingFunction={async () => {
+            // Use dataService which handles API/mock data switching
+            const [opportunities, savedSearches] = await Promise.all([
+              dataService.getOpportunities(searchFilters),
+              Promise.resolve(mockSavedSearches) // Keep saved searches as mock for now
+            ]);
+            
+            return {
+              opportunities,
+              savedSearches
+            };
+          }}
+          dependencies={[searchFilters]}
+          skeletonComponent={
+            <div className="space-y-6">
+              <DashboardStatsSkeleton />
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {Array.from({ length: 6 }).map((_, i) => (
+                  <OpportunityCardSkeleton key={i} />
+                ))}
+              </div>
+            </div>
+          }
+        >
+          {(data) => (
+            <OpportunityDiscoveryHub
+              opportunities={data.opportunities}
+              savedSearches={data.savedSearches}
+              onSearch={handleSearch}
+              onSaveSearch={handleSaveSearch}
+              onApply={handleApply}
+              onSave={handleSave}
+              onViewDetails={handleViewDetails}
+            />
+          )}
+        </ProgressiveCard>
       </div>
     </ModernLayoutWrapper>
   );

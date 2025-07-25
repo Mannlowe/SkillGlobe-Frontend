@@ -82,7 +82,7 @@ export default function CompactOpportunityCard({ opportunity, onApply, onSave, o
         <StandardizedButton
           onClick={() => onSave?.(opportunity.id)}
           variant="outline"
-          size="icon-sm"
+          size="icon"
           aria-label="Save job for later"
         >
           <Bookmark size={16} />

@@ -1,9 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import Sidebar from '@/components/dashboard/Sidebar';
-import DashboardHeader from '@/components/dashboard/DashboardHeader';
-import CompactDashboardLayout from '@/components/dashboard/CompactDashboardLayout';
+import ModernLayoutWrapper from '@/components/layout/ModernLayoutWrapper';
 import CompactMarketMetrics from '@/components/dashboard/CompactMarketMetrics';
 import CompactOpportunityCard from '@/components/dashboard/CompactOpportunityCard';
 import EnhancedStatsGrid from '@/components/dashboard/EnhancedStatsGrid';
@@ -281,49 +279,33 @@ export default function CompactDashboardPage() {
   );
 
   return (
-    <div className="flex h-screen bg-gray-50">
-      <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
-      
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <DashboardHeader onMenuClick={() => setSidebarOpen(true)} />
-        
-        <main className="flex-1 overflow-hidden">
-          {/* Welcome Section - Minimal */}
-          <div className="bg-white border-b border-gray-200">
-            <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h1 className="text-xl md:text-2xl font-bold text-gray-900">
-                    Welcome back, {userName}!
-                  </h1>
-                  <p className="text-sm text-gray-600">
-                    Your career marketplace overview
-                  </p>
-                </div>
-                <div className="flex items-center gap-2">
-                  <button className="px-4 py-2 bg-gradient-to-r from-orange-500 to-blue-500 text-white font-medium rounded-lg hover:shadow-lg transition-all duration-300 text-sm">
-                    Quick Apply
-                  </button>
-                  <button className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg">
-                    <Bell size={20} />
-                  </button>
-                </div>
+    <ModernLayoutWrapper>
+      <div>
+        {/* Welcome Section */}
+        <div className="bg-white border-b border-gray-200 mb-6">
+          <div className="px-6 py-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h1 className="text-xl md:text-2xl font-bold text-gray-900">
+                  Welcome back, {userName}!
+                </h1>
+                <p className="text-sm text-gray-600">
+                  Your career marketplace overview
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                <button className="px-4 py-2 bg-gradient-to-r from-orange-500 to-blue-500 text-white font-medium rounded-lg hover:shadow-lg transition-all duration-300 text-sm">
+                  Quick Apply
+                </button>
+                <button className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg">
+                  <Bell size={20} />
+                </button>
               </div>
             </div>
           </div>
+        </div>
 
-          {/* Tab-based Layout */}
-          <CompactDashboardLayout>
-            {{
-              overview: overviewContent,
-              opportunities: opportunitiesContent,
-              activity: activityContent,
-              messages: messagesContent,
-              profile: profileContent,
-              insights: insightsContent,
-            }}
-          </CompactDashboardLayout>
-        </main>
+        {overviewContent}
       </div>
       
       {/* Floating Career Coach */}
@@ -342,6 +324,6 @@ export default function CompactDashboardPage() {
           }}
         />
       )}
-    </div>
+    </ModernLayoutWrapper>
   );
 }

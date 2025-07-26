@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { X, MapPin, DollarSign, Calendar, Star, Bookmark, Send, MessageCircle, ExternalLink, Clock, CheckCircle, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -59,6 +59,26 @@ export default function SlideInDetailPane({
   const [customMessage, setCustomMessage] = useState('');
   const [aiQuestion, setAiQuestion] = useState('');
   const [showCustomApplication, setShowCustomApplication] = useState(false);
+
+  // Handle ESC key to close the pane
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        event.stopPropagation();
+        onClose();
+      }
+    };
+
+    // Add event listener with high priority (capture phase)
+    document.addEventListener('keydown', handleKeyDown, true);
+
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown, true);
+    };
+  }, [isOpen, onClose]);
 
   if (!isOpen || !opportunity) return null;
 

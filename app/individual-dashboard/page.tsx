@@ -27,6 +27,7 @@ import { mockHeaderMetrics, mockEnhancedStats, mockJobOpportunities } from '@/li
 import { mockSavedSearches, mockApplications, mockConversations } from '@/lib/mockPhase2Data';
 import { mockProfileOptimizationHub, mockFloatingCareerCoach, mockProfileAnalytics } from '@/lib/mockPhase3Data';
 import { mockGamificationHub, mockLeaderboard } from '@/lib/mockPhase4Data';
+import '@/lib/mockUserData'; // Initialize mock user data for demo
 import SlideInDetailPane from '@/components/layout/SlideInDetailPane';
 import type { JobOpportunity } from '@/types/dashboard';
 
@@ -39,7 +40,7 @@ const recentActivities = [
 
 export default function CompactDashboardPage() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [userName, setUserName] = useState('User');
+  const [userName, setUserName] = useState('Amit Verma');
   const [showCareerCoach, setShowCareerCoach] = useState(true);
   const [selectedOpportunity, setSelectedOpportunity] = useState<JobOpportunity | null>(null);
   const [isDetailPaneOpen, setIsDetailPaneOpen] = useState(false);

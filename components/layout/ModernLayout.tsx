@@ -11,7 +11,9 @@ import { useUILayout } from '@/contexts/UILayoutContext';
 import { useNotifications } from '@/contexts/NotificationContext';
 import { useNavigation } from '@/contexts/SimpleNavigationContext';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
+import { useAuthStore } from '@/store/authStore';
 import { cn } from '@/lib/utils';
+import '@/lib/mockUserData'; // Initialize mock user data for demo
 
 interface ModernLayoutProps {
   children: React.ReactNode;
@@ -20,7 +22,7 @@ interface ModernLayoutProps {
 
 export default function ModernLayout({ children, className }: ModernLayoutProps) {
   const pathname = usePathname();
-  const [quickToolsActivePanel, setQuickToolsActivePanel] = useState<'notifications' | 'messages' | null>(null);
+  const [activePanel, setActivePanel] = useState<'notifications' | 'messages' | null>(null);
   
   // Layout state
   const {
@@ -30,12 +32,17 @@ export default function ModernLayout({ children, className }: ModernLayoutProps)
     currentDetailType,
     isMobile,
     toggleSidebar,
-    openSidebar,
     closeSidebar,
     openDetailPane,
     closeDetailPane
   } = useUILayout();
 
+  // Auth state - gets real user data after login
+  const { user, isAuthenticated } = useAuthStore();
+  
+  // Derive user display name - prioritizes real user data over demo fallback
+  const userDisplayName = user?.full_name || user?.name || (isAuthenticated ? 'User' : 'Demo User');
+  
   // Notifications
   const { notifications, addNotification } = useNotifications();
   const [notificationCount, setNotificationCount] = useState(0);
@@ -103,7 +110,7 @@ export default function ModernLayout({ children, className }: ModernLayoutProps)
 
   // Handle navigation events
   const handleNavigationClick = (type: 'notifications' | 'messages') => {
-    setQuickToolsActivePanel(type);
+    setActivePanel(type);
   };
 
   const handleUserAction = (action: string) => {
@@ -191,7 +198,8 @@ export default function ModernLayout({ children, className }: ModernLayoutProps)
         onMessageClick={() => handleNavigationClick('messages')}
         onSettingsClick={() => handleUserAction('settings')}
         onProfileClick={() => handleUserAction('profile')}
-        userName="John Doe"
+        userName={userDisplayName}
+        userAvatar={user?.user_image || undefined}
       />
 
       <div className="flex">

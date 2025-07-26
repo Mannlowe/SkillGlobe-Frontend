@@ -353,8 +353,7 @@ export default function HorizontalNavigation({
             <DropdownMenuTrigger asChild>
               <Button
                 variant="ghost"
-                size="icon"
-                className="relative rounded-full"
+                className="flex items-center space-x-2 px-3 py-2 h-auto rounded-full hover:bg-gray-100 transition-colors"
               >
                 {userAvatar ? (
                   <Image
@@ -369,6 +368,9 @@ export default function HorizontalNavigation({
                     <User className="w-4 h-4 text-gray-600" />
                   </div>
                 )}
+                <span className="hidden sm:block text-sm font-medium text-gray-700 max-w-[120px] truncate">
+                  {userName}
+                </span>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56">

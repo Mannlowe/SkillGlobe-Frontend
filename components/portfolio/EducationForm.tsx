@@ -1,7 +1,24 @@
 'use client';
 
-import React, { useState } from 'react';
-import { Calendar, BookOpen, Award, Upload, GraduationCap, School, Plus, Pencil, Trash2 } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Calendar, BookOpen, Award, Upload, GraduationCap, School, Plus, Pencil, Trash2, GripVertical } from 'lucide-react';
+// Import directly to avoid type conflicts
+import {
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent
+} from '@dnd-kit/core';
+import { DndContext, SortableContext, closestCenter, verticalStrategy } from '../ui/dnd-wrapper';
+import {
+  arrayMove,
+  sortableKeyboardCoordinates,
+  useSortable
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+
+// Using wrapper components from dnd-wrapper.tsx
 
 interface EducationEntry {
   id: string;
@@ -21,8 +38,31 @@ interface EducationFormProps {
 }
 
 export default function EducationForm({ onSave, onCancel, initialData = [] }: EducationFormProps) {
-  const [educationEntries, setEducationEntries] = useState<EducationEntry[]>(
-    initialData.length > 0 ? initialData : [
+  // Initialize state from localStorage or use initialData as fallback
+  const [educationEntries, setEducationEntries] = useState<EducationEntry[]>(() => {
+    // Check if we're in a browser environment (not during SSR)
+    if (typeof window !== 'undefined') {
+      try {
+        // Try to get saved entries from localStorage
+        const savedEntries = localStorage.getItem('educationEntries');
+        if (savedEntries) {
+          const parsedEntries = JSON.parse(savedEntries);
+          // Make sure we have valid data
+          if (Array.isArray(parsedEntries) && parsedEntries.length > 0) {
+            // Convert File objects which were serialized to null back to null
+            return parsedEntries.map(entry => ({
+              ...entry,
+              certificateFile: null // Files can't be stored in localStorage
+            }));
+          }
+        }
+      } catch (error) {
+        console.error('Error loading education entries from localStorage:', error);
+      }
+    }
+    
+    // Fallback to initialData or create a new entry
+    return initialData.length > 0 ? initialData : [
       {
         id: crypto.randomUUID(),
         educationLevel: '',
@@ -32,11 +72,30 @@ export default function EducationForm({ onSave, onCancel, initialData = [] }: Ed
         university: '',
         certificateFile: null,
       }
-    ]
-  );
+    ];
+  });
   
   const [activeEntryId, setActiveEntryId] = useState<string>(educationEntries[0]?.id || '');
   const [editMode, setEditMode] = useState<boolean>(true);
+  const [validationErrors, setValidationErrors] = useState<{[key: string]: string}>({});
+  
+  // Save to localStorage whenever educationEntries changes
+  useEffect(() => {
+    if (typeof window !== 'undefined' && educationEntries.length > 0) {
+      try {
+        // Create a version that's safe to serialize to JSON
+        const serializableEntries = educationEntries.map(entry => {
+          // Create a new object without the certificateFile
+          const { certificateFile, ...serializableEntry } = entry;
+          return serializableEntry;
+        });
+        
+        localStorage.setItem('educationEntries', JSON.stringify(serializableEntries));
+      } catch (error) {
+        console.error('Error saving education entries to localStorage:', error);
+      }
+    }
+  }, [educationEntries]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>, entryId: string) => {
     const { name, value } = e.target;
@@ -45,6 +104,15 @@ export default function EducationForm({ onSave, onCancel, initialData = [] }: Ed
         entry.id === entryId ? { ...entry, [name]: value } : entry
       )
     );
+    
+    // Clear validation error for this field when user types
+    if (validationErrors[name]) {
+      setValidationErrors(prev => {
+        const newErrors = {...prev};
+        delete newErrors[name];
+        return newErrors;
+      });
+    }
   };
 
   const handleCertificateUpload = (e: React.ChangeEvent<HTMLInputElement>, entryId: string) => {
@@ -96,12 +164,41 @@ export default function EducationForm({ onSave, onCancel, initialData = [] }: Ed
   const editEducation = (entryId: string) => {
     setActiveEntryId(entryId);
     setEditMode(true);
+    setValidationErrors({});
+  };
+  
+  const validateActiveEntry = () => {
+    const activeEntry = educationEntries.find(entry => entry.id === activeEntryId);
+    if (!activeEntry) return false;
+    
+    const errors: {[key: string]: string} = {};
+    
+    // Check required fields
+    if (!activeEntry.educationLevel) {
+      errors.educationLevel = 'Education level is required';
+    }
+    
+    if (!activeEntry.yearOfCompletion) {
+      errors.yearOfCompletion = 'Year of completion is required';
+    } else if (!validateYear(activeEntry.yearOfCompletion)) {
+      errors.yearOfCompletion = 'Year must be 4 digits (e.g., 2020)';
+    }
+    
+    // Set validation errors
+    setValidationErrors(errors);
+    
+    // Return true if no errors
+    return Object.keys(errors).length === 0;
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (onSave) {
       onSave(educationEntries);
+      
+      // Optionally clear localStorage after successful save
+      // Uncomment if you want to clear localStorage after saving to backend
+      // localStorage.removeItem('educationEntries');
     }
   };
 
@@ -113,6 +210,99 @@ export default function EducationForm({ onSave, onCancel, initialData = [] }: Ed
   // Validate score is a number or percentage
   const validateScore = (score: string) => {
     return score === '' || /^(\d+(\.\d+)?|\d+%)$/.test(score);
+  };
+
+  // Handle drag end event for reordering education entries
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    
+    if (!over) return;
+    
+    if (active.id !== over.id) {
+      setEducationEntries((items) => {
+        const oldIndex = items.findIndex(item => item.id === active.id);
+        const newIndex = items.findIndex(item => item.id === over.id);
+        
+        return arrayMove(items, oldIndex, newIndex);
+      });
+    }
+  };
+  
+  // Set up sensors for drag and drop
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
+  // Sortable education item component
+  const SortableEducationItem = ({ entry, onEdit, onRemove }: { 
+    entry: EducationEntry; 
+    onEdit: (id: string) => void; 
+    onRemove: (id: string) => void; 
+  }) => {
+    const {
+      attributes,
+      listeners,
+      setNodeRef,
+      transform,
+      transition,
+      isDragging
+    } = useSortable({ id: entry.id });
+    
+    const style = {
+      transform: CSS.Transform.toString(transform),
+      transition,
+      marginBottom: '12px',
+      zIndex: isDragging ? 10 : 0
+    };
+    
+    return (
+      <div
+        ref={setNodeRef}
+        style={style}
+        className={`p-3 border border-gray-200 rounded-lg ${isDragging ? 'bg-blue-50 shadow-lg' : 'bg-gray-50'}`}
+        {...attributes}
+      >
+        <div className="flex items-center w-full">
+          <div
+            {...listeners}
+            className="mr-3 cursor-grab text-gray-400 hover:text-gray-600 flex-shrink-0"
+            aria-label="Drag to reorder"
+          >
+            <GripVertical size={20} />
+          </div>
+          <div className="flex-grow">
+            <h4 className="font-medium text-gray-900">{entry.educationLevel || 'Untitled Education'}</h4>
+            <p className="text-sm text-gray-600">
+              {entry.university ? `${entry.university}, ` : ''}
+              {entry.yearOfCompletion ? `${entry.yearOfCompletion}` : ''}
+              {entry.stream ? ` - ${entry.stream}` : ''}
+              {entry.score ? ` (${entry.score})` : ''}
+            </p>
+          </div>
+          <div className="flex space-x-3 ml-2 flex-shrink-0">
+            <button
+              type="button"
+              onClick={() => onEdit(entry.id)}
+              className="text-blue-600 hover:text-blue-800"
+              aria-label="Edit education entry"
+            >
+              <Pencil size={18} />
+            </button>
+            <button
+              type="button"
+              onClick={() => onRemove(entry.id)}
+              className="text-red-600 hover:text-red-800"
+              aria-label="Remove education entry"
+            >
+              <Trash2 size={18} />
+            </button>
+          </div>
+        </div>
+      </div>
+    );
   };
 
   return (
@@ -131,38 +321,28 @@ export default function EducationForm({ onSave, onCancel, initialData = [] }: Ed
         
         {/* Education entries list */}
         {!editMode && educationEntries.length > 0 && (
-          <div className="mb-6 space-y-3">
-            {educationEntries.map((entry) => (
-              <div key={entry.id} className="p-3 border border-gray-200 rounded-lg bg-gray-50 flex justify-between items-center">
-                <div>
-                  <h4 className="font-medium text-gray-900">{entry.educationLevel || 'Untitled Education'}</h4>
-                  <p className="text-sm text-gray-600">
-                    {entry.university ? `${entry.university}, ` : ''}
-                    {entry.yearOfCompletion ? `${entry.yearOfCompletion}` : ''}
-                    {entry.stream ? ` - ${entry.stream}` : ''}
-                    {entry.score ? ` (${entry.score})` : ''}
-                  </p>
-                </div>
-                <div className="flex space-x-3">
-                  <button 
-                    type="button" 
-                    onClick={() => editEducation(entry.id)}
-                    className="text-blue-600 hover:text-blue-800"
-                    aria-label="Edit education entry"
-                  >
-                    <Pencil size={18} />
-                  </button>
-                  <button 
-                    type="button" 
-                    onClick={() => removeEducation(entry.id)}
-                    className="text-red-600 hover:text-red-800"
-                    aria-label="Remove education entry"
-                  >
-                    <Trash2 size={18} />
-                  </button>
-                </div>
-              </div>
-            ))}
+          <div className="mb-6">
+            {/* @ts-ignore - Ignoring type error with DndContext */}
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCenter}
+              onDragEnd={handleDragEnd}
+            >
+              {/* @ts-ignore - Ignoring type error with SortableContext */}
+              <SortableContext
+                items={educationEntries.map(entry => entry.id)}
+                strategy={verticalStrategy}
+              >
+                {educationEntries.map((entry) => (
+                  <SortableEducationItem 
+                    key={entry.id} 
+                    entry={entry} 
+                    onEdit={editEducation} 
+                    onRemove={removeEducation} 
+                  />
+                ))}
+              </SortableContext>
+            </DndContext>
           </div>
         )}
         
@@ -210,7 +390,11 @@ export default function EducationForm({ onSave, onCancel, initialData = [] }: Ed
                           <option value="Post Graduation">Post Graduation</option>
                         </select>
                       </div>
-                      <p className="text-xs text-gray-500 mt-1">Latest qualification at top</p>
+                      {validationErrors.educationLevel ? (
+                        <p className="text-xs text-red-500 mt-1">{validationErrors.educationLevel}</p>
+                      ) : (
+                        <p className="text-xs text-gray-500 mt-1">Latest qualification at top</p>
+                      )}
                     </div>
                     
                     {/* Year of Completion */}
@@ -236,10 +420,11 @@ export default function EducationForm({ onSave, onCancel, initialData = [] }: Ed
                           placeholder="YYYY"
                         />
                       </div>
-                      {entry.yearOfCompletion && !validateYear(entry.yearOfCompletion) && (
+                      {validationErrors.yearOfCompletion ? (
+                        <p className="text-xs text-red-500 mt-1">{validationErrors.yearOfCompletion}</p>
+                      ) : entry.yearOfCompletion && !validateYear(entry.yearOfCompletion) ? (
                         <p className="text-xs text-red-500 mt-1">Must be 4 digits (e.g., 2020)</p>
-                      )}
-                      {validateYear(entry.yearOfCompletion) && (
+                      ) : (
                         <p className="text-xs text-gray-500 mt-1">Must be 4 digits (e.g., 2020)</p>
                       )}
                     </div>
@@ -364,7 +549,7 @@ export default function EducationForm({ onSave, onCancel, initialData = [] }: Ed
       </div>
       
       <div className="flex justify-end space-x-3">
-        {onCancel && (
+        {/* {onCancel && (
           <button
             type="button"
             onClick={onCancel}
@@ -372,14 +557,18 @@ export default function EducationForm({ onSave, onCancel, initialData = [] }: Ed
           >
             Cancel
           </button>
-        )}
+        )} */}
         {editMode && (
           <button
             type="button"
-            onClick={() => setEditMode(false)}
+            onClick={() => {
+              if (validateActiveEntry()) {
+                setEditMode(false);
+              }
+            }}
             className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
           >
-            Done Editing
+            Add
           </button>
         )}
         <button

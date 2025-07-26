@@ -142,7 +142,7 @@ export const useRegistrationStore = create<RegistrationState>()(
         } catch (error: any) {
           console.error('Personal details update error:', error);
           set({
-            error: 'Failed to update personal details. Please try again.',
+            error: 'Email ID already exists',
             isLoading: false
           });
           throw error;

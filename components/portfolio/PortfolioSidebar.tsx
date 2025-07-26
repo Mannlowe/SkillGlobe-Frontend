@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Upload, User, GraduationCap, Briefcase, Award, FileText, X, ChevronLeft } from 'lucide-react';
 
 interface PortfolioSidebarProps {
@@ -21,6 +21,21 @@ export default function PortfolioSidebar({
   sections,
   onClose
 }: PortfolioSidebarProps) {
+  // Function to determine the color of each progress bar segment
+  const getProgressBarColor = (index: number, completedCount: number): string => {
+    // Calculate how many segments should be colored
+    const completedIndex = completedCount - 1;
+    
+    if (index <= completedIndex) {
+      // Use a gradient of colors for completed segments
+      if (index < 3) return 'bg-red-500'; // First few are red
+      if (index < 5) return 'bg-orange-400'; // Next few are orange
+      return 'bg-gray-300'; // Rest are gray
+    }
+    
+    // Incomplete segments
+    return 'bg-gray-200';
+  };
   return (
     <div className="w-64 h-full bg-white border-r border-gray-200 flex flex-col">
       {/* Header */}
@@ -67,17 +82,34 @@ export default function PortfolioSidebar({
       
       {/* Progress indicator */}
       <div className="p-4 border-t border-gray-200">
-        <div className="flex items-center justify-between mb-2">
-          <span className="text-sm text-gray-500">Completion</span>
-          <span className="text-sm font-medium text-gray-900">
-            {sections.filter(s => s.completed).length}/{sections.length}
-          </span>
-        </div>
-        <div className="w-full bg-gray-200 rounded-full h-2">
-          <div 
-            className="bg-blue-500 h-2 rounded-full" 
-            style={{ width: `${(sections.filter(s => s.completed).length / sections.length) * 100}%` }}
-          ></div>
+        {/* Progress Card - Styled like the reference image */}
+        <div className="bg-white rounded-xl border border-gray-100 p-4 shadow-sm">
+          <div className="flex items-center justify-between mb-1">
+            <h3 className="text-lg font-bold text-gray-900">
+              {sections.filter(s => s.completed).length === sections.length 
+                ? "All Done!" 
+                : "Almost There!"}
+            </h3>
+            <span className="text-sm font-medium text-white bg-red-500 px-2 py-0.5 rounded-full">
+              {Math.round((sections.filter(s => s.completed).length / sections.length) * 100)}%
+            </span>
+          </div>
+          
+          <p className="text-sm text-gray-500 mb-3">
+            {sections.filter(s => s.completed).length === sections.length 
+              ? "You've completed all steps in your portfolio." 
+              : "Complete the remaining steps in the checklist before going live."}
+          </p>
+          
+          {/* Progress bar with colored segments */}
+          <div className="flex space-x-0.5">
+            {sections.map((section, index) => (
+              <div 
+                key={section.id}
+                className={`h-2 flex-1 ${getProgressBarColor(index, sections.filter(s => s.completed).length)}`}
+              ></div>
+            ))}
+          </div>
         </div>
       </div>
     </div>

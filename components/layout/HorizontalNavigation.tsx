@@ -75,7 +75,6 @@ export default function HorizontalNavigation({
   const pathname = usePathname();
   const router = useRouter();
   const [isIdentityOpen, setIsIdentityOpen] = useState(false);
-  const [isApplicationsOpen, setIsApplicationsOpen] = useState(false);
 
   const navigationItems: NavigationItem[] = [
     {
@@ -95,29 +94,8 @@ export default function HorizontalNavigation({
       id: 'applications',
       label: 'Applications',
       icon: <Briefcase className="w-4 h-4" />,
-      children: [
-        {
-          id: 'application-tracker',
-          label: 'Application Tracker',
-          icon: <Briefcase className="w-4 h-4" />,
-          href: '/applications',
-          description: 'Track your applications with profile context'
-        },
-        {
-          id: 'application-history',
-          label: 'Application History',
-          icon: <Users className="w-4 h-4" />,
-          href: '/applications/history',
-          description: 'Complete history of all applications'
-        },
-        {
-          id: 'application-analytics',
-          label: 'Analytics & Insights',
-          icon: <TrendingUp className="w-4 h-4" />,
-          href: '/applications/analytics',
-          description: 'Performance insights and success analysis'
-        }
-      ]
+      href: '/applications',
+      badge: 4
     },
     {
       id: 'identity',
@@ -164,6 +142,10 @@ export default function HorizontalNavigation({
 
   const isActive = (item: NavigationItem) => {
     if (item.href) {
+      // Special handling for applications to include all sub-routes
+      if (item.id === 'applications') {
+        return pathname.startsWith('/applications');
+      }
       return pathname === item.href;
     }
     if (item.children) {
@@ -222,11 +204,8 @@ export default function HorizontalNavigation({
         <nav className="hidden lg:flex items-center space-x-1 ml-8 flex-1">
           {navigationItems.map((item) => {
             if (item.children) {
-              const isOpen = item.id === 'identity' ? isIdentityOpen : isApplicationsOpen;
-              const setIsOpen = item.id === 'identity' ? setIsIdentityOpen : setIsApplicationsOpen;
-              
               return (
-                <DropdownMenu key={item.id} open={isOpen} onOpenChange={setIsOpen}>
+                <DropdownMenu key={item.id} open={isIdentityOpen} onOpenChange={setIsIdentityOpen}>
                   <DropdownMenuTrigger asChild>
                     <Button
                       variant="ghost"
@@ -241,7 +220,7 @@ export default function HorizontalNavigation({
                       <span>{item.label}</span>
                       <ChevronDown className={cn(
                         "w-3 h-3 transition-transform",
-                        isOpen ? "rotate-180" : ""
+                        isIdentityOpen ? "rotate-180" : ""
                       )} />
                     </Button>
                   </DropdownMenuTrigger>
@@ -251,7 +230,7 @@ export default function HorizontalNavigation({
                     sideOffset={5}
                   >
                     <DropdownMenuLabel className="text-xs text-gray-500 uppercase">
-                      {item.id === 'identity' ? 'Professional Identity' : 'Application Management'}
+                      Professional Identity
                     </DropdownMenuLabel>
                     <DropdownMenuSeparator />
                     {item.children.map((child) => (
@@ -262,8 +241,6 @@ export default function HorizontalNavigation({
                           "cursor-pointer",
                           child.id === 'verification' 
                             ? "border border-orange-200 bg-gradient-to-r from-orange-50 to-red-50 hover:from-orange-100 hover:to-red-100" 
-                            : child.id === 'application-tracker'
-                            ? "border border-blue-200 bg-gradient-to-r from-blue-50 to-purple-50 hover:from-blue-100 hover:to-purple-100"
                             : "",
                           isChildActive(child.href) && "bg-[#FF6B35]/10"
                         )}
@@ -273,8 +250,6 @@ export default function HorizontalNavigation({
                             "mt-0.5",
                             child.id === 'verification' 
                               ? "text-orange-600" 
-                              : child.id === 'application-tracker'
-                              ? "text-blue-600"
                               : isChildActive(child.href) 
                                 ? "text-[#FF6B35]" 
                                 : "text-gray-500"
@@ -286,8 +261,6 @@ export default function HorizontalNavigation({
                               "font-medium text-sm flex items-center gap-2",
                               child.id === 'verification' 
                                 ? "text-orange-700" 
-                                : child.id === 'application-tracker'
-                                ? "text-blue-700"
                                 : isChildActive(child.href) 
                                   ? "text-[#FF6B35]" 
                                   : "text-gray-900"
@@ -296,11 +269,6 @@ export default function HorizontalNavigation({
                               {child.id === 'verification' && (
                                 <span className="px-1.5 py-0.5 text-xs bg-orange-200 text-orange-800 rounded-full font-medium">
                                   Important
-                                </span>
-                              )}
-                              {child.id === 'application-tracker' && (
-                                <span className="px-1.5 py-0.5 text-xs bg-blue-200 text-blue-800 rounded-full font-medium">
-                                  New
                                 </span>
                               )}
                             </div>
@@ -473,39 +441,6 @@ export default function HorizontalNavigation({
               )}
             </Button>
           ))}
-          
-          {/* Applications for mobile */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="ghost"
-                size="sm"
-                className={cn(
-                  "flex flex-col items-center space-y-1 h-full rounded-none",
-                  navigationItems.find(item => item.id === 'applications' && isActive(item))
-                    ? "text-[#FF6B35]" 
-                    : "text-gray-600"
-                )}
-              >
-                <Briefcase className="w-4 h-4" />
-                <span className="text-xs">Apps</span>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="center" side="top" className="w-56 mb-2">
-              {navigationItems.find(item => item.id === 'applications')?.children?.map((child) => (
-                <DropdownMenuItem
-                  key={child.id}
-                  onClick={() => handleNavigation(child.href)}
-                  className="cursor-pointer"
-                >
-                  <div className="flex items-center space-x-3">
-                    {child.icon}
-                    <span className="text-sm">{child.label}</span>
-                  </div>
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
           
           {/* My Identity for mobile */}
           <DropdownMenu>

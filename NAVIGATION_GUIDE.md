@@ -22,9 +22,12 @@ The multi-profile system has been fully integrated into the existing SkillGlobe 
   - 📊 **Detailed Analysis**: Click "View Details" for comprehensive matching breakdown
   - 🔄 **Profile Context**: All applications track which profile was used
 
-#### 3. **Applications** (Dropdown Menu) 🆕
+#### 3. **Applications** (`/applications`) 🆕
 - **Purpose**: Complete application lifecycle management
-- **Sub-sections**:
+- **Navigation**: Tabbed interface within applications section
+- **Active Application Count Badge**: Shows number of active applications (4)
+
+##### **Tab Navigation within Applications:**
 
 ##### 3a. **Application Tracker** (`/applications`)
 - Track all applications with profile context
@@ -82,14 +85,14 @@ The multi-profile system has been fully integrated into the existing SkillGlobe 
 ### **Bottom Navigation Bar**
 - Dashboard
 - Opportunities
-- **Apps** (Applications dropdown)
+- **Applications** (Direct link with tabbed navigation)
 - **Identity** (My Identity dropdown)
 - Insights
 
-### **Mobile Dropdowns**
-- Same functionality as desktop
-- Optimized for touch interaction
-- Quick access to all features
+### **Mobile Navigation**
+- **Applications**: Direct link to `/applications` with mobile-optimized tabs
+- **Identity Dropdown**: Touch-optimized for My Identity features
+- **Tab Navigation**: Horizontal scrollable tabs on mobile within Applications
 
 ---
 

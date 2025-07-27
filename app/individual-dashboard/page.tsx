@@ -7,6 +7,7 @@ import { DashboardStatsSkeleton, OpportunityCardSkeleton, ProfileCardSkeleton } 
 import LazyImage, { LazyAvatar } from '@/components/ui/LazyImage';
 import CompactMarketMetrics from '@/components/dashboard/CompactMarketMetrics';
 import CompactOpportunityCard from '@/components/dashboard/CompactOpportunityCard';
+import EmployerInterestCard from '@/components/dashboard/EmployerInterestCard';
 import EnhancedStatsGrid from '@/components/dashboard/EnhancedStatsGrid';
 import OpportunityDiscoveryHub from '@/components/dashboard/OpportunityDiscoveryHub';
 import ApplicationPipelineManager from '@/components/dashboard/ApplicationPipelineManager';
@@ -19,7 +20,7 @@ import AchievementShowcase from '@/components/dashboard/AchievementBadges';
 import WeeklyChallenges from '@/components/dashboard/WeeklyChallenges';
 import SocialRecognition from '@/components/dashboard/SocialRecognition';
 import StreakTracker from '@/components/dashboard/StreakTracker';
-import { BarChart3, Users, Briefcase, TrendingUp, Calendar, Bell, Star, ArrowUpRight, Check as CheckIcon, Eye, Filter } from 'lucide-react';
+import { BarChart3, Users, Briefcase, TrendingUp, Calendar, Bell, Star, ArrowUpRight, Check as CheckIcon, Eye, Filter, Heart, Handshake } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
@@ -38,12 +39,27 @@ const recentActivities = [
   { id: 3, type: 'course', title: 'Completed Advanced React Course', company: 'SkillGlobe', time: '3 days ago', status: 'completed' },
 ];
 
+// Types for matchmaking
+interface InterestExpression {
+  opportunityId: string;
+  interest: 'yes' | 'maybe' | 'no';
+  timestamp: string;
+}
+
+interface MutualInterest {
+  opportunityId: string;
+  opportunity: JobOpportunity;
+  status: 'new' | 'contacted' | 'interviewing';
+  nextAction: string;
+}
+
 export default function CompactDashboardPage() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [userName, setUserName] = useState('Amit Verma');
   const [showCareerCoach, setShowCareerCoach] = useState(true);
   const [selectedOpportunity, setSelectedOpportunity] = useState<JobOpportunity | null>(null);
   const [isDetailPaneOpen, setIsDetailPaneOpen] = useState(false);
+  const [userInterests, setUserInterests] = useState<InterestExpression[]>([]);
   const { user, isAuthenticated } = useAuthStore();
   const { toast } = useToast();
   const router = useRouter();
@@ -63,6 +79,48 @@ export default function CompactDashboardPage() {
       setUserName(user.full_name || user.name);
     }
   }, [isAuthenticated, user]);
+
+  // Mock mutual interests
+  const mutualInterests: MutualInterest[] = [
+    {
+      opportunityId: 'job-2',
+      opportunity: mockJobOpportunities[1], // Data Engineer
+      status: 'new',
+      nextAction: 'Begin application process'
+    },
+    {
+      opportunityId: 'job-6',
+      opportunity: mockJobOpportunities[5] || mockJobOpportunities[0], // ML Engineer or fallback
+      status: 'contacted',
+      nextAction: 'Schedule initial conversation'
+    }
+  ];
+
+  const handleExpressInterest = (opportunityId: string, interest: 'yes' | 'maybe' | 'no') => {
+    const newInterest: InterestExpression = {
+      opportunityId,
+      interest,
+      timestamp: new Date().toISOString()
+    };
+    
+    setUserInterests(prev => [...prev, newInterest]);
+    
+    toast({
+      title: 'Interest Expressed',
+      description: `You ${interest === 'yes' ? 'expressed interest in' : interest === 'maybe' ? 'marked as maybe for' : 'declined'} this opportunity.`,
+    });
+  };
+
+  const handleBeginApplication = (mutualInterest: MutualInterest) => {
+    toast({
+      title: 'Application Started',
+      description: `Starting application process with ${mutualInterest.opportunity.company}`,
+    });
+  };
+
+  const getUserInterest = (opportunityId: string) => {
+    return userInterests.find(interest => interest.opportunityId === opportunityId)?.interest;
+  };
 
   // Convert JobOpportunity to SlideInDetailPane format
   const convertToDetailPaneFormat = (job: JobOpportunity) => {
@@ -162,31 +220,22 @@ export default function CompactDashboardPage() {
 
       {/* Two Column Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Top Opportunities */}
+        {/* Top Matches - Employer Interest */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-gray-900">Top Matches</h3>
+            <div className="flex items-center gap-2">
+              <h3 className="text-lg font-semibold text-gray-900">Employers Interested in You</h3>
+              <span className="px-2 py-1 text-xs font-medium bg-blue-100 text-blue-700 rounded-full">3 new</span>
+            </div>
             <button className="text-sm text-blue-600 hover:text-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded-md px-2 py-1">View all →</button>
           </div>
           <div className="space-y-3">
             {mockJobOpportunities.slice(0, 2).map((job) => (
-              <CompactOpportunityCard 
+              <EmployerInterestCard
                 key={job.id}
                 opportunity={job}
-                onApply={(id) => {
-                  console.log('Apply:', id);
-                  toast({
-                    title: "Application Submitted!",
-                    description: "Your application has been sent successfully.",
-                  });
-                }}
-                onSave={(id) => {
-                  console.log('Save:', id);
-                  toast({
-                    title: "Job Saved!",
-                    description: "This opportunity has been added to your saved jobs.",
-                  });
-                }}
+                userInterest={getUserInterest(job.id)}
+                onExpressInterest={handleExpressInterest}
                 onViewDetails={handleViewDetails}
               />
             ))}
@@ -229,6 +278,71 @@ export default function CompactDashboardPage() {
           </div>
         </div>
       </div>
+
+      {/* Mutual Interests Section */}
+      {mutualInterests.length > 0 && (
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <Heart className="w-5 h-5 text-red-500" />
+              <h3 className="text-lg font-semibold text-gray-900">Mutual Interests ({mutualInterests.length})</h3>
+              <span className="px-2 py-1 text-xs font-medium bg-red-100 text-red-700 rounded-full">Ready for Application</span>
+            </div>
+          </div>
+          <div className="space-y-4">
+            {mutualInterests.map((mutualInterest) => (
+              <div key={mutualInterest.opportunityId} className="border-2 border-red-200 rounded-lg p-4 bg-red-50">
+                <div className="flex items-start justify-between mb-3">
+                  <div className="flex-1">
+                    <h4 className="font-semibold text-lg flex items-center gap-2">
+                      {mutualInterest.opportunity.title}
+                      <span className="px-2 py-1 text-xs font-medium bg-red-100 text-red-600 rounded-full border border-red-300">
+                        {mutualInterest.opportunity.match_score}% Match
+                      </span>
+                    </h4>
+                    <div className="flex items-center gap-4 text-sm text-gray-600 mt-1">
+                      <span className="flex items-center gap-1">
+                        <Briefcase className="w-4 h-4" />
+                        {mutualInterest.opportunity.company}
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <Users className="w-4 h-4" />
+                        Location: {mutualInterest.opportunity.location}
+                      </span>
+                    </div>
+                  </div>
+                  <span className={`px-2 py-1 text-xs font-medium rounded-full capitalize ${
+                    mutualInterest.status === 'new' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-700'
+                  }`}>
+                    {mutualInterest.status}
+                  </span>
+                </div>
+
+                <div className="bg-white p-3 rounded-lg mb-3">
+                  <p className="text-sm text-gray-700 flex items-center gap-2">
+                    <Star className="w-4 h-4 text-yellow-500" />
+                    <strong>Next Action:</strong> {mutualInterest.nextAction}
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <button 
+                    onClick={() => handleBeginApplication(mutualInterest)}
+                    className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                  >
+                    <Handshake className="w-4 h-4" />
+                    Begin Application
+                  </button>
+                  <button className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+                    <Eye className="w-4 h-4" />
+                    View Details
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
     </div>
   );

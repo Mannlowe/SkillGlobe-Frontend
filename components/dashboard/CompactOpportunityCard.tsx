@@ -1,6 +1,6 @@
 'use client';
 
-import { MapPin, DollarSign, Target, Clock, Zap, Bookmark, Send, Eye } from 'lucide-react';
+import { MapPin, DollarSign, Target, Clock, Zap, Bookmark, Send, Eye, ThumbsUp, ThumbsDown } from 'lucide-react';
 import type { JobOpportunity } from '@/types/dashboard';
 import { StandardizedButton } from '@/components/ui/StandardizedButton';
 import { useState } from 'react';
@@ -10,9 +10,22 @@ interface CompactOpportunityCardProps {
   onApply?: (jobId: string) => void;
   onSave?: (jobId: string) => void;
   onViewDetails?: (jobId: string) => void;
+  onExpressInterest?: (jobId: string, interest: 'yes' | 'maybe' | 'no') => void;
+  showInterestButtons?: boolean;
+  userInterest?: 'yes' | 'maybe' | 'no';
+  hideHeader?: boolean; // Hide header when wrapped in employer interest
 }
 
-export default function CompactOpportunityCard({ opportunity, onApply, onSave, onViewDetails }: CompactOpportunityCardProps) {
+export default function CompactOpportunityCard({ 
+  opportunity, 
+  onApply, 
+  onSave, 
+  onViewDetails, 
+  onExpressInterest,
+  showInterestButtons = false,
+  userInterest,
+  hideHeader = false
+}: CompactOpportunityCardProps) {
   const [showTooltip, setShowTooltip] = useState(false);
   const [isBookmarked, setIsBookmarked] = useState(false);
 
@@ -68,38 +81,40 @@ export default function CompactOpportunityCard({ opportunity, onApply, onSave, o
         <Bookmark size={16} fill={isBookmarked ? 'currentColor' : 'none'} />
       </button>
 
-      {/* Header Row */}
-      <div className="flex items-start justify-between mb-3 pr-10">
-        <div className="flex-1 min-w-0">
-          <h3 className="font-semibold text-gray-900 truncate group-hover:text-orange-600 transition-colors" title={opportunity.title}>
-            {opportunity.title}
-          </h3>
-          
-          {/* Company and Match Score on same line */}
-          <div className="flex items-center gap-2 mt-1">
-            <p className="text-sm text-gray-600">{opportunity.company}</p>
-            <span className="text-gray-400">•</span>
+      {/* Header Row - Conditionally rendered */}
+      {!hideHeader && (
+        <div className="flex items-start justify-between mb-3 pr-10">
+          <div className="flex-1 min-w-0">
+            <h3 className="font-semibold text-gray-900 truncate group-hover:text-orange-600 transition-colors" title={opportunity.title}>
+              {opportunity.title}
+            </h3>
             
-            {/* Inline Match Score with Tooltip */}
-            <div 
-              className={`relative px-2 py-0.5 rounded-full text-xs font-medium flex items-center gap-1 ${getMatchScoreColor(opportunity.match_score)}`}
-              onMouseEnter={() => setShowTooltip(true)}
-              onMouseLeave={() => setShowTooltip(false)}
-            >
-              <Target size={12} />
-              <span>{opportunity.match_score}% match</span>
+            {/* Company and Match Score on same line */}
+            <div className="flex items-center gap-2 mt-1">
+              <p className="text-sm text-gray-600">{opportunity.company}</p>
+              <span className="text-gray-400">•</span>
               
-              {/* Tooltip */}
-              {showTooltip && (
-                <div className="absolute top-full mt-2 left-1/2 transform -translate-x-1/2 z-10 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg whitespace-nowrap">
-                  {getMatchScoreTooltip(opportunity.match_score)}
-                  <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-b-4 border-transparent border-b-gray-900"></div>
-                </div>
-              )}
+              {/* Inline Match Score with Tooltip */}
+              <div 
+                className={`relative px-2 py-0.5 rounded-full text-xs font-medium flex items-center gap-1 ${getMatchScoreColor(opportunity.match_score)}`}
+                onMouseEnter={() => setShowTooltip(true)}
+                onMouseLeave={() => setShowTooltip(false)}
+              >
+                <Target size={12} />
+                <span>{opportunity.match_score}% match</span>
+                
+                {/* Tooltip */}
+                {showTooltip && (
+                  <div className="absolute top-full mt-2 left-1/2 transform -translate-x-1/2 z-10 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg whitespace-nowrap">
+                    {getMatchScoreTooltip(opportunity.match_score)}
+                    <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-b-4 border-transparent border-b-gray-900"></div>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* Key Details - Single Row */}
       <div className="flex flex-wrap items-center gap-3 text-xs text-gray-600 mb-3">
@@ -128,35 +143,101 @@ export default function CompactOpportunityCard({ opportunity, onApply, onSave, o
         </div>
       </div>
 
-      {/* Actions Row - Grouped Primary & Secondary */}
-      <div className="flex items-center justify-between pt-2 border-t border-gray-100">
-        {/* Primary Action */}
-        <StandardizedButton
-          onClick={handleApply}
-          variant="primary"
-          size="sm"
-          leftIcon={<Send size={14} />}
-          className="flex-1 mr-3"
-        >
-          Quick Apply
-        </StandardizedButton>
-        
-        {/* Secondary Actions */}
-        <div className="flex items-center gap-2">
-          <StandardizedButton
-            onClick={(e) => {
-              e.stopPropagation();
-              console.log('View button clicked for job:', opportunity.id);
-              onViewDetails?.(opportunity.id);
-            }}
-            variant="ghost"
-            size="sm"
-            leftIcon={<Eye size={14} />}
-            className="text-gray-600 hover:text-orange-600"
-          >
-            View
-          </StandardizedButton>
-        </div>
+      {/* Actions Row - Conditional based on showInterestButtons */}
+      <div className="pt-2 border-t border-gray-100">
+        {showInterestButtons ? (
+          userInterest ? (
+            <div className="flex items-center justify-center py-2 px-3 bg-gray-50 rounded-lg">
+              <span className="text-sm text-gray-600">
+                You {userInterest === 'yes' ? 'expressed interest' : userInterest === 'maybe' ? 'marked as maybe' : 'declined'} - waiting for employer response
+              </span>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <StandardizedButton
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onExpressInterest?.(opportunity.id, 'yes');
+                  }}
+                  variant="primary"
+                  size="sm"
+                  leftIcon={<ThumbsUp size={14} />}
+                  className="flex-1"
+                >
+                  Interested
+                </StandardizedButton>
+                <StandardizedButton
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onExpressInterest?.(opportunity.id, 'maybe');
+                  }}
+                  variant="secondary"
+                  size="sm"
+                  leftIcon={<Clock size={14} />}
+                  className="flex-1"
+                >
+                  Maybe
+                </StandardizedButton>
+                <StandardizedButton
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onExpressInterest?.(opportunity.id, 'no');
+                  }}
+                  variant="ghost"
+                  size="sm"
+                  leftIcon={<ThumbsDown size={14} />}
+                  className="px-3"
+                >
+                </StandardizedButton>
+              </div>
+              <div className="flex justify-center">
+                <StandardizedButton
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onViewDetails?.(opportunity.id);
+                  }}
+                  variant="ghost"
+                  size="sm"
+                  leftIcon={<Eye size={14} />}
+                  className="text-gray-600 hover:text-orange-600"
+                >
+                  View Details
+                </StandardizedButton>
+              </div>
+            </div>
+          )
+        ) : (
+          <div className="flex items-center justify-between">
+            {/* Primary Action */}
+            <StandardizedButton
+              onClick={handleApply}
+              variant="primary"
+              size="sm"
+              leftIcon={<Send size={14} />}
+              className="flex-1 mr-3"
+            >
+              Quick Apply
+            </StandardizedButton>
+            
+            {/* Secondary Actions */}
+            <div className="flex items-center gap-2">
+              <StandardizedButton
+                onClick={(e) => {
+                  e.stopPropagation();
+                  console.log('View button clicked for job:', opportunity.id);
+                  onViewDetails?.(opportunity.id);
+                }}
+                variant="ghost"
+                size="sm"
+                leftIcon={<Eye size={14} />}
+                className="text-gray-600 hover:text-orange-600"
+              >
+                View
+              </StandardizedButton>
+            </div>
+          </div>
+        )}
       </div>
       
       {/* Subtle indication this card is clickable */}

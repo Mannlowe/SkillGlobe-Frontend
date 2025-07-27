@@ -18,6 +18,14 @@ import { Badge } from '@/components/ui/badge';
 export default function TestingNavigation() {
   const testPages = [
     {
+      title: 'Consolidated Dashboard V2',
+      description: 'NEW: Matchmaking dashboard with interest expression and unified workflow',
+      url: '/dashboard-v2',
+      icon: TestTube,
+      badge: 'NEW Matchmaking',
+      color: 'bg-red-100 text-red-800'
+    },
+    {
       title: 'Multi-Profile Testing',
       description: 'Comprehensive testing interface for all components',
       url: '/test-multiprofile',
@@ -78,8 +86,9 @@ export default function TestingNavigation() {
           </p>
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 max-w-2xl mx-auto">
             <p className="text-blue-800">
-              <strong>🚀 Start Here:</strong> Use the "Multi-Profile Testing" page for the complete testing experience, 
-              or visit individual pages to test specific components.
+              <strong>🚀 NEW:</strong> Try the "Consolidated Dashboard V2" to see the future matchmaking interface with interest expression and unified workflow.
+              <br />
+              <strong>📊 Alternative:</strong> Use "Multi-Profile Testing" for the current complete testing experience.
             </p>
           </div>
         </div>

@@ -19,11 +19,14 @@ const withPWA = require('next-pwa')({
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  output: 'export',
+  // output: 'export', // Commented out for development - uncomment for static export
   eslint: {
     ignoreDuringBuilds: true,
   },
-  images: { unoptimized: true },
+  images: { 
+    unoptimized: true,
+    domains: ['localhost', 'skillglobe.com'] // Add your image domains here
+  },
 };
 
 module.exports = withPWA(nextConfig);

@@ -141,22 +141,48 @@ export default function DynamicSidebar({ isOpen, onClose, isMobile = false }: Dy
         profileHealth: 92,
         todos: [
           { id: '1', title: 'Verify identity for premium jobs', icon: '🔒', priority: 'high' as const, actionUrl: '/verification' },
-          { id: '2', title: 'Complete skill tests', icon: '🧪', priority: 'medium' as const }
+          { id: '2', title: 'Complete skill tests', icon: '🧪', priority: 'medium' as const },
+          { id: '3', title: 'Try multi-profile matching', icon: '👥', priority: 'medium' as const, actionUrl: '/profile/me' }
         ],
         stats: [
-          { id: '1', title: 'Match quality score', icon: '📊', priority: 'low' as const, value: '94%' },
-          { id: '2', title: 'Active applications', icon: '📋', priority: 'low' as const, value: '7' },
+          { id: '1', title: 'AI match quality score', icon: '📊', priority: 'low' as const, value: '94%' },
+          { id: '2', title: 'Active applications', icon: '📋', priority: 'low' as const, value: '4', actionUrl: '/applications' },
           { id: '3', title: 'Interview pipeline', icon: '🎭', priority: 'low' as const, value: '2' }
         ],
         opportunities: [
-          { id: '1', title: 'Interview: TechCorp (2 days)', icon: '🎯', priority: 'high' as const },
-          { id: '2', title: 'Application: StartupXYZ', icon: '📄', priority: 'medium' as const },
-          { id: '3', title: 'Follow-up: Design Co', icon: '🔗', priority: 'low' as const }
+          { id: '1', title: 'High match: Senior Full Stack (87%)', icon: '🎯', priority: 'high' as const },
+          { id: '2', title: 'Interview: TechCorp (2 days)', icon: '📅', priority: 'high' as const },
+          { id: '3', title: 'New matches for Data Engineer profile', icon: '🔄', priority: 'medium' as const }
         ],
         interviewPipeline: [
-          { id: '1', title: 'TechCorp - Technical Round', icon: '💻', priority: 'high' as const, description: 'Tomorrow 2:00 PM', actionUrl: '/opportunities/interview/1' },
-          { id: '2', title: 'StartupXYZ - Cultural Fit', icon: '🤝', priority: 'medium' as const, description: 'Next week', actionUrl: '/opportunities/interview/2' },
-          { id: '3', title: 'Design Co - Portfolio Review', icon: '🎨', priority: 'low' as const, description: 'Pending schedule', actionUrl: '/opportunities/interview/3' }
+          { id: '1', title: 'TechCorp - Technical Round', icon: '💻', priority: 'high' as const, description: 'Tomorrow 2:00 PM', actionUrl: '/applications' },
+          { id: '2', title: 'DataFlow - Final Interview', icon: '🤝', priority: 'medium' as const, description: 'Next week', actionUrl: '/applications' }
+        ]
+      };
+    }
+
+    if (path.includes('applications')) {
+      return {
+        profileHealth: 88,
+        todos: [
+          { id: '1', title: 'Follow up on TechCorp application', icon: '📞', priority: 'high' as const },
+          { id: '2', title: 'Prepare for technical interview', icon: '💻', priority: 'high' as const },
+          { id: '3', title: 'Update status for DataFlow offer', icon: '✅', priority: 'medium' as const }
+        ],
+        stats: [
+          { id: '1', title: 'Total applications', icon: '📊', priority: 'low' as const, value: '4' },
+          { id: '2', title: 'Success rate', icon: '🎯', priority: 'low' as const, value: '25%' },
+          { id: '3', title: 'Avg response time', icon: '⏱️', priority: 'low' as const, value: '6.3 days' }
+        ],
+        opportunities: [
+          { id: '1', title: 'Offer received: DataFlow Analytics', icon: '🎉', priority: 'high' as const, actionUrl: '/applications' },
+          { id: '2', title: 'Technical interview: TechCorp', icon: '💻', priority: 'high' as const, actionUrl: '/applications' },
+          { id: '3', title: 'Application submitted: UX Studio', icon: '📤', priority: 'medium' as const, actionUrl: '/applications' }
+        ],
+        careerCoach: [
+          { id: '1', title: 'Your Data Engineer profile is performing best', icon: '📈', priority: 'low' as const, description: '100% success rate' },
+          { id: '2', title: 'Consider strengthening finance skills for analyst roles', icon: '💡', priority: 'medium' as const },
+          { id: '3', title: 'Technology companies show 33% higher success', icon: '🏢', priority: 'low' as const }
         ]
       };
     }
@@ -532,6 +558,19 @@ export default function DynamicSidebar({ isOpen, onClose, isMobile = false }: Dy
                   </h3>
                   <div className="space-y-1">
                     {contextualData.interviewPipeline.map(renderActionItem)}
+                  </div>
+                </div>
+              )}
+
+              {/* Career Coach Insights */}
+              {contextualData.careerCoach.length > 0 && (
+                <div>
+                  <h3 className="text-sm font-semibold text-gray-700 mb-2 flex items-center">
+                    <span>AI Career Coach</span>
+                    <span className="ml-2 text-purple-600 text-xs">🤖</span>
+                  </h3>
+                  <div className="space-y-1">
+                    {contextualData.careerCoach.map(renderActionItem)}
                   </div>
                 </div>
               )}

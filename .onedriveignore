@@ -1,0 +1,20 @@
+# Next.js build files
+.next/
+next-env.d.ts
+
+# Node modules
+node_modules/
+
+# Build outputs
+out/
+build/
+dist/
+
+# Cache files
+*.cache
+.cache/
+
+# Temp files
+*.tmp
+*.temp
+.turbo/

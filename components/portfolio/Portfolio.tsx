@@ -261,7 +261,7 @@ export default function Portfolio({
       <div className={`bg-white rounded-xl max-w-full shadow-sm p-3 space-y-6 font-rubik ${className}`}>
 
       {/* Active Section Content */}
-      <div className="bg-white p-4 rounded-xl border border-gray-200">
+      <div className="bg-white p-4 rounded-xl shadow-lg">
         {activeSection === 'resume' && (
           <div>
             <h3 className="font-semibold text-gray-900 mb-3">Resume Upload & Smart Parsing</h3>

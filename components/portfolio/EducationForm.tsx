@@ -307,7 +307,7 @@ export default function EducationForm({ onSave, onCancel, initialData = [] }: Ed
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      <div className="bg-white p-6 rounded-xl border border-gray-200">
+      <div className="bg-white p-6 rounded-xl shadow-lg">
         <div className="flex justify-between items-center mb-4">
           <h3 className="font-semibold text-gray-900">Education Information</h3>
           <button

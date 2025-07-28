@@ -24,8 +24,7 @@ interface ExperienceEntry {
   role: string;
   organization: string;
   website: string;
-  totalExperience: string;
-  noticePeriod: string;
+  relevantExperience: string;
   professionalSummary: string;
 }
 
@@ -45,25 +44,24 @@ export default function ExperienceForm({ onSave, onCancel, initialData = [] }: E
         role: '',
         organization: '',
         website: '',
-        totalExperience: '',
-        noticePeriod: '',
+        relevantExperience: '',
         professionalSummary: '',
       }
     ]
   );
-  
+
   const [activeEntryId, setActiveEntryId] = useState<string>(experienceEntries[0]?.id || '');
   const [editMode, setEditMode] = useState<boolean>(true);
-  const [validationErrors, setValidationErrors] = useState<{[key: string]: string}>({});
+  const [validationErrors, setValidationErrors] = useState<{ [key: string]: string }>({});
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>, entryId: string) => {
     const { name, value } = e.target;
-    setExperienceEntries(prev => 
-      prev.map(entry => 
+    setExperienceEntries(prev =>
+      prev.map(entry =>
         entry.id === entryId ? { ...entry, [name]: value } : entry
       )
     );
-    
+
     // Clear validation error for this field when user types
     if (validationErrors[name]) {
       setValidationErrors(prev => {
@@ -73,7 +71,7 @@ export default function ExperienceForm({ onSave, onCancel, initialData = [] }: E
       });
     }
   };
-  
+
   const addNewExperience = () => {
     const newEntry: ExperienceEntry = {
       id: crypto.randomUUID(),
@@ -82,19 +80,18 @@ export default function ExperienceForm({ onSave, onCancel, initialData = [] }: E
       role: '',
       organization: '',
       website: '',
-      totalExperience: '',
-      noticePeriod: '',
       professionalSummary: '',
+      relevantExperience: '',
     };
-    
+
     setExperienceEntries(prev => [newEntry, ...prev]);
     setActiveEntryId(newEntry.id);
     setEditMode(true);
   };
-  
+
   const removeExperience = (entryId: string) => {
     setExperienceEntries(prev => prev.filter(entry => entry.id !== entryId));
-    
+
     // If we removed the active entry, set the first remaining entry as active
     if (activeEntryId === entryId) {
       const remainingEntries = experienceEntries.filter(entry => entry.id !== entryId);
@@ -106,30 +103,37 @@ export default function ExperienceForm({ onSave, onCancel, initialData = [] }: E
       }
     }
   };
-  
+
   const editExperience = (entryId: string) => {
     setActiveEntryId(entryId);
     setEditMode(true);
     setValidationErrors({});
   };
-  
+
   const validateActiveEntry = () => {
     const activeEntry = experienceEntries.find(entry => entry.id === activeEntryId);
     if (!activeEntry) return false;
-    
-    const errors: {[key: string]: string} = {};
-    
-    // Check required fields
-    if (!activeEntry.employmentStatus) {
-      errors.employmentStatus = 'Employment status is required';
+
+    const errors: { [key: string]: string } = {};
+
+    // Mandatory fields
+    if (!activeEntry.space) {
+      errors.space = 'Industry is required';
     }
-    
-    // Set validation errors
+    if (!activeEntry.role) {
+      errors.role = 'Role / Designation is required';
+    }
+    if (!activeEntry.organization) {
+      errors.organization = 'Work organization is required';
+    }
+    if (!activeEntry.relevantExperience) {
+      errors.relevantExperience = 'Relevant experience is required';
+    }
+
     setValidationErrors(errors);
-    
-    // Return true if no errors
     return Object.keys(errors).length === 0;
   };
+
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -147,23 +151,23 @@ export default function ExperienceForm({ onSave, onCancel, initialData = [] }: E
   const validateExperience = (exp: string) => {
     return exp === '' || /^\d+(\.\d+)?$/.test(exp);
   };
-  
+
   // Handle drag end event for reordering experience entries
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
-    
+
     if (!over) return;
-    
+
     if (active.id !== over.id) {
       setExperienceEntries((items) => {
         const oldIndex = items.findIndex(item => item.id === active.id);
         const newIndex = items.findIndex(item => item.id === over.id);
-        
+
         return arrayMove(items, oldIndex, newIndex);
       });
     }
   };
-  
+
   // Set up sensors for drag and drop
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -171,12 +175,12 @@ export default function ExperienceForm({ onSave, onCancel, initialData = [] }: E
       coordinateGetter: sortableKeyboardCoordinates,
     })
   );
-  
+
   // Sortable experience item component
-  const SortableExperienceItem = ({ entry, onEdit, onRemove }: { 
-    entry: ExperienceEntry; 
-    onEdit: (id: string) => void; 
-    onRemove: (id: string) => void; 
+  const SortableExperienceItem = ({ entry, onEdit, onRemove }: {
+    entry: ExperienceEntry;
+    onEdit: (id: string) => void;
+    onRemove: (id: string) => void;
   }) => {
     const {
       attributes,
@@ -186,14 +190,14 @@ export default function ExperienceForm({ onSave, onCancel, initialData = [] }: E
       transition,
       isDragging
     } = useSortable({ id: entry.id });
-    
+
     const style = {
       transform: CSS.Transform.toString(transform),
       transition,
       marginBottom: '12px',
       zIndex: isDragging ? 10 : 0
     };
-    
+
     return (
       <div
         ref={setNodeRef}
@@ -214,7 +218,6 @@ export default function ExperienceForm({ onSave, onCancel, initialData = [] }: E
             <p className="text-sm text-gray-600">
               {entry.organization ? `${entry.organization}` : ''}
               {entry.space ? ` - ${entry.space}` : ''}
-              {entry.totalExperience ? ` (${entry.totalExperience} years)` : ''}
             </p>
           </div>
           <div className="flex space-x-3 ml-2 flex-shrink-0">
@@ -242,7 +245,7 @@ export default function ExperienceForm({ onSave, onCancel, initialData = [] }: E
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      <div className="bg-white p-6 rounded-xl border border-gray-200">
+      <div className="bg-white p-6 rounded-xl shadow-lg">
         <div className="flex justify-between items-center mb-4">
           <h3 className="font-semibold text-gray-900">Experience Information</h3>
           <button
@@ -253,7 +256,7 @@ export default function ExperienceForm({ onSave, onCancel, initialData = [] }: E
             <Plus size={16} className="mr-1" /> Add Experience
           </button>
         </div>
-        
+
         {/* Experience entries list */}
         {!editMode && experienceEntries.length > 0 && (
           <div className="mb-6">
@@ -269,18 +272,18 @@ export default function ExperienceForm({ onSave, onCancel, initialData = [] }: E
                 strategy={verticalStrategy}
               >
                 {experienceEntries.map((entry) => (
-                  <SortableExperienceItem 
-                    key={entry.id} 
-                    entry={entry} 
-                    onEdit={editExperience} 
-                    onRemove={removeExperience} 
+                  <SortableExperienceItem
+                    key={entry.id}
+                    entry={entry}
+                    onEdit={editExperience}
+                    onRemove={removeExperience}
                   />
                 ))}
               </SortableContext>
             </DndContext>
           </div>
         )}
-        
+
         {/* Experience form */}
         {editMode && activeEntryId && (
           <div>
@@ -289,8 +292,8 @@ export default function ExperienceForm({ onSave, onCancel, initialData = [] }: E
                 <h4 className="font-medium text-gray-900">
                   {experienceEntries.find(e => e.id === activeEntryId)?.role || 'New Experience'}
                 </h4>
-                <button 
-                  type="button" 
+                <button
+                  type="button"
                   onClick={() => setEditMode(false)}
                   className="text-sm text-gray-600 hover:text-gray-800"
                 >
@@ -298,39 +301,36 @@ export default function ExperienceForm({ onSave, onCancel, initialData = [] }: E
                 </button>
               </div>
             )}
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {experienceEntries.map(entry => (
                 entry.id === activeEntryId && (
                   <React.Fragment key={entry.id}>
-                    {/* Employment Status */}
-                    <div>
+
+<div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Employment Status <span className="text-red-500">*</span>
+                        Relevant Experience  <span className="text-red-500">*</span>
                       </label>
                       <div className="relative">
-                        <Briefcase className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
-                        <select
-                          name="employmentStatus"
-                          value={entry.employmentStatus}
+                        <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
+                        <input
+                          type="text"
+                          name="relevantExperience"
+                          value={entry.relevantExperience}
                           onChange={(e) => handleInputChange(e, entry.id)}
-                          required
-                          className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none"
-                        >
-                          <option value="">Select status</option>
-                          <option value="Working">Working</option>
-                          <option value="Not Working">Not Working</option>
-                        </select>
+                          className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          placeholder="Relevant experience"
+                        />
                       </div>
-                      {validationErrors.employmentStatus && (
-                        <p className="text-xs text-red-500 mt-1">{validationErrors.employmentStatus}</p>
+                      {validationErrors.relevantExperience && (
+                        <p className="text-sm text-red-600 mt-1">{validationErrors.relevantExperience}</p>
                       )}
                     </div>
-                    
+
                     {/* Space/Industry */}
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Space
+                        Space  <span className="text-red-500">*</span>
                       </label>
                       <div className="relative">
                         <Building className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
@@ -346,12 +346,15 @@ export default function ExperienceForm({ onSave, onCancel, initialData = [] }: E
                           <option value="Finance">Finance</option>
                         </select>
                       </div>
+                      {validationErrors.space && (
+                        <p className="text-sm text-red-600 mt-1">{validationErrors.space}</p>
+                      )}
                     </div>
-                    
+
                     {/* Role/Designation */}
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Role / Designation
+                        Role / Designation <span className="text-red-500">*</span>
                       </label>
                       <input
                         type="text"
@@ -361,12 +364,15 @@ export default function ExperienceForm({ onSave, onCancel, initialData = [] }: E
                         className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                         placeholder="Your job title or designation"
                       />
+                      {validationErrors.role && (
+                        <p className="text-sm text-red-600 mt-1">{validationErrors.role}</p>
+                      )}
                     </div>
-                    
+
                     {/* Work Organization */}
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Work Organization
+                        Work Organization <span className="text-red-500">*</span>
                       </label>
                       <input
                         type="text"
@@ -376,97 +382,9 @@ export default function ExperienceForm({ onSave, onCancel, initialData = [] }: E
                         className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                         placeholder="Last company / organization name"
                       />
-                    </div>
-                    
-                    {/* Website */}
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Website
-                      </label>
-                      <div className="relative">
-                        <Globe className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
-                        <input
-                          type="text"
-                          name="website"
-                          value={entry.website}
-                          onChange={(e) => handleInputChange(e, entry.id)}
-                          className={`w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                            entry.website && !validateWebsite(entry.website) 
-                              ? 'border-red-500' 
-                              : 'border-gray-300'
-                          }`}
-                          placeholder="https://example.com"
-                        />
-                      </div>
-                      {entry.website && !validateWebsite(entry.website) && (
-                        <p className="text-xs text-red-500 mt-1">URL must start with http:// or https://</p>
+                      {validationErrors.organization && (
+                        <p className="text-sm text-red-600 mt-1">{validationErrors.organization}</p>
                       )}
-                    </div>
-                    
-                    {/* Total Experience */}
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Total Experience
-                      </label>
-                      <div className="relative">
-                        <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
-                        <input
-                          type="text"
-                          name="totalExperience"
-                          value={entry.totalExperience}
-                          onChange={(e) => handleInputChange(e, entry.id)}
-                          className={`w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                            entry.totalExperience && !validateExperience(entry.totalExperience) 
-                              ? 'border-red-500' 
-                              : 'border-gray-300'
-                          }`}
-                          placeholder="e.g., 5.5"
-                        />
-                      </div>
-                      <p className="text-xs text-gray-500 mt-1">Total experience in years (e.g., 5, 6.5)</p>
-                      {entry.totalExperience && !validateExperience(entry.totalExperience) && (
-                        <p className="text-xs text-red-500 mt-1">Enter a valid number</p>
-                      )}
-                    </div>
-                    
-                    {/* Notice Period */}
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Notice Period
-                      </label>
-                      <div className="relative">
-                        <Clock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
-                        <select
-                          name="noticePeriod"
-                          value={entry.noticePeriod}
-                          onChange={(e) => handleInputChange(e, entry.id)}
-                          className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none"
-                        >
-                          <option value="">Select notice period</option>
-                          <option value="Immediate">Immediate</option>
-                          <option value="15 Days">15 Days</option>
-                          <option value="30 Days">30 Days</option>
-                          <option value="60 Days">60 Days</option>
-                        </select>
-                      </div>
-                      <p className="text-xs text-gray-500 mt-1">For working professionals</p>
-                    </div>
-                    
-                    {/* Professional Summary */}
-                    <div className="md:col-span-2">
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Professional Summary
-                      </label>
-                      <div className="relative">
-                        <FileText className="absolute left-3 top-3 text-gray-400" size={16} />
-                        <textarea
-                          name="professionalSummary"
-                          value={entry.professionalSummary}
-                          onChange={(e) => handleInputChange(e, entry.id)}
-                          className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-h-[120px]"
-                          placeholder="Short paragraph describing experience & strengths"
-                        />
-                      </div>
                     </div>
                   </React.Fragment>
                 )
@@ -475,7 +393,7 @@ export default function ExperienceForm({ onSave, onCancel, initialData = [] }: E
           </div>
         )}
       </div>
-      
+
       <div className="flex justify-end space-x-3">
         {/* {onCancel && (
           <button

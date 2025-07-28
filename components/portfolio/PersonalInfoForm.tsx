@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Calendar, MapPin, Globe, Upload, AtSign, Phone, User, Landmark, Locate } from 'lucide-react';
+import { Calendar, MapPin, Globe, Upload, AtSign, Phone, User, Landmark, Locate, Briefcase, FileText } from 'lucide-react';
 import Image from 'next/image';
 
 interface PersonalInfoFormProps {
@@ -24,18 +24,27 @@ export default function PersonalInfoForm({ onSave, onCancel, initialData = {} }:
     pincode: initialData.pincode || '',
     currentAddress: initialData.currentAddress || '',
     permanentAddress: initialData.permanentAddress || '',
+    permanentCountry: initialData.permanentCountry || '',
+    permanentCity: initialData.permanentCity || '',
+    permanentLandmark: initialData.permanentLandmark || '',
+    permanentPincode: initialData.permanentPincode || '',
     sameAsCurrentAddress: initialData.permanentAddress === initialData.currentAddress,
     twitterHandle: initialData.twitterHandle || '',
     linkedinHandle: initialData.linkedinHandle || '',
+    instagramHandle: initialData.instagramHandle || '',
     employmentStatus: initialData.employmentStatus || '',
     profilePicture: initialData.profilePicture || null,
+    website: initialData.website || '',
+    totalExperience: initialData.totalExperience || '',
+    noticePeriod: initialData.noticePeriod || '',
+    professionalSummary: initialData.professionalSummary || '',
   });
 
   const [profilePreview, setProfilePreview] = useState<string | null>(null);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value, type } = e.target;
-    
+
     if (type === 'checkbox') {
       const checked = (e.target as HTMLInputElement).checked;
       setFormData(prev => ({
@@ -56,7 +65,7 @@ export default function PersonalInfoForm({ onSave, onCancel, initialData = {} }:
     const file = e.target.files?.[0];
     if (file) {
       setFormData(prev => ({ ...prev, profilePicture: file }));
-      
+
       // Create preview URL
       const reader = new FileReader();
       reader.onloadend = () => {
@@ -75,15 +84,15 @@ export default function PersonalInfoForm({ onSave, onCancel, initialData = {} }:
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      <div className="bg-white p-6 rounded-xl border border-gray-200">
+      <div className="bg-white p-6 rounded-xl shadow-lg">
         <h3 className="font-semibold text-gray-900 mb-4">Personal Information</h3>
-        
+
         {/* Profile Picture Upload */}
         <div className="flex flex-col items-center mb-6">
           <div className="relative mb-3">
             {profilePreview ? (
               <div className="w-24 h-24 rounded-full border-2 border-gray-200 overflow-hidden">
-                <Image 
+                <Image
                   src={profilePreview}
                   alt="Profile Preview"
                   width={96}
@@ -96,7 +105,7 @@ export default function PersonalInfoForm({ onSave, onCancel, initialData = {} }:
                 <User className="text-gray-400" size={40} />
               </div>
             )}
-            
+
             <label className="absolute bottom-0 right-0 bg-blue-500 text-white p-1 rounded-full cursor-pointer hover:bg-blue-600 transition-colors">
               <Upload size={16} />
               <input
@@ -110,7 +119,7 @@ export default function PersonalInfoForm({ onSave, onCancel, initialData = {} }:
           </div>
           <p className="text-sm text-gray-500">Profile Picture</p>
         </div>
-        
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {/* Full Name */}
           <div>
@@ -128,7 +137,7 @@ export default function PersonalInfoForm({ onSave, onCancel, initialData = {} }:
             />
             <p className="text-xs text-gray-500 mt-1">Auto-filled from your account</p>
           </div>
-          
+
           {/* Email */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -148,7 +157,7 @@ export default function PersonalInfoForm({ onSave, onCancel, initialData = {} }:
             </div>
             <p className="text-xs text-gray-500 mt-1">Auto-filled from your account</p>
           </div>
-          
+
           {/* Phone */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -168,7 +177,7 @@ export default function PersonalInfoForm({ onSave, onCancel, initialData = {} }:
             </div>
             <p className="text-xs text-gray-500 mt-1">Auto-filled from your account</p>
           </div>
-          
+
           {/* Gender */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -210,7 +219,7 @@ export default function PersonalInfoForm({ onSave, onCancel, initialData = {} }:
               </label>
             </div>
           </div>
-          
+
           {/* Date of Birth */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -228,7 +237,7 @@ export default function PersonalInfoForm({ onSave, onCancel, initialData = {} }:
               />
             </div>
           </div>
-          
+
           {/* Nationality */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -244,8 +253,23 @@ export default function PersonalInfoForm({ onSave, onCancel, initialData = {} }:
               placeholder="Enter your nationality"
             />
           </div>
-          
+
           {/* Country */}
+          <div className="md:col-span-2">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Current Address <span className="text-red-500">*</span>
+            </label>
+            <textarea
+              name="currentAddress"
+              value={formData.currentAddress}
+              onChange={handleInputChange}
+              required
+              rows={2}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              placeholder="Enter your current address"
+            ></textarea>
+          </div>
+
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Country <span className="text-red-500">*</span>
@@ -269,7 +293,7 @@ export default function PersonalInfoForm({ onSave, onCancel, initialData = {} }:
               </select>
             </div>
           </div>
-          
+
           {/* City */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -296,11 +320,11 @@ export default function PersonalInfoForm({ onSave, onCancel, initialData = {} }:
               <Landmark className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
               <input
                 type="text"
-                name="city"
+                name="landmark"
                 value={formData.landmark}
                 onChange={handleInputChange}
                 className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                placeholder="Enter your city"
+                placeholder="Enter your landmark"
               />
             </div>
           </div>
@@ -317,27 +341,11 @@ export default function PersonalInfoForm({ onSave, onCancel, initialData = {} }:
                 value={formData.pincode}
                 onChange={handleInputChange}
                 className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                placeholder="Enter your city"
+                placeholder="Enter your pincode"
               />
             </div>
           </div>
-          
-          {/* Current Address */}
-          <div className="md:col-span-2">
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Current Address <span className="text-red-500">*</span>
-            </label>
-            <textarea
-              name="currentAddress"
-              value={formData.currentAddress}
-              onChange={handleInputChange}
-              required
-              rows={2}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              placeholder="Enter your current address"
-            ></textarea>
-          </div>
-          
+
           {/* Same as Current Address Checkbox */}
           <div className="md:col-span-2">
             <label className="inline-flex items-center cursor-pointer">
@@ -351,52 +359,11 @@ export default function PersonalInfoForm({ onSave, onCancel, initialData = {} }:
               <span className="ml-2 text-sm text-gray-700">Permanent address same as current address</span>
             </label>
           </div>
-          
+
           {/* Permanent Address */}
           {!formData.sameAsCurrentAddress && (
-                <><div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Country <span className="text-red-500">*</span>
-              </label>
-              <div className="relative">
-                <Globe className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
-                <select
-                  name="country"
-                  value={formData.country}
-                  onChange={handleInputChange}
-                  required
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none"
-                >
-                  <option value="">Select your country</option>
-                  <option value="US">United States</option>
-                  <option value="CA">Canada</option>
-                  <option value="UK">United Kingdom</option>
-                  <option value="IN">India</option>
-                  <option value="AU">Australia</option>
-                  {/* Add more countries as needed */}
-                </select>
-              </div>
-
-              
-            </div>
-            <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              City
-            </label>
-            <div className="relative">
-              <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
-              <input
-                type="text"
-                name="city"
-                value={formData.city}
-                onChange={handleInputChange}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                placeholder="Enter your city"
-              />
-            </div>
-          </div>
-            
-            <div className="md:col-span-2">
+            <>
+              <div className="md:col-span-2">
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Permanent Address <span className="text-red-500">*</span>
                 </label>
@@ -409,9 +376,93 @@ export default function PersonalInfoForm({ onSave, onCancel, initialData = {} }:
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   placeholder="Enter your permanent address"
                 ></textarea>
-              </div></>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Country <span className="text-red-500">*</span>
+                </label>
+                <div className="relative">
+                  <Globe className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
+                  <select
+                    name="permanentCountry"
+                    value={formData.permanentCountry}
+                    onChange={handleInputChange}
+                    required
+                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none"
+                  >
+                    <option value="">Select your country</option>
+                    <option value="US">United States</option>
+                    <option value="CA">Canada</option>
+                    <option value="UK">United Kingdom</option>
+                    <option value="IN">India</option>
+                    <option value="AU">Australia</option>
+                    {/* Add more countries as needed */}
+                  </select>
+                </div>
+
+
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  City
+                </label>
+                <div className="relative">
+                  <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
+                  <input
+                    type="text"
+                    name="permanentCity"
+                    value={formData.permanentCity}
+                    onChange={handleInputChange}
+                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="Enter your city"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Landmark
+                </label>
+                <div className="relative">
+                  <Landmark className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
+                  <input
+                    type="text"
+                    name="permanentLandmark"
+                    value={formData.permanentLandmark}
+                    onChange={handleInputChange}
+                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="Enter your landmark"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Pincode
+                </label>
+                <div className="relative">
+                  <Locate className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
+                  <input
+                    type="text"
+                    name="permanentPincode"
+                    value={formData.permanentPincode}
+                    onChange={handleInputChange}
+                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="Enter your pincode"
+                  />
+                </div>
+              </div>
+            </>
           )}
-          
+
+        </div>
+      </div>
+
+      {/* Social Media - Full Width Section */}
+      <div className="bg-white p-6 rounded-xl shadow-lg mt-6">
+        <h3 className="font-semibold text-gray-900 mb-4">Social Media</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {/* Twitter Handle */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -424,12 +475,12 @@ export default function PersonalInfoForm({ onSave, onCancel, initialData = {} }:
                 name="twitterHandle"
                 value={formData.twitterHandle}
                 onChange={handleInputChange}
-                className="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full pl-8 pr-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:outline-none"
                 placeholder="username"
               />
             </div>
           </div>
-          
+
           {/* LinkedIn Handle */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -442,32 +493,137 @@ export default function PersonalInfoForm({ onSave, onCancel, initialData = {} }:
                 name="linkedinHandle"
                 value={formData.linkedinHandle}
                 onChange={handleInputChange}
-                className="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:outline-none"
                 placeholder="username"
               />
             </div>
           </div>
-          
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Instagram Profile
+            </label>
+            <div className="relative">
+              <input
+                type="text"
+                name="instagramHandle"
+                value={formData.instagramHandle}
+                onChange={handleInputChange}
+                className="w-full pl-4 pr-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:outline-none"
+                placeholder="https://instagram.com/your_username"
+              />
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      {/* Employment Status - Separate Section */}
+      <div className="bg-white p-6 rounded-xl shadow-lg mt-6">
+        <h3 className="font-semibold text-gray-900 mb-4">Professional Information</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {/* Employment Status */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Employment Status <span className="text-red-500">*</span>
             </label>
-            <select
-              name="employmentStatus"
-              value={formData.employmentStatus}
-              onChange={handleInputChange}
-              required
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none"
-            >
-              <option value="">Select status</option>
-              <option value="Working">Working</option>
-              <option value="Not Working">Not Working</option>
-            </select>
+            <div className="relative">
+              <Briefcase className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
+              <select
+                name="employmentStatus"
+                value={formData.employmentStatus}
+                onChange={handleInputChange}
+                required
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none"
+              >
+                <option value="">Select your employment status</option>
+                <option value="employed">Employed</option>
+                <option value="self-employed">Self-Employed</option>
+                <option value="unemployed">Unemployed</option>
+                <option value="student">Student</option>
+                <option value="retired">Retired</option>
+              </select>
+            </div>
           </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Website <span className="text-red-500">*</span>
+            </label>
+            <div className="relative">
+              <Globe className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
+              <input
+                type="url"
+                name="website"
+                value={formData.website}
+                onChange={handleInputChange}
+                required
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                placeholder="https://www.example.com"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Total Experience <span className="text-red-500">*</span>
+            </label>
+            <div className="relative">
+              <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
+              <input
+                type="text"
+                name="totalExperience"
+                value={formData.totalExperience}
+                onChange={handleInputChange}
+                required
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                placeholder="e.g., 5.5"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Notice Period <span className="text-red-500">*</span>
+            </label>
+            <div className="relative">
+              <Briefcase className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
+              <select
+                name="noticePeriod"
+                value={formData.noticePeriod}
+                onChange={handleInputChange}
+                required
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none"
+              >
+                <option value="">Select notice period</option>
+                <option value="Immediate">Immediate</option>
+                <option value="15 Days">15 Days</option>
+                <option value="30 Days">30 Days</option>
+                <option value="60 Days">60 Days</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="md:col-span-2">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Professional Summary
+            </label>
+            <div className="relative">
+              <FileText className="absolute left-3 top-3 text-gray-400" size={16} />
+              <textarea
+                rows={1}
+                name="professionalSummary"
+                value={formData.professionalSummary}
+                onChange={handleInputChange}
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-h-[120px]"
+                placeholder="Short paragraph describing experience & strengths"
+              />
+            </div>
+          </div>
+
         </div>
       </div>
-      
+
       <div className="flex justify-end space-x-3">
         {onCancel && (
           <button

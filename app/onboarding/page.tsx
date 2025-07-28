@@ -11,10 +11,6 @@ import UserTypeSelection from '@/components/onboarding/UserTypeSelection';
 import BasicInformation from '@/components/onboarding/BasicInformation';
 import OTPVerification from '@/components/onboarding/OTPVerification';
 import TermsAcceptance from '@/components/onboarding/TermsAcceptance';
-import IdentityVerification from '@/components/onboarding/IdentityVerification';
-import PortfolioSetup from '@/components/onboarding/PortfolioSetup';
-import SkillsSetup from '@/components/onboarding/SkillsSetup';
-import ProfileCreation from '@/components/onboarding/ProfileCreation';
 
 // Business Components
 import BusinessBasicInformation from '@/components/onboarding/BusinessBasicInformation';

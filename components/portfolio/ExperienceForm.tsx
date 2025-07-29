@@ -287,7 +287,7 @@ export default function ExperienceForm({ onSave, onCancel, initialData = [] }: E
         {/* Experience form */}
         {editMode && activeEntryId && (
           <div>
-            {experienceEntries.length > 1 && (
+            {experienceEntries.length > 0 && (
               <div className="flex justify-between items-center mb-4 pb-3 border-b border-gray-200">
                 <h4 className="font-medium text-gray-900">
                   {experienceEntries.find(e => e.id === activeEntryId)?.role || 'New Experience'}

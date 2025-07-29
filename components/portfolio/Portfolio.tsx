@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Upload, User, GraduationCap, Briefcase, Award, FileText, Plus, X } from 'lucide-react';
+import { Upload, User, GraduationCap, Briefcase, Award, FileText, Plus, X, Loader2 } from 'lucide-react';
+import { useResumeStore } from '../../store/portfolio/resumeStore';
 import PersonalInfoForm from './PersonalInfoForm';
 import EducationForm from './EducationForm';
 import ExperienceForm from './ExperienceForm';
@@ -171,17 +172,32 @@ export default function Portfolio({
     { id: 'certificates', name: 'Certificates', icon: Award, completed: certificatesCompleted },
   ];
 
-  const handleResumeUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Get resume store functions
+  const { uploadResume, isUploading, isUploaded, error, uploadProgress } = useResumeStore();
+
+  const handleResumeUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      updateResumeUploaded(true);
-      // After resume is uploaded, automatically switch to personal info section
-      setTimeout(() => {
-        setActiveSection('personal');
-      }, 1000);
+      try {
+        // Upload the resume using our store
+        const result = await uploadResume(file);
+        
+        if (result.success) {
+          updateResumeUploaded(true);
+          // After resume is uploaded, automatically switch to personal info section
+          setTimeout(() => {
+            setActiveSection('personal');
+          }, 1000);
+        } else {
+          // Handle upload failure
+          console.error('Resume upload failed');
+        }
+      } catch (err) {
+        console.error('Error uploading resume:', err);
+      }
     }
   };
-  
+
   const handlePersonalInfoSave = (data: any) => {
     setPersonalInfo(data);
     localStorage.setItem('portfolioPersonalInfo', JSON.stringify(data));
@@ -189,7 +205,7 @@ export default function Portfolio({
     setActiveSection('education');
     localStorage.setItem('portfolioActiveSection', 'education');
   };
-  
+
   const handleEducationSave = (data: any) => {
     setEducation(data);
     localStorage.setItem('portfolioEducation', JSON.stringify(data));
@@ -197,7 +213,7 @@ export default function Portfolio({
     setActiveSection('experience');
     localStorage.setItem('portfolioActiveSection', 'experience');
   };
-  
+
   const handleExperienceSave = (data: any) => {
     setExperience(data);
     localStorage.setItem('portfolioExperience', JSON.stringify(data));
@@ -205,7 +221,7 @@ export default function Portfolio({
     setActiveSection('certificates');
     localStorage.setItem('portfolioActiveSection', 'certificates');
   };
-  
+
   const handleCertificatesSave = (data: any) => {
     setCertificates(data);
     localStorage.setItem('portfolioCertificates', JSON.stringify(data));
@@ -224,12 +240,12 @@ export default function Portfolio({
       onPortfolioComplete();
     }
   };
-  
+
   // Handle closing the reminder modal
   const handleCloseReminderModal = () => {
     setShowReminderModal(false);
   };
-  
+
   // Handle continuing from the reminder modal
   const handleContinueFromReminder = () => {
     setShowReminderModal(false);
@@ -258,7 +274,7 @@ export default function Portfolio({
   };
 
   return (
-      <div className={`bg-white rounded-xl max-w-full shadow-sm p-3 space-y-6 font-rubik ${className}`}>
+    <div className={`bg-white rounded-xl max-w-full shadow-sm p-3 space-y-6 font-rubik ${className}`}>
 
       {/* Active Section Content */}
       <div className="bg-white p-4 rounded-xl shadow-lg">
@@ -268,19 +284,41 @@ export default function Portfolio({
             <p className="text-sm text-gray-600 mb-4">
               Upload your resume and we&apos;ll automatically extract your information to build your profile
             </p>
-            
+
             {!resumeUploaded ? (
-              <label className="block">
+              <label className={`block ${isUploading ? 'opacity-50 pointer-events-none' : ''}`}>
                 <div className="border-2 border-dashed border-gray-300 rounded-xl p-6 text-center hover:border-orange-500 transition-colors cursor-pointer">
-                  <Upload className="mx-auto text-gray-400 mb-2" size={24} />
-                  <p className="text-sm font-medium text-gray-900">Upload your resume</p>
+                  {isUploading ? (
+                    <Loader2 className="mx-auto text-blue-500 mb-2 animate-spin" size={24} />
+                  ) : (
+                    <Upload className="mx-auto text-gray-400 mb-2" size={24} />
+                  )}
+                  <p className="text-sm font-medium text-gray-900">
+                    {isUploading ? `Uploading resume (${uploadProgress}%)` : 'Upload your resume'}
+                  </p>
                   <p className="text-xs text-gray-500 mt-1">PDF, DOC, DOCX (max 10MB)</p>
+
+                  {/* Show error message if upload failed */}
+                  {error && (
+                    <p className="text-xs text-red-500 mt-2">{error}</p>
+                  )}
+
+                  {/* Show upload progress bar */}
+                  {isUploading && (
+                    <div className="w-full h-2 bg-gray-200 rounded-full mt-3">
+                      <div 
+                        className="h-full bg-blue-500 rounded-full" 
+                        style={{ width: `${uploadProgress}%` }}
+                      ></div>
+                    </div>
+                  )}
                 </div>
                 <input
                   type="file"
                   accept=".pdf,.doc,.docx"
                   onChange={handleResumeUpload}
                   className="hidden"
+                  disabled={isUploading}
                 />
               </label>
             ) : (

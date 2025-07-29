@@ -17,6 +17,8 @@ import {
   useSortable
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+// Import education store
+import { useEducationStore } from '@/store/portfolio/addeducationStore';
 
 // Using wrapper components from dnd-wrapper.tsx
 
@@ -60,7 +62,7 @@ export default function EducationForm({ onSave, onCancel, initialData = [] }: Ed
         console.error('Error loading education entries from localStorage:', error);
       }
     }
-    
+
     // Fallback to initialData or create a new entry
     return initialData.length > 0 ? initialData : [
       {
@@ -74,11 +76,11 @@ export default function EducationForm({ onSave, onCancel, initialData = [] }: Ed
       }
     ];
   });
-  
+
   const [activeEntryId, setActiveEntryId] = useState<string>(educationEntries[0]?.id || '');
   const [editMode, setEditMode] = useState<boolean>(true);
-  const [validationErrors, setValidationErrors] = useState<{[key: string]: string}>({});
-  
+  const [validationErrors, setValidationErrors] = useState<{ [key: string]: string }>({});
+
   // Save to localStorage whenever educationEntries changes
   useEffect(() => {
     if (typeof window !== 'undefined' && educationEntries.length > 0) {
@@ -89,7 +91,7 @@ export default function EducationForm({ onSave, onCancel, initialData = [] }: Ed
           const { certificateFile, ...serializableEntry } = entry;
           return serializableEntry;
         });
-        
+
         localStorage.setItem('educationEntries', JSON.stringify(serializableEntries));
       } catch (error) {
         console.error('Error saving education entries to localStorage:', error);
@@ -99,16 +101,16 @@ export default function EducationForm({ onSave, onCancel, initialData = [] }: Ed
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>, entryId: string) => {
     const { name, value } = e.target;
-    setEducationEntries(prev => 
-      prev.map(entry => 
+    setEducationEntries(prev =>
+      prev.map(entry =>
         entry.id === entryId ? { ...entry, [name]: value } : entry
       )
     );
-    
+
     // Clear validation error for this field when user types
     if (validationErrors[name]) {
       setValidationErrors(prev => {
-        const newErrors = {...prev};
+        const newErrors = { ...prev };
         delete newErrors[name];
         return newErrors;
       });
@@ -118,10 +120,10 @@ export default function EducationForm({ onSave, onCancel, initialData = [] }: Ed
   const handleCertificateUpload = (e: React.ChangeEvent<HTMLInputElement>, entryId: string) => {
     const file = e.target.files?.[0];
     if (file) {
-      setEducationEntries(prev => 
-        prev.map(entry => 
-          entry.id === entryId ? { 
-            ...entry, 
+      setEducationEntries(prev =>
+        prev.map(entry =>
+          entry.id === entryId ? {
+            ...entry,
             certificateFile: file,
             certificateFileName: file.name
           } : entry
@@ -129,7 +131,7 @@ export default function EducationForm({ onSave, onCancel, initialData = [] }: Ed
       );
     }
   };
-  
+
   const addNewEducation = () => {
     const newEntry: EducationEntry = {
       id: crypto.randomUUID(),
@@ -140,15 +142,15 @@ export default function EducationForm({ onSave, onCancel, initialData = [] }: Ed
       university: '',
       certificateFile: null,
     };
-    
+
     setEducationEntries(prev => [newEntry, ...prev]);
     setActiveEntryId(newEntry.id);
     setEditMode(true);
   };
-  
+
   const removeEducation = (entryId: string) => {
     setEducationEntries(prev => prev.filter(entry => entry.id !== entryId));
-    
+
     // If we removed the active entry, set the first remaining entry as active
     if (activeEntryId === entryId) {
       const remainingEntries = educationEntries.filter(entry => entry.id !== entryId);
@@ -160,46 +162,93 @@ export default function EducationForm({ onSave, onCancel, initialData = [] }: Ed
       }
     }
   };
-  
+
   const editEducation = (entryId: string) => {
     setActiveEntryId(entryId);
     setEditMode(true);
     setValidationErrors({});
   };
-  
+
   const validateActiveEntry = () => {
     const activeEntry = educationEntries.find(entry => entry.id === activeEntryId);
     if (!activeEntry) return false;
-    
-    const errors: {[key: string]: string} = {};
-    
+
+    const errors: { [key: string]: string } = {};
+
     // Check required fields
     if (!activeEntry.educationLevel) {
       errors.educationLevel = 'Education level is required';
     }
-    
+
     if (!activeEntry.yearOfCompletion) {
       errors.yearOfCompletion = 'Year of completion is required';
     } else if (!validateYear(activeEntry.yearOfCompletion)) {
       errors.yearOfCompletion = 'Year must be 4 digits (e.g., 2020)';
     }
-    
+
     // Set validation errors
     setValidationErrors(errors);
-    
+
     // Return true if no errors
     return Object.keys(errors).length === 0;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  // Get education store functions
+  const { uploadEducation, isUploading, uploadSuccess, uploadError, resetUploadState } = useEducationStore();
+
+  // Reset upload state when component unmounts
+  useEffect(() => {
+    return () => {
+      resetUploadState();
+    };
+  }, [resetUploadState]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    // Prevent default form submission
     e.preventDefault();
-    if (onSave) {
-      onSave(educationEntries);
-      
-      // Optionally clear localStorage after successful save
-      // Uncomment if you want to clear localStorage after saving to backend
-      // localStorage.removeItem('educationEntries');
+    e.stopPropagation();
+
+    // Reset any previous upload state
+    resetUploadState();
+
+    // Validate active entry
+    if (!validateActiveEntry()) {
+      console.error('Validation failed');
+      return;
     }
+
+    try {
+      // Get active entry
+      const activeEntry = educationEntries.find(entry => entry.id === activeEntryId);
+      if (!activeEntry) {
+        console.error('No active entry found');
+        return;
+      }
+
+      // Upload education data using store
+      const response = await uploadEducation(activeEntry);
+
+      if (response) {
+        console.log('Education added successfully:', response);
+
+        // Call onSave if provided
+        if (onSave) {
+          onSave(educationEntries);
+        }
+
+        // Set edit mode to false to show the saved entry
+        setEditMode(false);
+
+        // Optionally clear localStorage after successful save
+        // localStorage.removeItem('educationEntries');
+      }
+    } catch (error) {
+      console.error('Error adding education:', error);
+      // Error handling is done by the store
+    }
+
+    // Return false to prevent form submission
+    return false;
   };
 
   // Validate year is 4 digits
@@ -215,19 +264,19 @@ export default function EducationForm({ onSave, onCancel, initialData = [] }: Ed
   // Handle drag end event for reordering education entries
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
-    
+
     if (!over) return;
-    
+
     if (active.id !== over.id) {
       setEducationEntries((items) => {
         const oldIndex = items.findIndex(item => item.id === active.id);
         const newIndex = items.findIndex(item => item.id === over.id);
-        
+
         return arrayMove(items, oldIndex, newIndex);
       });
     }
   };
-  
+
   // Set up sensors for drag and drop
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -237,10 +286,10 @@ export default function EducationForm({ onSave, onCancel, initialData = [] }: Ed
   );
 
   // Sortable education item component
-  const SortableEducationItem = ({ entry, onEdit, onRemove }: { 
-    entry: EducationEntry; 
-    onEdit: (id: string) => void; 
-    onRemove: (id: string) => void; 
+  const SortableEducationItem = ({ entry, onEdit, onRemove }: {
+    entry: EducationEntry;
+    onEdit: (id: string) => void;
+    onRemove: (id: string) => void;
   }) => {
     const {
       attributes,
@@ -250,14 +299,14 @@ export default function EducationForm({ onSave, onCancel, initialData = [] }: Ed
       transition,
       isDragging
     } = useSortable({ id: entry.id });
-    
+
     const style = {
       transform: CSS.Transform.toString(transform),
       transition,
       marginBottom: '12px',
       zIndex: isDragging ? 10 : 0
     };
-    
+
     return (
       <div
         ref={setNodeRef}
@@ -318,7 +367,7 @@ export default function EducationForm({ onSave, onCancel, initialData = [] }: Ed
             <Plus size={16} className="mr-1" /> Add Education
           </button>
         </div>
-        
+
         {/* Education entries list */}
         {!editMode && educationEntries.length > 0 && (
           <div className="mb-6">
@@ -334,36 +383,54 @@ export default function EducationForm({ onSave, onCancel, initialData = [] }: Ed
                 strategy={verticalStrategy}
               >
                 {educationEntries.map((entry) => (
-                  <SortableEducationItem 
-                    key={entry.id} 
-                    entry={entry} 
-                    onEdit={editEducation} 
-                    onRemove={removeEducation} 
+                  <SortableEducationItem
+                    key={entry.id}
+                    entry={entry}
+                    onEdit={editEducation}
+                    onRemove={removeEducation}
                   />
                 ))}
               </SortableContext>
             </DndContext>
           </div>
         )}
-        
+
         {/* Education form */}
         {editMode && activeEntryId && (
           <div>
-            {educationEntries.length > 1 && (
+            {educationEntries.length > 0 && (
               <div className="flex justify-between items-center mb-4 pb-3 border-b border-gray-200">
                 <h4 className="font-medium text-gray-900">
                   {educationEntries.find(e => e.id === activeEntryId)?.educationLevel || 'New Education'}
                 </h4>
-                <button 
-                  type="button" 
-                  onClick={() => setEditMode(false)}
+                <button
+                  type="button"
+                  onClick={() => {
+                    // Check if this is a new entry with no data filled
+                    const currentEntry = educationEntries.find(e => e.id === activeEntryId);
+                    const isEmptyEntry = currentEntry &&
+                      !currentEntry.educationLevel &&
+                      !currentEntry.yearOfCompletion &&
+                      !currentEntry.stream &&
+                      !currentEntry.score &&
+                      !currentEntry.university;
+
+                    // If it's an empty entry, remove it from the list
+                    if (isEmptyEntry) {
+                      setEducationEntries(prev => prev.filter(entry => entry.id !== activeEntryId));
+                    }
+
+                    // Return to list view
+                    setEditMode(false);
+                  }}
                   className="text-sm text-gray-600 hover:text-gray-800"
+                  disabled={isUploading}
                 >
                   Back to List
                 </button>
               </div>
             )}
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {educationEntries.map(entry => (
                 entry.id === activeEntryId && (
@@ -396,7 +463,7 @@ export default function EducationForm({ onSave, onCancel, initialData = [] }: Ed
                         <p className="text-xs text-gray-500 mt-1">Latest qualification at top</p>
                       )}
                     </div>
-                    
+
                     {/* Year of Completion */}
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -412,11 +479,10 @@ export default function EducationForm({ onSave, onCancel, initialData = [] }: Ed
                           required
                           maxLength={4}
                           pattern="\d{4}"
-                          className={`w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                            entry.yearOfCompletion && !validateYear(entry.yearOfCompletion) 
-                              ? 'border-red-500' 
-                              : 'border-gray-300'
-                          }`}
+                          className={`w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${entry.yearOfCompletion && !validateYear(entry.yearOfCompletion)
+                            ? 'border-red-500'
+                            : 'border-gray-300'
+                            }`}
                           placeholder="YYYY"
                         />
                       </div>
@@ -428,7 +494,7 @@ export default function EducationForm({ onSave, onCancel, initialData = [] }: Ed
                         <p className="text-xs text-gray-500 mt-1">Must be 4 digits (e.g., 2020)</p>
                       )}
                     </div>
-                    
+
                     {/* Stream */}
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -446,7 +512,7 @@ export default function EducationForm({ onSave, onCancel, initialData = [] }: Ed
                         />
                       </div>
                     </div>
-                    
+
                     {/* Score */}
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -457,11 +523,10 @@ export default function EducationForm({ onSave, onCancel, initialData = [] }: Ed
                         name="score"
                         value={entry.score}
                         onChange={(e) => handleInputChange(e, entry.id)}
-                        className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                          entry.score && !validateScore(entry.score) 
-                            ? 'border-red-500' 
-                            : 'border-gray-300'
-                        }`}
+                        className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${entry.score && !validateScore(entry.score)
+                          ? 'border-red-500'
+                          : 'border-gray-300'
+                          }`}
                         placeholder="E.g., 85% or 3.8 CGPA"
                       />
                       {entry.score && !validateScore(entry.score) && (
@@ -471,7 +536,7 @@ export default function EducationForm({ onSave, onCancel, initialData = [] }: Ed
                         <p className="text-xs text-gray-500 mt-1">%, CGPA or other scoring system</p>
                       )}
                     </div>
-                    
+
                     {/* University/Board */}
                     <div className="md:col-span-2">
                       <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -489,13 +554,13 @@ export default function EducationForm({ onSave, onCancel, initialData = [] }: Ed
                         />
                       </div>
                     </div>
-                    
+
                     {/* Certificate Upload */}
                     <div className="md:col-span-2">
                       <label className="block text-sm font-medium text-gray-700 mb-2">
                         Certificate Upload
                       </label>
-                      
+
                       {!entry.certificateFileName ? (
                         <label className="block">
                           <div className="border-2 border-dashed border-gray-300 rounded-xl p-4 text-center hover:border-blue-500 transition-colors cursor-pointer">
@@ -519,13 +584,13 @@ export default function EducationForm({ onSave, onCancel, initialData = [] }: Ed
                               <p className="text-xs text-blue-700">Certificate uploaded successfully</p>
                             </div>
                           </div>
-                          <button 
+                          <button
                             type="button"
                             onClick={() => {
-                              setEducationEntries(prev => 
-                                prev.map(e => 
-                                  e.id === entry.id ? { 
-                                    ...e, 
+                              setEducationEntries(prev =>
+                                prev.map(e =>
+                                  e.id === entry.id ? {
+                                    ...e,
                                     certificateFile: null,
                                     certificateFileName: undefined
                                   } : e
@@ -547,35 +612,80 @@ export default function EducationForm({ onSave, onCancel, initialData = [] }: Ed
           </div>
         )}
       </div>
-      
+
+      {/* Upload Status Messages */}
+      {uploadError && (
+        <div className="p-3 mb-4 text-sm text-red-700 bg-red-100 rounded-md">
+          Error: {uploadError}
+        </div>
+      )}
+      {uploadSuccess && (
+        <div className="p-3 mb-4 text-sm text-green-700 bg-green-100 rounded-md">
+          Education details added successfully!
+        </div>
+      )}
+      {isUploading && (
+        <div className="p-3 mb-4 text-sm text-blue-700 bg-blue-100 rounded-md">
+          Uploading education details...
+        </div>
+      )}
+
       <div className="flex justify-end space-x-3">
-        {/* {onCancel && (
-          <button
-            type="button"
-            onClick={onCancel}
-            className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
-          >
-            Cancel
-          </button>
-        )} */}
         {editMode && (
           <button
             type="button"
-            onClick={() => {
+            onClick={async (e) => {
+              // Prevent form submission
+              e.preventDefault();
+              e.stopPropagation();
+
               if (validateActiveEntry()) {
-                setEditMode(false);
+                // Get active entry
+                const activeEntry = educationEntries.find(entry => entry.id === activeEntryId);
+                if (!activeEntry) {
+                  console.error('No active entry found');
+                  return;
+                }
+
+                // Reset any previous upload state
+                resetUploadState();
+
+                try {
+                  // Upload education data using store
+                  const response = await uploadEducation(activeEntry);
+
+                  if (response) {
+                    console.log('Education added successfully:', response);
+                  }
+                } catch (error) {
+                  console.error('Error adding education:', error);
+                } finally {
+                  // Always navigate back to list view regardless of success/failure
+                  setEditMode(false);
+                }
+              } else {
+                // If validation fails, stay on the form
+                console.error('Validation failed');
               }
             }}
             className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
+            disabled={isUploading}
           >
-            Add
+            {isUploading ? 'Adding...' : 'Add'}
           </button>
         )}
         <button
-          type="submit"
-          className="px-6 py-2 bg-blue-500 text-white font-medium rounded-lg hover:bg-blue-600 transition-colors"
+          type="button"
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            handleSubmit(e as React.FormEvent);
+          }}
+          className={`px-6 py-2 text-white font-medium rounded-lg transition-colors ${isUploading ? 'bg-blue-400 cursor-not-allowed' : 'bg-blue-500 hover:bg-blue-600'}`}
+          disabled={isUploading}
         >
-          {educationEntries.length > 0 ? 'Save Education' : 'Skip Education'}
+          {isUploading ? 'Saving...' : 
+          (educationEntries.filter(entry => entry.educationLevel || entry.yearOfCompletion || entry.stream || entry.score || entry.university).length > 0 ? 'Save Education' : 'Skip Education')}
         </button>
       </div>
     </form>

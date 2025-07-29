@@ -91,10 +91,17 @@ export const isAuthenticated = (): boolean => {
  */
 export const storeAuthData = (authData: LoginResponse): void => {
   if (typeof window !== 'undefined') {
+    // Store basic auth data
     localStorage.setItem('auth_token', authData.message.auth.token);
     localStorage.setItem('user_data', JSON.stringify(authData.message.user));
     localStorage.setItem('entity_data', JSON.stringify(authData.message.entity));
     localStorage.setItem('auth_expires', authData.message.auth.expires_on);
+    
+    // Store API credentials for resume upload and other API calls
+    localStorage.setItem('auth_api_key', authData.message.auth.api_key);
+    localStorage.setItem('auth_api_secret', authData.message.auth.api_secret);
+    
+    console.log('Auth data stored in localStorage, including API credentials');
   }
 };
 

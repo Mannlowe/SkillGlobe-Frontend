@@ -25,7 +25,7 @@ interface SidebarProps {
 
 const menuItems = [
   { icon: Home, label: 'Dashboard', href: '/individual-dashboard' },
-  { icon: Briefcase, label: 'Jobs', href: '/jobs' },
+  { icon: Briefcase, label: 'Opportunities', href: '/jobs' },
   { icon: Shield, label: 'Identity Verification', href: '/verification' },
   { icon: FileText, label: 'Portfolio', href: '/portfolio' },
   { icon: Award, label: 'Skills', href: '/skills' },

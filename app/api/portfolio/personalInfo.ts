@@ -22,6 +22,7 @@ export interface PersonalInfoData {
   twitter_handle?: string;
   linkedin_profile?: string;
   instagram_handle?: string;
+  facebook_profile?: string;
   website?: string;
   employment_status?: string;
   total_experience?: string;
@@ -111,13 +112,6 @@ export const getAuthData = () => {
   }
 };
 
-/**
- * Get personal info data for a user
- * @param entityId Entity ID of the user
- * @param apiKey API key
- * @param apiSecret API secret
- * @returns Promise with personal info data
- */
 export const getPersonalInfo = async (
   entityId: string,
   apiKey: string,

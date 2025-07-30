@@ -13,8 +13,8 @@ export default function SettingsPage() {
     { id: 'profile', label: 'Profile', icon: User },
     { id: 'notifications', label: 'Notifications', icon: Bell },
     { id: 'security', label: 'Security', icon: Shield },
-    { id: 'role', label: 'Role', icon: CreditCard },
-    { id: 'preferences', label: 'Preferences', icon: Globe },
+    // { id: 'role', label: 'Role', icon: CreditCard },
+    // { id: 'preferences', label: 'Preferences', icon: Globe },
   ];
 
   return (

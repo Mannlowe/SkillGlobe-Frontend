@@ -35,7 +35,7 @@ export default function Footer() {
           </div>
 
           {/* Quick Links */}
-          <div>
+          {/* <div>
             <h3 className="text-lg font-semibold mb-4">Quick Links</h3>
             <ul className="space-y-2">
               {['Discover', 'Jobs', 'Services', 'Learn', 'About Us', 'Contact'].map((link) => (
@@ -46,13 +46,13 @@ export default function Footer() {
                 </li>
               ))}
             </ul>
-          </div>
+          </div> */}
 
           {/* For Professionals */}
           <div>
             <h3 className="text-lg font-semibold mb-4">For Professionals</h3>
             <ul className="space-y-2">
-              {['Find Jobs', 'Skill Assessment', 'Career Coaching', 'Freelance Services', 'Learning Paths', 'Success Stories'].map((link) => (
+              {['Find Opportunities', 'Skill Assessment', 'Career Coaching', 'Freelance Services', 'Learning Paths', 'Success Stories'].map((link) => (
                 <li key={link}>
                   <Link href="#" className="text-gray-400 hover:text-orange-500 transition-colors">
                     {link}

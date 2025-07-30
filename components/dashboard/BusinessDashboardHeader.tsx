@@ -187,13 +187,13 @@ export default function BusinessDashboardHeader({ title, onMenuClick }: Business
                     Company Profile
                   </button>
 
-                  <button
+                  {/* <button
                     onClick={() => router.push('/business-dashboard/settings')}
                     className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                   >
                     <Settings size={16} className="mr-3 text-gray-500" />
                     Settings
-                  </button>
+                  </button> */}
 
                   <button
                     onClick={() => router.push('/help')}

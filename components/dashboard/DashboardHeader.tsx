@@ -123,14 +123,14 @@ export default function DashboardHeader({ onMenuClick, title }: DashboardHeaderP
                   <p className="text-sm text-gray-600">{user?.email || 'user@example.com'}</p>
                 </div>
                 <div className="py-2">
-                  <a href="/profile" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                  {/* <a href="/profile" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
                     View Profile
-                  </a>
+                  </a> */}
                   <a 
                     href={user?.user_type === 'business' ? '/business-dashboard/settings' : '/settings'} 
                     className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                   >
-                    Settings
+                    View Profile
                   </a>
                   <a href="/help" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
                     Help & Support

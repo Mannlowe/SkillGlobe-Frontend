@@ -98,9 +98,9 @@ export default function UserTypeSelection({ data, updateData, nextStep }: UserTy
         </div>
       )}
       
-      <div className="text-center text-sm text-gray-500">
+      {/* <div className="text-center text-sm text-gray-500">
         {isLoading ? 'Processing...' : 'You can change this later in your account settings'}
-      </div>
+      </div> */}
     </div>
   );
 }

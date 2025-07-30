@@ -26,6 +26,11 @@ export default function PersonalInfoForm({ onSave, onCancel, initialData = {} }:
   
   // Success state for UI feedback
   const [isSuccess, setIsSuccess] = useState(false);
+  const [errors, setErrors] = useState({
+    permanentPincode: '',
+    pincode: '',
+    // ...other errors if needed
+  });
   
   // Fetch personal info on component mount
   useEffect(() => {
@@ -56,6 +61,7 @@ export default function PersonalInfoForm({ onSave, onCancel, initialData = {} }:
         twitterHandle: personalInfo.twitter_handle || '',
         linkedinHandle: personalInfo.linkedin_profile || '',
         instagramHandle: personalInfo.instagram_handle || '',
+        facebookHandle: personalInfo.facebook_profile || '',
         employmentStatus: personalInfo.employment_status || '',
         profilePicture: null,
         website: personalInfo.website || '',
@@ -87,6 +93,7 @@ export default function PersonalInfoForm({ onSave, onCancel, initialData = {} }:
     twitterHandle: initialData.twitterHandle || '',
     linkedinHandle: initialData.linkedinHandle || '',
     instagramHandle: initialData.instagramHandle || '',
+    facebookHandle: initialData.facebookHandle || '',
     employmentStatus: initialData.employmentStatus || '',
     profilePicture: initialData.profilePicture || null,
     website: initialData.website || '',
@@ -96,25 +103,77 @@ export default function PersonalInfoForm({ onSave, onCancel, initialData = {} }:
   });
 
   const [profilePreview, setProfilePreview] = useState<string | null>(null);
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
+  ) => {
     const { name, value, type } = e.target;
-
+  
     if (type === 'checkbox') {
       const checked = (e.target as HTMLInputElement).checked;
       setFormData(prev => ({
         ...prev,
         [name]: checked,
-        ...(name === 'sameAsCurrentAddress' && checked ? { permanentAddress: formData.currentAddress } : {})
+        ...(name === 'sameAsCurrentAddress' && checked
+          ? { permanentAddress: formData.currentAddress }
+          : {})
       }));
     } else {
-      setFormData(prev => ({
-        ...prev,
-        [name]: value,
-        ...(name === 'currentAddress' && formData.sameAsCurrentAddress ? { permanentAddress: value } : {})
-      }));
+      if (name === 'permanentPincode' || name === 'pincode') {
+        const onlyDigits = value.replace(/\D/g, ''); // Remove non-digit characters
+  
+        setFormData(prev => ({
+          ...prev,
+          [name]: onlyDigits
+        }));
+  
+        setErrors(prev => ({
+          ...prev,
+          [name]: onlyDigits.length > 0 && onlyDigits.length < 6 ? '6 digits required' : ''
+        }));
+      } else if (name === 'totalExperience') {
+        const numericValue = parseFloat(value);
+        if (!isNaN(numericValue) && numericValue >= 0) {
+          setFormData(prev => ({
+            ...prev,
+            [name]: value
+          }));
+          setErrors(prev => ({
+            ...prev,
+            [name]: ''
+          }));
+        } else if (value === '') {
+          setFormData(prev => ({
+            ...prev,
+            [name]: ''
+          }));
+          setErrors(prev => ({
+            ...prev,
+            [name]: ''
+          }));
+        } else {
+          setErrors(prev => ({
+            ...prev,
+            [name]: 'Only non-negative numbers allowed'
+          }));
+        }
+      } else {
+        setFormData(prev => ({
+          ...prev,
+          [name]: value,
+          ...(name === 'currentAddress' && formData.sameAsCurrentAddress
+            ? { permanentAddress: value }
+            : {})
+        }));
+  
+        setErrors(prev => ({
+          ...prev,
+          [name]: ''
+        }));
+      }
     }
   };
+  
+  
 
   const handleProfilePictureChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -160,6 +219,7 @@ export default function PersonalInfoForm({ onSave, onCancel, initialData = {} }:
       twitter_handle: formData.twitterHandle,
       linkedin_profile: formData.linkedinHandle,
       instagram_handle: formData.instagramHandle,
+      facebook_profile: formData.facebookHandle,
       website: formData.website,
       employment_status: formData.employmentStatus,
       total_experience: formData.totalExperience,
@@ -439,21 +499,30 @@ export default function PersonalInfoForm({ onSave, onCancel, initialData = {} }:
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Pincode
-            </label>
-            <div className="relative">
-              <Locate className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
-              <input
-                type="text"
-                name="pincode"
-                value={formData.pincode}
-                onChange={handleInputChange}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                placeholder="Enter your pincode"
-              />
-            </div>
-          </div>
+  <label className="block text-sm font-medium text-gray-700 mb-1">
+    Pincode
+  </label>
+  <div className="relative">
+    <Locate className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
+    <input
+      type="text" // Keep as text to prevent issues with leading 0
+      name="pincode"
+      inputMode="numeric"
+      maxLength={6}
+      value={formData.pincode}
+      onChange={handleInputChange}
+      className={`w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+        errors.pincode ? 'border-red-500' : 'border-gray-300'
+      }`}
+      placeholder="Enter your pincode"
+    />
+  </div>
+
+  {errors.pincode && (
+    <p className="text-red-500 text-sm mt-1">{errors.pincode}</p>
+  )}
+</div>
+
 
           {/* Same as Current Address Checkbox */}
           <div className="md:col-span-2">
@@ -548,12 +617,17 @@ export default function PersonalInfoForm({ onSave, onCancel, initialData = {} }:
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Pincode
+                  PincodeP
                 </label>
                 <div className="relative">
                   <Locate className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
                   <input
-                    type="text"
+                    type="number"
+                    min={0}
+                    inputMode="numeric"
+                    pattern="\d{6,}"
+                    minLength={6}
+                    maxLength={6}
                     name="permanentPincode"
                     value={formData.permanentPincode}
                     onChange={handleInputChange}
@@ -561,6 +635,9 @@ export default function PersonalInfoForm({ onSave, onCancel, initialData = {} }:
                     placeholder="Enter your pincode"
                   />
                 </div>
+                {errors.permanentPincode && (
+    <p className="text-red-500 text-sm mt-1">{errors.permanentPincode}</p>
+  )}
               </div>
             </>
           )}
@@ -624,6 +701,22 @@ export default function PersonalInfoForm({ onSave, onCancel, initialData = {} }:
             </div>
           </div>
 
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Facebook Profile
+            </label>
+            <div className="relative">
+              <input
+                type="text"
+                name="facebookHandle"
+                value={formData.facebookHandle}
+                onChange={handleInputChange}
+                className="w-full pl-4 pr-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:outline-none"
+                placeholder="https://facebook.com/your_username"
+              />
+            </div>
+          </div>
+
         </div>
       </div>
 
@@ -646,11 +739,11 @@ export default function PersonalInfoForm({ onSave, onCancel, initialData = {} }:
                 className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none"
               >
                 <option value="">Select your employment status</option>
-                <option value="employed">Employed</option>
-                <option value="self-employed">Self-Employed</option>
-                <option value="unemployed">Unemployed</option>
-                <option value="student">Student</option>
-                <option value="retired">Retired</option>
+                <option value="Employed">Employed</option>
+                <option value="Self-Employed">Self-Employed</option>
+                <option value="Unemployed">Unemployed</option>
+                <option value="Student">Student</option>
+                <option value="Retired">Retired</option>
               </select>
             </div>
           </div>
@@ -679,7 +772,8 @@ export default function PersonalInfoForm({ onSave, onCancel, initialData = {} }:
             <div className="relative">
               <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
               <input
-                type="text"
+                type="number"
+                min={0}
                 name="totalExperience"
                 value={formData.totalExperience}
                 onChange={handleInputChange}

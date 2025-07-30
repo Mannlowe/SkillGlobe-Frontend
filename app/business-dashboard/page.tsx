@@ -29,7 +29,7 @@ const stats = [
     color: 'bg-blue-500',
   },
   {
-    title: 'Total Applications',
+    title: 'Total Profiles',
     value: '156',
     change: '+23 this week',
     trend: 'up',
@@ -279,7 +279,7 @@ export default function BusinessDashboardPage() {
                         Post New Opportunity
                       </button>
                       <button className="w-full border-2 border-orange-500 text-orange-600 font-semibold py-3 px-4 rounded-lg hover:bg-orange-50 transition-all duration-300">
-                        Review Applications
+                        Review Profiles
                       </button>
                       <button className="w-full border-2 border-blue-500 text-blue-600 font-semibold py-3 px-4 rounded-lg hover:bg-blue-50 transition-all duration-300">
                         Manage Team

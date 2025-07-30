@@ -149,7 +149,7 @@ export default function OnboardingPage() {
           <Link href="/" className="flex items-center">
           <div className="bg-white rounded-lg overflow-hidden">
               <Image 
-                src="/Images/logo_image.png" 
+                src="/Images/logo_image.jpg" 
                 alt="SkillGlobe Logo" 
                 width={150} 
                 height={24} 

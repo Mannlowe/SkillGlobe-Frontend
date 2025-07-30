@@ -16,7 +16,7 @@ import {
 
 const menuItems = [
   { icon: Home, label: 'Dashboard', href: '/business-dashboard' },
-  { icon: Briefcase, label: 'Job Postings', href: '/business-dashboard/job-postings' },
+  { icon: Briefcase, label: 'Opportunity Postings', href: '/business-dashboard/job-postings' },
   { icon: Shield, label: 'Document Verify', href: '/business-dashboard/document-verify' },
   { icon: Settings, label: 'Admin Access', href: '/business-dashboard/dashboard-setup' },
 ];
@@ -132,7 +132,7 @@ export default function BusinessSidebar({ mobileOpen }: BusinessSidebarProps) {
           </div>
           
           {/* Navigation */}
-          <nav className={`flex-1 overflow-y-auto ${isCollapsed && !isMobile ? 'p-2' : 'p-4'} space-y-2`}>
+          <nav className={`flex-1 w-72 overflow-y-auto ${isCollapsed && !isMobile ? 'p-2' : 'p-4'} space-y-2`}>
             {menuItems.map((item) => {
               const Icon = item.icon;
               const isActive = pathname === item.href;
@@ -143,7 +143,7 @@ export default function BusinessSidebar({ mobileOpen }: BusinessSidebarProps) {
                   href={item.href}
                   onClick={handleNavigate}
                   className={`
-                    flex items-center rounded-lg transition-colors
+                    flex items-center rounded-lg transition-colors w-60
                     ${isCollapsed && !isMobile ? 'justify-center p-3' : 'space-x-3 px-4 py-3'}
                     ${isActive 
                       ? 'bg-blue-50 text-blue-600' 

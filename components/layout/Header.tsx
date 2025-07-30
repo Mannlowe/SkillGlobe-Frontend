@@ -24,7 +24,7 @@ export default function Header() {
           </Link>
 
           {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center space-x-8">
+          {/* <nav className="hidden md:flex items-center space-x-8">
             <Link href="/discover" className="text-gray-700 hover:text-orange-500 font-medium transition-colors">
               Discover
             </Link>
@@ -37,7 +37,7 @@ export default function Header() {
             <Link href="/services" className="text-gray-700 hover:text-orange-500 font-medium transition-colors">
               Services
             </Link>
-          </nav>
+          </nav> */}
 
           {/* Right Side Actions */}
           <div className="flex items-center space-x-4">

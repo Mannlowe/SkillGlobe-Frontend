@@ -20,6 +20,28 @@ export interface AddExperienceResponse {
   };
 }
 
+export interface ExperienceListResponse {
+  message?: {
+    status: string;
+    message: string;
+    data?: {
+      portfolio?: string;
+      entity_id?: string;
+      experience_list?: Array<{
+        name?: string;
+        space?: string;
+        designation?: string;
+        company?: string;
+        relevant_experience?: number;
+      }>
+    }
+  };
+  exception?: string;
+  exc_type?: string;
+  exc?: string;
+  _server_messages?: string;
+}
+
 /**
  * Add work experience details to user portfolio
  * @param experienceData Experience data to be added
@@ -58,10 +80,36 @@ export const addExperience = async (
   }
 };
 
-/**
- * Get authentication data from localStorage
- * @returns Object containing auth data or null if not found
- */
+export const getExperienceList = async (
+  entityId: string,
+  apiKey: string,
+  apiSecret: string
+): Promise<ExperienceListResponse> => {
+  try {
+    console.log('Getting experience list for entity ID:', entityId);
+
+    // Authorization header
+    const authHeader = `token ${apiKey}:${apiSecret}`;
+
+    // Construct URL with query param
+    const url = `${API_BASE_URL}/api/method/skillglobe_be.api.portfolio.experience.get_experience_list?entity_id=${entityId}`;
+
+    const response = await axios.get(url, {
+      headers: {
+        'Authorization': authHeader,
+        'Accept': 'application/json'
+      }
+    });
+
+    console.log('Get experience list response:', response.data);
+    return response.data;
+  } catch (error: any) {
+    console.error('Get experience list error:', error.response?.data || error.message || error);
+    throw error;
+  }
+};
+
+
 export const getAuthData = () => {
   if (typeof window !== 'undefined') {
     try {

@@ -73,7 +73,7 @@ export const addEducation = async (
     const authHeader = `token ${apiKey}:${apiSecret}`;
     
     const response = await axios.post<AddEducationResponse>(
-      `${API_BASE_URL}/api/method/skillglobe_be.api.portfolio.add_education`,
+      `${API_BASE_URL}/api/method/skillglobe_be.api.portfolio.education.add_education`,
       formData,
       {
         headers: {
@@ -92,17 +92,6 @@ export const addEducation = async (
   }
 };
 
-/**
- * Get authentication data from localStorage
- * @returns Object containing auth data or null if not found
- */
-/**
- * Get education list for a user
- * @param entityId Entity ID of the user
- * @param apiKey API key for authentication
- * @param apiSecret API secret for authentication
- * @returns Promise with the education list response
- */
 export const getEducationList = async (
   entityId: string,
   apiKey: string,
@@ -110,25 +99,20 @@ export const getEducationList = async (
 ): Promise<EducationListResponse> => {
   try {
     console.log('Getting education list for entity ID:', entityId);
-    
-    // Create authorization header
+
+    // Authorization header
     const authHeader = `token ${apiKey}:${apiSecret}`;
-    
-    // Use JSON payload format like addExperience instead of FormData
-    const payload = { entity_id: entityId };
-    
-    const response = await axios.post<EducationListResponse>(
-      `${API_BASE_URL}/api/method/skillglobe_be.api.portfolio.education.add_education`,
-      payload,
-      {
-        headers: {
-          'Authorization': authHeader,
-          'Accept': 'application/json',
-          'Content-Type': 'application/json'
-        }
+
+    // Construct URL with query param
+    const url = `${API_BASE_URL}/api/method/skillglobe_be.api.portfolio.education.get_education_list?entity_id=${entityId}`;
+
+    const response = await axios.get<EducationListResponse>(url, {
+      headers: {
+        'Authorization': authHeader,
+        'Accept': 'application/json'
       }
-    );
-    
+    });
+
     console.log('Get education list response:', response.data);
     return response.data;
   } catch (error: any) {
@@ -136,6 +120,7 @@ export const getEducationList = async (
     throw error;
   }
 };
+
 
 export const getAuthData = () => {
   if (typeof window !== 'undefined') {

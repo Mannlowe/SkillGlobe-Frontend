@@ -56,9 +56,10 @@ export default function BusinessBasicInformation({ data, updateData, nextStep }:
       newErrors.email = 'Please use a business domain email (e.g., @yourcompany.com)';
     }
 
-    // Mobile validation
     if (!data.mobile) {
       newErrors.mobile = 'Mobile number is required';
+    } else if (!/^\d{10}$/.test(data.mobile)) {
+      newErrors.mobile = 'Mobile number must be exactly 10 digits';
     }
 
     // Password validation

@@ -36,6 +36,7 @@ interface ExperienceFormProps {
 }
 
 export default function ExperienceForm({ onSave, onCancel, initialData = [] }: ExperienceFormProps) {
+  // const { fetchExperienceList, isLoading, error } = useExperienceStore();
   const [experienceEntries, setExperienceEntries] = useState<ExperienceEntry[]>(
     initialData.length > 0 ? initialData : [
       {
@@ -136,7 +137,7 @@ export default function ExperienceForm({ onSave, onCancel, initialData = [] }: E
   };
 
 
-  const { uploadExperience, isUploading, uploadSuccess, uploadError, resetUploadState } = useExperienceStore();
+  const { uploadExperience, isUploading, uploadSuccess, uploadError, resetUploadState, fetchExperienceList, isFetchingList, fetchListError } = useExperienceStore();
 
   useEffect(() => {
     // Reset upload state when component mounts
@@ -246,6 +247,7 @@ export default function ExperienceForm({ onSave, onCancel, initialData = [] }: E
             <p className="text-sm text-gray-600">
               {entry.organization ? `${entry.organization}` : ''}
               {entry.space ? ` - ${entry.space}` : ''}
+              {entry.relevantExperience ? ` - ${entry.relevantExperience} years` : ''}
             </p>
           </div>
           <div className="flex space-x-3 ml-2 flex-shrink-0">
@@ -322,7 +324,29 @@ export default function ExperienceForm({ onSave, onCancel, initialData = [] }: E
                 </h4>
                 <button
                   type="button"
-                  onClick={() => setEditMode(false)}
+                  onClick={async () => {
+                    // Check if this is a new entry with no data filled
+                    const currentEntry = experienceEntries.find(e => e.id === activeEntryId);
+                    const isEmptyEntry = currentEntry && 
+                      !currentEntry.role && 
+                      !currentEntry.organization;
+                      
+                    // If it's an empty entry, remove it from the list
+                    if (isEmptyEntry) {
+                      setExperienceEntries(prev => prev.filter(entry => entry.id !== activeEntryId));
+                    }
+                    
+                    // Try to fetch the latest experience list from API
+                    try {
+                      await fetchExperienceList();
+                    } catch (error) {
+                      console.error('Failed to fetch experience list:', error);
+                      // If API fails, continue using the current list
+                    }
+                    
+                    // Return to list view
+                    setEditMode(false);
+                  }}
                   className="text-sm text-gray-600 hover:text-gray-800"
                 >
                   Back to List

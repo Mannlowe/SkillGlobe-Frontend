@@ -1,31 +1,30 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Building, MapPin, Globe, FileText, Upload, Users, Briefcase, Save } from 'lucide-react';
+import { Building, MapPin, Globe, FileText, Upload, Users, Briefcase, Save, Lock } from 'lucide-react';
 import BusinessDashboardHeader from '@/components/dashboard/BusinessDashboardHeader';
 import BusinessSidebar from '@/components/dashboard/BusinessSidebar';
+import { useBusinessRegistrationStore } from '@/store/businessRegistrationStore';
+import { useAuthStore } from '@/store/authStore';
+import BusinessProfileSuccessModal from '@/components/modal/BusinessProfileSuccessModal';
+import { updateBusinessProfile, getAuthData } from '@/app/api/Business Profile/businessProfile';
 
 const industrySectors = [
   'Technology',
-  'Healthcare',
-  'Education',
-  'Finance',
-  'Manufacturing',
-  'Retail',
-  'Consulting',
-  'Media & Entertainment',
-  'Real Estate',
-  'Non-Profit',
-  'Government',
-  'Other'
+  'Service',
+  'Software',
+  'Sports',
+  'Telecommunication',
+
 ];
 
 const organizationSizes = [
-  '1-10 employees',
-  '11-50 employees',
-  '51-200 employees',
-  '201-1000 employees',
-  '1000+ employees'
+  '1-10',
+  '11-50',
+  '51-200',
+  '201-500',
+  '501-1000',
+  '1000+'
 ];
 
 export default function CompanyProfilePage() {
@@ -36,37 +35,69 @@ export default function CompanyProfilePage() {
   const [errors, setErrors] = useState<any>({});
   const [isSaving, setIsSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
 
-  // Load company profile data from localStorage on component mount
+  // Get business name from entity details or fall back to registration store
+  const { entity, isAuthenticated } = useAuthStore();
+  const businessNameFromStore = useBusinessRegistrationStore(state => state.businessName);
+  const [businessName, setBusinessName] = useState<string>('');
+  
+  // Effect to set business name once auth data is available
   useEffect(() => {
-    const loadCompanyProfile = () => {
-      if (typeof window !== 'undefined') {
-        const companyProfileStr = localStorage.getItem('companyProfile');
-        const userInfoStr = localStorage.getItem('userInfo');
-        
-        if (companyProfileStr) {
-          try {
-            const companyProfile = JSON.parse(companyProfileStr);
-            setData(companyProfile);
-          } catch (error) {
-            console.error('Error parsing company profile:', error);
-          }
-        } else if (userInfoStr) {
-          // If no company profile exists, initialize with basic info from user data
-          try {
-            const userInfo = JSON.parse(userInfoStr);
-            setData({
-              companyName: userInfo.company || '',
-            });
-          } catch (error) {
-            console.error('Error parsing user info:', error);
-          }
-        }
-      }
-    };
+    // Get name from entity if available
+    const entityName = entity?.details?.name;
     
-    loadCompanyProfile();
-  }, []);
+    // Get name from localStorage to prevent flashing of default value
+    let storedName = '';
+    if (typeof window !== 'undefined') {
+      storedName = localStorage.getItem('businessName') || '';
+    }
+    
+    // Set business name with priority order
+    const name = entityName || businessNameFromStore || storedName || '';
+    
+    // Only update if we have a real name (not the default)
+    if (name) {
+      setBusinessName(name);
+      
+      // Store in localStorage for persistence across refreshes
+      if (typeof window !== 'undefined' && name) {
+        localStorage.setItem('businessName', name);
+      }
+    }
+  }, [entity, businessNameFromStore, isAuthenticated]);
+
+  // Load company profile data from localStorage and business registration store on component mount
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+  
+    const companyProfileStr = localStorage.getItem('companyProfile');
+    const userInfoStr = localStorage.getItem('userInfo');
+  
+    let business = businessName || '';
+  
+    try {
+      if (companyProfileStr) {
+        const companyProfile = JSON.parse(companyProfileStr);
+        business = business || companyProfile.businessName || '';
+        setData({ ...companyProfile, businessName: business });
+        return;
+      }
+  
+      if (userInfoStr) {
+        const userInfo = JSON.parse(userInfoStr);
+        business = business || userInfo.businessName || '';
+      }
+    } catch (error) {
+      console.error('Error parsing localStorage data:', error);
+    }
+  
+    setData(prev => ({
+      ...prev,
+      businessName: business
+    }));
+  }, [businessName]);
+    // Add businessName as dependency
 
   const updateData = (newData: any) => {
     setData((prevData: any) => ({
@@ -78,7 +109,7 @@ export default function CompanyProfilePage() {
   const validateForm = () => {
     const newErrors: any = {};
 
-    if (!data.companyName?.trim()) newErrors.companyName = 'Company name is required';
+    // Business name is now prefilled and read-only, so no validation needed
     if (!data.businessAddress?.trim()) newErrors.businessAddress = 'Business address is required';
     if (!data.industrySector) newErrors.industrySector = 'Industry sector is required';
     if (!data.organizationSize) newErrors.organizationSize = 'Organization size is required';
@@ -116,11 +147,40 @@ export default function CompanyProfilePage() {
       setIsSaving(true);
       
       try {
-        // Simulate API call
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        // Get auth data using the getAuthData function from businessProfile.ts
+        const authData = getAuthData();
         
-        // Save to localStorage for demo purposes
+        if (!authData) {
+          console.error('Authentication data not found');
+          return;
+        }
+        
+        const { entityId, apiKey, apiSecret } = authData;
+        
+        if (!entityId) {
+          console.error('Entity ID not found');
+          return;
+        }
+        
+        // Prepare API payload
+        const payload = {
+          entity_id: entityId,
+          tax_id: data.taxId || '',
+          website: data.website || '',
+          industry: data.industrySector || '',
+          number_of_employees: data.organizationSize || '',
+          headquarters_address: data.businessAddress || '',
+          about_company: data.businessDescription || ''
+        };
+        
+        // Call API with authentication
+        const response = await updateBusinessProfile(payload, apiKey, apiSecret);
+        
+        // Save to localStorage for persistence
         localStorage.setItem('companyProfile', JSON.stringify(data));
+        
+        // Show success modal
+        setShowSuccessModal(true);
         
         // Update success state
         setSaveSuccess(true);
@@ -148,7 +208,7 @@ export default function CompanyProfilePage() {
             <div className="space-y-6">
               <div>
                 <h1 className="text-2xl font-bold text-gray-900 mb-2">
-                  Company Profile
+                  Business Profile
                 </h1>
                 <p className="text-gray-600">
                   Manage your company&apos;s information and presence on SkillGlobe
@@ -158,30 +218,33 @@ export default function CompanyProfilePage() {
               <form onSubmit={handleSubmit} className="space-y-5">
                 {/* Grid layout for form fields */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                  {/* Company Name */}
+                  {/* Company Name - Read-only */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Company Name <span className="text-red-500">*</span>
+                      Business Name <span className="text-red-500">*</span>
                     </label>
                     <div className="relative">
                       <Building className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+                      <Lock className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
                       <input
                         type="text"
-                        value={data.companyName || ''}
-                        onChange={(e) => updateData({ companyName: e.target.value })}
-                        className={`w-full pl-10 pr-4 py-3 bg-gray-50 rounded-xl border-0 focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all ${
-                          errors.companyName ? 'ring-2 ring-red-500' : ''
-                        }`}
-                        placeholder="Your company name"
+                        value={businessName || 'Your Business'}
+                        readOnly
+                        className="w-full pl-10 pr-10 py-3 bg-gray-100 rounded-xl border-0 text-gray-700 cursor-not-allowed transition-all"
+                        placeholder="Your business name"
                       />
                     </div>
-                    {errors.companyName && <p className="text-red-500 text-xs mt-1">{errors.companyName}</p>}
+                    {data.companyName ? (
+                      <p className="text-xs text-gray-500 mt-1 flex items-center">
+                        <Lock size={12} className="mr-1" /> Business name is locked and cannot be changed
+                      </p>
+                    ) : null}
                   </div>
 
                   {/* Website */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Website (Optional)
+                      Website
                     </label>
                     <div className="relative">
                       <Globe className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
@@ -201,7 +264,7 @@ export default function CompanyProfilePage() {
                   {/* Tax ID */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Tax ID / PAN / GSTIN (Optional)
+                      PAN / GSTIN
                     </label>
                     <div className="relative">
                       <FileText className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
@@ -212,7 +275,7 @@ export default function CompanyProfilePage() {
                         className={`w-full pl-10 pr-4 py-3 bg-gray-50 rounded-xl border-0 focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all ${
                           errors.taxId ? 'ring-2 ring-red-500' : ''
                         }`}
-                        placeholder="Enter your business tax ID"
+                        placeholder="ID Number"
                       />
                     </div>
                     {errors.taxId && <p className="text-red-500 text-xs mt-1">{errors.taxId}</p>}
@@ -221,7 +284,7 @@ export default function CompanyProfilePage() {
                   {/* Social Links */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Social/External Links (Optional)
+                      Social/External Links
                     </label>
                     <input
                       type="url"
@@ -301,7 +364,7 @@ export default function CompanyProfilePage() {
                   {/* Business Description */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Business Description (Optional)
+                      Business Description
                     </label>
                     <textarea
                       value={data.businessDescription || ''}
@@ -316,7 +379,7 @@ export default function CompanyProfilePage() {
                 {/* Logo Upload - Full width */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Company Logo (Optional)
+                    Company Logo
                   </label>
                   {!logo && !data.logo ? (
                     <label className="block">
@@ -348,40 +411,37 @@ export default function CompanyProfilePage() {
                   <button
                     type="submit"
                     disabled={isSaving}
-                    className={`w-60 flex items-center justify-center bg-blue-500 text-white font-semibold py-3 px-6 rounded-xl hover:bg-blue-600 transition-all duration-300 ${
+                    className={`w-40 flex items-center justify-center bg-blue-500 text-white font-semibold py-3 px-6 rounded-xl hover:bg-blue-600 transition-all duration-300 ${
                       isSaving ? 'opacity-70 cursor-not-allowed' : ''
                     }`}
                   >
                     {isSaving ? (
                       <>
-                        <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <svg className="animate-spin -ml-1 mr-1 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                           <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                           <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                         </svg>
-                        Saving Changes...
+                        Saving
                       </>
                     ) : (
                       <>
                         <Save className="mr-2" size={18} />
-                        Save Changes
+                        Save
                       </>
                     )}
                   </button>
-                  
-                  {/* Success Message */}
-                  {saveSuccess && (
-                    <div className="mt-3 bg-green-50 text-green-800 text-sm p-3 rounded-lg border border-green-200 flex items-center">
-                      <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                      </svg>
-                      Company profile updated successfully!
-                    </div>
-                  )}
                 </div>
               </form>
             </div>
           </div>
         </main>
+        
+        {/* Success Modal */}
+        <BusinessProfileSuccessModal 
+          isOpen={showSuccessModal} 
+          onClose={() => setShowSuccessModal(false)} 
+          message="Business Profile added successfully"
+        />
       </div>
     </div>
   );

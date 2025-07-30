@@ -92,7 +92,7 @@ export default function CompanyProfilePage() {
       console.error('Error parsing localStorage data:', error);
     }
   
-    setData(prev => ({
+    setData((prev: any) => ({
       ...prev,
       businessName: business
     }));

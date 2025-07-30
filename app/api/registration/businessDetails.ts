@@ -42,7 +42,7 @@ export const updateBusinessDetails = async (
     console.log('Updating business details with:', businessDetails);
     
     const response = await axios.post<BusinessDetailsResponse>(
-      `${API_BASE_URL}/api/method/skillglobe_be.api.register.update_business_details`,
+      `${API_BASE_URL}/api/method/skillglobe_be.api.register.register.update_business_details`,
       businessDetails,
       {
         headers: {

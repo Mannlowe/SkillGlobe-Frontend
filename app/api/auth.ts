@@ -53,7 +53,7 @@ export const login = async (email: string, password: string): Promise<LoginRespo
     console.log('Attempting login with:', { usr: email, pwd: password });
     
     const response = await axios.post<LoginResponse>(
-      `${API_BASE_URL}/api/method/skillglobe_be.api.auth.login`,
+      `${API_BASE_URL}/api/method/skillglobe_be.api.auth.auth.login`,
       {
         usr: email,
         pwd: password

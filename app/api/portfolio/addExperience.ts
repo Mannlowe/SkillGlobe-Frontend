@@ -3,61 +3,57 @@ import axios from 'axios';
 // Base URL for API calls
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
-// Interface for resume upload response
-export interface ResumeUploadResponse {
+// Interface for experience data
+export interface ExperienceData {
+  entity_id: string;
+  space: string;
+  designation: string;
+  company: string;
+  relevant_experience: number;
+}
+
+// Interface for add experience response
+export interface AddExperienceResponse {
   message: {
     status: string;
-    message: string;
-    data: {
-      name?: string;
-      file_url?: string;
-      [key: string]: any;
-    };
-    timestamp: string;
+    data?: any;
   };
 }
 
 /**
- * Upload resume file to the server
- * @param file Resume file to upload
- * @param entityId User's entity ID
- * @param apiKey API key from login response
- * @param apiSecret API secret from login response
- * @returns Promise with upload response
+ * Add work experience details to user portfolio
+ * @param experienceData Experience data to be added
+ * @param apiKey API key for authentication
+ * @param apiSecret API secret for authentication
+ * @returns Promise with the response
  */
-export const uploadResume = async (
-  file: File,
-  entityId: string,
+export const addExperience = async (
+  experienceData: ExperienceData,
   apiKey: string,
   apiSecret: string
-): Promise<ResumeUploadResponse> => {
+): Promise<AddExperienceResponse> => {
   try {
-    console.log('Uploading resume with entity ID:', entityId);
-    
-    // Create FormData object
-    const formData = new FormData();
-    formData.append('entity_id', entityId);
-    formData.append('resume', file);
+    console.log('Adding work experience with entity ID:', experienceData.entity_id);
     
     // Create authorization header
     const authHeader = `token ${apiKey}:${apiSecret}`;
     
-    const response = await axios.post<ResumeUploadResponse>(
-      `${API_BASE_URL}/api/method/skillglobe_be.api.portfolio.resume.upload_resume`,
-      formData,
+    const response = await axios.post<AddExperienceResponse>(
+      `${API_BASE_URL}/api/method/skillglobe_be.api.portfolio.experience.add_work_experience`,
+      experienceData,
       {
         headers: {
           'Authorization': authHeader,
           'Accept': 'application/json',
-          // Don't set Content-Type when using FormData, axios will set it with the correct boundary
+          'Content-Type': 'application/json'
         }
       }
     );
     
-    console.log('Resume upload response:', response.data);
+    console.log('Add work experience response:', response.data);
     return response.data;
   } catch (error: any) {
-    console.error('Resume upload error:', error.response?.data || error.message || error);
+    console.error('Add work experience error:', error.response?.data || error.message || error);
     throw error;
   }
 };
@@ -75,7 +71,6 @@ export const getAuthData = () => {
       const entityData = entityDataStr ? JSON.parse(entityDataStr) : {};
       
       // Store auth data directly in localStorage during login
-      // We need to add this to the storeAuthData function in auth.ts
       const apiKey = localStorage.getItem('auth_api_key');
       const apiSecret = localStorage.getItem('auth_api_secret');
       
@@ -90,11 +85,7 @@ export const getAuthData = () => {
           
           // Try to get API credentials from state
           if (state && state.token) {
-            // The token is stored, but we need to check if the full auth object is available
             console.log('Found token in auth-storage, checking for auth data...');
-            
-            // Since we don't have direct access to api_key and api_secret in the state,
-            // we'll need to modify the auth.ts file to store these values separately
           }
         }
       }

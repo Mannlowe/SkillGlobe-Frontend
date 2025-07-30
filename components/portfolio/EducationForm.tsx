@@ -194,14 +194,37 @@ export default function EducationForm({ onSave, onCancel, initialData = [] }: Ed
   };
 
   // Get education store functions
-  const { uploadEducation, isUploading, uploadSuccess, uploadError, resetUploadState } = useEducationStore();
+  const { uploadEducation, isUploading, uploadSuccess, uploadError, resetUploadState, fetchEducationList, isFetchingList, fetchListError } = useEducationStore();
 
-  // Reset upload state when component unmounts
   useEffect(() => {
-    return () => {
-      resetUploadState();
-    };
-  }, [resetUploadState]);
+    // Reset upload state when component mounts
+    resetUploadState();
+    
+    // Try to fetch education list from API
+    fetchEducationList().then(entries => {
+      console.log('Fetched education entries:', entries);
+      if (entries.length > 0 && !activeEntryId) {
+        setActiveEntryId(entries[0].id);
+      }
+    }).catch(error => {
+      console.error('Failed to fetch education list on mount:', error);
+      // If API fails, try to load from localStorage
+      try {
+        const savedEntries = localStorage.getItem('educationEntries');
+        if (savedEntries) {
+          const parsedEntries = JSON.parse(savedEntries);
+          setEducationEntries(parsedEntries);
+          if (parsedEntries.length > 0 && !activeEntryId) {
+            setActiveEntryId(parsedEntries[0].id);
+          }
+        }
+      } catch (e) {
+        console.error('Error loading education entries from localStorage:', e);
+      }
+    });
+    
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     // Prevent default form submission
@@ -369,43 +392,82 @@ export default function EducationForm({ onSave, onCancel, initialData = [] }: Ed
         </div>
 
         {/* Education entries list */}
-        {!editMode && educationEntries.length > 0 && (
-          <div className="mb-6">
-            {/* @ts-ignore - Ignoring type error with DndContext */}
-            <DndContext
-              sensors={sensors}
-              collisionDetection={closestCenter}
-              onDragEnd={handleDragEnd}
-            >
-              {/* @ts-ignore - Ignoring type error with SortableContext */}
-              <SortableContext
-                items={educationEntries.map(entry => entry.id)}
-                strategy={verticalStrategy}
-              >
-                {educationEntries.map((entry) => (
-                  <SortableEducationItem
-                    key={entry.id}
-                    entry={entry}
-                    onEdit={editEducation}
-                    onRemove={removeEducation}
-                  />
-                ))}
-              </SortableContext>
-            </DndContext>
+        {!editMode && (
+          <div>
+            {isFetchingList && (
+              <div className="flex justify-center items-center py-8">
+                <svg className="animate-spin h-8 w-8 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                <span className="ml-2 text-gray-600">Loading education list...</span>
+              </div>
+            )}
+            
+            {/* {fetchListError && (
+              <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg">
+                <p>Error loading education list: {fetchListError}</p>
+                <button 
+                  onClick={() => fetchEducationList()}
+                  className="mt-2 text-sm text-blue-600 hover:text-blue-800 font-medium"
+                >
+                  Try Again
+                </button>
+              </div>
+            )} */}
+            
+            {!isFetchingList && !fetchListError && educationEntries.length === 0 && (
+              <div className="text-center py-8">
+                <p className="text-gray-500 mb-4">No education entries found</p>
+                <button
+                  type="button"
+                  onClick={addNewEducation}
+                  className="px-4 py-2 bg-blue-500 text-white font-medium rounded-lg hover:bg-blue-600 transition-colors"
+                >
+                  Add Education
+                </button>
+              </div>
+            )}
+            
+            {!isFetchingList && educationEntries.length > 0 && (
+              <div className="mb-6">
+                {/* @ts-ignore - Ignoring type error with DndContext */}
+                <DndContext
+                  sensors={sensors}
+                  collisionDetection={closestCenter}
+                  onDragEnd={handleDragEnd}
+                >
+                  {/* @ts-ignore - Ignoring type error with SortableContext */}
+                  <SortableContext
+                    items={educationEntries.map(entry => entry.id)}
+                    strategy={verticalStrategy}
+                  >
+                    {educationEntries.map((entry) => (
+                      <SortableEducationItem
+                        key={entry.id}
+                        entry={entry}
+                        onEdit={editEducation}
+                        onRemove={removeEducation}
+                      />
+                    ))}
+                  </SortableContext>
+                </DndContext>
+              </div>
+            )}
           </div>
         )}
 
         {/* Education form */}
         {editMode && activeEntryId && (
           <div>
-            {educationEntries.length > 0 && (
+            {!isFetchingList && educationEntries.length > 0 && (
               <div className="flex justify-between items-center mb-4 pb-3 border-b border-gray-200">
                 <h4 className="font-medium text-gray-900">
                   {educationEntries.find(e => e.id === activeEntryId)?.educationLevel || 'New Education'}
                 </h4>
                 <button
                   type="button"
-                  onClick={() => {
+                  onClick={async () => {
                     // Check if this is a new entry with no data filled
                     const currentEntry = educationEntries.find(e => e.id === activeEntryId);
                     const isEmptyEntry = currentEntry &&
@@ -418,6 +480,14 @@ export default function EducationForm({ onSave, onCancel, initialData = [] }: Ed
                     // If it's an empty entry, remove it from the list
                     if (isEmptyEntry) {
                       setEducationEntries(prev => prev.filter(entry => entry.id !== activeEntryId));
+                    }
+
+                    // Try to fetch the latest education list from API
+                    try {
+                      await fetchEducationList();
+                    } catch (error) {
+                      console.error('Failed to fetch education list:', error);
+                      // If API fails, continue using the current list
                     }
 
                     // Return to list view
@@ -656,12 +726,12 @@ export default function EducationForm({ onSave, onCancel, initialData = [] }: Ed
 
                   if (response) {
                     console.log('Education added successfully:', response);
+                    // Only navigate back to list view on success
+                    setEditMode(false);
                   }
                 } catch (error) {
                   console.error('Error adding education:', error);
-                } finally {
-                  // Always navigate back to list view regardless of success/failure
-                  setEditMode(false);
+                  // Stay in edit mode when there's an error
                 }
               } else {
                 // If validation fails, stay on the form

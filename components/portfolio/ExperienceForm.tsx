@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useExperienceStore } from '@/store/portfolio/addexperienceStore';
 import { Calendar, Briefcase, Building, Globe, Clock, FileText, Plus, Pencil, Trash2, GripVertical } from 'lucide-react';
 import {
   KeyboardSensor,
@@ -135,10 +136,37 @@ export default function ExperienceForm({ onSave, onCancel, initialData = [] }: E
   };
 
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const { uploadExperience, isUploading, uploadSuccess, uploadError, resetUploadState } = useExperienceStore();
+
+  useEffect(() => {
+    // Reset upload state when component mounts
+    resetUploadState();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (onSave) {
-      onSave(experienceEntries);
+    
+    // If there are no entries or we're in edit mode, just call onSave
+    if (experienceEntries.length === 0 || editMode) {
+      if (onSave) {
+        onSave(experienceEntries);
+      }
+      return;
+    }
+
+    // Try to upload each experience entry
+    try {
+      for (const entry of experienceEntries) {
+        await uploadExperience(entry);
+      }
+      
+      // Call onSave after successful upload
+      if (onSave) {
+        onSave(experienceEntries);
+      }
+    } catch (error) {
+      console.error('Failed to upload experience entries:', error);
     }
   };
 
@@ -342,6 +370,7 @@ export default function ExperienceForm({ onSave, onCancel, initialData = [] }: E
                         >
                           <option value="">Select industry</option>
                           <option value="IT">IT</option>
+                          <option value="Testing">Testing</option>
                           <option value="Education & Training">Education & Training</option>
                           <option value="Finance">Finance</option>
                         </select>
@@ -394,6 +423,18 @@ export default function ExperienceForm({ onSave, onCancel, initialData = [] }: E
         )}
       </div>
 
+      {uploadError && (
+        <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg">
+          <p>Error: {uploadError}</p>
+        </div>
+      )}
+
+      {uploadSuccess && (
+        <div className="mb-4 p-3 bg-green-50 border border-green-200 text-green-700 rounded-lg">
+          <p>Work experience details saved successfully!</p>
+        </div>
+      )}
+
       <div className="flex justify-end space-x-3">
         {/* {onCancel && (
           <button
@@ -407,21 +448,48 @@ export default function ExperienceForm({ onSave, onCancel, initialData = [] }: E
         {editMode && (
           <button
             type="button"
-            onClick={() => {
+            onClick={async () => {
               if (validateActiveEntry()) {
-                setEditMode(false);
+                // Get the active entry
+                const activeEntry = experienceEntries.find(entry => entry.id === activeEntryId);
+                if (activeEntry) {
+                  try {
+                    // Upload the experience entry
+                    await uploadExperience(activeEntry);
+                    // Only set editMode to false if upload was successful
+                    if (!uploadError) {
+                      setEditMode(false);
+                    }
+                  } catch (error) {
+                    console.error('Failed to upload experience entry:', error);
+                  }
+                }
               }
             }}
-            className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
+            disabled={isUploading}
+            className={`px-4 py-2 border border-gray-300 text-gray-700 rounded-lg ${isUploading ? 'bg-gray-100 cursor-not-allowed' : 'hover:bg-gray-50'} flex items-center`}
           >
-            Add
+            {isUploading && (
+              <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-gray-700" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+            )}
+            {isUploading ? 'Adding...' : 'Add'}
           </button>
         )}
         <button
           type="submit"
-          className="px-6 py-2 bg-blue-500 text-white font-medium rounded-lg hover:bg-blue-600 transition-colors"
+          disabled={isUploading}
+          className={`px-6 py-2 ${isUploading ? 'bg-blue-300' : 'bg-blue-500 hover:bg-blue-600'} text-white font-medium rounded-lg transition-colors flex items-center`}
         >
-          {experienceEntries.length > 0 ? 'Save Experience' : 'Skip Experience'}
+          {isUploading && (
+            <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+          )}
+          {isUploading ? 'Saving...' : experienceEntries.length > 0 ? 'Save Experience' : 'Skip Experience'}
         </button>
       </div>
     </form>

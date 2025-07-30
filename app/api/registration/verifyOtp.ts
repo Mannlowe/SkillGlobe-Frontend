@@ -42,7 +42,7 @@ export const verifyOtp = async (
     console.log('Verifying OTP with:', { request_id: requestId, email_otp: emailOtp, phone_otp: phoneOtp });
     
     const response = await axios.post<VerifyOtpResponse>(
-      `${API_BASE_URL}/api/method/skillglobe_be.api.register_both_contacts.verify_both_contacts`,
+      `${API_BASE_URL}/api/method/skillglobe_be.api.register.register_both_contacts.verify_both_contacts`,
       {
         request_id: requestId,
         email_otp: emailOtp,

@@ -126,11 +126,16 @@ export const useAuthStore = create<AuthState>()(
       },
       
       logout: () => {
-        // Clear auth data from localStorage
+        // Clear all user-specific data from localStorage
         if (typeof window !== 'undefined') {
+          // Clear all items shown in the screenshot
           localStorage.removeItem('auth_token');
           localStorage.removeItem('user_data');
           localStorage.removeItem('auth_expires');
+          
+          // Use localStorage.clear() as a fallback to ensure everything is cleared
+          // Uncomment if you want to clear ALL localStorage items (including non-user data)
+          // localStorage.clear();
         }
         
         // Reset state

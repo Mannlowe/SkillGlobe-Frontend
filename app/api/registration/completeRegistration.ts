@@ -30,7 +30,7 @@ export const completeRegistration = async (
     console.log('Completing registration with:', { request_id: requestId });
     
     const response = await axios.post<CompleteRegistrationResponse>(
-      `${API_BASE_URL}/api/method/skillglobe_be.api.register.complete_registration`,
+      `${API_BASE_URL}/api/method/skillglobe_be.api.register.register.complete_registration`,
       {
         request_id: requestId,
         password: password,

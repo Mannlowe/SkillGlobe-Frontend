@@ -22,13 +22,31 @@ export interface AddEducationResponse {
   };
 }
 
-/**
- * Add education details to user portfolio
- * @param educationData Education data to be added
- * @param apiKey API key for authentication
- * @param apiSecret API secret for authentication
- * @returns Promise with the response
- */
+// Interface for education list response
+export interface EducationListResponse {
+  message?: {
+    status: string;
+    message: string;
+    data?: {
+      portfolio?: string;
+      entity_id?: string;
+      education_list?: Array<{
+        name?: string;
+        education_level?: string;
+        year_of_completion?: number | string;
+        stream?: string;
+        score?: string | number;
+        university_board?: string;
+        certificate?: string | null;
+      }>
+    }
+  };
+  exception?: string;
+  exc_type?: string;
+  exc?: string;
+  _server_messages?: string;
+}
+
 export const addEducation = async (
   educationData: EducationData,
   apiKey: string,
@@ -78,6 +96,47 @@ export const addEducation = async (
  * Get authentication data from localStorage
  * @returns Object containing auth data or null if not found
  */
+/**
+ * Get education list for a user
+ * @param entityId Entity ID of the user
+ * @param apiKey API key for authentication
+ * @param apiSecret API secret for authentication
+ * @returns Promise with the education list response
+ */
+export const getEducationList = async (
+  entityId: string,
+  apiKey: string,
+  apiSecret: string
+): Promise<EducationListResponse> => {
+  try {
+    console.log('Getting education list for entity ID:', entityId);
+    
+    // Create authorization header
+    const authHeader = `token ${apiKey}:${apiSecret}`;
+    
+    // Use JSON payload format like addExperience instead of FormData
+    const payload = { entity_id: entityId };
+    
+    const response = await axios.post<EducationListResponse>(
+      `${API_BASE_URL}/api/method/skillglobe_be.api.portfolio.education.add_education`,
+      payload,
+      {
+        headers: {
+          'Authorization': authHeader,
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
+        }
+      }
+    );
+    
+    console.log('Get education list response:', response.data);
+    return response.data;
+  } catch (error: any) {
+    console.error('Get education list error:', error.response?.data || error.message || error);
+    throw error;
+  }
+};
+
 export const getAuthData = () => {
   if (typeof window !== 'undefined') {
     try {

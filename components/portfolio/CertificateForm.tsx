@@ -1,7 +1,8 @@
 'use client';
 
-import React, { useState } from 'react';
-import { Award, Upload, Plus, Pencil, Trash2, GripVertical } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Award, Upload, Plus, Pencil, Trash2, GripVertical, Check } from 'lucide-react';
+import { addCertificate, getAuthData } from '@/app/api/portfolio/addCertificate';
 import {
   KeyboardSensor,
   PointerSensor,
@@ -22,6 +23,9 @@ interface CertificateEntry {
   certificateName: string;
   certificateFile: File | null;
   certificateFileName?: string;
+  isUploading?: boolean;
+  isUploaded?: boolean;
+  uploadError?: string;
 }
 
 interface CertificateFormProps {
@@ -122,7 +126,10 @@ export default function CertificateForm({ onSave, onCancel, initialData = [] }: 
   
   const validateActiveEntry = () => {
     const activeEntry = certificateEntries.find(entry => entry.id === activeEntryId);
-    if (!activeEntry) return false;
+    if (!activeEntry) {
+      console.log('No active entry found');
+      return false;
+    }
     
     const errors: {[key: string]: string} = {};
     
@@ -139,12 +146,87 @@ export default function CertificateForm({ onSave, onCancel, initialData = [] }: 
     setValidationErrors(errors);
     
     // Return true if no errors
-    return Object.keys(errors).length === 0;
+    const isValid = Object.keys(errors).length === 0;
+    console.log('Validation result:', isValid, 'Errors:', errors);
+    return isValid;
   };
   
-  const saveActiveEntry = () => {
+  const saveActiveEntry = async () => {
+    console.log('saveActiveEntry called');
     if (validateActiveEntry()) {
-      setEditMode(false);
+      const activeEntry = certificateEntries.find(entry => entry.id === activeEntryId);
+      if (!activeEntry || !activeEntry.certificateFile) return;
+      
+      // Get auth data
+      const authData = getAuthData();
+      console.log('Auth data:', authData);
+      if (!authData) {
+        console.error('Authentication data not found');
+        setCertificateEntries(prev => 
+          prev.map(entry => 
+            entry.id === activeEntryId ? { ...entry, uploadError: 'Authentication failed' } : entry
+          )
+        );
+        return;
+      }
+      
+      try {
+        // Mark as uploading
+        setCertificateEntries(prev => 
+          prev.map(entry => 
+            entry.id === activeEntryId ? { ...entry, isUploading: true, uploadError: undefined } : entry
+          )
+        );
+        
+        // Prepare certificate data
+        const certificateData = {
+          entity_id: authData.entityId,
+          document_name: activeEntry.certificateName,
+          certificate_type: 'Technical', // Default to Technical as shown in the image
+          document_upload: activeEntry.certificateFile,
+          issuing_organisation: '' // Optional, can be left empty
+        };
+        
+        console.log('Certificate data prepared:', {
+          ...certificateData,
+          document_upload: 'File object present' // Don't log the actual file
+        });
+        
+        // Call API
+        console.log('Calling addCertificate API...');
+        try {
+          const response = await addCertificate(certificateData, authData.apiKey, authData.apiSecret);
+          console.log('API call successful:', response);
+        } catch (error) {
+          console.error('API call failed:', error);
+          throw error;
+        }
+        
+        // Update entry status
+        setCertificateEntries(prev => 
+          prev.map(entry => 
+            entry.id === activeEntryId ? { 
+              ...entry, 
+              isUploading: false, 
+              isUploaded: true 
+            } : entry
+          )
+        );
+        
+        // Exit edit mode after successful upload
+        setEditMode(false);
+      } catch (error: any) {
+        console.error('Error uploading certificate:', error);
+        setCertificateEntries(prev => 
+          prev.map(entry => 
+            entry.id === activeEntryId ? { 
+              ...entry, 
+              isUploading: false, 
+              uploadError: error.message || 'Failed to upload certificate' 
+            } : entry
+          )
+        );
+      }
     }
   };
 
@@ -337,7 +419,7 @@ export default function CertificateForm({ onSave, onCancel, initialData = [] }: 
                     {/* Certificate Upload */}
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Upload Certificate
+                        Upload Certificate <span className="text-red-500">*</span>
                       </label>
                       <div className="relative">
                         {!entry.certificateFile ? (
@@ -405,9 +487,23 @@ export default function CertificateForm({ onSave, onCancel, initialData = [] }: 
           <button
             type="button"
             onClick={saveActiveEntry}
-            className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
+            disabled={certificateEntries.find(e => e.id === activeEntryId)?.isUploading}
+            className={`px-4 py-2 border rounded-lg flex items-center ${certificateEntries.find(e => e.id === activeEntryId)?.isUploaded
+              ? 'bg-green-500 text-white border-green-500 hover:bg-green-600'
+              : 'border-gray-300 text-gray-700 hover:bg-gray-50'
+            }`}
           >
-            {certificateEntries.find(e => e.id === activeEntryId)?.certificateFile ? 'Save' : 'Add'}
+            {certificateEntries.find(e => e.id === activeEntryId)?.isUploading ? (
+              <>
+                <span className="animate-pulse mr-2">Uploading...</span>
+              </>
+            ) : certificateEntries.find(e => e.id === activeEntryId)?.isUploaded ? (
+              <>
+                <Check size={16} className="mr-1" /> Added
+              </>
+            ) : (
+              certificateEntries.find(e => e.id === activeEntryId)?.certificateFile ? 'Add' : 'Add'
+            )}
           </button>
         )}
         <button

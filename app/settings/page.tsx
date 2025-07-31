@@ -11,14 +11,14 @@ export default function SettingsPage() {
 
   const tabs = [
     { id: 'profile', label: 'Profile', icon: User },
-    { id: 'notifications', label: 'Notifications', icon: Bell },
+    // { id: 'notifications', label: 'Notifications', icon: Bell },
     { id: 'security', label: 'Security', icon: Shield },
     // { id: 'role', label: 'Role', icon: CreditCard },
     // { id: 'preferences', label: 'Preferences', icon: Globe },
   ];
 
   return (
-    <div className="flex h-screen bg-gray-50">
+    <div className="flex h-screen bg-gray-50 font-rubik">
       <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
       
       <div className="flex-1 flex flex-col overflow-hidden">
@@ -62,7 +62,7 @@ export default function SettingsPage() {
                 <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
                   {activeTab === 'profile' && (
                     <div>
-                      <h2 className="text-xl font-semibold text-gray-900 mb-6">Profile Settings</h2>
+                      <h2 className="text-xl font-semibold text-gray-900 mb-6">Profile</h2>
                       <div className="space-y-6">
                         <div className="flex items-center space-x-6">
                           <img

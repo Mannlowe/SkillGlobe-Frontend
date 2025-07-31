@@ -111,31 +111,3 @@ export const getAuthData = () => {
     return null;
   }
 };
-
-export const getPersonalInfo = async (
-  entityId: string,
-  apiKey: string,
-  apiSecret: string
-) => {
-  try {
-    // Create authorization header
-    const authHeader = `token ${apiKey}:${apiSecret}`;
-    
-    // Make API call
-    const response = await axios.get(
-      `${API_BASE_URL}/api/method/skillglobe_be.api.portfolio.get_portfolio?entity_id=${entityId}`,
-      {
-        headers: {
-          'Authorization': authHeader,
-          'Accept': 'application/json'
-        }
-      }
-    );
-    
-    console.log('Get personal info response:', response.data);
-    return response.data;
-  } catch (error: any) {
-    console.error('Get personal info error:', error.response?.data || error.message || error);
-    throw error;
-  }
-};

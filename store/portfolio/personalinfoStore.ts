@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { updatePersonalInfo, getPersonalInfo, getAuthData, PersonalInfoData } from '@/app/api/portfolio/personalInfo';
+import { updatePersonalInfo, getAuthData, PersonalInfoData } from '@/app/api/portfolio/personalInfo';
 
 interface PersonalInfoState {
   personalInfo: PersonalInfoData | null;
@@ -30,47 +30,39 @@ export const usePersonalInfoStore = create<PersonalInfoState>((set, get) => ({
         return;
       }
       
-      // Fetch personal info
-      const response = await getPersonalInfo(authData.entityId, authData.apiKey, authData.apiSecret);
+      // Note: The API endpoint for fetching personal info no longer exists
+      // Instead, we'll initialize with empty values or fetch from another source if available
+      const personalInfo: PersonalInfoData = {
+        entity_id: authData.entityId,
+        first_name: '',
+        last_name: '',
+        email: '',
+        phone: '',
+        gender: '',
+        date_of_birth: '',
+        nationality: '',
+        country: '',
+        city: '',
+        landmark: '',
+        pincode: '',
+        current_address: '',
+        permanent_address: '',
+        twitter_handle: '',
+        linkedin_profile: '',
+        instagram_handle: '',
+        website: '',
+        employment_status: '',
+        total_experience: '',
+        notice_period: '',
+        professional_summary: ''
+      };
       
-      if (response && response.message && response.message.data) {
-        // Map API response to our state format
-        const apiData = response.message.data;
-        
-        const personalInfo: PersonalInfoData = {
-          entity_id: authData.entityId,
-          first_name: apiData.first_name || '',
-          last_name: apiData.last_name || '',
-          email: apiData.email || '',
-          phone: apiData.phone || '',
-          gender: apiData.gender || '',
-          date_of_birth: apiData.date_of_birth || '',
-          nationality: apiData.nationality || '',
-          country: apiData.country || '',
-          city: apiData.city || '',
-          landmark: apiData.landmark || '',
-          pincode: apiData.pincode || '',
-          current_address: apiData.current_address || '',
-          permanent_address: apiData.permanent_address || '',
-          twitter_handle: apiData.twitter_handle || '',
-          linkedin_profile: apiData.linkedin_profile || '',
-          instagram_handle: apiData.instagram_handle || '',
-          website: apiData.website || '',
-          employment_status: apiData.employment_status || '',
-          total_experience: apiData.total_experience || '',
-          notice_period: apiData.notice_period || '',
-          professional_summary: apiData.professional_summary || ''
-        };
-        
-        set({ personalInfo, isLoading: false });
-      } else {
-        set({ isLoading: false, error: 'Invalid response format' });
-      }
+      set({ personalInfo, isLoading: false });
     } catch (error: any) {
-      console.error('Error fetching personal info:', error);
+      console.error('Error initializing personal info:', error);
       set({ 
         isLoading: false, 
-        error: error.message || 'Failed to fetch personal information' 
+        error: error.message || 'Failed to initialize personal information' 
       });
     }
   },

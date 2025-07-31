@@ -5,6 +5,7 @@ import { Calendar, MapPin, Globe, Upload, AtSign, Phone, User, Landmark, Locate,
 import Image from 'next/image';
 import { usePersonalInfoStore } from '@/store/portfolio/personalinfoStore';
 import { PersonalInfoData } from '@/app/api/portfolio/personalInfo';
+import { useAuthStore } from '@/store/authStore';
 
 interface PersonalInfoFormProps {
   onSave?: (data: any) => void;
@@ -23,13 +24,26 @@ export default function PersonalInfoForm({ onSave, onCancel, initialData = {} }:
     fetchPersonalInfo, 
     updatePersonalInfo 
   } = usePersonalInfoStore();
+
+  const [userName, setUserName] = useState('');
+  const { user, isAuthenticated } = useAuthStore();
+
+  useEffect(() => {
+    if (isAuthenticated && user && user.full_name) {
+      setUserName(user.full_name);
+      // Also update the formData to ensure consistency
+      setFormData(prevData => ({
+        ...prevData,
+        fullName: user.full_name
+      }));
+    }
+  }, [isAuthenticated, user]);
   
   // Success state for UI feedback
   const [isSuccess, setIsSuccess] = useState(false);
   const [errors, setErrors] = useState({
     permanentPincode: '',
     pincode: '',
-    // ...other errors if needed
   });
   
   // Fetch personal info on component mount
@@ -297,7 +311,7 @@ export default function PersonalInfoForm({ onSave, onCancel, initialData = {} }:
             <input
               type="text"
               name="fullName"
-              value={formData.fullName}
+              value={userName}
               onChange={handleInputChange}
               required
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"

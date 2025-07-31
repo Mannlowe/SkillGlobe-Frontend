@@ -20,6 +20,28 @@ export interface AddCertificateResponse {
   };
 }
 
+export interface CertificateListResponse {
+  message?: {
+    status: string;
+    message: string;
+    data?: {
+      portfolio?: string;
+      entity_id?: string;
+      certificate_list?: Array<{
+        name?: string;
+        document_name?: string;
+        certificate_type?: string;
+        document_upload?: string | null;
+        issuing_organisation?: string;
+      }>
+    }
+  };
+  exception?: string;
+  exc_type?: string;
+  exc?: string;
+  _server_messages?: string;
+}
+
 export const addCertificate = async (
   certificateData: CertificateData,
   apiKey: string,
@@ -63,10 +85,35 @@ export const addCertificate = async (
   }
 };
 
-/**
- * Get authentication data from localStorage
- * @returns Object containing auth data or null if not found
- */
+export const getCertificateList = async (
+  entityId: string,
+  apiKey: string,
+  apiSecret: string
+): Promise<CertificateListResponse> => {
+  try {
+    console.log('Getting certificate list for entity ID:', entityId);
+
+    // Authorization header
+    const authHeader = `token ${apiKey}:${apiSecret}`;
+
+    // Construct URL with query param
+    const url = `${API_BASE_URL}/api/method/skillglobe_be.api.portfolio.certificate.get_certificate_list?entity_id=${entityId}`;
+
+    const response = await axios.get<CertificateListResponse>(url, {
+      headers: {
+        'Authorization': authHeader,
+        'Accept': 'application/json'
+      }
+    });
+
+    console.log('Get certificate list response:', response.data);
+    return response.data;
+  } catch (error: any) {
+    console.error('Get certificate list error:', error.response?.data || error.message || error);
+    throw error;
+  }
+};
+
 export const getAuthData = () => {
   if (typeof window === 'undefined') {
     return null;

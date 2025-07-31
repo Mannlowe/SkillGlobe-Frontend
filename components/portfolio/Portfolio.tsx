@@ -8,6 +8,7 @@ import EducationForm from './EducationForm';
 import ExperienceForm from './ExperienceForm';
 import CertificateForm from './CertificateForm';
 import SubmitFormModal from '../modal/SubmitFormModal';
+import { getPortfolio, getAuthData } from '../../app/api/portfolio/getPortfolio';
 
 interface PortfolioProps {
   activeSection?: string;
@@ -98,6 +99,8 @@ export default function Portfolio({
   const [education, setEducation] = useState([]);
   const [experience, setExperience] = useState([]);
   const [certificates, setCertificates] = useState([]);
+  const [certificateList, setCertificateList] = useState<any[]>([]);
+
   
   // Load saved data from localStorage on component mount
   useEffect(() => {
@@ -268,9 +271,86 @@ export default function Portfolio({
     }
   };
 
-  const handleContinue = () => {
-    // Open the modal instead of directly completing
-    setIsModalOpen(true);
+  const [isLoading, setIsLoading] = useState(false);
+  const [portfolioData, setPortfolioData] = useState<any>(null);
+  const [apiError, setApiError] = useState<string | null>(null);
+
+  const handleContinue = async () => {
+    setIsLoading(true);
+    setApiError(null);
+    
+    try {
+      // Get auth data for API call
+      const authData = getAuthData();
+      
+      if (!authData) {
+        setApiError('Authentication data not found. Please log in again.');
+        setIsLoading(false);
+        return;
+      }
+      
+      // Call the getPortfolio API
+      const response = await getPortfolio(
+        authData.entityId,
+        authData.apiKey,
+        authData.apiSecret
+      );
+      
+      console.log('Portfolio data retrieved:', response);
+      setPortfolioData(response);
+      
+      // Extract portfolio data from the response
+      if (response && response.data && response.data.portfolio) {
+        const portfolioData = response.data.portfolio;
+        
+        // Map the portfolio data to the personalInfo format
+        const mappedPersonalInfo = {
+          fullName: `${portfolioData.first_name || ''} ${portfolioData.last_name || ''}`.trim(),
+          email: portfolioData.email || '',
+          phone: portfolioData.phone || '',
+          gender: portfolioData.gender || '',
+          dateOfBirth: portfolioData.date_of_birth || '',
+          nationality: portfolioData.nationality || '',
+          country: portfolioData.country || '',
+          city: portfolioData.city || '',
+          landmark: portfolioData.landmark || '',
+          pincode: portfolioData.pincode || '',
+          currentAddress: portfolioData.current_address || '',
+          permanentAddress: portfolioData.permanent_address || '',
+          twitterHandle: portfolioData.twitter_handle || '',
+          linkedinHandle: portfolioData.linkedin_profile || '',
+          instagramHandle: portfolioData.instagram_handle || '',
+          facebookHandle: portfolioData.facebook_profile || '',
+          employmentStatus: portfolioData.employment_status || '',
+          website: portfolioData.website || '',
+          totalExperience: portfolioData.total_experience || '',
+          noticePeriod: portfolioData.notice_period || '',
+          professionalSummary: portfolioData.professional_summary || ''
+        };
+        
+        // Update the personalInfo state
+        setPersonalInfo(mappedPersonalInfo);
+        
+        // Save to localStorage for persistence
+        localStorage.setItem('portfolioPersonalInfo', JSON.stringify(mappedPersonalInfo));
+        
+        console.log('Personal info updated from portfolio data:', mappedPersonalInfo);
+      }
+      
+      // Open the modal after successful API call
+      setIsModalOpen(true);
+      
+      // After showing the modal, navigate to the personal info section
+      // This will ensure the form is populated with the updated data
+      setTimeout(() => {
+        setActiveSection('personal');
+      }, 1500); // Short delay to allow the modal to be seen
+    } catch (error: any) {
+      console.error('Error fetching portfolio data:', error);
+      setApiError(error.message || 'Failed to fetch portfolio data');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -338,11 +418,14 @@ export default function Portfolio({
         )}
 
         {activeSection === 'personal' && (
-          <PersonalInfoForm 
-            initialData={personalInfo}
-            onSave={handlePersonalInfoSave}
-            onCancel={() => setActiveSection('resume')}
-          />
+          <>
+            {console.log('DEBUG - Portfolio - personalInfo being passed to PersonalInfoForm:', personalInfo)}
+            <PersonalInfoForm 
+              initialData={personalInfo}
+              onSave={handlePersonalInfoSave}
+              onCancel={() => setActiveSection('resume')}
+            />
+          </>
         )}
         
         {activeSection === 'education' && (
@@ -366,6 +449,7 @@ export default function Portfolio({
             initialData={certificates}
             onSave={handleCertificatesSave}
             onCancel={() => setActiveSection('experience')}
+            setCertificateList={setCertificateList}
           />
         )}
         
@@ -420,21 +504,37 @@ export default function Portfolio({
         </div>
       </div>
 
-      <div className="flex space-x-3">
-    
-        <button
-          onClick={handleContinue}
-          className="max-w-xs mx-auto flex-1 bg-blue-500 text-white font-semibold py-3 px-6 rounded-xl hover:shadow-lg transition-all duration-300"
-        >
-          Submit
-        </button>
+      <div className="flex flex-col space-y-3">
+        {apiError && (
+          <div className="bg-red-50 text-red-600 p-3 rounded-lg text-sm">
+            {apiError}
+          </div>
+        )}
+        
+        <div className="flex space-x-3">
+          <button
+            onClick={handleContinue}
+            disabled={isLoading}
+            className={`max-w-xs mx-auto flex-1 ${isLoading ? 'bg-blue-400' : 'bg-blue-500 hover:shadow-lg'} text-white font-semibold py-3 px-6 rounded-xl transition-all duration-300 flex items-center justify-center`}
+          >
+            {isLoading ? (
+              <>
+                <Loader2 size={18} className="animate-spin mr-2" />
+                Loading...
+              </>
+            ) : (
+              'Submit'
+            )}
+          </button>
+        </div>
       </div>
 
       {/* Submit Form Modal */}
       <SubmitFormModal 
         isOpen={isModalOpen} 
         onClose={() => setIsModalOpen(false)} 
-        onSubmit={handleModalSubmit} 
+        onSubmit={handleModalSubmit}
+        portfolioData={portfolioData}
       />
       
       {/* Reminder Modal */}

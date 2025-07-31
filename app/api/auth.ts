@@ -24,6 +24,7 @@ export interface LoginResponse {
       user_type: string;
       roles: string[];
       user_image: string | null;
+      mobile: string | null;
     };
     entity: {
       type: string | null;

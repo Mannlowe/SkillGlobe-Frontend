@@ -6,9 +6,10 @@ interface SubmitFormModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSubmit: () => void;
+  portfolioData?: any;
 }
 
-export default function SubmitFormModal({ isOpen, onClose, onSubmit }: SubmitFormModalProps) {
+export default function SubmitFormModal({ isOpen, onClose, onSubmit, portfolioData }: SubmitFormModalProps) {
   if (!isOpen) return null;
 
   return (
@@ -29,18 +30,76 @@ export default function SubmitFormModal({ isOpen, onClose, onSubmit }: SubmitFor
           <h4 className="text-lg font-semibold text-gray-800 mb-2">
             Your form has been submitted!
           </h4>
+          
+          {/* {portfolioData && (
+            <div className="w-full text-left bg-gray-50 p-4 rounded-lg mb-4 overflow-auto max-h-60">
+              <h5 className="font-medium text-gray-700 mb-2">Portfolio Data Summary:</h5>
+              <div className="text-xs text-gray-600 font-mono">
+
+                {typeof portfolioData.message === 'object' ? (
+                  <p className="text-green-600 mb-2">
+                    {portfolioData.message?.status || ''}
+                    {portfolioData.message?.message_text ? `: ${portfolioData.message.message_text}` : ''}
+                  </p>
+                ) : typeof portfolioData.message === 'string' ? (
+                  <p className="text-green-600 mb-2">{portfolioData.message}</p>
+                ) : null}
+                
+
+                <p className="mb-2">Status: <span className="font-medium">{portfolioData.status || 'Unknown'}</span></p>
+                
+                
+                {portfolioData.data && typeof portfolioData.data === 'object' && (
+                  <div className="mt-2">
+                    <p className="font-medium mb-1">Data:</p>
+                    <ul className="space-y-1 pl-2">
+                      {Object.entries(portfolioData.data).map(([key, value]: [string, any]) => (
+                        <li key={key} className="flex flex-wrap">
+                          <span className="font-medium mr-2">{key}:</span>
+                          <span>
+                            {typeof value === 'object' 
+                              ? JSON.stringify(value).substring(0, 50) + (JSON.stringify(value).length > 50 ? '...' : '')
+                              : String(value)
+                            }
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+                
+          
+                {portfolioData.exception && (
+                  <div className="mt-2 text-red-500">
+                    <p className="font-medium">Error:</p>
+                    <p>{portfolioData.exception}</p>
+                    {portfolioData.exc_type && <p>Type: {portfolioData.exc_type}</p>}
+                  </div>
+                )}
+              </div>
+            </div>
+          )} */}
+          
           <p className="text-sm text-gray-600 mb-6">
-            We’ve received your details and will get back to you shortly.
+            We&apos;ve received your details and will process it.
           </p>
-          <button
-            onClick={() => {
-            //   onSubmit();
-              onClose();
-            }}
-            className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition duration-200"
-          >
-            Close
-          </button>
+          <div className="flex space-x-4">
+            {/* <button
+              onClick={() => {
+                onSubmit();
+                onClose();
+              }}
+              className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition duration-200"
+            >
+              Continue
+            </button> */}
+            <button
+              onClick={onClose}
+              className="px-4 py-2 border border-white text-white bg-orange-500  rounded-lg hover:bg-white hover:text-orange-500 hover:border-orange-500 transition duration-200"
+            >
+              Close
+            </button>
+          </div>
         </div>
       </div>
     </div>

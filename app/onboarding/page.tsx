@@ -115,12 +115,8 @@ export default function OnboardingPage() {
     if (currentStep < steps.length - 1) {
       setCurrentStep(currentStep + 1);
     } else {
-      // Complete onboarding - redirect based on user type
-      if (onboardingData.userType === 'business') {
-        router.push('/business-dashboard');
-      } else {
-        router.push('/individual-dashboard');
-      }
+      // Complete onboarding - redirect to login page
+      router.push('/auth/login');
     }
   };
 

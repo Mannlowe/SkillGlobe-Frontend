@@ -40,8 +40,8 @@ useEffect(() => {
       if (user.email) {
         setUserEmail(user.email);
       }
-      if (user.mobile) {
-        setUserMobile(user.mobile);
+      if (user.mobile_no) {
+        setUserMobile(user.mobile_no);
       }
   
       // Also update the formData to ensure consistency
@@ -49,7 +49,7 @@ useEffect(() => {
         ...prevData,
         fullName: user.full_name || prevData.fullName,
         email: user.email || prevData.email,
-        mobile: user.mobile || prevData.mobile
+        mobile: user.mobile_no || prevData.mobile
       }));
     }
   }, [isAuthenticated, user]);
@@ -79,7 +79,7 @@ useEffect(() => {
       setFormData({
         fullName: initialData.fullName || '',
         email: initialData.email || '',
-        mobile: initialData.mobile || '',
+        mobile: initialData.mobile_no || '',
         phone: initialData.phone || '',
         gender: initialData.gender || '',
         dateOfBirth: initialData.dateOfBirth || '',
@@ -111,7 +111,7 @@ useEffect(() => {
       setFormData({
         fullName: `${personalInfo.first_name} ${personalInfo.last_name}`.trim(),
         email: personalInfo.email || '',
-        mobile: personalInfo.mobile || '',
+        mobile: personalInfo.mobile_no || '',
         phone: personalInfo.phone || '',
         gender: personalInfo.gender || '',
         dateOfBirth: personalInfo.date_of_birth || '',
@@ -144,7 +144,7 @@ useEffect(() => {
   const [formData, setFormData] = useState({
     fullName: initialData.fullName || '',
     email: initialData.email || '',
-    mobile: initialData.mobile || '',
+    mobile: initialData.mobile_no || '',
     phone: initialData.phone || '',
     gender: initialData.gender || '',
     dateOfBirth: initialData.dateOfBirth || '',
@@ -173,7 +173,17 @@ useEffect(() => {
   });
 
   const [profilePreview, setProfilePreview] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (user?.mobile_no) {
+      setFormData(prev => ({
+        ...prev,
+        phone: user.mobile_no  // Pre-fill formData.phone from auth store
+      }));
+    }
+  }, [user]);
   
+
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
   ) => {
@@ -188,61 +198,146 @@ useEffect(() => {
           ? { permanentAddress: formData.currentAddress }
           : {})
       }));
-    } else {
-      if (name === 'permanentPincode' || name === 'pincode') {
-        const onlyDigits = value.replace(/\D/g, ''); // Remove non-digit characters
+    } else if (name === 'permanentPincode' || name === 'pincode') {
+      const onlyDigits = value.replace(/\D/g, ''); // Remove non-digit characters
   
+      setFormData(prev => ({
+        ...prev,
+        [name]: onlyDigits
+      }));
+  
+      setErrors(prev => ({
+        ...prev,
+        [name]: onlyDigits.length > 0 && onlyDigits.length < 6 ? '6 digits required' : ''
+      }));
+    } else if (name === 'totalExperience') {
+      const numericValue = parseFloat(value);
+      if (!isNaN(numericValue) && numericValue >= 0) {
         setFormData(prev => ({
           ...prev,
-          [name]: onlyDigits
+          [name]: value
         }));
-  
-        setErrors(prev => ({
-          ...prev,
-          [name]: onlyDigits.length > 0 && onlyDigits.length < 6 ? '6 digits required' : ''
-        }));
-      } else if (name === 'totalExperience') {
-        const numericValue = parseFloat(value);
-        if (!isNaN(numericValue) && numericValue >= 0) {
-          setFormData(prev => ({
-            ...prev,
-            [name]: value
-          }));
-          setErrors(prev => ({
-            ...prev,
-            [name]: ''
-          }));
-        } else if (value === '') {
-          setFormData(prev => ({
-            ...prev,
-            [name]: ''
-          }));
-          setErrors(prev => ({
-            ...prev,
-            [name]: ''
-          }));
-        } else {
-          setErrors(prev => ({
-            ...prev,
-            [name]: 'Only non-negative numbers allowed'
-          }));
-        }
-      } else {
-        setFormData(prev => ({
-          ...prev,
-          [name]: value,
-          ...(name === 'currentAddress' && formData.sameAsCurrentAddress
-            ? { permanentAddress: value }
-            : {})
-        }));
-  
         setErrors(prev => ({
           ...prev,
           [name]: ''
         }));
+      } else if (value === '') {
+        setFormData(prev => ({
+          ...prev,
+          [name]: ''
+        }));
+        setErrors(prev => ({
+          ...prev,
+          [name]: ''
+        }));
+      } else {
+        setErrors(prev => ({
+          ...prev,
+          [name]: 'Only non-negative numbers allowed'
+        }));
       }
+    } else if (name === 'phone' || name === 'mobile') {
+      const digitsOnly = value.replace(/\D/g, '');
+  
+      setFormData(prev => ({
+        ...prev,
+        [name]: digitsOnly
+      }));
+  
+      setErrors(prev => ({
+        ...prev,
+        [name]: !digitsOnly
+          ? 'Mobile number is required'
+          : digitsOnly.length !== 12
+          ? 'Mobile number must be exactly 12 digits'
+          : ''
+      }));
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        [name]: value,
+        ...(name === 'currentAddress' && formData.sameAsCurrentAddress
+          ? { permanentAddress: value }
+          : {})
+      }));
+  
+      setErrors(prev => ({
+        ...prev,
+        [name]: ''
+      }));
     }
   };
+  
+  
+  // const handleInputChange = (
+  //   e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
+  // ) => {
+  //   const { name, value, type } = e.target;
+  
+  //   if (type === 'checkbox') {
+  //     const checked = (e.target as HTMLInputElement).checked;
+  //     setFormData(prev => ({
+  //       ...prev,
+  //       [name]: checked,
+  //       ...(name === 'sameAsCurrentAddress' && checked
+  //         ? { permanentAddress: formData.currentAddress }
+  //         : {})
+  //     }));
+  //   } else {
+  //     if (name === 'permanentPincode' || name === 'pincode') {
+  //       const onlyDigits = value.replace(/\D/g, ''); // Remove non-digit characters
+  
+  //       setFormData(prev => ({
+  //         ...prev,
+  //         [name]: onlyDigits
+  //       }));
+  
+  //       setErrors(prev => ({
+  //         ...prev,
+  //         [name]: onlyDigits.length > 0 && onlyDigits.length < 6 ? '6 digits required' : ''
+  //       }));
+  //     } else if (name === 'totalExperience') {
+  //       const numericValue = parseFloat(value);
+  //       if (!isNaN(numericValue) && numericValue >= 0) {
+  //         setFormData(prev => ({
+  //           ...prev,
+  //           [name]: value
+  //         }));
+  //         setErrors(prev => ({
+  //           ...prev,
+  //           [name]: ''
+  //         }));
+  //       } else if (value === '') {
+  //         setFormData(prev => ({
+  //           ...prev,
+  //           [name]: ''
+  //         }));
+  //         setErrors(prev => ({
+  //           ...prev,
+  //           [name]: ''
+  //         }));
+  //       } else {
+  //         setErrors(prev => ({
+  //           ...prev,
+  //           [name]: 'Only non-negative numbers allowed'
+  //         }));
+  //       }
+  //     } else {
+  //       setFormData(prev => ({
+  //         ...prev,
+  //         [name]: value,
+  //         ...(name === 'currentAddress' && formData.sameAsCurrentAddress
+  //           ? { permanentAddress: value }
+  //           : {})
+  //       }));
+  
+  //       setErrors(prev => ({
+  //         ...prev,
+  //         [name]: ''
+  //       }));
+  //     }
+  //   }
+  // };
   
   const handleProfilePictureChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -275,6 +370,7 @@ useEffect(() => {
       first_name: firstName,
       last_name: lastName,
       email: formData.email,
+      mobile_no: formData.mobile,
       phone: formData.phone,
       gender: formData.gender,
       date_of_birth: formData.dateOfBirth,

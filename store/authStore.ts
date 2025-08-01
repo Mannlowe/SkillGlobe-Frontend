@@ -9,7 +9,7 @@ interface UserData {
   user_type: string;
   roles: string[] | string | unknown;
   user_image: string | null;
-  mobile: string | null;
+  mobile_no: string | null;
 }
 
 interface EntityData {

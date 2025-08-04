@@ -49,7 +49,7 @@ useEffect(() => {
         ...prevData,
         fullName: user.full_name || prevData.fullName,
         email: user.email || prevData.email,
-        mobile: user.mobile_no || prevData.mobile
+        mobile_no: user.mobile_no || prevData.mobile_no
       }));
     }
   }, [isAuthenticated, user]);
@@ -59,6 +59,7 @@ useEffect(() => {
   const [errors, setErrors] = useState({
     permanentPincode: '',
     pincode: '',
+    mobile_no: '',
   });
   
   // Fetch personal info on component mount
@@ -79,8 +80,7 @@ useEffect(() => {
       setFormData({
         fullName: initialData.fullName || '',
         email: initialData.email || '',
-        mobile: initialData.mobile_no || '',
-        phone: initialData.phone || '',
+        mobile_no: initialData.mobile_no || '',
         gender: initialData.gender || '',
         dateOfBirth: initialData.dateOfBirth || '',
         nationality: initialData.nationality || '',
@@ -111,8 +111,7 @@ useEffect(() => {
       setFormData({
         fullName: `${personalInfo.first_name} ${personalInfo.last_name}`.trim(),
         email: personalInfo.email || '',
-        mobile: personalInfo.mobile_no || '',
-        phone: personalInfo.phone || '',
+        mobile_no: personalInfo.mobile_no || '',
         gender: personalInfo.gender || '',
         dateOfBirth: personalInfo.date_of_birth || '',
         nationality: personalInfo.nationality || '',
@@ -144,8 +143,7 @@ useEffect(() => {
   const [formData, setFormData] = useState({
     fullName: initialData.fullName || '',
     email: initialData.email || '',
-    mobile: initialData.mobile_no || '',
-    phone: initialData.phone || '',
+    mobile_no: initialData.mobile_no || '',
     gender: initialData.gender || '',
     dateOfBirth: initialData.dateOfBirth || '',
     nationality: initialData.nationality || '',
@@ -237,7 +235,7 @@ useEffect(() => {
           [name]: 'Only non-negative numbers allowed'
         }));
       }
-    } else if (name === 'phone' || name === 'mobile') {
+    } else if (name === 'mobile') {
       const digitsOnly = value.replace(/\D/g, '');
   
       setFormData(prev => ({
@@ -382,8 +380,7 @@ useEffect(() => {
       first_name: firstName,
       last_name: lastName,
       email: formData.email,
-      mobile_no: formData.mobile,
-      phone: formData.phone,
+      mobile_no: formData.mobile_no,
       gender: formData.gender,
       date_of_birth: formData.dateOfBirth,
       nationality: formData.nationality,
@@ -436,6 +433,7 @@ useEffect(() => {
     submitError,
     isSuccess,
     errors,
+    setErrors,
     handleInputChange,
     handleProfilePictureChange,
     handleSubmit,

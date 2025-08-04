@@ -1,6 +1,8 @@
 'use client';
 
 import { Calendar, MapPin, Globe, Upload, AtSign, Phone, User, Landmark, Locate, Briefcase, FileText, Check } from 'lucide-react';
+import PhoneInput from 'react-phone-input-2';
+import 'react-phone-input-2/lib/style.css';
 import Image from 'next/image';
 import { usePersonalInfoForm, PersonalInfoFormProps } from './PersonalInfoConstant';
 
@@ -15,10 +17,11 @@ export default function PersonalInfoForm({ onSave, onCancel, initialData = {} }:
     submitError,
     isSuccess,
     errors,
+    setErrors,
     handleInputChange,
     handleProfilePictureChange,
     handleSubmit,
-    userName, 
+    userName,
     userEmail,
     userMobile, // Get userName from the hook
   } = usePersonalInfoForm({ onSave, onCancel, initialData });
@@ -103,19 +106,50 @@ export default function PersonalInfoForm({ onSave, onCancel, initialData = {} }:
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Phone <span className="text-red-500">*</span>
             </label>
-            <div className="relative">
-              <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
-              <input
-                type="tel"
-                name="phone"
-                value={formData.phone}
-                onChange={handleInputChange}
-                required
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                placeholder="+1 (123) 456-7890"
+            <div className="phone-input-container">
+              <PhoneInput
+                country={'in'}
+                value={formData.mobile_no || userMobile}
+                onChange={(phone) => {
+                  const digitsOnly = phone.replace(/\D/g, '');
+                  
+                  // Update formData with the new phone number
+                  handleInputChange({
+                    target: {
+                      name: 'mobile_no',
+                      value: digitsOnly,
+                      type: 'tel'
+                    }
+                  } as React.ChangeEvent<HTMLInputElement>);
+                  
+                  // Validate phone number length
+                  if (!digitsOnly) {
+                    setErrors(prev => ({ ...prev, phone: 'Mobile number is required' }));
+                  } else if (digitsOnly.length < 10) {
+                    setErrors(prev => ({ ...prev, mobile_no: 'Mobile number must be at least 10 digits' }));
+                  } else {
+                    setErrors(prev => ({ ...prev, mobile_no: '' }));
+                  }
+                }}
+                inputClass={`w-full py-2 border ${errors.mobile_no ? 'border-red-500 ring-1 ring-red-500' : 'border-gray-300'} rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500`}
+                containerClass="phone-input-container"
+                buttonClass="phone-input-button"
+                dropdownClass="phone-input-dropdown"
+                enableSearch={true}
+                disableSearchIcon={false}
+                searchPlaceholder="Search country..."
+                inputProps={{
+                  name: 'phone',
+                  required: true,
+                  autoFocus: false,
+                }}
               />
             </div>
-            <p className="text-xs text-gray-500 mt-1">Auto-filled from your account</p>
+            {errors.mobile_no ? (
+              <p className="text-red-500 text-xs mt-1">{errors.mobile_no}</p>
+            ) : (
+              <p className="text-xs text-gray-500 mt-1">Auto-filled from your account</p>
+            )}
           </div>
 
           {/* Gender */}
@@ -271,29 +305,28 @@ export default function PersonalInfoForm({ onSave, onCancel, initialData = {} }:
           </div>
 
           <div>
-  <label className="block text-sm font-medium text-gray-700 mb-1">
-    Pincode
-  </label>
-  <div className="relative">
-    <Locate className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
-    <input
-      type="text" // Keep as text to prevent issues with leading 0
-      name="pincode"
-      inputMode="numeric"
-      maxLength={6}
-      value={formData.pincode}
-      onChange={handleInputChange}
-      className={`w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-        errors.pincode ? 'border-red-500' : 'border-gray-300'
-      }`}
-      placeholder="Enter your pincode"
-    />
-  </div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Pincode
+            </label>
+            <div className="relative">
+              <Locate className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
+              <input
+                type="text" // Keep as text to prevent issues with leading 0
+                name="pincode"
+                inputMode="numeric"
+                maxLength={6}
+                value={formData.pincode}
+                onChange={handleInputChange}
+                className={`w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${errors.pincode ? 'border-red-500' : 'border-gray-300'
+                  }`}
+                placeholder="Enter your pincode"
+              />
+            </div>
 
-  {errors.pincode && (
-    <p className="text-red-500 text-sm mt-1">{errors.pincode}</p>
-  )}
-</div>
+            {errors.pincode && (
+              <p className="text-red-500 text-sm mt-1">{errors.pincode}</p>
+            )}
+          </div>
 
 
           {/* Same as Current Address Checkbox */}
@@ -315,7 +348,7 @@ export default function PersonalInfoForm({ onSave, onCancel, initialData = {} }:
             <>
               <div className="md:col-span-2">
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Permanent Address 
+                  Permanent Address
                 </label>
                 <textarea
                   name="permanentAddress"
@@ -329,7 +362,7 @@ export default function PersonalInfoForm({ onSave, onCancel, initialData = {} }:
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Country 
+                  Country
                 </label>
                 <div className="relative">
                   <Globe className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
@@ -406,8 +439,8 @@ export default function PersonalInfoForm({ onSave, onCancel, initialData = {} }:
                   />
                 </div>
                 {errors.permanentPincode && (
-    <p className="text-red-500 text-sm mt-1">{errors.permanentPincode}</p>
-  )}
+                  <p className="text-red-500 text-sm mt-1">{errors.permanentPincode}</p>
+                )}
               </div>
             </>
           )}
@@ -602,7 +635,7 @@ export default function PersonalInfoForm({ onSave, onCancel, initialData = {} }:
           <p className="text-sm">{submitError}</p>
         </div>
       )}
-      
+
       <div className="flex justify-end space-x-3">
         {onCancel && (
           <button
@@ -617,14 +650,14 @@ export default function PersonalInfoForm({ onSave, onCancel, initialData = {} }:
         <button
           type="submit"
           disabled={isSubmitting}
-          className={`px-6 py-2 font-medium rounded-lg transition-colors flex items-center justify-center min-w-[150px] ${isSuccess 
-            ? 'bg-green-500 hover:bg-green-600 text-white' 
-            : isSubmitting 
-              ? 'bg-blue-300 text-white cursor-not-allowed' 
+          className={`px-6 py-2 font-medium rounded-lg transition-colors flex items-center justify-center min-w-[150px] ${isSuccess
+            ? 'bg-green-500 hover:bg-green-600 text-white'
+            : isSubmitting
+              ? 'bg-blue-300 text-white cursor-not-allowed'
               : 'bg-blue-500 hover:bg-blue-600 text-white'}`}
         >
           {isSubmitting ? (
-            'Saving...' 
+            'Saving...'
           ) : isSuccess ? (
             <>
               <Check className="mr-1" size={18} />
@@ -635,7 +668,7 @@ export default function PersonalInfoForm({ onSave, onCancel, initialData = {} }:
           )}
         </button>
       </div>
-      
+
       {/* Loading state for initial data fetch */}
       {isLoading && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">

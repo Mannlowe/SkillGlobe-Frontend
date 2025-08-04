@@ -10,7 +10,7 @@ export interface PersonalInfoData {
   last_name: string;
   email: string;
   mobile_no: string;
-  phone: string;
+  // phone: string;
   gender: string;
   date_of_birth: string;
   nationality: string;

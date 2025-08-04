@@ -183,7 +183,8 @@ useEffect(() => {
     }
   }, [user]);
   
-
+  // We don't need this effect anymore as we'll handle email differently
+  
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
   ) => {
@@ -251,6 +252,17 @@ useEffect(() => {
           : digitsOnly.length !== 12
           ? 'Mobile number must be exactly 12 digits'
           : ''
+      }));
+    } else if (name === 'email') {
+      // Special handling for email field
+      setFormData(prev => ({
+        ...prev,
+        [name]: value
+      }));
+      
+      setErrors(prev => ({
+        ...prev,
+        [name]: ''
       }));
     } else {
       setFormData(prev => ({

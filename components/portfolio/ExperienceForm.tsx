@@ -27,6 +27,7 @@ interface ExperienceEntry {
   website: string;
   relevantExperience: string;
   professionalSummary: string;
+  name?: string; // Added for API update functionality
 }
 
 interface ExperienceFormProps {
@@ -53,9 +54,11 @@ export default function ExperienceForm({ onSave, onCancel, initialData = [] }: E
     ]
   );
 
-  const [activeEntryId, setActiveEntryId] = useState<string>(experienceEntries[0]?.id || '');
-  const [editMode, setEditMode] = useState<boolean>(true);
+  const [activeEntryId, setActiveEntryId] = useState<string>('');
+  const [editMode, setEditMode] = useState(false);
   const [validationErrors, setValidationErrors] = useState<{ [key: string]: string }>({});
+  const [isUpdateMode, setIsUpdateMode] = useState(false);
+  const [currentEntryName, setCurrentEntryName] = useState('');
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>, entryId: string) => {
     const { name, value } = e.target;
@@ -75,21 +78,28 @@ export default function ExperienceForm({ onSave, onCancel, initialData = [] }: E
     }
   };
 
-  const addNewExperience = () => {
-    const newEntry: ExperienceEntry = {
-      id: crypto.randomUUID(),
+  // Create an empty experience entry without adding it to the list
+  const createEmptyEntry = () => {
+    const newId = `exp-${Date.now()}`;
+    return {
+      id: newId,
       employmentStatus: '',
       space: '',
       role: '',
       organization: '',
       website: '',
-      professionalSummary: '',
       relevantExperience: '',
+      professionalSummary: '',
     };
+  };
 
-    setExperienceEntries(prev => [newEntry, ...prev]);
+  const addNewExperience = () => {
+    const newEntry = createEmptyEntry();
+    setExperienceEntries(prev => [...prev, newEntry]);
     setActiveEntryId(newEntry.id);
     setEditMode(true);
+    setIsUpdateMode(false);
+    setCurrentEntryName('');
   };
 
   const removeExperience = (entryId: string) => {
@@ -111,6 +121,19 @@ export default function ExperienceForm({ onSave, onCancel, initialData = [] }: E
     setActiveEntryId(entryId);
     setEditMode(true);
     setValidationErrors({});
+    
+    // Check if this is an existing entry from the API
+    const entry = experienceEntries.find(e => e.id === entryId);
+    
+    if (entry && entry.name) {
+      console.log('Setting update mode to TRUE for entry:', entry);
+      setIsUpdateMode(true);
+      setCurrentEntryName(entry.name);
+    } else {
+      console.log('Setting update mode to FALSE');
+      setIsUpdateMode(false);
+      setCurrentEntryName('');
+    }
   };
 
   const validateActiveEntry = () => {
@@ -138,11 +161,26 @@ export default function ExperienceForm({ onSave, onCancel, initialData = [] }: E
   };
 
 
-  const { uploadExperience, isUploading, uploadSuccess, uploadError, resetUploadState, fetchExperienceList, isFetchingList, fetchListError } = useExperienceStore();
+  const { 
+    uploadExperience, 
+    isUploading, 
+    uploadSuccess, 
+    uploadError, 
+    resetUploadState, 
+    fetchExperienceList, 
+    isFetchingList, 
+    fetchListError,
+    updateExperienceAPI,
+    isUpdating,
+    updateSuccess,
+    updateError,
+    resetUpdateState
+  } = useExperienceStore();
 
   useEffect(() => {
-    // Reset upload state when component mounts
+    // Reset upload and update states when component mounts
     resetUploadState();
+    resetUpdateState();
     
     // Fetch experience list from API
     fetchExperienceListFromStore().then(fetchedEntries => {
@@ -157,41 +195,109 @@ export default function ExperienceForm({ onSave, onCancel, initialData = [] }: E
           organization: entry.organization || '',
           relevantExperience: entry.relevantExperience || '',
           website: '', // Add missing fields required by component
-          professionalSummary: '' // Add missing fields required by component
+          professionalSummary: '', // Add missing fields required by component
+          name: entry.id // Store the original name/id for update API
         }));
         setExperienceEntries(mappedEntries);
-        setActiveEntryId(mappedEntries[0].id);
-        setEditMode(false); // Show the list view when we have entries
+        
+        // Create a new empty entry with a temporary ID that we can identify and remove later
+        const newEntry = createEmptyEntry();
+        setExperienceEntries(prev => [...prev, newEntry]);
+        setActiveEntryId(newEntry.id);
+        setEditMode(true); // Show the form view when component mounts
+      } else {
+        // If no entries, add a new empty one and show the form
+        const newEntry = createEmptyEntry();
+        setExperienceEntries([newEntry]);
+        setActiveEntryId(newEntry.id);
+        setEditMode(true);
       }
     }).catch(error => {
       console.error('Error fetching experience list:', error);
+      // If API fails, try to load from localStorage
+      try {
+        const savedEntries = localStorage.getItem('experienceEntries');
+        if (savedEntries) {
+          const parsedEntries = JSON.parse(savedEntries);
+          setExperienceEntries(parsedEntries);
+          if (parsedEntries.length > 0 && !activeEntryId) {
+            setActiveEntryId(parsedEntries[0].id);
+          }
+        }
+      } catch (e) {
+        console.error('Error loading experience entries from localStorage:', e);
+      }
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
+    // Prevent default form submission
     e.preventDefault();
+    e.stopPropagation();
     
-    // If there are no entries or we're in edit mode, just call onSave
-    if (experienceEntries.length === 0 || editMode) {
+    // If there are no entries, just call onSave
+    if (experienceEntries.length === 0) {
       if (onSave) {
         onSave(experienceEntries);
       }
       return;
     }
 
-    // Try to upload each experience entry
-    try {
-      for (const entry of experienceEntries) {
-        await uploadExperience(entry);
+    // Reset any previous states
+    resetUploadState();
+    resetUpdateState();
+
+    // If we're in edit mode, validate the active entry
+    if (editMode) {
+      // Validate active entry
+      if (!validateActiveEntry()) {
+        console.error('Validation failed');
+        return;
       }
-      
-      // Call onSave after successful upload
-      if (onSave) {
-        onSave(experienceEntries);
+
+      const activeEntry = experienceEntries.find(entry => entry.id === activeEntryId);
+      if (activeEntry) {
+        try {
+          let response;
+          
+          // Check if we're in update mode
+          console.log('Before API call - isUpdateMode:', isUpdateMode, 'currentEntryName:', currentEntryName);
+          
+          if (isUpdateMode && currentEntryName) {
+            // Update existing experience entry
+            console.log('Calling updateExperienceAPI with:', activeEntry, currentEntryName);
+            response = await updateExperienceAPI(activeEntry, currentEntryName);
+            console.log('Experience updated successfully:', response);
+          } else {
+            // Upload new experience data
+            console.log('Calling uploadExperience with:', activeEntry);
+            response = await uploadExperience(activeEntry);
+            console.log('Experience added successfully:', response);
+          }
+
+          if (response) {
+            // Call onSave if provided
+            if (onSave) {
+              onSave(experienceEntries);
+            }
+
+            // Set edit mode to false to show the saved entry
+            setEditMode(false);
+
+            // Refresh the list
+            await fetchExperienceList();
+          }
+        } catch (error) {
+          console.error(`Error ${isUpdateMode ? 'updating' : 'adding'} experience:`, error);
+        }
       }
-    } catch (error) {
-      console.error('Failed to upload experience entries:', error);
+      return;
+    }
+
+    // If we're in list view, just call onSave
+    if (onSave) {
+      onSave(experienceEntries);
     }
   };
 
@@ -278,18 +384,10 @@ export default function ExperienceForm({ onSave, onCancel, initialData = [] }: E
             <button
               type="button"
               onClick={() => onEdit(entry.id)}
-              className="text-blue-600 hover:text-blue-800"
+              className="text-blue-600 hover:text-blue-800 underline mr-5"
               aria-label="Edit experience entry"
             >
-              <Pencil size={18} />
-            </button>
-            <button
-              type="button"
-              onClick={() => onRemove(entry.id)}
-              className="text-red-600 hover:text-red-800"
-              aria-label="Remove experience entry"
-            >
-              <Trash2 size={18} />
+              Edit
             </button>
           </div>
         </div>
@@ -302,13 +400,35 @@ export default function ExperienceForm({ onSave, onCancel, initialData = [] }: E
       <div className="bg-white p-6 rounded-xl shadow-lg">
         <div className="flex justify-between items-center mb-4">
           <h3 className="font-semibold text-gray-900">Experience Information</h3>
-          <button
-            type="button"
-            onClick={addNewExperience}
-            className="flex items-center text-sm text-blue-600 hover:text-blue-800 font-medium"
-          >
-            <Plus size={16} className="mr-1" /> Add Experience
-          </button>
+          <div className="flex flex-col items-end space-y-2">
+            <button
+              type="button"
+              onClick={addNewExperience}
+              className="flex items-center text-sm text-blue-600 hover:text-blue-800 font-medium"
+            >
+              <Plus size={16} className="mr-1" /> Add Experience
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                // Find and remove any empty entries before going back to list
+                const updatedEntries = experienceEntries.filter(entry => 
+                  (entry.role && entry.role.trim() !== '') || 
+                  (entry.organization && entry.organization.trim() !== '') || 
+                  (entry.relevantExperience && entry.relevantExperience.trim() !== '') || 
+                  (entry.space && entry.space.trim() !== '')
+                );
+                setExperienceEntries(updatedEntries);
+                
+                // Return to list view
+                setEditMode(false);
+              }}
+              className="text-sm text-gray-600 hover:text-gray-800"
+              disabled={isUploading || isUpdating}
+            >
+              Back to List
+            </button>
+          </div>
         </div>
 
         {/* Experience entries list */}
@@ -346,46 +466,19 @@ export default function ExperienceForm({ onSave, onCancel, initialData = [] }: E
                 <h4 className="font-medium text-gray-900">
                   {experienceEntries.find(e => e.id === activeEntryId)?.role || 'New Experience'}
                 </h4>
-                <button
-                  type="button"
-                  onClick={async () => {
-                    // Check if this is a new entry with no data filled
-                    const currentEntry = experienceEntries.find(e => e.id === activeEntryId);
-                    const isEmptyEntry = currentEntry && 
-                      !currentEntry.role && 
-                      !currentEntry.organization;
-                      
-                    // If it's an empty entry, remove it from the list
-                    if (isEmptyEntry) {
-                      setExperienceEntries(prev => prev.filter(entry => entry.id !== activeEntryId));
-                    }
-                    
-                    // Try to fetch the latest experience list from API
-                    try {
-                      await fetchExperienceList();
-                    } catch (error) {
-                      console.error('Failed to fetch experience list:', error);
-                      // If API fails, continue using the current list
-                    }
-                    
-                    // Return to list view
-                    setEditMode(false);
-                  }}
-                  className="text-sm text-gray-600 hover:text-gray-800"
-                >
-                  Back to List
-                </button>
               </div>
+              
             )}
+            
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {experienceEntries.map(entry => (
-                entry.id === activeEntryId && (
+              {experienceEntries
+                .filter(entry => entry.id === activeEntryId)
+                .map(entry => (
                   <React.Fragment key={entry.id}>
-
-<div>
+                    <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Relevant Experience  <span className="text-red-500">*</span>
+                        Relevant Experience <span className="text-red-500">*</span>
                       </label>
                       <div className="relative">
                         <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
@@ -407,7 +500,7 @@ export default function ExperienceForm({ onSave, onCancel, initialData = [] }: E
                     {/* Space/Industry */}
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Space  <span className="text-red-500">*</span>
+                        Space <span className="text-red-500">*</span>
                       </label>
                       <div className="relative">
                         <Building className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
@@ -465,8 +558,8 @@ export default function ExperienceForm({ onSave, onCancel, initialData = [] }: E
                       )}
                     </div>
                   </React.Fragment>
-                )
-              ))}
+                ))
+              }
             </div>
           </div>
         )}
@@ -483,63 +576,84 @@ export default function ExperienceForm({ onSave, onCancel, initialData = [] }: E
           <p>Work experience details saved successfully!</p>
         </div>
       )}
-
+      
       <div className="flex justify-end space-x-3">
-        {/* {onCancel && (
-          <button
-            type="button"
-            onClick={onCancel}
-            className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
-          >
-            Cancel
-          </button>
-        )} */}
         {editMode && (
-          <button
-            type="button"
-            onClick={async () => {
-              if (validateActiveEntry()) {
-                // Get the active entry
-                const activeEntry = experienceEntries.find(entry => entry.id === activeEntryId);
-                if (activeEntry) {
-                  try {
-                    // Upload the experience entry
-                    await uploadExperience(activeEntry);
-                    // Only set editMode to false if upload was successful
-                    if (!uploadError) {
-                      setEditMode(false);
+          <>
+            {!isUpdateMode && (
+              <button
+                type="submit"
+                disabled={isUploading}
+                className="px-6 py-2 bg-blue-500 hover:bg-blue-600 text-white font-medium rounded-lg transition-colors flex items-center"
+              >
+                {isUploading ? 'Adding...' : 'Save Experience'}
+              </button>
+            )}
+            {isUpdateMode && (
+              <>
+                <button
+                  type="button"
+                  disabled={isUpdating}
+                  className="px-6 py-2 bg-blue-500 hover:bg-blue-600 text-white font-medium rounded-lg transition-colors flex items-center"
+                  onClick={async () => {
+                    // Validate active entry
+                    if (!validateActiveEntry()) {
+                      console.error('Validation failed');
+                      return;
                     }
-                  } catch (error) {
-                    console.error('Failed to upload experience entry:', error);
-                  }
-                }
-              }
-            }}
-            disabled={isUploading}
-            className={`px-4 py-2 border border-gray-300 text-gray-700 rounded-lg ${isUploading ? 'bg-gray-100 cursor-not-allowed' : 'hover:bg-gray-50'} flex items-center`}
+                    
+                    const activeEntry = experienceEntries.find(entry => entry.id === activeEntryId);
+                    if (activeEntry && currentEntryName) {
+                      try {
+                        // Update existing experience entry
+                        const response = await updateExperienceAPI(activeEntry, currentEntryName);
+                        console.log('Experience updated successfully:', response);
+                        
+                        // Return to list view
+                        setEditMode(false);
+                        
+                        // Refresh the list
+                        await fetchExperienceList();
+                      } catch (error) {
+                        console.error('Error updating experience:', error);
+                      }
+                    }
+                  }}
+                >
+                  {isUpdating ? 'Updating...' : 'Update'}
+                </button>
+                <button
+                  type="button"
+                  className="px-6 py-2 bg-blue-500 hover:bg-blue-600 text-white font-medium rounded-lg transition-colors flex items-center"
+                  onClick={() => {
+                    // Create a new experience entry
+                    addNewExperience();
+                    // Reset update mode
+                    setIsUpdateMode(false);
+                    setCurrentEntryName('');
+                  }}
+                >
+                  Save Experience
+                </button>
+              </>
+            )}
+          </>
+        )}
+        {!editMode && (
+          <button
+            type="submit"
+            disabled={isUploading || isUpdating}
+            className={`px-6 py-2 ${isUploading || isUpdating ? 'bg-blue-300' : 'bg-blue-500 hover:bg-blue-600'} text-white font-medium rounded-lg transition-colors flex items-center`}
           >
-            {isUploading && (
-              <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-gray-700" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            {(isUploading || isUpdating) && (
+              <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
               </svg>
             )}
-            {isUploading ? 'Adding...' : 'Add'}
+            Save Experience
           </button>
         )}
-        <button
-          type="submit"
-          disabled={isUploading}
-          className={`px-6 py-2 ${isUploading ? 'bg-blue-300' : 'bg-blue-500 hover:bg-blue-600'} text-white font-medium rounded-lg transition-colors flex items-center`}
-        >
-          {isUploading && (
-            <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-            </svg>
-          )}
-          {isUploading ? 'Saving...' : experienceEntries.length > 0 ? 'Save Experience' : 'Skip Experience'}
-        </button>
       </div>
     </form>
   );

@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { addExperience, getAuthData, ExperienceData, AddExperienceResponse, getExperienceList } from '@/app/api/portfolio/addExperience';
+import { addExperience, updateExperience, getAuthData, ExperienceData, UpdateExperienceData, AddExperienceResponse, UpdateExperienceResponse, getExperienceList } from '@/app/api/portfolio/addExperience';
 
 // Interface for experience entry
 export interface ExperienceEntry {
@@ -21,6 +21,9 @@ interface ExperienceState {
   isFetchingList: boolean;
   fetchListError: string | null;
   experienceEntries: ExperienceEntry[];
+  isUpdating: boolean;
+  updateSuccess: boolean;
+  updateError: string | null;
   
   // Actions
   setExperienceEntries: (entries: ExperienceEntry[]) => void;
@@ -28,8 +31,10 @@ interface ExperienceState {
   removeExperienceEntry: (id: string) => void;
   updateExperienceEntry: (id: string, data: Partial<ExperienceEntry>) => void;
   uploadExperience: (entry: ExperienceEntry) => Promise<AddExperienceResponse | null>;
+  updateExperienceAPI: (entry: ExperienceEntry, entryName: string) => Promise<UpdateExperienceResponse | null>;
   fetchExperienceList: () => Promise<ExperienceEntry[]>;
   resetUploadState: () => void;
+  resetUpdateState: () => void;
 }
 
 // Create Zustand store
@@ -42,6 +47,9 @@ export const useExperienceStore = create<ExperienceState>((set, get) => ({
   experienceEntries: [],
   isFetchingList: false,
   fetchListError: null,
+  isUpdating: false,
+  updateSuccess: false,
+  updateError: null,
   
   // Actions
   setExperienceEntries: (entries) => set({ experienceEntries: entries }),
@@ -189,5 +197,67 @@ export const useExperienceStore = create<ExperienceState>((set, get) => ({
     uploadProgress: 0,
     uploadSuccess: false,
     uploadError: null
-  })
+  }),
+  
+  updateExperienceAPI: async (entry: ExperienceEntry, entryName: string) => {
+    try {
+      console.log('updateExperienceAPI called with entry:', entry, 'and entryName:', entryName);
+      
+      // Validate name parameter
+      if (!entryName || entryName.trim() === '') {
+        throw new Error('Name parameter is required for update');
+      }
+      
+      // Set updating state
+      set({ isUpdating: true, updateSuccess: false, updateError: null });
+      
+      // Get auth data
+      const authData = getAuthData();
+      console.log('Auth data retrieved:', authData ? 'Available' : 'Not available');
+      
+      if (!authData) {
+        throw new Error('Authentication data not available');
+      }
+      
+      // Map entry to API format for update
+      const updateData: UpdateExperienceData = {
+        entity_id: authData.entityId,
+        name: entryName.trim(), // Ensure name is trimmed
+        company: entry.organization,
+        space: entry.space,
+        designation: entry.role,
+        relevant_experience: parseFloat(entry.relevantExperience) || 0
+      };
+      
+      console.log('Prepared update data:', updateData);
+      
+      // Update experience data
+      console.log('Calling updateExperience API function with data');
+      const response = await updateExperience(updateData, authData.apiKey, authData.apiSecret);
+      console.log('Update API response received:', response);
+      
+      // Update state
+      set({ isUpdating: false, updateSuccess: true });
+      
+      // Refresh experience list after update
+      await get().fetchExperienceList();
+      
+      return response;
+    } catch (error: any) {
+      console.error('Error in updateExperienceAPI:', error);
+      set({
+        isUpdating: false,
+        updateError: error.response?.data?.message || error.message || 'Failed to update experience'
+      });
+      return null;
+    }
+  },
+  
+  resetUpdateState: () => {
+    set({
+      isUpdating: false,
+      updateSuccess: false,
+      updateError: null
+    });
+  }
 }));

@@ -12,8 +12,26 @@ export interface ExperienceData {
   relevant_experience: number;
 }
 
+// Interface for update experience data
+export interface UpdateExperienceData {
+  entity_id: string;
+  name: string;
+  company?: string;
+  space?: string;
+  designation?: string;
+  relevant_experience?: number;
+}
+
 // Interface for add experience response
 export interface AddExperienceResponse {
+  message: {
+    status: string;
+    data?: any;
+  };
+}
+
+// Interface for update experience response
+export interface UpdateExperienceResponse {
   message: {
     status: string;
     data?: any;
@@ -76,6 +94,51 @@ export const addExperience = async (
     return response.data;
   } catch (error: any) {
     console.error('Add work experience error:', error.response?.data || error.message || error);
+    throw error;
+  }
+};
+
+export const updateExperience = async (
+  updateData: UpdateExperienceData,
+  apiKey: string,
+  apiSecret: string
+): Promise<UpdateExperienceResponse> => {
+  try {
+    console.log('updateExperience API function called with data:', JSON.stringify(updateData));
+    console.log('API endpoint:', `${API_BASE_URL}/api/method/skillglobe_be.api.portfolio.experience.update_work_experience`);
+    
+    // Create authorization header
+    const authHeader = `token ${apiKey}:${apiSecret}`;
+    console.log('Authorization header created (not showing sensitive data)');
+    
+    // Log the request details
+    console.log('Making PUT request with headers:', {
+      'Authorization': 'token [REDACTED]',
+      'Accept': 'application/json',
+      'Content-Type': 'application/json'
+    });
+    
+    const response = await axios.put<UpdateExperienceResponse>(
+      `${API_BASE_URL}/api/method/skillglobe_be.api.portfolio.experience.update_work_experience`,
+      updateData,
+      {
+        headers: {
+          'Authorization': authHeader,
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
+        }
+      }
+    );
+    
+    console.log('Update experience response status:', response.status);
+    console.log('Update experience response data:', response.data);
+    return response.data;
+  } catch (error: any) {
+    console.error('Update experience error details:');
+    console.error('- Status:', error.response?.status);
+    console.error('- Status text:', error.response?.statusText);
+    console.error('- Response data:', error.response?.data);
+    console.error('- Error message:', error.message);
     throw error;
   }
 };

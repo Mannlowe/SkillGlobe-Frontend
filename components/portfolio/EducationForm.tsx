@@ -31,6 +31,7 @@ interface EducationEntry {
   university: string;
   certificateFile: File | null;
   certificateFileName?: string;
+  name?: string; // Added name property for update functionality
 }
 
 interface EducationFormProps {
@@ -80,6 +81,8 @@ export default function EducationForm({ onSave, onCancel, initialData = [] }: Ed
   const [activeEntryId, setActiveEntryId] = useState<string>(educationEntries[0]?.id || '');
   const [editMode, setEditMode] = useState<boolean>(true);
   const [validationErrors, setValidationErrors] = useState<{ [key: string]: string }>({});
+  const [isUpdateMode, setIsUpdateMode] = useState<boolean>(false);
+  const [currentEntryName, setCurrentEntryName] = useState<string>('');
 
   // Save to localStorage whenever educationEntries changes
   useEffect(() => {
@@ -167,6 +170,23 @@ export default function EducationForm({ onSave, onCancel, initialData = [] }: Ed
     setActiveEntryId(entryId);
     setEditMode(true);
     setValidationErrors({});
+    
+    // Check if this is an existing entry from the API
+    const entry = educationEntries.find(e => e.id === entryId);
+    
+    // Force update mode to true for all entries from the education list
+    // This is a temporary fix until we can properly identify API entries
+    if (entry) {
+      console.log('Setting update mode to TRUE for entry:', entry);
+      setIsUpdateMode(true);
+      // Use university as the name if name is not available
+      const entryName = entry.name || entry.university;
+      setCurrentEntryName(entryName);
+    } else {
+      console.log('Setting update mode to FALSE');
+      setIsUpdateMode(false);
+      setCurrentEntryName('');
+    }
   };
 
   const validateActiveEntry = () => {
@@ -194,11 +214,26 @@ export default function EducationForm({ onSave, onCancel, initialData = [] }: Ed
   };
 
   // Get education store functions
-  const { uploadEducation, isUploading, uploadSuccess, uploadError, resetUploadState, fetchEducationList, isFetchingList, fetchListError } = useEducationStore();
+  const { 
+    uploadEducation, 
+    isUploading, 
+    uploadSuccess, 
+    uploadError, 
+    resetUploadState, 
+    fetchEducationList, 
+    isFetchingList, 
+    fetchListError,
+    updateEducationAPI,
+    isUpdating,
+    updateSuccess,
+    updateError,
+    resetUpdateState
+  } = useEducationStore();
 
   useEffect(() => {
     // Reset upload state when component mounts
     resetUploadState();
+    resetUpdateState();
     
     // Try to fetch education list from API
     fetchEducationList().then(entries => {
@@ -231,8 +266,9 @@ export default function EducationForm({ onSave, onCancel, initialData = [] }: Ed
     e.preventDefault();
     e.stopPropagation();
 
-    // Reset any previous upload state
+    // Reset any previous states
     resetUploadState();
+    resetUpdateState();
 
     // Validate active entry
     if (!validateActiveEntry()) {
@@ -248,12 +284,24 @@ export default function EducationForm({ onSave, onCancel, initialData = [] }: Ed
         return;
       }
 
-      // Upload education data using store
-      const response = await uploadEducation(activeEntry);
+      let response;
+      
+      // Check if we're in update mode
+      console.log('Before API call - isUpdateMode:', isUpdateMode, 'currentEntryName:', currentEntryName);
+      
+      if (isUpdateMode && currentEntryName) {
+        // Update existing education entry
+        console.log('Calling updateEducationAPI with:', activeEntry, currentEntryName);
+        response = await updateEducationAPI(activeEntry, currentEntryName);
+        console.log('Education updated successfully:', response);
+      } else {
+        // Upload new education data
+        console.log('Calling uploadEducation with:', activeEntry);
+        response = await uploadEducation(activeEntry);
+        console.log('Education added successfully:', response);
+      }
 
       if (response) {
-        console.log('Education added successfully:', response);
-
         // Call onSave if provided
         if (onSave) {
           onSave(educationEntries);
@@ -266,7 +314,7 @@ export default function EducationForm({ onSave, onCancel, initialData = [] }: Ed
         // localStorage.removeItem('educationEntries');
       }
     } catch (error) {
-      console.error('Error adding education:', error);
+      console.error(`Error ${isUpdateMode ? 'updating' : 'adding'} education:`, error);
       // Error handling is done by the store
     }
 
@@ -347,35 +395,46 @@ export default function EducationForm({ onSave, onCancel, initialData = [] }: Ed
           </div>
           <div className="flex-grow">
             <h4 className="font-medium text-gray-900">{entry.educationLevel || 'Untitled Education'}</h4>
-            <p className="text-sm text-gray-600">
-              {entry.university ? `${entry.university}, ` : ''}
-              {entry.yearOfCompletion ? `${entry.yearOfCompletion}` : ''}
-              {entry.stream ? ` - ${entry.stream}` : ''}
-              {entry.score ? ` (${entry.score})` : ''}
-            </p>
+            {(() => {
+        const trimmedScore = entry.score ? Number(entry.score).toString() : '';
+        return (
+          <p className="text-sm text-gray-600">
+            {entry.university ? `${entry.university}, ` : ''}
+            {entry.yearOfCompletion ? `${entry.yearOfCompletion}` : ''}
+            {entry.stream ? ` - ${entry.stream}` : ''}
+            {trimmedScore ? ` (${trimmedScore})` : ''}
+          </p>
+        );
+      })()}
           </div>
           <div className="flex space-x-3 ml-2 flex-shrink-0">
             <button
               type="button"
               onClick={() => onEdit(entry.id)}
-              className="text-blue-600 hover:text-blue-800"
+              className="text-blue-600 hover:text-blue-800 underline mr-5"
               aria-label="Edit education entry"
             >
-              <Pencil size={18} />
+              Edit
+              {/* <Pencil size={18} /> */}
             </button>
-            <button
+            {/* <button
               type="button"
               onClick={() => onRemove(entry.id)}
               className="text-red-600 hover:text-red-800"
               aria-label="Remove education entry"
             >
               <Trash2 size={18} />
-            </button>
+            </button> */}
           </div>
         </div>
       </div>
     );
   };
+
+  // Debug log for update mode
+  useEffect(() => {
+    console.log('Current update mode:', isUpdateMode, 'Current entry name:', currentEntryName);
+  }, [isUpdateMode, currentEntryName]);
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
@@ -684,79 +743,142 @@ export default function EducationForm({ onSave, onCancel, initialData = [] }: Ed
       </div>
 
       {/* Upload Status Messages */}
-      {uploadError && (
+      {(uploadError || updateError) && (
         <div className="p-3 mb-4 text-sm text-red-700 bg-red-100 rounded-md">
-          Error: {uploadError}
+          Error: {uploadError || updateError}
         </div>
       )}
-      {uploadSuccess && (
+      {(uploadSuccess || updateSuccess) && (
         <div className="p-3 mb-4 text-sm text-green-700 bg-green-100 rounded-md">
-          Education details added successfully!
+          Education details {updateSuccess ? 'updated' : 'added'} successfully!
         </div>
       )}
-      {isUploading && (
+      {(isUploading || isUpdating) && (
         <div className="p-3 mb-4 text-sm text-blue-700 bg-blue-100 rounded-md">
-          Uploading education details...
+          {isUpdating ? 'Updating' : 'Uploading'} education details...
         </div>
       )}
 
       <div className="flex justify-end space-x-3">
         {editMode && (
+          <>
+            {/* Update button - only shown in update mode */}
+            {isUpdateMode && (
+              <button
+                type="button"
+                onClick={() => {
+                  if (validateActiveEntry()) {
+                    // Reset any previous states
+                    resetUploadState();
+                    resetUpdateState();
+
+                    try {
+                      // Update existing education entry
+                      const activeEntry = educationEntries.find(entry => entry.id === activeEntryId);
+                      if (!activeEntry) {
+                        console.error('No active entry found');
+                        return;
+                      }
+                      
+                      // For update API, the 'id' in our frontend object corresponds to 'name' in the API
+                      // We need to use the entry's id as the name parameter for the update API
+                      if (!activeEntry.id) {
+                        console.error('Cannot update: entry does not have an id');
+                        return;
+                      }
+                      
+                      console.log('Update button clicked with id (used as name for API):', activeEntry.id);
+                      
+                      updateEducationAPI(activeEntry, activeEntry.id)
+                        .then(result => {
+                          if (result) {
+                            console.log('Education updated successfully:', result);
+                            // Only navigate back to list view on success
+                            setEditMode(false);
+                          }
+                        })
+                        .catch(error => {
+                          console.error('Error updating education:', error);
+                        });
+                    } catch (error) {
+                      console.error('Error updating education:', error);
+                      // Stay in edit mode when there's an error
+                    }
+                  } else {
+                    // If validation fails, stay on the form
+                    console.error('Validation failed');
+                  }
+                }}
+                className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
+                disabled={isUpdating}
+              >
+                {isUpdating ? 'Updating...' : 'Update'}
+              </button>
+            )}
+            
+            {/* Add button - only shown in add mode */}
+            {!isUpdateMode && (
+              <button
+                type="button"
+                onClick={() => {
+                  if (validateActiveEntry()) {
+                    // Reset any previous states
+                    resetUploadState();
+                    resetUpdateState();
+
+                    try {
+                      // Add new education entry
+                      console.log('Add button clicked');
+                      const activeEntry = educationEntries.find(entry => entry.id === activeEntryId);
+                      if (!activeEntry) {
+                        console.error('No active entry found');
+                        return;
+                      }
+                      
+                      uploadEducation(activeEntry)
+                        .then(result => {
+                          if (result) {
+                            console.log('Education added successfully:', result);
+                            // Only navigate back to list view on success
+                            setEditMode(false);
+                          }
+                        })
+                        .catch(error => {
+                          console.error('Error adding education:', error);
+                        });
+                    } catch (error) {
+                      console.error('Error adding education:', error);
+                      // Stay in edit mode when there's an error
+                    }
+                  } else {
+                    // If validation fails, stay on the form
+                    console.error('Validation failed');
+                  }
+                }}
+                className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
+                disabled={isUploading}
+              >
+                {isUploading ? 'Adding...' : 'Add'}
+              </button>
+            )}
+          </>
+        )}
+        {/* Only show the main submit button when in edit mode, not in list view */}
+        {editMode && (
           <button
             type="button"
-            onClick={async (e) => {
-              // Prevent form submission
+            onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
-
-              if (validateActiveEntry()) {
-                // Get active entry
-                const activeEntry = educationEntries.find(entry => entry.id === activeEntryId);
-                if (!activeEntry) {
-                  console.error('No active entry found');
-                  return;
-                }
-
-                // Reset any previous upload state
-                resetUploadState();
-
-                try {
-                  // Upload education data using store
-                  const response = await uploadEducation(activeEntry);
-
-                  if (response) {
-                    console.log('Education added successfully:', response);
-                    // Only navigate back to list view on success
-                    setEditMode(false);
-                  }
-                } catch (error) {
-                  console.error('Error adding education:', error);
-                  // Stay in edit mode when there's an error
-                }
-              } else {
-                // If validation fails, stay on the form
-                console.error('Validation failed');
-              }
+              handleSubmit(e as React.FormEvent);
             }}
-            className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
+            className={`px-6 py-2 text-white font-medium rounded-lg transition-colors ${isUploading ? 'bg-blue-400 cursor-not-allowed' : 'bg-blue-500 hover:bg-blue-600'}`}
             disabled={isUploading}
           >
-            {isUploading ? 'Adding...' : 'Add'}
+            {isUploading ? 'Saving...' : isUpdating ? 'Updating...' :
+             educationEntries.length === 0 ? 'Skip Education' : 'Save Education'}
           </button>
         )}
-        <button
-          type="button"
-          onClick={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            handleSubmit(e as React.FormEvent);
-          }}
-          className={`px-6 py-2 text-white font-medium rounded-lg transition-colors ${isUploading ? 'bg-blue-400 cursor-not-allowed' : 'bg-blue-500 hover:bg-blue-600'}`}
-          disabled={isUploading}
-        >
-          {isUploading ? 'Saving...' : 
-          (educationEntries.filter(entry => entry.educationLevel || entry.yearOfCompletion || entry.stream || entry.score || entry.university).length > 0 ? 'Save Education' : 'Skip Education')}
-        </button>
       </div>
     </form>
   );

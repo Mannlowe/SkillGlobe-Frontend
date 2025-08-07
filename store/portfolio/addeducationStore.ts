@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { addEducation, getAuthData, getEducationList, EducationData, AddEducationResponse, EducationListResponse } from '@/app/api/portfolio/addEducation';
+import { addEducation, updateEducation, getAuthData, getEducationList, EducationData, UpdateEducationData, AddEducationResponse, UpdateEducationResponse, EducationListResponse } from '@/app/api/portfolio/addEducation';
 
 // Interface for education entry
 export interface EducationEntry {
@@ -11,6 +11,7 @@ export interface EducationEntry {
   university: string;
   certificateFile: File | null;
   certificateFileName?: string;
+  name?: string;
 }
 
 // Interface for education store state
@@ -23,6 +24,9 @@ interface EducationState {
   educationEntries: EducationEntry[];
   isFetchingList: boolean;
   fetchListError: string | null;
+  isUpdating: boolean;
+  updateSuccess: boolean;
+  updateError: string | null;
   
   // Actions
   setEducationEntries: (entries: EducationEntry[]) => void;
@@ -30,8 +34,10 @@ interface EducationState {
   removeEducationEntry: (id: string) => void;
   updateEducationEntry: (id: string, data: Partial<EducationEntry>) => void;
   uploadEducation: (entry: EducationEntry) => Promise<AddEducationResponse | null>;
+  updateEducationAPI: (entry: EducationEntry, entryName: string) => Promise<UpdateEducationResponse | null>;
   fetchEducationList: () => Promise<EducationEntry[]>;
   resetUploadState: () => void;
+  resetUpdateState: () => void;
 }
 
 // Create Zustand store
@@ -44,6 +50,9 @@ export const useEducationStore = create<EducationState>((set, get) => ({
   educationEntries: [],
   isFetchingList: false,
   fetchListError: null,
+  isUpdating: false,
+  updateSuccess: false,
+  updateError: null,
   
   // Actions
   setEducationEntries: (entries) => set({ educationEntries: entries }),
@@ -118,74 +127,118 @@ export const useEducationStore = create<EducationState>((set, get) => ({
     set({ isFetchingList: true, fetchListError: null });
     
     try {
+      // Get auth data
       const authData = getAuthData();
       
       if (!authData) {
         throw new Error('Authentication data not available');
       }
       
-      const response = await getEducationList(
-        authData.entityId,
-        authData.apiKey,
-        authData.apiSecret
-      );
+      // Get education list from API
+      const response = await getEducationList(authData.entityId, authData.apiKey, authData.apiSecret);
       
-      if (!response || !response.message || response.exception) {
-        throw new Error(response.exception || 'Invalid API response format');
+      // Check if response has data
+      if (response?.message?.data?.education_list && Array.isArray(response.message.data.education_list)) {
+        // Map API response to education entries
+        const entries: EducationEntry[] = response.message.data.education_list.map(item => ({
+          id: crypto.randomUUID(), // Generate a new ID for each entry
+          educationLevel: item.education_level || '',
+          yearOfCompletion: item.year_of_completion?.toString() || '',
+          stream: item.stream || '',
+          score: item.score?.toString() || '',
+          university: item.university_board || '',
+          certificateFile: null,
+          certificateFileName: item.certificate || undefined,
+          name: item.name || '' // Include the name field for update functionality
+        }));
+        
+        // Update state
+        set({ educationEntries: entries, isFetchingList: false });
+        return entries;
+      } else {
+        // No education list found or empty list
+        set({ educationEntries: [], isFetchingList: false });
+        return [];
       }
-      
-      const educationList = response.message.data?.education_list || [];
-      console.log('Education list from API:', educationList);
-      
-      const entries = educationList.map(item => ({
-        id: item.name || crypto.randomUUID(),
-        educationLevel: item.education_level || '',
-        yearOfCompletion: item.year_of_completion?.toString() || '',
-        stream: item.stream || '',
-        score: item.score?.toString() || '',
-        university: item.university_board || '',
-        certificateFile: null, // Can't convert remote file reference to File object
-        certificateFileName: item.certificate ? 'Certificate file' : undefined
-      }));
-      
-      console.log('Mapped education entries:', entries);
-      set({ educationEntries: entries, isFetchingList: false });
-      
-      // Save to localStorage for offline access
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('educationEntries', JSON.stringify(entries));
-      }
-      
-      return entries;
     } catch (error: any) {
-      let errorMessage = 'Failed to fetch education list';
-      
-      if (error.response?.data) {
-        if (error.response.data.exception) {
-          errorMessage = `API Error: ${error.response.data.exception.split(':').pop()?.trim() || 'Unknown error'}`;
-        } else if (error.response.data.message) {
-          errorMessage = `API Error: ${error.response.data.message}`;
-        } else if (error.response.data._server_messages) {
-          try {
-            const serverMessages = JSON.parse(error.response.data._server_messages);
-            errorMessage = `API Error: ${serverMessages[0].message || 'Unknown error'}`;
-          } catch (e) {
-            // If parsing fails, use the original error message
-          }
-        }
-      } else if (error.message) {
-        errorMessage = error.message;
-      }
-      
-      set({ isFetchingList: false, fetchListError: errorMessage });
-      throw error;
+      console.error('Fetch education list error:', error.response?.data || error.message || error);
+      set({
+        isFetchingList: false,
+        fetchListError: error.response?.data?.message || error.message || 'Failed to fetch education list'
+      });
+      return [];
     }
   },
   
-  resetUploadState: () => set({ 
-    isUploading: false,
-    uploadProgress: 0,
-    uploadSuccess: false,
-    uploadError: null
-  })
+  resetUploadState: () => {
+    set({
+      isUploading: false,
+      uploadProgress: 0,
+      uploadSuccess: false,
+      uploadError: null
+    });
+  },
+  
+  updateEducationAPI: async (entry: EducationEntry, entryName: string) => {
+    try {
+      console.log('updateEducationAPI called with entry:', entry, 'and entryName:', entryName);
+      
+      // Validate name parameter
+      if (!entryName || entryName.trim() === '') {
+        throw new Error('Name parameter is required for update');
+      }
+      
+      // Set updating state
+      set({ isUpdating: true, updateSuccess: false, updateError: null });
+      
+      // Get auth data
+      const authData = getAuthData();
+      console.log('Auth data retrieved:', authData ? 'Available' : 'Not available');
+      
+      if (!authData) {
+        throw new Error('Authentication data not available');
+      }
+      
+      // Map entry to API format for update
+      const updateData: UpdateEducationData = {
+        entity_id: authData.entityId,
+        name: entryName.trim(), // Ensure name is trimmed
+        university_board: entry.university,
+        education_level: entry.educationLevel,
+        year_of_completion: entry.yearOfCompletion,
+        stream: entry.stream,
+        score: entry.score
+      };
+      
+      console.log('Prepared update data:', updateData);
+      
+      // Update education data
+      console.log('Calling updateEducation API function with data');
+      const response = await updateEducation(updateData, authData.apiKey, authData.apiSecret);
+      console.log('Update API response received:', response);
+      
+      // Update state
+      set({ isUpdating: false, updateSuccess: true });
+      
+      // Refresh education list after update
+      await get().fetchEducationList();
+      
+      return response;
+    } catch (error: any) {
+      console.error('Error in updateEducationAPI:', error);
+      set({
+        isUpdating: false,
+        updateError: error.response?.data?.message || error.message || 'Failed to update education'
+      });
+      return null;
+    }
+  },
+  
+  resetUpdateState: () => {
+    set({
+      isUpdating: false,
+      updateSuccess: false,
+      updateError: null
+    });
+  }
 }));

@@ -145,8 +145,8 @@ export const useExperienceStore = create<ExperienceState>((set, get) => ({
           id: item.name || crypto.randomUUID(),
           employmentStatus: item.employment_status || '',
           space: item.space || '',
-          role: item.role || '',
-          organization: item.organization || '',
+          role: item.designation || '', // API returns 'designation', not 'role'
+          organization: item.company || '', // API returns 'company', not 'organization'
           relevantExperience: item.relevant_experience?.toString() || '',
         }));
         

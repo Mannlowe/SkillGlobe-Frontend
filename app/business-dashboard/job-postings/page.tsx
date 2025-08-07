@@ -239,7 +239,7 @@ export default function JobPostingsPage() {
                           onClick={() => handleDeleteClick(job)} 
                           className="text-red-600 hover:text-red-900"
                         >
-                          Delete
+                          Close
                         </button>
                       </td>
                     </tr>

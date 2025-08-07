@@ -36,7 +36,8 @@ interface ExperienceFormProps {
 }
 
 export default function ExperienceForm({ onSave, onCancel, initialData = [] }: ExperienceFormProps) {
-  // const { fetchExperienceList, isLoading, error } = useExperienceStore();
+  // Get store functions and state
+  const { fetchExperienceList: fetchExperienceListFromStore, experienceEntries: storeEntries, isFetchingList: isListLoading } = useExperienceStore();
   const [experienceEntries, setExperienceEntries] = useState<ExperienceEntry[]>(
     initialData.length > 0 ? initialData : [
       {
@@ -142,6 +143,29 @@ export default function ExperienceForm({ onSave, onCancel, initialData = [] }: E
   useEffect(() => {
     // Reset upload state when component mounts
     resetUploadState();
+    
+    // Fetch experience list from API
+    fetchExperienceListFromStore().then(fetchedEntries => {
+      console.log('Fetched experience entries:', fetchedEntries);
+      if (fetchedEntries && fetchedEntries.length > 0) {
+        // Map store entries to component format, adding missing fields
+        const mappedEntries = fetchedEntries.map(entry => ({
+          id: entry.id,
+          employmentStatus: entry.employmentStatus || '',
+          space: entry.space || '',
+          role: entry.role || '',
+          organization: entry.organization || '',
+          relevantExperience: entry.relevantExperience || '',
+          website: '', // Add missing fields required by component
+          professionalSummary: '' // Add missing fields required by component
+        }));
+        setExperienceEntries(mappedEntries);
+        setActiveEntryId(mappedEntries[0].id);
+        setEditMode(false); // Show the list view when we have entries
+      }
+    }).catch(error => {
+      console.error('Error fetching experience list:', error);
+    });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

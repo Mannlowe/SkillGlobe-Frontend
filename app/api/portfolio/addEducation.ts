@@ -14,8 +14,27 @@ export interface EducationData {
   certificate?: File;
 }
 
+// Interface for update education data
+export interface UpdateEducationData {
+  entity_id: string;
+  name: string;
+  university_board: string;
+  education_level?: string;
+  year_of_completion?: string;
+  stream?: string;
+  score?: string;
+}
+
 // Interface for add education response
 export interface AddEducationResponse {
+  message: {
+    status: string;
+    data?: any;
+  };
+}
+
+// Interface for update education response
+export interface UpdateEducationResponse {
   message: {
     status: string;
     data?: any;
@@ -88,6 +107,51 @@ export const addEducation = async (
     return response.data;
   } catch (error: any) {
     console.error('Add education error:', error.response?.data || error.message || error);
+    throw error;
+  }
+};
+
+export const updateEducation = async (
+  updateData: UpdateEducationData,
+  apiKey: string,
+  apiSecret: string
+): Promise<UpdateEducationResponse> => {
+  try {
+    console.log('updateEducation API function called with data:', JSON.stringify(updateData));
+    console.log('API endpoint:', `${API_BASE_URL}/api/method/skillglobe_be.api.portfolio.education.update_education`);
+    
+    // Create authorization header
+    const authHeader = `token ${apiKey}:${apiSecret}`;
+    console.log('Authorization header created (not showing sensitive data)');
+    
+    // Log the request details
+    console.log('Making PUT request with headers:', {
+      'Authorization': 'token [REDACTED]',
+      'Accept': 'application/json',
+      'Content-Type': 'application/json'
+    });
+    
+    const response = await axios.put<UpdateEducationResponse>(
+      `${API_BASE_URL}/api/method/skillglobe_be.api.portfolio.education.update_education`,
+      updateData,
+      {
+        headers: {
+          'Authorization': authHeader,
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
+        }
+      }
+    );
+    
+    console.log('Update education response status:', response.status);
+    console.log('Update education response data:', response.data);
+    return response.data;
+  } catch (error: any) {
+    console.error('Update education error details:');
+    console.error('- Status:', error.response?.status);
+    console.error('- Status text:', error.response?.statusText);
+    console.error('- Response data:', error.response?.data);
+    console.error('- Error message:', error.message);
     throw error;
   }
 };

@@ -527,20 +527,6 @@ export default function JobPostingModal({ showModal, setShowModal, onSubmit, edi
       </div>
     </div>
     
-    {/* Opportunity Closed */}
-    <div>
-      <label className="inline-flex items-center">
-        <input
-          type="checkbox"
-          name="opportunityClosed"
-          checked={newJob.opportunityClosed}
-          onChange={handleCheckboxChange}
-          className="form-checkbox h-4 w-4 text-blue-500"
-        />
-        <span className="ml-2 text-sm text-gray-700">Close opportunity manually</span>
-      </label>
-    </div>
-    
     <h4 className="text-md font-semibold text-blue-600 mt-6 mb-2">Step 2: Detailed Information</h4>
     
     {/* Description */}
@@ -657,70 +643,6 @@ export default function JobPostingModal({ showModal, setShowModal, onSubmit, edi
     <h4 className="text-md font-semibold text-blue-600 mt-6 mb-2">Step 3: Additional Filters</h4>
     
     <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
-      {/* Gender Preference */}
-    <div>
-      <label className="block text-sm font-medium text-gray-700 mb-1">
-        Gender Preference
-      </label>
-      <div className="flex gap-4">
-        <div className="w-1/2 relative" ref={genderDropdownRef}>
-          <div 
-            className="w-full px-4 py-2 bg-gray-50 rounded-lg border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all flex justify-between items-center cursor-pointer"
-            onClick={() => setGenderDropdownOpen(!genderDropdownOpen)}
-          >
-            <span className={newJob.gender.length === 0 ? "text-gray-500" : ""}>
-              {newJob.gender.length === 0 ? 'Select gender preference' : 'Gender preferences selected'}
-            </span>
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
-              <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
-            </svg>
-          </div>
-          
-          {genderDropdownOpen && (
-            <div className="absolute z-10 mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-lg overflow-auto">
-              {[
-                { value: "male", label: "Male" },
-                { value: "female", label: "Female" },
-                { value: "other", label: "Other" }
-              ].map((option) => (
-                <div 
-                  key={option.value} 
-                  className="px-4 py-2 hover:bg-blue-50 cursor-pointer flex items-center justify-between"
-                  onClick={() => toggleGender(option.value)}
-                >
-                  <span>{option.label}</span>
-                  {newJob.gender.includes(option.value) && (
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-blue-600" viewBox="0 0 20 20" fill="currentColor">
-                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                    </svg>
-                  )}
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-        <div className="w-1/2 bg-gray-50 border border-gray-200 rounded-lg p-2 min-h-[42px] max-h-[150px] overflow-y-auto">
-          {newJob.gender.length > 0 ? (
-            <div className="flex flex-wrap gap-2">
-              {newJob.gender.map((gender) => (
-                <div key={gender} className="bg-blue-100 text-blue-800 text-xs font-medium px-2 py-1 rounded-md flex items-center">
-                  {gender === 'male' ? 'Male' : gender === 'female' ? 'Female' : gender === 'other' ? 'Other' : gender}
-                  <button 
-                    type="button" 
-                    className="ml-1 text-blue-600 hover:text-blue-800"
-                    onClick={() => removeGender(gender)}
-                  >
-                    ×
-                  </button>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <p className="text-sm text-gray-500 italic">No preferences selected</p>
-          )}
-        </div>
-      </div>
-    </div>
       
       {/* Language Requirement */}
     <div>

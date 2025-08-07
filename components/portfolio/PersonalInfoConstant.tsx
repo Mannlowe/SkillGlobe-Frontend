@@ -60,6 +60,7 @@ useEffect(() => {
     permanentPincode: '',
     pincode: '',
     mobile_no: '',
+    dateOfBirth: '',
   });
   
   // Fetch personal info on component mount
@@ -196,6 +197,28 @@ useEffect(() => {
         ...(name === 'sameAsCurrentAddress' && checked
           ? { permanentAddress: formData.currentAddress }
           : {})
+      }));
+    } else if (name === 'dateOfBirth') {
+      // Date of birth validation for minimum age of 13
+      setFormData(prev => ({
+        ...prev,
+        [name]: value
+      }));
+      
+      // Calculate if the user is at least 13 years old
+      const birthDate = new Date(value);
+      const today = new Date();
+      let age = today.getFullYear() - birthDate.getFullYear();
+      const monthDiff = today.getMonth() - birthDate.getMonth();
+      
+      // Adjust age if birthday hasn't occurred yet this year
+      if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+        age--;
+      }
+      
+      setErrors(prev => ({
+        ...prev,
+        [name]: age < 13 ? 'You must be at least 13 years old' : ''
       }));
     } else if (name === 'permanentPincode' || name === 'pincode') {
       const onlyDigits = value.replace(/\D/g, ''); // Remove non-digit characters

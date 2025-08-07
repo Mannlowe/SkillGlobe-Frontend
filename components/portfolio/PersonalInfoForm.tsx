@@ -210,9 +210,12 @@ export default function PersonalInfoForm({ onSave, onCancel, initialData = {} }:
                 value={formData.dateOfBirth}
                 onChange={handleInputChange}
                 required
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className={`w-full pl-10 pr-4 py-2 border ${errors.dateOfBirth ? 'border-red-500 ring-1 ring-red-500' : 'border-gray-300'} rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500`}
               />
             </div>
+            {errors.dateOfBirth && (
+              <p className="text-red-500 text-xs mt-1">{errors.dateOfBirth}</p>
+            )}
           </div>
 
           {/* Nationality */}
@@ -328,123 +331,6 @@ export default function PersonalInfoForm({ onSave, onCancel, initialData = {} }:
             )}
           </div>
 
-
-          {/* Same as Current Address Checkbox */}
-          <div className="md:col-span-2">
-            <label className="inline-flex items-center cursor-pointer">
-              <input
-                type="checkbox"
-                name="sameAsCurrentAddress"
-                checked={formData.sameAsCurrentAddress}
-                onChange={handleInputChange}
-                className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-              />
-              <span className="ml-2 text-sm text-gray-700">Permanent address same as current address</span>
-            </label>
-          </div>
-
-          {/* Permanent Address */}
-          {!formData.sameAsCurrentAddress && (
-            <>
-              <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Permanent Address
-                </label>
-                <textarea
-                  name="permanentAddress"
-                  value={formData.permanentAddress}
-                  onChange={handleInputChange}
-                  rows={2}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="Enter your permanent address"
-                ></textarea>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Country
-                </label>
-                <div className="relative">
-                  <Globe className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
-                  <select
-                    name="permanentCountry"
-                    value={formData.permanentCountry}
-                    onChange={handleInputChange}
-                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none"
-                  >
-                    <option value="">Select your country</option>
-                    <option value="US">United States</option>
-                    <option value="CA">Canada</option>
-                    <option value="UK">United Kingdom</option>
-                    <option value="IN">India</option>
-                    <option value="AU">Australia</option>
-                    {/* Add more countries as needed */}
-                  </select>
-                </div>
-
-
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  City
-                </label>
-                <div className="relative">
-                  <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
-                  <input
-                    type="text"
-                    name="permanentCity"
-                    value={formData.permanentCity}
-                    onChange={handleInputChange}
-                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    placeholder="Enter your city"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Landmark
-                </label>
-                <div className="relative">
-                  <Landmark className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
-                  <input
-                    type="text"
-                    name="permanentLandmark"
-                    value={formData.permanentLandmark}
-                    onChange={handleInputChange}
-                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    placeholder="Enter your landmark"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Pincode
-                </label>
-                <div className="relative">
-                  <Locate className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
-                  <input
-                    type="number"
-                    min={0}
-                    inputMode="numeric"
-                    pattern="\d{6,}"
-                    minLength={6}
-                    maxLength={6}
-                    name="permanentPincode"
-                    value={formData.permanentPincode}
-                    onChange={handleInputChange}
-                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    placeholder="Enter your pincode"
-                  />
-                </div>
-                {errors.permanentPincode && (
-                  <p className="text-red-500 text-sm mt-1">{errors.permanentPincode}</p>
-                )}
-              </div>
-            </>
-          )}
-
         </div>
       </div>
 
@@ -504,22 +390,6 @@ export default function PersonalInfoForm({ onSave, onCancel, initialData = {} }:
             </div>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Facebook Profile
-            </label>
-            <div className="relative">
-              <input
-                type="text"
-                name="facebookHandle"
-                value={formData.facebookHandle}
-                onChange={handleInputChange}
-                className="w-full pl-4 pr-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:outline-none"
-                placeholder="https://facebook.com/your_username"
-              />
-            </div>
-          </div>
-
         </div>
       </div>
 
@@ -553,7 +423,7 @@ export default function PersonalInfoForm({ onSave, onCancel, initialData = {} }:
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Website
+              Own Website
             </label>
             <div className="relative">
               <Globe className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />

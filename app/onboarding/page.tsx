@@ -64,7 +64,7 @@ const businessSteps = [
   { id: 'basicInfo', title: 'Basic Info', component: BusinessBasicInformation },
   { id: 'otpVerification', title: 'Verification', component: OTPVerification },
   { id: 'terms', title: 'Terms', component: BusinessTermsAcceptance },
-  { id: 'businessProfile', title: 'Profile', component: BusinessProfile },
+  // { id: 'businessProfile', title: 'Profile', component: BusinessProfile },
   // { id: 'documentVerification', title: 'Documents', component: BusinessDocumentVerification },
   // { id: 'dashboardSetup', title: 'Dashboard', component: BusinessDashboardSetup },
 ];

@@ -117,7 +117,7 @@ export default function DashboardHeader({ onMenuClick, title }: DashboardHeaderP
               <ChevronDown size={16} className="text-gray-500" />
             </button>
             {showProfile && (
-              <div className="absolute right-0 mt-2 max-w-fit bg-white rounded-lg shadow-lg border border-gray-200 z-50">
+              <div className="absolute right-0 mt-2 w-60 bg-white rounded-lg shadow-lg border border-gray-200 z-50">
                 <div className="p-4 border-b border-gray-200">
                   <p className="font-semibold text-gray-900">{user?.full_name || user?.name || 'User'}</p>
                   <p className="text-sm text-gray-600">{user?.email || 'user@example.com'}</p>
@@ -126,12 +126,12 @@ export default function DashboardHeader({ onMenuClick, title }: DashboardHeaderP
                   {/* <a href="/profile" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
                     View Profile
                   </a> */}
-                  <a 
+                  {/* <a 
                     href={user?.user_type === 'business' ? '/business-dashboard/settings' : '/settings'} 
                     className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                   >
                     View Profile
-                  </a>
+                  </a> */}
                   <a href="/help" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
                     Help & Support
                   </a>

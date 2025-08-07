@@ -15,6 +15,7 @@ export default function BusinessTermsAcceptance({ data, updateData, nextStep }: 
   const [authDocument, setAuthDocument] = useState<File | null>(null);
   const [agreementDownloaded, setAgreementDownloaded] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+  const [isCheckboxEnabled, setIsCheckboxEnabled] = useState<boolean>(false);
   
   // Get registration store state and actions
   const { completeRegistration, isLoading, error: apiError, request_id, password } = useRegistrationStore();
@@ -24,6 +25,7 @@ export default function BusinessTermsAcceptance({ data, updateData, nextStep }: 
     if (file) {
       setAuthDocument(file);
       updateData({ authDocument: file.name });
+      setIsCheckboxEnabled(true); // Enable checkbox after document upload
     }
   };
   
@@ -208,12 +210,13 @@ export default function BusinessTermsAcceptance({ data, updateData, nextStep }: 
 
         {/* Acceptance Checkbox */}
         <div className="bg-orange-50 p-4 rounded-xl border border-orange-200">
-          <label className="flex items-start space-x-3 cursor-pointer">
+          <label className={`flex items-start space-x-3 ${isCheckboxEnabled ? 'cursor-pointer' : 'cursor-not-allowed'}`}>
             <input
               type="checkbox"
               checked={data.termsAccepted || false}
               onChange={(e) => updateData({ termsAccepted: e.target.checked })}
-              className="w-5 h-5 text-orange-500 bg-white border-gray-300 rounded focus:ring-orange-500 focus:ring-2 mt-0.5"
+              disabled={!isCheckboxEnabled}
+              className="w-5 h-5 text-orange-500 bg-white border-gray-300 rounded focus:ring-orange-500 focus:ring-2 mt-0.5 disabled:opacity-50 disabled:cursor-not-allowed"
             />
             <div className="text-sm">
               <p className="text-gray-900 font-medium mb-1">
@@ -235,7 +238,7 @@ export default function BusinessTermsAcceptance({ data, updateData, nextStep }: 
       
       <button
         onClick={handleAccept}
-        disabled={isLoading || !data.termsAccepted}
+        disabled={isLoading || !data.termsAccepted || !authDocument || !agreementDownloaded}
         className="w-full bg-blue-500 text-white font-semibold py-3 px-6 rounded-xl hover:shadow-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
       >
         {isLoading ? (

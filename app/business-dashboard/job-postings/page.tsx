@@ -1,10 +1,13 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Briefcase, Plus, Search } from 'lucide-react';
 import BusinessSidebar from '@/components/dashboard/BusinessSidebar';
 import BusinessDashboardHeader from '@/components/dashboard/BusinessDashboardHeader';
 import JobPostingModal, { JobFormState, DocumentFile } from './jobPostingModal';
+import { useJobPostingListStore } from '@/store/job-postings/jobpostinglistStore';
+import { JobPosting as ApiJobPosting } from '@/app/api/job postings/jobpostingList';
+import { useAuthStore } from '@/store/authStore';
 
 // Job posting interface to match the form fields
 interface JobPosting {
@@ -66,9 +69,59 @@ const sampleJobPostings: JobPosting[] = [
 export default function JobPostingsPage() {
   const [showModal, setShowModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [jobPostings, setJobPostings] = useState(sampleJobPostings);
+  const [jobPostings, setJobPostings] = useState<JobPosting[]>([]);
   const [currentJob, setCurrentJob] = useState<JobPosting | null>(null);
   const [editMode, setEditMode] = useState(false);
+  
+  // Use the job posting list store
+  const { 
+    jobPostings: apiJobPostings, 
+    isLoading, 
+    error, 
+    getJobPostings 
+  } = useJobPostingListStore();
+  
+  // Get entity ID from auth store
+  const { entity } = useAuthStore();
+  const entityId = entity?.details?.entity_id || "";
+  
+  // Log entity information for debugging
+  useEffect(() => {
+    console.log('Auth entity:', entity);
+    console.log('Using entity ID:', entityId);
+  }, [entity, entityId]);
+  
+  // Fetch job postings when component mounts
+  useEffect(() => {
+    const fetchJobPostings = async () => {
+      try {
+        await getJobPostings(entityId);
+      } catch (error) {
+        console.error('Error fetching job postings:', error);
+      }
+    };
+    
+    fetchJobPostings();
+  }, [getJobPostings, entityId]);
+  
+  // Map API job postings to UI job postings format when apiJobPostings changes
+  useEffect(() => {
+    if (apiJobPostings && apiJobPostings.length > 0) {
+      const mappedJobPostings: JobPosting[] = apiJobPostings.map((job: ApiJobPosting, index: number) => ({
+        id: job.name,
+        title: job.opportunity_title,
+        skillCategory: job.role_skill_category,
+        employmentType: job.employment_type,
+        workMode: job.work_mode,
+        experienceRequired: job.experience_required,
+        location: job.location || 'Not specified',
+        postedDate: '2 days ago', // This would ideally come from the API
+        status: 'Active' // This would ideally come from the API
+      }));
+      
+      setJobPostings(mappedJobPostings);
+    }
+  }, [apiJobPostings]);
   
   const handleCreateJob = (job: JobFormState) => {
     console.log('Creating new job:', job);
@@ -161,17 +214,36 @@ export default function JobPostingsPage() {
       <div className="flex-1 flex flex-col overflow-hidden pl-64">
         <BusinessDashboardHeader title="Job Postings" />
         
-        <main className="flex-1 overflow-y-auto p-6">
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-2xl font-semibold text-gray-800">Manage Job Postings</h2>
+        <div className="flex-1 bg-gray-50 p-8">
+          <div className="flex justify-end items-center mb-3">
+            {/* <h1 className="text-2xl font-bold flex items-center">
+              <Briefcase className="mr-2" /> Job Postings
+            </h1> */}
             <button
-              onClick={() => setShowModal(true)}
-              className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors"
+              onClick={() => {
+                setEditMode(false);
+                setCurrentJob(null);
+                setShowModal(true);
+              }}
+              className="bg-[#007BCA] hover:bg-[#007BCA] text-white py-2 px-4 rounded-lg flex items-center transition-all duration-300"
             >
-              <Plus size={18} />
-              <span>Create New</span>
+              <Plus size={20} className="mr-1" /> Create Job Posting
             </button>
           </div>
+          
+          {/* Loading and error states */}
+          {isLoading && (
+            <div className="flex justify-center items-center p-8">
+              <div className="w-8 h-8 border-4 border-orange-600 border-t-transparent rounded-full animate-spin"></div>
+              <span className="ml-2">Loading job postings...</span>
+            </div>
+          )}
+          
+          {error && (
+            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4">
+              {error}
+            </div>
+          )}
           
           <div className="bg-white rounded-xl shadow-sm mb-6">
             <div className="p-4 border-b border-gray-200">
@@ -185,7 +257,7 @@ export default function JobPostingsPage() {
               </div>
             </div>
             
-            <div className="overflow-x-auto">
+            <div className="flex-1 overflow-y-auto p-6">
               <table className="w-full">
                 <thead className="bg-gray-50">
                   <tr>
@@ -248,7 +320,7 @@ export default function JobPostingsPage() {
               </table>
             </div>
           </div>
-        </main>
+        </div>
       </div>
       
       {/* Job Posting Modal */}

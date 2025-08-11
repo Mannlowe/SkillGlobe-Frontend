@@ -6,6 +6,7 @@ import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { Eye, EyeOff, Mail, Lock, ArrowLeft } from 'lucide-react';
 import PasswordResetSuccessModal from '@/components/modal/PasswordResetSuccessModal';
+import { useForgetPasswordStore } from '@/store/registration/forgetpasswordStore';
 
 export const ForgetPassword = () => {
   const router = useRouter();
@@ -16,31 +17,42 @@ export const ForgetPassword = () => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState('');
   const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [localError, setError] = useState('');
+  const [isLocalLoading, setIsLoading] = useState(false);
+  
+  // Use the forget password store
+  const { 
+    isLoading: storeIsLoading, 
+    error: storeError, 
+    sendResetPasswordEmail,
+    verifyOtp,
+    resetUserPassword,
+    otpId,
+    otpVerified,
+    passwordReset,
+    resetState 
+  } = useForgetPasswordStore();
 
   // Handle email submission
   const handleEmailSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
-    setError('');
     
     try {
-      // Here you would make an API call to send the OTP to the email
-      // For now, we'll just simulate a successful response
-      console.log('Sending OTP to email:', email);
+      // Call the API to send reset password email
+      console.log('Sending reset password email to:', email);
       
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const result = await sendResetPasswordEmail(email);
       
-      // Move to the next step
-      setStep(2);
-    } catch (error) {
-      console.error('Error sending OTP:', error);
-      setError('Failed to send verification code. Please try again.');
-    } finally {
-      setIsLoading(false);
+      if (result.success) {
+        console.log('Reset password email sent successfully, OTP ID:', result.otpId);
+        // Move to the next step
+        setStep(2);
+      } else {
+        console.error('Failed to send reset password email');
+      }
+    } catch (err) {
+      console.error('Error sending reset password email:', err);
     }
   };
 
@@ -51,15 +63,20 @@ export const ForgetPassword = () => {
     setError('');
     
     try {
-      // Here you would make an API call to verify the OTP
+      // Call the API to verify the OTP
       const otpValue = otp.join('');
       console.log('Verifying OTP:', otpValue);
       
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Call the verify OTP function from the store
+      const result = await verifyOtp(otpValue);
       
-      // Move to the next step
-      setStep(3);
+      if (result.success) {
+        console.log('OTP verified successfully');
+        // Move to the next step
+        setStep(3);
+      } else {
+        setError('Invalid verification code. Please try again.');
+      }
     } catch (error) {
       console.error('Error verifying OTP:', error);
       setError('Invalid verification code. Please try again.');
@@ -82,14 +99,19 @@ export const ForgetPassword = () => {
     }
     
     try {
-      // Here you would make an API call to reset the password
+      // Call the API to reset the password
       console.log('Resetting password for email:', email);
       
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Call the reset password function from the store
+      const result = await resetUserPassword(password);
       
-      // Show success modal
-      setShowSuccessModal(true);
+      if (result.success) {
+        console.log('Password reset successfully');
+        // Show success modal
+        setShowSuccessModal(true);
+      } else {
+        setError('Failed to reset password. Please try again.');
+      }
     } catch (error) {
       console.error('Error resetting password:', error);
       setError('Failed to reset password. Please try again.');
@@ -188,19 +210,20 @@ export const ForgetPassword = () => {
                   </div>
                 </div>
 
-                {error && (
+                {(localError || storeError) && (
                   <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
-                    {error}
+                    {localError || storeError}
                   </div>
                 )}
 
                 <div className="flex justify-center">
                   <button
                     type="submit"
-                    disabled={isLoading}
+                    disabled={storeIsLoading || isLocalLoading}
                     className=" w-44 flex justify-center py-3 px-4 border border-orange-600 text-sm font-medium rounded-lg text-white bg-orange-600 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300"
+                    onClick={handleEmailSubmit}
                   >
-                    {isLoading ? (
+                    {(storeIsLoading || isLocalLoading) ? (
                       <div className="w-5 h-5 border-2 border-orange-600 border-t-orange-600 rounded-full animate-spin"></div>
                     ) : (
                       'Recover Password'
@@ -249,19 +272,19 @@ export const ForgetPassword = () => {
                   </div> */}
                 </div>
 
-                {error && (
+                {(localError || storeError) && (
                   <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
-                    {error}
+                    {localError || storeError}
                   </div>
                 )}
 
                 <div className="flex justify-center">
                   <button
                     type="submit"
-                    disabled={isLoading || otp.some(digit => !digit)}
+                    disabled={isLocalLoading || otp.some(digit => !digit)}
                     className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-orange-600 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300"
                   >
-                    {isLoading ? (
+                    {isLocalLoading ? (
                       <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                     ) : (
                       'Verify and Proceed'
@@ -283,7 +306,7 @@ export const ForgetPassword = () => {
               <form onSubmit={handlePasswordReset} className="space-y-6">
                 <div>
                   <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-                    Password
+                    New Password
                   </label>
                   <div className="mt-1 relative">
                     <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
@@ -309,7 +332,7 @@ export const ForgetPassword = () => {
 
                 <div>
                   <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">
-                    Confirm Password
+                    Confirm New Password
                   </label>
                   <div className="mt-1 relative">
                     <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
@@ -333,19 +356,19 @@ export const ForgetPassword = () => {
                   </div>
                 </div>
 
-                {error && (
+                {(localError || storeError) && (
                   <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
-                    {error}
+                    {localError || storeError}
                   </div>
                 )}
 
                 <div className="flex justify-center">
                   <button
                     type="submit"
-                    disabled={isLoading || !password || !confirmPassword}
+                    disabled={isLocalLoading || !password || !confirmPassword}
                     className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-orange-600 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300"
                   >
-                    {isLoading ? (
+                    {isLocalLoading ? (
                       <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                     ) : (
                       'Continue'

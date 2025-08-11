@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { ArrowLeft, ArrowRight, User, Building, CheckCircle } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -69,8 +69,24 @@ const businessSteps = [
   // { id: 'dashboardSetup', title: 'Dashboard', component: BusinessDashboardSetup },
 ];
 
+// Function to fetch lead data from backend
+async function fetchLeadData(leadId: string) {
+  try {
+    // Replace with your actual API endpoint that connects to Frappe
+    const response = await fetch(`/api/leads/${leadId}`);
+    if (!response.ok) {
+      throw new Error('Failed to fetch lead data');
+    }
+    return response.json();
+  } catch (error) {
+    console.error('Error fetching lead data:', error);
+    return {}; // Return empty object if fetch fails
+  }
+}
+
 export default function OnboardingPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [currentStep, setCurrentStep] = useState(0);
   const [onboardingData, setOnboardingData] = useState<OnboardingData>({
     userType: '',
@@ -108,6 +124,45 @@ export default function OnboardingPage() {
   const updateData = (newData: Partial<OnboardingData>) => {
     setOnboardingData(prev => ({ ...prev, ...newData }));
   };
+
+  // Handle lead registration links
+  useEffect(() => {
+    const leadId = searchParams.get('leadId');
+    const skipFirstStep = searchParams.get('skipFirstStep');
+    const userType = searchParams.get('userType');
+    
+    if (leadId && skipFirstStep === 'true' && (userType === 'individual' || userType === 'business')) {
+      // Set the user type
+      updateData({
+        userType: userType as 'individual' | 'business',
+      });
+      
+      // Fetch lead data from backend
+      fetchLeadData(leadId).then(leadData => {
+        if (leadData) {
+          // Pre-fill the form with lead data
+          updateData({
+            email: leadData.email || '',
+            // For individual leads
+            ...(userType === 'individual' && {
+              firstName: leadData.firstName || '',
+              lastName: leadData.lastName || '',
+              mobile: leadData.mobile || '',
+            }),
+            // For business leads
+            ...(userType === 'business' && {
+              businessName: leadData.businessName || '',
+              contactPersonName: leadData.contactPersonName || '',
+              businessAddress: leadData.businessAddress || '',
+            }),
+          });
+        }
+      });
+      
+      // Skip to the second step (Basic Info)
+      setCurrentStep(1);
+    }
+  }, [searchParams]);
 
   const steps = onboardingData.userType === 'business' ? businessSteps : individualSteps;
 

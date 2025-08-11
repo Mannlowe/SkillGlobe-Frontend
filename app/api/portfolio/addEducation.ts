@@ -194,8 +194,6 @@ export const getAuthData = () => {
       const entityDataStr = localStorage.getItem('entity_data');
       const entityData = entityDataStr ? JSON.parse(entityDataStr) : {};
       
-      // Store auth data directly in localStorage during login
-      // We need to add this to the storeAuthData function in auth.ts
       const apiKey = localStorage.getItem('auth_api_key');
       const apiSecret = localStorage.getItem('auth_api_secret');
       

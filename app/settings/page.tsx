@@ -1,12 +1,10 @@
 'use client';
 
 import { useState } from 'react';
-import Sidebar from '@/components/dashboard/Sidebar';
-import DashboardHeader from '@/components/dashboard/DashboardHeader';
+import ModernLayoutWrapper from '@/components/layout/ModernLayoutWrapper';
 import { User, Bell, Shield, CreditCard, Globe, Smartphone } from 'lucide-react';
 
 export default function SettingsPage() {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('profile');
 
   const tabs = [
@@ -18,13 +16,15 @@ export default function SettingsPage() {
   ];
 
   return (
+    <ModernLayoutWrapper>
+      <main className="flex-1 overflow-x-hidden overflow-y-auto bg-gray-50">
+
     <div className="flex h-screen bg-gray-50 font-rubik">
       <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
       
       <div className="flex-1 flex flex-col overflow-hidden">
         <DashboardHeader onMenuClick={() => setSidebarOpen(true)} />
-        
-        <main className="flex-1 overflow-x-hidden overflow-y-auto bg-gray-50">
+       
           <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6">
             <div className="mb-8">
               <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Settings</h1>
@@ -312,8 +312,7 @@ export default function SettingsPage() {
               </div>
             </div>
           </div>
-        </main>
-      </div>
-    </div>
+      </main>
+    </ModernLayoutWrapper>
   );
 }

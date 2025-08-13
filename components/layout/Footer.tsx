@@ -2,6 +2,7 @@
 
 import { Facebook, Twitter, Linkedin, Instagram, Mail, Phone, MapPin } from 'lucide-react';
 import Link from 'next/link';
+import { StandardizedButton } from '@/components/ui/StandardizedButton';
 
 export default function Footer() {
   return (
@@ -23,14 +24,20 @@ export default function Footer() {
               Empowering professionals worldwide with AI-driven talent solutions and personalized career growth.
             </p>
             <div className="flex space-x-4">
-              {[Facebook, Twitter, Linkedin, Instagram].map((Icon, index) => (
-                <button
-                  key={index}
-                  className="w-10 h-10 bg-gray-800 rounded-lg flex items-center justify-center hover:bg-orange-500 transition-colors"
-                >
-                  <Icon size={20} />
-                </button>
-              ))}
+              {[Facebook, Twitter, Linkedin, Instagram].map((Icon, index) => {
+                const socialNames = ['Facebook', 'Twitter', 'LinkedIn', 'Instagram'];
+                return (
+                  <StandardizedButton
+                    key={index}
+                    variant="ghost"
+                    size="icon"
+                    className="w-10 h-10 bg-gray-800 hover:bg-orange-500 text-white"
+                    aria-label={`Visit our ${socialNames[index]} page`}
+                  >
+                    <Icon size={20} />
+                  </StandardizedButton>
+                );
+              })}
             </div>
           </div>
 

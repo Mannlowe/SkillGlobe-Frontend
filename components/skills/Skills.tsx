@@ -299,7 +299,29 @@ export default function Skills({ onSkillsComplete, onSkip, className = '' }: Ski
         </p>
       </div>
 
-
+      {/* Selected Skills */}
+      {selectedSkills.length > 0 && (
+        <div className="bg-white p-4 rounded-xl border border-gray-200">
+          <h3 className="font-semibold text-gray-900 mb-3">Selected Skills ({selectedSkills.length})</h3>
+          <div className="flex flex-wrap gap-2">
+            {selectedSkills.map((skill) => (
+              <div
+                key={skill}
+                className="flex items-center space-x-2 bg-orange-100 text-orange-800 px-3 py-1 rounded-lg"
+              >
+                <span className="text-sm font-medium">{skill}</span>
+                <button
+                  onClick={() => removeSkill(skill)}
+                  className="text-orange-600 hover:text-orange-800 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 rounded-sm p-1"
+                  aria-label={`Remove ${skill} skill`}
+                >
+                  <X size={14} />
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Search */}
       <div className="relative">

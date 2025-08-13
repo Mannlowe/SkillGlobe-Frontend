@@ -48,7 +48,9 @@ export default function MobileNavigation() {
       {/* Hamburger Menu Button for Mobile */}
       <button
         onClick={() => setIsMenuOpen(!isMenuOpen)}
-        className="fixed top-4 right-4 z-50 md:hidden bg-white rounded-full p-3 shadow-lg"
+        className="fixed top-4 right-4 z-50 md:hidden bg-white rounded-full p-3 shadow-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2"
+        aria-label={isMenuOpen ? 'Close navigation menu' : 'Open navigation menu'}
+        aria-expanded={isMenuOpen}
       >
         {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
       </button>

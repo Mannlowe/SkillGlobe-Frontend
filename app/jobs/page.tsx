@@ -1,8 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import Sidebar from '@/components/dashboard/Sidebar';
-import DashboardHeader from '@/components/dashboard/DashboardHeader';
+import ModernLayoutWrapper from '@/components/layout/ModernLayoutWrapper';
 import { Search, MapPin, Briefcase, Banknote, Clock, Users } from 'lucide-react';
 
 const jobs = [
@@ -51,18 +50,12 @@ const jobs = [
 ];
 
 export default function JobsPage() {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedJob, setSelectedJob] = useState(jobs[0]);
 
   return (
-    <div className="flex h-screen bg-gray-50">
-      <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
-      
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <DashboardHeader onMenuClick={() => setSidebarOpen(true)} />
-        
-        <main className="flex-1 overflow-x-hidden overflow-y-auto bg-gray-50 font-rubik">
+    <ModernLayoutWrapper>
+      <main className="flex-1 overflow-x-hidden overflow-y-auto bg-gray-50 font-rubik">
           <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6">
             <div className="mb-8">
               <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">
@@ -233,8 +226,7 @@ export default function JobsPage() {
               </div>
             </div>
           </div>
-        </main>
-      </div>
-    </div>
+      </main>
+    </ModernLayoutWrapper>
   );
 }

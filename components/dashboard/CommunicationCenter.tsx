@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { MessageSquare, Search, Filter, Phone, Video, Calendar, Paperclip, Send, MoreHorizontal, Star, Archive, Trash2 } from 'lucide-react';
 import type { ConversationThread, ThreadMessage } from '@/types/opportunities';
+import { StandardizedButton } from '@/components/ui/StandardizedButton';
 
 interface Message {
   id: string;
@@ -297,13 +298,15 @@ export default function CommunicationCenter({
                   />
                 </div>
 
-                <button
+                <StandardizedButton
                   onClick={handleSendMessage}
                   disabled={!messageText.trim()}
-                  className="p-3 bg-gradient-to-r from-orange-500 to-blue-500 text-white rounded-lg hover:shadow-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                  variant="primary"
+                  size="icon"
+                  aria-label="Send message"
                 >
                   <Send size={18} />
-                </button>
+                </StandardizedButton>
               </div>
             </div>
           </>

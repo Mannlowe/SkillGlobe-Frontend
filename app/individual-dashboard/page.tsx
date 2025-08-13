@@ -20,7 +20,7 @@ import AchievementShowcase from '@/components/dashboard/AchievementBadges';
 import WeeklyChallenges from '@/components/dashboard/WeeklyChallenges';
 import SocialRecognition from '@/components/dashboard/SocialRecognition';
 import StreakTracker from '@/components/dashboard/StreakTracker';
-import { BarChart3, Users, Briefcase, TrendingUp, Calendar, Bell, Star, ArrowUpRight, Check as CheckIcon, Eye, Filter, Heart, Handshake } from 'lucide-react';
+import { BarChart3, Users, Briefcase, TrendingUp, Calendar, Bell, Star, ArrowUpRight, Check as CheckIcon, Eye, Filter, Heart, Handshake, Clock } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
@@ -54,7 +54,6 @@ interface MutualInterest {
 }
 
 export default function CompactDashboardPage() {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [userName, setUserName] = useState('Amit Verma');
   const [showCareerCoach, setShowCareerCoach] = useState(true);
   const [selectedOpportunity, setSelectedOpportunity] = useState<JobOpportunity | null>(null);
@@ -209,141 +208,156 @@ export default function CompactDashboardPage() {
     });
   };
 
-  // Tab content components
+  // Mobile-first dashboard layout
   const overviewContent = (
     <div className="mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6 font-rubik">
+      {/* Welcome */}
+      <div className="mb-3">
+        <h2 className="text-lg font-semibold text-gray-900">Welcome back, {userName}</h2>
+      </div>
+      
       {/* Compact Market Metrics */}
       <CompactMarketMetrics 
         metrics={mockHeaderMetrics}
         onViewDetails={() => console.log('View market details')}
       />
 
-      {/* Two Column Layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Top Matches - Employer Interest */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-2">
-              <h3 className="text-lg font-semibold text-gray-900">Employers Interested in You</h3>
-              <span className="px-2 py-1 text-xs font-medium bg-blue-100 text-blue-700 rounded-full">3 new</span>
-            </div>
-            <button className="text-sm text-blue-600 hover:text-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded-md px-2 py-1">View all →</button>
-          </div>
-          <div className="space-y-3">
-            {mockJobOpportunities.slice(0, 2).map((job) => (
-              <EmployerInterestCard
-                key={job.id}
-                opportunity={job}
-                userInterest={getUserInterest(job.id)}
-                onExpressInterest={handleExpressInterest}
-                onViewDetails={handleViewDetails}
-              />
-            ))}
+      {/* Critical Action Cards - Always visible at top */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
+        {/* Employers Waiting */}
+        <div 
+          onClick={() => router.push('/applications?filter=pending')}
+          className="bg-red-50 border border-red-200 rounded-lg p-3 cursor-pointer hover:bg-red-100 transition-colors group"
+        >
+          <div className="text-center">
+            <div className="text-xl font-bold text-red-600">3</div>
+            <div className="text-xs text-red-700 font-medium">Pending Responses</div>
+            <div className="w-2 h-2 bg-red-500 rounded-full mx-auto mt-1 animate-pulse"></div>
           </div>
         </div>
 
-        {/* Recent Activity */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-gray-900">Recent Activity</h3>
-            <button className="text-sm text-blue-600 hover:text-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded-md px-2 py-1">View all →</button>
+        {/* Mutual Matches */}
+        <div className="bg-green-50 border border-green-200 rounded-lg p-3 cursor-pointer hover:bg-green-100 transition-colors">
+          <div className="text-center">
+            <div className="text-xl font-bold text-green-600">{mutualInterests.length}</div>
+            <div className="text-xs text-green-700 font-medium">Ready to Apply</div>
+            <div className="w-2 h-2 bg-green-500 rounded-full mx-auto mt-1"></div>
           </div>
-          <div className="space-y-3">
-            {recentActivities.map((activity) => (
-              <div key={activity.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                <div className="flex items-center gap-3">
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                    activity.type === 'application' ? 'bg-blue-100' :
-                    activity.type === 'interview' ? 'bg-green-100' :
-                    'bg-purple-100'
-                  }`}>
-                    {activity.type === 'application' && <Briefcase className="text-blue-600" size={16} />}
-                    {activity.type === 'interview' && <Calendar className="text-green-600" size={16} />}
-                    {activity.type === 'course' && <BarChart3 className="text-purple-600" size={16} />}
-                  </div>
-                  <div>
-                    <p className="font-medium text-sm text-gray-900">{activity.title}</p>
-                    <p className="text-xs text-gray-600">{activity.company} • {activity.time}</p>
-                  </div>
-                </div>
-                <span className={`px-2 py-1 text-xs font-medium rounded-full ${
-                  activity.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                  activity.status === 'scheduled' ? 'bg-blue-100 text-blue-800' :
-                  'bg-green-100 text-green-800'
-                }`}>
-                  {activity.status}
-                </span>
-              </div>
-            ))}
+        </div>
+
+        {/* Profile Health */}
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 cursor-pointer hover:bg-blue-100 transition-colors">
+          <div className="text-center">
+            <div className="text-xl font-bold text-blue-600">85%</div>
+            <div className="text-xs text-blue-700 font-medium">Profile Health</div>
+          </div>
+        </div>
+
+        {/* Applications */}
+        <div className="bg-gray-50 border border-gray-200 rounded-lg p-3 cursor-pointer hover:bg-gray-100 transition-colors">
+          <div className="text-center">
+            <div className="text-xl font-bold text-gray-900">8</div>
+            <div className="text-xs text-gray-600 font-medium">Active Applications</div>
           </div>
         </div>
       </div>
 
-      {/* Mutual Interests Section */}
-      {mutualInterests.length > 0 && (
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-2">
-              <Heart className="w-5 h-5 text-red-500" />
-              <h3 className="text-lg font-semibold text-gray-900">Mutual Interests ({mutualInterests.length})</h3>
-              <span className="px-2 py-1 text-xs font-medium bg-red-100 text-red-700 rounded-full">Ready for Application</span>
+      {/* Action Required Section - Only when needed */}
+      <div 
+        onClick={() => router.push('/applications?filter=pending')}
+        className="bg-red-50 border border-red-200 rounded-lg p-3 mb-4 cursor-pointer hover:bg-red-100 transition-colors group"
+      >
+        <div className="flex items-center gap-2">
+          <div className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse"></div>
+          <span className="text-sm font-medium text-red-900 group-hover:underline">3 employers waiting for response</span>
+          <span className="text-xs text-red-600 ml-auto">24hrs left</span>
+        </div>
+      </div>
+
+      {/* Main Content - Two Column Layout */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
+        {/* Left Column */}
+        <div className="space-y-4">
+          {/* Employer Interests */}
+          <div className="bg-white rounded-lg border border-gray-200 p-4">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="font-medium text-gray-900">Employers Interested</h3>
+              <button className="text-xs text-blue-600 hover:text-blue-800">View All</button>
+            </div>
+            <div className="space-y-2">
+              {mockJobOpportunities.slice(0, 2).map((job) => (
+                <EmployerInterestCard
+                  key={job.id}
+                  opportunity={job}
+                  userInterest={getUserInterest(job.id)}
+                  onExpressInterest={handleExpressInterest}
+                  onViewDetails={handleViewDetails}
+                />
+              ))}
             </div>
           </div>
-          <div className="space-y-4">
-            {mutualInterests.map((mutualInterest) => (
-              <div key={mutualInterest.opportunityId} className="border-2 border-red-200 rounded-lg p-4 bg-red-50">
-                <div className="flex items-start justify-between mb-3">
-                  <div className="flex-1">
-                    <h4 className="font-semibold text-lg flex items-center gap-2">
-                      {mutualInterest.opportunity.title}
-                      <span className="px-2 py-1 text-xs font-medium bg-red-100 text-red-600 rounded-full border border-red-300">
-                        {mutualInterest.opportunity.match_score}% Match
-                      </span>
-                    </h4>
-                    <div className="flex items-center gap-4 text-sm text-gray-600 mt-1">
-                      <span className="flex items-center gap-1">
-                        <Briefcase className="w-4 h-4" />
-                        {mutualInterest.opportunity.company}
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <Users className="w-4 h-4" />
-                        Location: {mutualInterest.opportunity.location}
-                      </span>
+
+          {/* Mutual Interests - Only when exists */}
+          {mutualInterests.length > 0 && (
+            <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></div>
+                <h3 className="font-medium text-green-900">Ready to Apply</h3>
+                <span className="text-xs text-green-600 ml-auto">{mutualInterests.length} matches</span>
+              </div>
+              <div className="space-y-2">
+                {mutualInterests.map((mutualInterest) => (
+                  <div key={mutualInterest.opportunityId} className="bg-white border border-green-200 rounded-lg p-3">
+                    <div className="flex items-center justify-between mb-2">
+                      <div>
+                        <h4 className="font-medium text-gray-900 text-sm">{mutualInterest.opportunity.title}</h4>
+                        <p className="text-xs text-gray-600">{mutualInterest.opportunity.company}</p>
+                      </div>
+                      <span className="text-xs text-gray-500">{mutualInterest.opportunity.match_score}%</span>
                     </div>
+                    <button 
+                      onClick={() => handleBeginApplication(mutualInterest)}
+                      className="w-full bg-green-600 text-white py-2 rounded text-sm font-medium hover:bg-green-700 transition-colors"
+                    >
+                      Start Application
+                    </button>
                   </div>
-                  <span className={`px-2 py-1 text-xs font-medium rounded-full capitalize ${
-                    mutualInterest.status === 'new' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-700'
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Right Column */}
+        <div>
+          {/* Recent Activity */}
+          <div className="bg-white rounded-lg border border-gray-200 p-4">
+            <h3 className="font-medium text-gray-900 mb-3">Recent Activity</h3>
+            <div className="space-y-2">
+              {recentActivities.map((activity) => (
+                <div key={activity.id} className="flex items-center gap-3 py-2">
+                  <div className="w-5 h-5 rounded-full bg-gray-100 flex items-center justify-center text-xs">
+                    {activity.type === 'application' && '📝'}
+                    {activity.type === 'interview' && '📅'}
+                    {activity.type === 'course' && '📚'}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-gray-900 truncate">{activity.title}</p>
+                    <p className="text-xs text-gray-500">{activity.time}</p>
+                  </div>
+                  <span className={`px-2 py-1 text-xs rounded-full ${
+                    activity.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                    activity.status === 'scheduled' ? 'bg-blue-100 text-blue-800' :
+                    'bg-green-100 text-green-800'
                   }`}>
-                    {mutualInterest.status}
+                    {activity.status}
                   </span>
                 </div>
-
-                <div className="bg-white p-3 rounded-lg mb-3">
-                  <p className="text-sm text-gray-700 flex items-center gap-2">
-                    <Star className="w-4 h-4 text-yellow-500" />
-                    <strong>Next Action:</strong> {mutualInterest.nextAction}
-                  </p>
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <button 
-                    onClick={() => handleBeginApplication(mutualInterest)}
-                    className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                  >
-                    <Handshake className="w-4 h-4" />
-                    Begin Application
-                  </button>
-                  <button className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
-                    <Eye className="w-4 h-4" />
-                    View Details
-                  </button>
-                </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         </div>
-      )}
-
+      </div>
     </div>
   );
 
@@ -500,59 +514,8 @@ export default function CompactDashboardPage() {
   );
 
   return (
-    <div className="flex min-h-screen bg-gray-50 max-w-full">
-      <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
-      
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <DashboardHeader onMenuClick={() => setSidebarOpen(true)} />
-        
-        <main className="flex-1 overflow-y-auto scrollbar-custom">
-          {/* Custom scrollbar styles */}
-          <style jsx global>{`
-            .scrollbar-custom::-webkit-scrollbar {
-              width: 8px;
-            }
-            .scrollbar-custom::-webkit-scrollbar-track {
-              background: transparent;
-            }
-            .scrollbar-custom::-webkit-scrollbar-thumb {
-              background-color: rgba(255, 255, 255, 0.7);
-              border-radius: 20px;
-            }
-            .scrollbar-custom::-webkit-scrollbar-thumb:hover {
-              background-color: rgba(255, 255, 255, 0.9);
-            }
-            /* For Firefox */
-            .scrollbar-custom {
-              scrollbar-width: thin;
-              scrollbar-color: rgba(255, 255, 255, 0.7) transparent;
-            }
-          `}</style>
-          {/* Welcome Section - Minimal */}
-          <div className="bg-white border-b border-gray-200 max-w-full">
-            <div className="w-full mx-auto px-4 sm:px-6 lg:px-8 py-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h1 className="text-xl md:text-2xl font-bold text-gray-900">
-                    Welcome back, {userName}!
-                  </h1>
-                  <p className="text-sm text-gray-600">
-                    Your career marketplace overview
-                  </p>
-                </div>
-                <div className="flex items-center gap-2">
-                  <button className="px-4 py-2 bg-gradient-to-r from-orange-500 to-blue-500 text-white font-medium rounded-lg hover:shadow-lg transition-all duration-300 text-sm">
-                    Quick Apply
-                  </button>
-                  <button className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg">
-                    <Bell size={20} />
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
+    <ModernLayoutWrapper>
+      <div>
         {overviewContent}
       </div>
       

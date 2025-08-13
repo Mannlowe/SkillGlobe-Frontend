@@ -44,13 +44,8 @@ export default function AuthLoginPage() {
       }
     } catch (error: any) {
       console.error('Login error in component:', error);
-      
-      // Check for specific error codes in the API response
-      if (error?.response?.data?.message?.error_code === 'INVALID_CREDENTIALS') {
-        setError('Invalid username or password. Please try again.');
-      } else {
-        setError('Login failed. Please try again later.');
-      }
+      // Display the actual error message
+      setError(error.message || 'An error occurred during login. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -208,6 +203,25 @@ export default function AuthLoginPage() {
             </div>
           </div>
         </div>
+        
+        {/* Mock Auth Info - Only show in development */}
+        {process.env.NEXT_PUBLIC_USE_MOCK_AUTH === 'true' && (
+          <div className="mt-8 p-4 bg-orange-50 border border-orange-200 rounded-lg">
+            <h3 className="text-sm font-semibold text-orange-800 mb-2">Demo Credentials</h3>
+            <div className="space-y-2 text-sm text-orange-700">
+              <div>
+                <strong>Individual Seller:</strong>
+                <div className="text-xs">Email: individual@skillglobe.com</div>
+                <div className="text-xs">Password: demo123</div>
+              </div>
+              <div className="mt-2">
+                <strong>Business Buyer:</strong>
+                <div className="text-xs">Email: business@skillglobe.com</div>
+                <div className="text-xs">Password: demo123</div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

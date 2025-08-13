@@ -37,7 +37,7 @@ export default function PortfolioSidebar({
     return 'bg-gray-200';
   };
   return (
-    <div className="w-64 h-full bg-white border-r border-gray-200 flex flex-col">
+    <div className="w-64 border rounded-xl h-[calc(100vh-82px)] bg-white border-r border-gray-200 flex flex-col">
       {/* Header */}
       <div className="flex items-center justify-between p-4 border-b border-gray-200 h-[82px]">
         <h2 className="font-semibold text-gray-900">Portfolio</h2>
@@ -46,7 +46,7 @@ export default function PortfolioSidebar({
           className="p-1 rounded-lg hover:bg-gray-100 transition-colors"
           title="Close portfolio sidebar"
         >
-          <ChevronLeft size={16} />
+          {/* <ChevronLeft size={16} /> */}
         </button>
       </div>
       

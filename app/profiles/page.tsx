@@ -1,18 +1,30 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import ModernLayoutWrapper from '@/components/layout/ModernLayoutWrapper';
 import StrategicProfileOptimizer from '@/components/dashboard/StrategicProfileOptimizer';
 import ProfileAnalytics from '@/components/dashboard/ProfileAnalytics';
+import ProfileForm, { ProfileEntry } from '@/components/profile/ProfileForm';
 import { mockProfileOptimizationHub, mockProfileAnalytics } from '@/lib/mockPhase3Data';
 import { useToast } from '@/hooks/use-toast';
+// Import useModals but use it inside useEffect to prevent infinite loop
+import { useModals } from '@/store/uiStore';
 import { Plus, User, Settings, Eye, Share2 } from 'lucide-react';
 
 export default function ProfilesPage() {
   const { toast } = useToast();
+  // Temporarily disable modal functionality to fix the infinite loop
+  // We'll implement a simple local state modal system instead
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  // Define a type for our modal content
+  type ModalContentType = {
+    component: React.ComponentType<any>;
+    props: Record<string, any>;
+  } | null;
+  const [modalContent, setModalContent] = useState<ModalContentType>(null);
   const [activeProfile, setActiveProfile] = useState('default');
 
-  const profiles = [
+  const [profiles, setProfiles] = useState([
     {
       id: 'default',
       name: 'Main Profile',
@@ -37,7 +49,7 @@ export default function ProfilesPage() {
       views: 654,
       isActive: false
     }
-  ];
+  ]);
 
   const handleTaskComplete = (taskId: string) => {
     console.log('Task completed:', taskId);
@@ -56,11 +68,45 @@ export default function ProfilesPage() {
   };
 
   const handleCreateProfile = () => {
-    console.log('Create new profile');
-    toast({
-      title: "Create Profile",
-      description: "Profile creation wizard will open soon.",
+    // Use local state to manage modal instead of Zustand store
+    setModalContent({
+      component: ProfileForm,
+      props: {
+        onSave: handleProfileFormSave,
+        onCancel: () => setIsModalOpen(false),
+        initialData: []
+      }
     });
+    setIsModalOpen(true);
+  };
+
+  const handleProfileFormSave = (profileData: ProfileEntry[]) => {
+    console.log('Profile data saved:', profileData);
+
+    // Create a new profile based on the form data
+    const newProfile = {
+      id: `profile-${Date.now()}`,
+      name: profileData[0]?.role || 'New Profile',
+      type: 'Specialized',
+      completeness: 60,
+      views: 0,
+      isActive: false
+    };
+
+    // Add the new profile to the list using a callback to avoid stale state
+    setProfiles(prevProfiles => [...prevProfiles, newProfile]);
+    
+    // First close the modal
+    setIsModalOpen(false);
+    setModalContent(null);
+    
+    // Then show toast notification
+    setTimeout(() => {
+      toast({
+        title: "Profile Created",
+        description: "Your new profile has been created successfully.",
+      });
+    }, 100);
   };
 
   const handleProfileSelect = (profileId: string) => {
@@ -72,9 +118,25 @@ export default function ProfilesPage() {
     });
   };
 
+  // Render the modal if it's open and has content
+  const renderModal = () => {
+    if (isModalOpen && modalContent) {
+      const ModalComponent = modalContent.component;
+      return (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-card rounded-xl p-6 shadow-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <ModalComponent {...modalContent.props} />
+          </div>
+        </div>
+      );
+    }
+    return null;
+  };
+
   return (
     <ModernLayoutWrapper>
-      <div className="space-y-8">
+      {renderModal()}
+      <div className="space-y-8 font-rubik">
         {/* Header */}
         <div className="flex justify-between items-center">
           <div>
@@ -112,7 +174,7 @@ export default function ProfilesPage() {
                   </div>
                   <div>
                     <h3 className="font-semibold text-gray-900">{profile.name}</h3>
-                    <p className="text-sm text-gray-600">{profile.type}</p>
+                    {/* <p className="text-sm text-gray-600">{profile.type}</p> */}
                   </div>
                 </div>
                 {profile.isActive && (
@@ -136,7 +198,7 @@ export default function ProfilesPage() {
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between pt-3 border-t border-gray-100">
+                {/* <div className="flex items-center justify-between pt-3 border-t border-gray-100">
                   <div className="flex items-center space-x-1 text-sm text-gray-600">
                     <Eye className="w-4 h-4" />
                     <span>{profile.views} views</span>
@@ -149,7 +211,7 @@ export default function ProfilesPage() {
                       <Share2 className="w-4 h-4" />
                     </button>
                   </div>
-                </div>
+                </div> */}
               </div>
             </div>
           ))}

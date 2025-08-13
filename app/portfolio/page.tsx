@@ -49,50 +49,47 @@ export default function PortfolioPage() {
 
   return (
     <ModernLayoutWrapper>
-      <div className="max-w-7xl mx-auto">
+      <div className="max-w-full mx-auto">
         <div className="flex justify-center">
-          <div className="w-full md:w-11/12">
-      
-      {/* Portfolio Sidebar */}
-      {portfolioSidebarOpen && (
-        <PortfolioSidebar
-          activeSection={activeSection}
-          setActiveSection={setActiveSection}
-          sections={sections}
-          onClose={() => {
-            setPortfolioSidebarOpen(false);
-            setMainSidebarOpen(true);
-          }}
-        />
-      )}
-      
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <DashboardHeader 
-          title="Portfolio" 
-          onMenuClick={() => {
-            if (portfolioSidebarOpen) {
-              setPortfolioSidebarOpen(false);
-              setMainSidebarOpen(true);
-            } else {
-              setMainSidebarOpen(!mainSidebarOpen);
-            }
-          }} 
-        />
-        <main className="flex-1 overflow-y-auto p-4">
-          <div className="max-w-full mx-auto">
-            <Portfolio 
-              activeSection={activeSection}
-              setActiveSection={setActiveSection}
-              sections={sections}
-              setResumeUploaded={setResumeUploaded}
-              setPersonalInfoCompleted={setPersonalInfoCompleted}
-              setEducationCompleted={setEducationCompleted}
-              setExperienceCompleted={setExperienceCompleted}
-              setCertificatesCompleted={setCertificatesCompleted}
-              onPortfolioComplete={handlePortfolioComplete}
-              onSkip={handleSkip}
-              className="mt-4"
-            />
+          <div className="w-full md:w-full">
+            {/* Main content container with flex layout */}
+            <div className="flex">
+              {/* Portfolio Sidebar */}
+              {portfolioSidebarOpen && (
+                <div className="flex-shrink-0">
+                  <PortfolioSidebar
+                    activeSection={activeSection}
+                    setActiveSection={setActiveSection}
+                    sections={sections}
+                    onClose={() => {
+                      setPortfolioSidebarOpen(false);
+                      setMainSidebarOpen(true);
+                    }}
+                  />
+                </div>
+              )}
+              
+              {/* Main Content Area */}
+              <div className="flex-1 flex flex-col overflow-hidden w-full">
+                <main className="flex-1 overflow-y-auto p-4 w-full">
+                  <div className="w-full ">
+                    <Portfolio 
+                      activeSection={activeSection}
+                      setActiveSection={setActiveSection}
+                      sections={sections}
+                      setResumeUploaded={setResumeUploaded}
+                      setPersonalInfoCompleted={setPersonalInfoCompleted}
+                      setEducationCompleted={setEducationCompleted}
+                      setExperienceCompleted={setExperienceCompleted}
+                      setCertificatesCompleted={setCertificatesCompleted}
+                      onPortfolioComplete={handlePortfolioComplete}
+                      onSkip={handleSkip}
+                      className='-mt-4'
+                    />
+                  </div>
+                </main>
+              </div>
+            </div>
           </div>
         </div>
       </div>

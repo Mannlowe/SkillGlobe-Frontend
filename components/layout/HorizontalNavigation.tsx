@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element */
 'use client';
 
 import React, { useState } from 'react';
@@ -182,9 +183,9 @@ export default function HorizontalNavigation({
             aria-label="Go to homepage"
           >
             <img 
-              src="/Images/logo_image.png" 
+              src="/Images/logo_image.jpg" 
               alt="SkillGlobe" 
-              className="h-12 w-auto object-contain max-w-[200px]"
+              className="h-12 w-auto object-contain max-w-[180px]"
             />
           </button>
         </div>

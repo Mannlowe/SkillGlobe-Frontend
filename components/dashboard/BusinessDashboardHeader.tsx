@@ -3,18 +3,20 @@
 import { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import { 
-  Search, 
-  Bell, 
-  MessageCircle, 
+import {
+  Search,
+  Bell,
+  MessageCircle,
   ChevronDown,
   Settings,
   User,
   HelpCircle,
   LogOut,
-  Building2
+  Building2,
+  Menu
 } from 'lucide-react';
 import useOutsideClick from '@/hooks/useOutsideClick';
+import { useAuthStore } from '@/store/authStore';
 
 interface BusinessDashboardHeaderProps {
   title?: string;
@@ -25,80 +27,15 @@ export default function BusinessDashboardHeader({ title, onMenuClick }: Business
   const router = useRouter();
   const [showNotifications, setShowNotifications] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
-  const [user, setUser] = useState<{ name: string; email: string; userType?: string; company?: string } | null>(null);
-  
+
+  // Get user data from auth store
+  const { user: authUser, isAuthenticated } = useAuthStore();
+
   const profileRef = useRef<HTMLDivElement>(null);
   const notificationsRef = useRef<HTMLDivElement>(null);
 
-    useOutsideClick(profileRef, () => setShowProfile(false));
-    useOutsideClick(notificationsRef, () => setShowNotifications(false));
-
-  useEffect(() => {
-    // Get user info from localStorage on component mount
-    const getUserInfo = () => {
-      if (typeof window !== 'undefined') {
-        // Try different possible storage keys
-        const possibleKeys = ['userInfo', 'user', 'businessUser', 'authUser', 'userData'];
-        let userFound = false;
-        
-        // First check localStorage
-        for (const key of possibleKeys) {
-          if (userFound) break;
-          
-          const userInfoStr = localStorage.getItem(key);
-          if (userInfoStr) {
-            try {
-              const userInfo = JSON.parse(userInfoStr);
-              // Check if we have the necessary fields
-              if (userInfo && (userInfo.name || userInfo.firstName || userInfo.email)) {
-                // Format the user object with consistent properties
-                setUser({
-                  name: userInfo.name || `${userInfo.firstName || ''} ${userInfo.lastName || ''}`.trim(),
-                  email: userInfo.email || userInfo.emailAddress || '',
-                  userType: userInfo.userType || 'business',
-                  // company: userInfo.company || userInfo.businessName || userInfo.companyName || ''
-                });
-                console.log('Found user info in localStorage:', userInfo);
-                userFound = true;
-                break;
-              }
-            } catch (error) {
-              console.error(`Error parsing user info from ${key}:`, error);
-            }
-          }
-        }
-        
-        // If no user info was found in localStorage, check sessionStorage
-        if (!userFound) {
-          for (const key of possibleKeys) {
-            if (userFound) break;
-            
-            const userInfoStr = sessionStorage.getItem(key);
-            if (userInfoStr) {
-              try {
-                const userInfo = JSON.parse(userInfoStr);
-                if (userInfo && (userInfo.name || userInfo.firstName || userInfo.email)) {
-                  setUser({
-                    name: userInfo.name || `${userInfo.firstName || ''} ${userInfo.lastName || ''}`.trim(),
-                    email: userInfo.email || userInfo.emailAddress || '',
-                    userType: userInfo.userType || 'business',
-                    company: userInfo.company || userInfo.businessName || userInfo.companyName || ''
-                  });
-                  console.log('Found user info in sessionStorage:', userInfo);
-                  userFound = true;
-                  break;
-                }
-              } catch (error) {
-                console.error(`Error parsing user info from sessionStorage ${key}:`, error);
-              }
-            }
-          }
-        }
-      }
-    };
-    
-    getUserInfo();
-  }, []);
+  useOutsideClick(profileRef, () => setShowProfile(false));
+  useOutsideClick(notificationsRef, () => setShowNotifications(false));
 
   const notifications = [
     { id: 1, title: 'New applicant for Frontend Developer', time: '5 min ago', unread: true },
@@ -106,24 +43,58 @@ export default function BusinessDashboardHeader({ title, onMenuClick }: Business
     { id: 3, title: 'Job posting expires tomorrow', time: '2 hours ago', unread: false },
   ];
 
+  const useIsMobile = () => {
+    const [isMobile, setIsMobile] = useState(false);
+
+    useEffect(() => {
+      const checkIsMobile = () => {
+        setIsMobile(window.innerWidth < 768);
+      };
+
+      checkIsMobile();
+      window.addEventListener('resize', checkIsMobile);
+
+      return () => {
+        window.removeEventListener('resize', checkIsMobile);
+      };
+    }, []);
+
+    return isMobile;
+  };
+
+  const isMobile = useIsMobile();
+
   return (
     <header className="bg-white shadow-sm border-b border-gray-200 relative z-30">
       <div className="flex items-center justify-between px-4 sm:px-6 lg:px-8 py-4">
         {/* Left Side */}
         <div className="flex items-center space-x-4">
-          {title && (
-            <h1 className="text-xl font-semibold text-gray-900">{title}</h1>
+          {/* Mobile Menu Button */}
+          <button
+            onClick={onMenuClick}
+            className="md:block lg:hidden p-2 rounded-lg hover:bg-gray-100 transition-colors"
+          >
+            <Menu size={20} />
+          </button>
+
+          {!isMobile && (
+            <>
+              {title && (
+                <h1 className="text-xl font-semibold text-gray-900">{title}</h1>
+              )}
+
+              {/* Search Bar */}
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+                <input
+                  type="text"
+                  placeholder="Search jobs, applicants, team members..."
+                  className="pl-10 pr-4 py-2 w-80 bg-gray-50 rounded-lg border-0 focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all"
+                />
+              </div>
+            </>
           )}
-          
-          {/* Search Bar */}
-          <div className="hidden md:block relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
-            <input
-              type="text"
-              placeholder="Search jobs, applicants, team members..."
-              className="pl-10 pr-4 py-2 w-80 bg-gray-50 rounded-lg border-0 focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all"
-            />
-          </div>
+
         </div>
 
         {/* Right Side */}
@@ -143,7 +114,7 @@ export default function BusinessDashboardHeader({ title, onMenuClick }: Business
 
           {/* Notifications */}
           <div className="relative" ref={notificationsRef}>
-            <button 
+            <button
               onClick={() => setShowNotifications(!showNotifications)}
               className="p-2 rounded-lg hover:bg-gray-100 transition-colors relative"
             >
@@ -178,7 +149,7 @@ export default function BusinessDashboardHeader({ title, onMenuClick }: Business
 
           {/* Profile Dropdown */}
           <div className="relative" ref={profileRef}>
-            <button 
+            <button
               onClick={() => setShowProfile(!showProfile)}
               className="flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-100 transition-colors"
             >
@@ -198,46 +169,46 @@ export default function BusinessDashboardHeader({ title, onMenuClick }: Business
             {showProfile && (
               <div className="absolute right-0 mt-2 w-64 bg-white rounded-lg shadow-lg border border-gray-200 z-50">
                 <div className="p-4 border-b border-gray-200">
-                  <p className="font-semibold text-gray-900">{user?.name || 'Business User'}</p>
-                  <p className="text-sm text-gray-600">{user?.email || 'business@example.com'}</p>
-                  {user?.company && (
+                  <p className="font-semibold text-gray-900">{authUser?.full_name || authUser?.name || 'Business User'}</p>
+                  <p className="text-sm text-gray-600">{authUser?.email || 'business@example.com'}</p>
+                  {/* {authUser?.user_type && (
                     <div className="flex items-center mt-1 text-xs text-gray-500">
                       <Building2 size={12} className="mr-1" />
-                      <span>{user.company}</span>
+                      <span>{authUser.user_type}</span>
                     </div>
-                  )}
+                  )} */}
                 </div>
                 <div className="py-2">
-                  <button 
+                  <button
                     onClick={() => router.push('/business-dashboard/company-profile')}
                     className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                   >
                     <User size={16} className="mr-3 text-gray-500" />
-                    Company Profile
+                    Business Profile
                   </button>
-                  
-                  <button 
+
+                  {/* <button
                     onClick={() => router.push('/business-dashboard/settings')}
                     className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                   >
                     <Settings size={16} className="mr-3 text-gray-500" />
                     Settings
-                  </button>
-                  
-                  <button 
+                  </button> */}
+
+                  <button
                     onClick={() => router.push('/help')}
                     className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                   >
                     <HelpCircle size={16} className="mr-3 text-gray-500" />
                     Help & Support
                   </button>
-                  
+
                   <hr className="my-2" />
-                  
-                  <button 
+
+                  <button
                     onClick={() => {
-                      // Clear user data from localStorage
-                      localStorage.removeItem('userInfo');
+                      // Use the logout function from auth store
+                      useAuthStore.getState().logout();
                       // Redirect to login page
                       router.push('/auth/login');
                     }}

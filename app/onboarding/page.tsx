@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { ArrowLeft, ArrowRight, User, Building, CheckCircle } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -11,17 +11,11 @@ import UserTypeSelection from '@/components/onboarding/UserTypeSelection';
 import BasicInformation from '@/components/onboarding/BasicInformation';
 import OTPVerification from '@/components/onboarding/OTPVerification';
 import TermsAcceptance from '@/components/onboarding/TermsAcceptance';
-import IdentityVerification from '@/components/onboarding/IdentityVerification';
-import PortfolioSetup from '@/components/onboarding/PortfolioSetup';
-import SkillsSetup from '@/components/onboarding/SkillsSetup';
-import ProfileCreation from '@/components/onboarding/ProfileCreation';
 
 // Business Components
 import BusinessBasicInformation from '@/components/onboarding/BusinessBasicInformation';
 import BusinessTermsAcceptance from '@/components/onboarding/BusinessTermsAcceptance';
 import BusinessProfile from '@/components/onboarding/BusinessProfile';
-import BusinessDocumentVerification from '@/components/onboarding/BusinessDocumentVerification';
-import BusinessDashboardSetup from '@/components/onboarding/BusinessDashboardSetup';
 
 export interface OnboardingData {
   userType: 'individual' | 'business' | '';
@@ -70,13 +64,29 @@ const businessSteps = [
   { id: 'basicInfo', title: 'Basic Info', component: BusinessBasicInformation },
   { id: 'otpVerification', title: 'Verification', component: OTPVerification },
   { id: 'terms', title: 'Terms', component: BusinessTermsAcceptance },
-  { id: 'businessProfile', title: 'Profile', component: BusinessProfile },
+  // { id: 'businessProfile', title: 'Profile', component: BusinessProfile },
   // { id: 'documentVerification', title: 'Documents', component: BusinessDocumentVerification },
   // { id: 'dashboardSetup', title: 'Dashboard', component: BusinessDashboardSetup },
 ];
 
+// Function to fetch lead data from backend
+async function fetchLeadData(leadId: string) {
+  try {
+    // Replace with your actual API endpoint that connects to Frappe
+    const response = await fetch(`/api/leads/${leadId}`);
+    if (!response.ok) {
+      throw new Error('Failed to fetch lead data');
+    }
+    return response.json();
+  } catch (error) {
+    console.error('Error fetching lead data:', error);
+    return {}; // Return empty object if fetch fails
+  }
+}
+
 export default function OnboardingPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [currentStep, setCurrentStep] = useState(0);
   const [onboardingData, setOnboardingData] = useState<OnboardingData>({
     userType: '',
@@ -115,18 +125,53 @@ export default function OnboardingPage() {
     setOnboardingData(prev => ({ ...prev, ...newData }));
   };
 
+  // Handle lead registration links
+  useEffect(() => {
+    const leadId = searchParams.get('leadId');
+    const skipFirstStep = searchParams.get('skipFirstStep');
+    const userType = searchParams.get('userType');
+    
+    if (leadId && skipFirstStep === 'true' && (userType === 'individual' || userType === 'business')) {
+      // Set the user type
+      updateData({
+        userType: userType as 'individual' | 'business',
+      });
+      
+      // Fetch lead data from backend
+      fetchLeadData(leadId).then(leadData => {
+        if (leadData) {
+          // Pre-fill the form with lead data
+          updateData({
+            email: leadData.email || '',
+            // For individual leads
+            ...(userType === 'individual' && {
+              firstName: leadData.firstName || '',
+              lastName: leadData.lastName || '',
+              mobile: leadData.mobile || '',
+            }),
+            // For business leads
+            ...(userType === 'business' && {
+              businessName: leadData.businessName || '',
+              contactPersonName: leadData.contactPersonName || '',
+              businessAddress: leadData.businessAddress || '',
+            }),
+          });
+        }
+      });
+      
+      // Skip to the second step (Basic Info)
+      setCurrentStep(1);
+    }
+  }, [searchParams]);
+
   const steps = onboardingData.userType === 'business' ? businessSteps : individualSteps;
 
   const nextStep = () => {
     if (currentStep < steps.length - 1) {
       setCurrentStep(currentStep + 1);
     } else {
-      // Complete onboarding - redirect based on user type
-      if (onboardingData.userType === 'business') {
-        router.push('/business-dashboard');
-      } else {
-        router.push('/individual-dashboard');
-      }
+      // Complete onboarding - redirect to login page
+      router.push('/auth/login');
     }
   };
 
@@ -155,7 +200,7 @@ export default function OnboardingPage() {
           <Link href="/" className="flex items-center">
           <div className="bg-white rounded-lg overflow-hidden">
               <Image 
-                src="/Images/logo_image.png" 
+                src="/Images/logo_image.jpg" 
                 alt="SkillGlobe Logo" 
                 width={150} 
                 height={24} 

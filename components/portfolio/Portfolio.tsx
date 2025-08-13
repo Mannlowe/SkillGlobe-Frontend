@@ -1,31 +1,173 @@
 'use client';
 
-import { useState } from 'react';
-import { Upload, User, GraduationCap, Briefcase, Award, FileText, Plus } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Upload, User, GraduationCap, Briefcase, Award, FileText, Plus, X, Loader2 } from 'lucide-react';
+import { useResumeStore } from '../../store/portfolio/resumeStore';
 import PersonalInfoForm from './PersonalInfoForm';
 import EducationForm from './EducationForm';
 import ExperienceForm from './ExperienceForm';
 import CertificateForm from './CertificateForm';
+import SubmitFormModal from '../modal/SubmitFormModal';
+import { getPortfolio, getAuthData } from '../../app/api/portfolio/getPortfolio';
 
 interface PortfolioProps {
+  activeSection?: string;
+  setActiveSection?: (section: string) => void;
+  sections?: {
+    id: string;
+    name: string;
+    icon: any;
+    completed: boolean;
+  }[];
+  setResumeUploaded?: (value: boolean) => void;
+  setPersonalInfoCompleted?: (value: boolean) => void;
+  setEducationCompleted?: (value: boolean) => void;
+  setExperienceCompleted?: (value: boolean) => void;
+  setCertificatesCompleted?: (value: boolean) => void;
   onPortfolioComplete?: () => void;
   onSkip?: () => void;
   className?: string;
 }
 
-export default function Portfolio({ onPortfolioComplete, onSkip, className = '' }: PortfolioProps) {
-  const [activeSection, setActiveSection] = useState('resume');
-  const [resumeUploaded, setResumeUploaded] = useState(false);
-  const [personalInfoCompleted, setPersonalInfoCompleted] = useState(false);
+export default function Portfolio({ 
+  activeSection: propActiveSection, 
+  setActiveSection: propSetActiveSection,
+  sections: propSections,
+  setResumeUploaded: propSetResumeUploaded,
+  setPersonalInfoCompleted: propSetPersonalInfoCompleted,
+  setEducationCompleted: propSetEducationCompleted,
+  setExperienceCompleted: propSetExperienceCompleted,
+  setCertificatesCompleted: propSetCertificatesCompleted,
+  onPortfolioComplete, 
+  onSkip, 
+  className = '' 
+}: PortfolioProps) {
+  // Use local state if props are not provided
+  const [localActiveSection, setLocalActiveSection] = useState('resume');
+  const [localResumeUploaded, setLocalResumeUploaded] = useState(false);
+  const [localPersonalInfoCompleted, setLocalPersonalInfoCompleted] = useState(false);
+  const [localEducationCompleted, setLocalEducationCompleted] = useState(false);
+  const [localExperienceCompleted, setLocalExperienceCompleted] = useState(false);
+  const [localCertificatesCompleted, setLocalCertificatesCompleted] = useState(false);
+  
+  // Modal states
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [showReminderModal, setShowReminderModal] = useState(false);
+  
+  // Use props if provided, otherwise use local state
+  const activeSection = propActiveSection || localActiveSection;
+  const setActiveSection = propSetActiveSection || setLocalActiveSection;
+  const resumeUploaded = propSections ? propSections[0].completed : localResumeUploaded;
+  const personalInfoCompleted = propSections ? propSections[1].completed : localPersonalInfoCompleted;
+  const educationCompleted = propSections ? propSections[2].completed : localEducationCompleted;
+  const experienceCompleted = propSections ? propSections[3].completed : localExperienceCompleted;
+  const certificatesCompleted = propSections ? propSections[4].completed : localCertificatesCompleted;
+  
+  // Set completion functions that update both local state and parent state if provided
+  const updateResumeUploaded = (value: boolean) => {
+    setLocalResumeUploaded(value);
+    if (propSetResumeUploaded) propSetResumeUploaded(value);
+    localStorage.setItem('portfolioResumeUploaded', value.toString());
+  };
+  
+  const updatePersonalInfoCompleted = (value: boolean) => {
+    setLocalPersonalInfoCompleted(value);
+    if (propSetPersonalInfoCompleted) propSetPersonalInfoCompleted(value);
+    localStorage.setItem('portfolioPersonalInfoCompleted', value.toString());
+  };
+  
+  const updateEducationCompleted = (value: boolean) => {
+    setLocalEducationCompleted(value);
+    if (propSetEducationCompleted) propSetEducationCompleted(value);
+    localStorage.setItem('portfolioEducationCompleted', value.toString());
+  };
+  
+  const updateExperienceCompleted = (value: boolean) => {
+    setLocalExperienceCompleted(value);
+    if (propSetExperienceCompleted) propSetExperienceCompleted(value);
+    localStorage.setItem('portfolioExperienceCompleted', value.toString());
+  };
+  
+  const updateCertificatesCompleted = (value: boolean) => {
+    setLocalCertificatesCompleted(value);
+    if (propSetCertificatesCompleted) propSetCertificatesCompleted(value);
+    localStorage.setItem('portfolioCertificatesCompleted', value.toString());
+  };
+  
+  // Other state
   const [personalInfo, setPersonalInfo] = useState({});
-  const [educationCompleted, setEducationCompleted] = useState(false);
   const [education, setEducation] = useState([]);
-  const [experienceCompleted, setExperienceCompleted] = useState(false);
   const [experience, setExperience] = useState([]);
-  const [certificatesCompleted, setCertificatesCompleted] = useState(false);
   const [certificates, setCertificates] = useState([]);
+  const [certificateList, setCertificateList] = useState<any[]>([]);
 
-  const sections = [
+  
+  // Load saved data from localStorage on component mount
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      // Load active section
+      const savedSection = localStorage.getItem('portfolioActiveSection');
+      if (savedSection) {
+        setLocalActiveSection(savedSection);
+        // Also update the parent's active section if available
+        if (propSetActiveSection) propSetActiveSection(savedSection);
+      }
+      
+      // Load completion status
+      const savedResumeUploaded = localStorage.getItem('portfolioResumeUploaded') === 'true';
+      const savedPersonalInfoCompleted = localStorage.getItem('portfolioPersonalInfoCompleted') === 'true';
+      const savedEducationCompleted = localStorage.getItem('portfolioEducationCompleted') === 'true';
+      const savedExperienceCompleted = localStorage.getItem('portfolioExperienceCompleted') === 'true';
+      const savedCertificatesCompleted = localStorage.getItem('portfolioCertificatesCompleted') === 'true';
+      
+      // Update local state
+      setLocalResumeUploaded(savedResumeUploaded);
+      setLocalPersonalInfoCompleted(savedPersonalInfoCompleted);
+      setLocalEducationCompleted(savedEducationCompleted);
+      setLocalExperienceCompleted(savedExperienceCompleted);
+      setLocalCertificatesCompleted(savedCertificatesCompleted);
+      
+      // Also update parent state if available
+      if (propSetResumeUploaded) propSetResumeUploaded(savedResumeUploaded);
+      if (propSetPersonalInfoCompleted) propSetPersonalInfoCompleted(savedPersonalInfoCompleted);
+      if (propSetEducationCompleted) propSetEducationCompleted(savedEducationCompleted);
+      if (propSetExperienceCompleted) propSetExperienceCompleted(savedExperienceCompleted);
+      if (propSetCertificatesCompleted) propSetCertificatesCompleted(savedCertificatesCompleted);
+      
+      // Load form data
+      const savedPersonalInfo = localStorage.getItem('portfolioPersonalInfo');
+      const savedEducation = localStorage.getItem('portfolioEducation');
+      const savedExperience = localStorage.getItem('portfolioExperience');
+      const savedCertificates = localStorage.getItem('portfolioCertificates');
+      
+      if (savedPersonalInfo) setPersonalInfo(JSON.parse(savedPersonalInfo));
+      if (savedEducation) setEducation(JSON.parse(savedEducation));
+      if (savedExperience) setExperience(JSON.parse(savedExperience));
+      if (savedCertificates) setCertificates(JSON.parse(savedCertificates));
+      
+      // Check if we need to show the reminder modal
+      const allCompleted = savedResumeUploaded && 
+                          savedPersonalInfoCompleted && 
+                          savedEducationCompleted && 
+                          savedExperienceCompleted && 
+                          savedCertificatesCompleted;
+      
+      const hasStarted = savedResumeUploaded || 
+                        savedPersonalInfoCompleted || 
+                        savedEducationCompleted || 
+                        savedExperienceCompleted || 
+                        savedCertificatesCompleted;
+      
+      // Only show reminder if user has started but not completed all steps
+      if (hasStarted && !allCompleted) {
+        setShowReminderModal(true);
+      }
+    }
+  }, [propSetActiveSection, propSetResumeUploaded, propSetPersonalInfoCompleted, 
+      propSetEducationCompleted, propSetExperienceCompleted, propSetCertificatesCompleted]);
+
+  // Use provided sections or create local ones
+  const sections = propSections || [
     { id: 'resume', name: 'Resume Upload', icon: FileText, completed: resumeUploaded },
     { id: 'personal', name: 'Personal Info', icon: User, completed: personalInfoCompleted },
     { id: 'education', name: 'Education', icon: GraduationCap, completed: educationCompleted },
@@ -33,45 +175,60 @@ export default function Portfolio({ onPortfolioComplete, onSkip, className = '' 
     { id: 'certificates', name: 'Certificates', icon: Award, completed: certificatesCompleted },
   ];
 
-  const handleResumeUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Get resume store functions
+  const { uploadResume, isUploading, isUploaded, error, uploadProgress } = useResumeStore();
+
+  const handleResumeUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      setResumeUploaded(true);
-      // After resume is uploaded, automatically switch to personal info section
-      setTimeout(() => {
-        setActiveSection('personal');
-      }, 1000);
+      try {
+        // Upload the resume using our store
+        const result = await uploadResume(file);
+        
+        if (result.success) {
+          updateResumeUploaded(true);
+          // After resume is uploaded, automatically switch to personal info section
+          setTimeout(() => {
+            setActiveSection('personal');
+          }, 1000);
+        } else {
+          // Handle upload failure
+          console.error('Resume upload failed');
+        }
+      } catch (err) {
+        console.error('Error uploading resume:', err);
+      }
     }
   };
-  
+
   const handlePersonalInfoSave = (data: any) => {
     setPersonalInfo(data);
-    setPersonalInfoCompleted(true);
-    // Move to next section after completing personal info
+    localStorage.setItem('portfolioPersonalInfo', JSON.stringify(data));
+    updatePersonalInfoCompleted(true);
     setActiveSection('education');
+    localStorage.setItem('portfolioActiveSection', 'education');
   };
-  
+
   const handleEducationSave = (data: any) => {
     setEducation(data);
-    setEducationCompleted(true);
-    // Move to next section after completing education
+    localStorage.setItem('portfolioEducation', JSON.stringify(data));
+    updateEducationCompleted(true);
     setActiveSection('experience');
+    localStorage.setItem('portfolioActiveSection', 'experience');
   };
-  
+
   const handleExperienceSave = (data: any) => {
     setExperience(data);
-    setExperienceCompleted(true);
-    // Move to next section after completing experience
+    localStorage.setItem('portfolioExperience', JSON.stringify(data));
+    updateExperienceCompleted(true);
     setActiveSection('certificates');
+    localStorage.setItem('portfolioActiveSection', 'certificates');
   };
-  
+
   const handleCertificatesSave = (data: any) => {
     setCertificates(data);
-    setCertificatesCompleted(true);
-    // Portfolio is complete
-    if (onPortfolioComplete) {
-      onPortfolioComplete();
-    }
+    localStorage.setItem('portfolioCertificates', JSON.stringify(data));
+    updateCertificatesCompleted(true);
   };
 
   const handleSkip = () => {
@@ -80,90 +237,168 @@ export default function Portfolio({ onPortfolioComplete, onSkip, className = '' 
     }
   };
 
-  const handleContinue = () => {
+  const handleModalSubmit = () => {
+    // Call the onPortfolioComplete callback when the form is successfully submitted
     if (onPortfolioComplete) {
       onPortfolioComplete();
     }
   };
 
-  return (
-      <div className="bg-white rounded-xl max-w-full shadow-sm p-3 space-y-6 font-rubik">
-      <div className="text-center">
-        <h1 className="text-2xl font-bold text-gray-900 mb-2">
-          Build Your Portfolio
-        </h1>
-        <p className="text-gray-600">
-          Create a comprehensive profile to showcase your skills and experience
-        </p>
-        {/* <div className="inline-flex items-center px-3 py-1 bg-blue-100 text-blue-800 text-sm font-medium rounded-full mt-2">
-          Optional - Complete later
-        </div> */}
-      </div>
+  // Handle closing the reminder modal
+  const handleCloseReminderModal = () => {
+    setShowReminderModal(false);
+  };
 
-      {/* Progress Overview */}
-      <div className="bg-white p-4 rounded-xl border border-gray-200">
-        <div className="flex items-center justify-between mb-3">
-          <h3 className="font-semibold text-gray-900">Portfolio Completion</h3>
-          <span className="text-sm text-gray-500">
-            {sections.filter(s => s.completed).length}/{sections.length} sections
-          </span>
-        </div>
+  // Handle continuing from the reminder modal
+  const handleContinueFromReminder = () => {
+    setShowReminderModal(false);
+    // Find the first incomplete section and navigate to it
+    if (!resumeUploaded) {
+      setActiveSection('resume');
+      localStorage.setItem('portfolioActiveSection', 'resume');
+    } else if (!personalInfoCompleted) {
+      setActiveSection('personal');
+      localStorage.setItem('portfolioActiveSection', 'personal');
+    } else if (!educationCompleted) {
+      setActiveSection('education');
+      localStorage.setItem('portfolioActiveSection', 'education');
+    } else if (!experienceCompleted) {
+      setActiveSection('experience');
+      localStorage.setItem('portfolioActiveSection', 'experience');
+    } else if (!certificatesCompleted) {
+      setActiveSection('certificates');
+      localStorage.setItem('portfolioActiveSection', 'certificates');
+    }
+  };
+
+  const [isLoading, setIsLoading] = useState(false);
+  const [portfolioData, setPortfolioData] = useState<any>(null);
+  const [apiError, setApiError] = useState<string | null>(null);
+
+  const handleContinue = async () => {
+    setIsLoading(true);
+    setApiError(null);
+    
+    try {
+      // Get auth data for API call
+      const authData = getAuthData();
+      
+      if (!authData) {
+        setApiError('Authentication data not found. Please log in again.');
+        setIsLoading(false);
+        return;
+      }
+      
+      // Call the getPortfolio API
+      const response = await getPortfolio(
+        authData.entityId,
+        authData.apiKey,
+        authData.apiSecret
+      );
+      
+      console.log('Portfolio data retrieved:', response);
+      setPortfolioData(response);
+      
+      // Extract portfolio data from the response
+      if (response && response.data && response.data.portfolio) {
+        const portfolioData = response.data.portfolio;
         
-        <div className="grid grid-cols-2 gap-2">
-          {sections.map((section) => {
-            const Icon = section.icon;
-            return (
-              <button
-                key={section.id}
-                onClick={() => setActiveSection(section.id)}
-                className={`p-3 rounded-lg border transition-all h-16 ${
-                  activeSection === section.id
-                    ? 'border-orange-500 bg-orange-50'
-                    : section.completed
-                    ? 'border-green-500 bg-green-50'
-                    : 'border-gray-200 bg-white hover:border-gray-300'
-                }`}
-              >
-                <div className="flex items-center justify-center space-x-2">
-                  <Icon 
-                    className={
-                      section.completed ? 'text-green-600' :
-                      activeSection === section.id ? 'text-blue-600' : 'text-gray-600'
-                    } 
-                    size={24} 
-                  />
-                  <p className="text-sm font-medium text-gray-900">{section.name}</p>
-                </div>
-                {section.completed && (
-                  <div className="w-2 h-2 bg-green-500 rounded-full mx-auto mt-1"></div>
-                )}
-              </button>
-            );
-          })}
-        </div>
-      </div>
+        // Map the portfolio data to the personalInfo format
+        const mappedPersonalInfo = {
+          fullName: `${portfolioData.first_name || ''} ${portfolioData.last_name || ''}`.trim(),
+          email: portfolioData.email || '',
+          phone: portfolioData.phone || '',
+          gender: portfolioData.gender || '',
+          dateOfBirth: portfolioData.date_of_birth || '',
+          nationality: portfolioData.nationality || '',
+          country: portfolioData.country || '',
+          city: portfolioData.city || '',
+          landmark: portfolioData.landmark || '',
+          pincode: portfolioData.pincode || '',
+          currentAddress: portfolioData.current_address || '',
+          permanentAddress: portfolioData.permanent_address || '',
+          twitterHandle: portfolioData.twitter_handle || '',
+          linkedinHandle: portfolioData.linkedin_profile || '',
+          instagramHandle: portfolioData.instagram_handle || '',
+          facebookHandle: portfolioData.facebook_profile || '',
+          employmentStatus: portfolioData.employment_status || '',
+          website: portfolioData.website || '',
+          totalExperience: portfolioData.total_experience || '',
+          noticePeriod: portfolioData.notice_period || '',
+          professionalSummary: portfolioData.professional_summary || ''
+        };
+        
+        // Update the personalInfo state
+        setPersonalInfo(mappedPersonalInfo);
+        
+        // Save to localStorage for persistence
+        localStorage.setItem('portfolioPersonalInfo', JSON.stringify(mappedPersonalInfo));
+        
+        console.log('Personal info updated from portfolio data:', mappedPersonalInfo);
+      }
+      
+      // Open the modal after successful API call
+      setIsModalOpen(true);
+      
+      // After showing the modal, navigate to the personal info section
+      // This will ensure the form is populated with the updated data
+      setTimeout(() => {
+        setActiveSection('personal');
+      }, 1500); // Short delay to allow the modal to be seen
+    } catch (error: any) {
+      console.error('Error fetching portfolio data:', error);
+      setApiError(error.message || 'Failed to fetch portfolio data');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <div className={`bg-white rounded-xl max-w-full shadow-sm p-3 space-y-6 font-rubik ${className}`}>
 
       {/* Active Section Content */}
-      <div className="bg-white p-4 rounded-xl border border-gray-200">
+      <div className="bg-white p-4 rounded-xl shadow-lg">
         {activeSection === 'resume' && (
           <div>
             <h3 className="font-semibold text-gray-900 mb-3">Resume Upload & Smart Parsing</h3>
             <p className="text-sm text-gray-600 mb-4">
               Upload your resume and we&apos;ll automatically extract your information to build your profile
             </p>
-            
+
             {!resumeUploaded ? (
-              <label className="block">
+              <label className={`block ${isUploading ? 'opacity-50 pointer-events-none' : ''}`}>
                 <div className="border-2 border-dashed border-gray-300 rounded-xl p-6 text-center hover:border-orange-500 transition-colors cursor-pointer">
-                  <Upload className="mx-auto text-gray-400 mb-2" size={24} />
-                  <p className="text-sm font-medium text-gray-900">Upload your resume</p>
+                  {isUploading ? (
+                    <Loader2 className="mx-auto text-blue-500 mb-2 animate-spin" size={24} />
+                  ) : (
+                    <Upload className="mx-auto text-gray-400 mb-2" size={24} />
+                  )}
+                  <p className="text-sm font-medium text-gray-900">
+                    {isUploading ? `Uploading resume (${uploadProgress}%)` : 'Upload your resume'}
+                  </p>
                   <p className="text-xs text-gray-500 mt-1">PDF, DOC, DOCX (max 10MB)</p>
+
+                  {/* Show error message if upload failed */}
+                  {error && (
+                    <p className="text-xs text-red-500 mt-2">{error}</p>
+                  )}
+
+                  {/* Show upload progress bar */}
+                  {isUploading && (
+                    <div className="w-full h-2 bg-gray-200 rounded-full mt-3">
+                      <div 
+                        className="h-full bg-blue-500 rounded-full" 
+                        style={{ width: `${uploadProgress}%` }}
+                      ></div>
+                    </div>
+                  )}
                 </div>
                 <input
                   type="file"
                   accept=".pdf,.doc,.docx"
                   onChange={handleResumeUpload}
                   className="hidden"
+                  disabled={isUploading}
                 />
               </label>
             ) : (
@@ -183,11 +418,14 @@ export default function Portfolio({ onPortfolioComplete, onSkip, className = '' 
         )}
 
         {activeSection === 'personal' && (
-          <PersonalInfoForm 
-            initialData={personalInfo}
-            onSave={handlePersonalInfoSave}
-            onCancel={() => setActiveSection('resume')}
-          />
+          <>
+            {console.log('DEBUG - Portfolio - personalInfo being passed to PersonalInfoForm:', personalInfo)}
+            <PersonalInfoForm 
+              initialData={personalInfo}
+              onSave={handlePersonalInfoSave}
+              onCancel={() => setActiveSection('resume')}
+            />
+          </>
         )}
         
         {activeSection === 'education' && (
@@ -211,6 +449,7 @@ export default function Portfolio({ onPortfolioComplete, onSkip, className = '' 
             initialData={certificates}
             onSave={handleCertificatesSave}
             onCancel={() => setActiveSection('experience')}
+            setCertificateList={setCertificateList}
           />
         )}
         
@@ -265,20 +504,100 @@ export default function Portfolio({ onPortfolioComplete, onSkip, className = '' 
         </div>
       </div>
 
-      <div className="flex space-x-3">
-        {/* <button
-          onClick={handleSkip}
-          className="flex-1 border-2 border-gray-300 text-gray-700 font-semibold py-3 px-6 rounded-xl hover:bg-gray-50 transition-all duration-300"
-        >
-          Skip for Now
-        </button> */}
-        <button
-          onClick={handleContinue}
-          className="max-w-xs mx-auto flex-1 bg-blue-500 text-white font-semibold py-3 px-6 rounded-xl hover:shadow-lg transition-all duration-300"
-        >
-          Submit
-        </button>
+      <div className="flex flex-col space-y-3">
+        {apiError && (
+          <div className="bg-red-50 text-red-600 p-3 rounded-lg text-sm">
+            {apiError}
+          </div>
+        )}
+        
+        <div className="flex space-x-3">
+          <button
+            onClick={handleContinue}
+            disabled={isLoading}
+            className={`max-w-xs mx-auto flex-1 ${isLoading ? 'bg-blue-400' : 'bg-blue-500 hover:shadow-lg'} text-white font-semibold py-3 px-6 rounded-xl transition-all duration-300 flex items-center justify-center`}
+          >
+            {isLoading ? (
+              <>
+                <Loader2 size={18} className="animate-spin mr-2" />
+                Loading...
+              </>
+            ) : (
+              'Submit'
+            )}
+          </button>
+        </div>
       </div>
+
+      {/* Submit Form Modal */}
+      <SubmitFormModal 
+        isOpen={isModalOpen} 
+        onClose={() => setIsModalOpen(false)} 
+        onSubmit={handleModalSubmit}
+        portfolioData={portfolioData}
+      />
+      
+      {/* Reminder Modal */}
+      {showReminderModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-1 bg-black bg-opacity-50">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-md transform transition-all">
+            <div className="flex items-center justify-between p-6 border-b border-gray-100">
+              <h3 className="text-xl font-semibold text-gray-900">Complete Your Portfolio</h3>
+              <button 
+                onClick={handleCloseReminderModal}
+                className="text-gray-400 hover:text-gray-500 focus:outline-none"
+              >
+                <X size={20} />
+              </button>
+            </div>
+            
+            <div className="p-6">
+              <p className="text-gray-600 mb-4">
+                You have started your portfolio but haven&apos;t completed all sections. Would you like to continue where you left off?
+              </p>
+              
+              {/* Progress indicators */}
+              <div className="space-y-2 mb-6">
+                <div className="flex items-center">
+                  <div className={`w-4 h-4 rounded-full mr-2 ${resumeUploaded ? 'bg-green-500' : 'bg-gray-300'}`}></div>
+                  <span className={resumeUploaded ? 'text-green-600' : 'text-gray-500'}>Resume Upload</span>
+                </div>
+                <div className="flex items-center">
+                  <div className={`w-4 h-4 rounded-full mr-2 ${personalInfoCompleted ? 'bg-green-500' : 'bg-gray-300'}`}></div>
+                  <span className={personalInfoCompleted ? 'text-green-600' : 'text-gray-500'}>Personal Information</span>
+                </div>
+                <div className="flex items-center">
+                  <div className={`w-4 h-4 rounded-full mr-2 ${educationCompleted ? 'bg-green-500' : 'bg-gray-300'}`}></div>
+                  <span className={educationCompleted ? 'text-green-600' : 'text-gray-500'}>Education</span>
+                </div>
+                <div className="flex items-center">
+                  <div className={`w-4 h-4 rounded-full mr-2 ${experienceCompleted ? 'bg-green-500' : 'bg-gray-300'}`}></div>
+                  <span className={experienceCompleted ? 'text-green-600' : 'text-gray-500'}>Experience</span>
+                </div>
+                <div className="flex items-center">
+                  <div className={`w-4 h-4 rounded-full mr-2 ${certificatesCompleted ? 'bg-green-500' : 'bg-gray-300'}`}></div>
+                  <span className={certificatesCompleted ? 'text-green-600' : 'text-gray-500'}>Certificates</span>
+                </div>
+              </div>
+              
+              <div className="flex justify-end space-x-3">
+                <button
+                  onClick={handleCloseReminderModal}
+                  className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
+                >
+                  Later
+                </button>
+                <button
+                  onClick={handleContinueFromReminder}
+                  className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:shadow-lg transition-all duration-300"
+                >
+                  Continue
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

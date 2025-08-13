@@ -17,7 +17,8 @@ export default function CompactMarketMetrics({ metrics, onViewDetails }: Compact
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
+    
+    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 w-full">
       {/* Compact Header with Key Metric */}
       <div className="flex items-center justify-between mb-4">
         <div>

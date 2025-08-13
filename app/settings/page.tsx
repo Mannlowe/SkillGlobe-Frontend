@@ -9,15 +9,22 @@ export default function SettingsPage() {
 
   const tabs = [
     { id: 'profile', label: 'Profile', icon: User },
-    { id: 'notifications', label: 'Notifications', icon: Bell },
+    // { id: 'notifications', label: 'Notifications', icon: Bell },
     { id: 'security', label: 'Security', icon: Shield },
-    { id: 'billing', label: 'Billing', icon: CreditCard },
-    { id: 'preferences', label: 'Preferences', icon: Globe },
+    // { id: 'role', label: 'Role', icon: CreditCard },
+    // { id: 'preferences', label: 'Preferences', icon: Globe },
   ];
 
   return (
     <ModernLayoutWrapper>
       <main className="flex-1 overflow-x-hidden overflow-y-auto bg-gray-50">
+
+    <div className="flex h-screen bg-gray-50 font-rubik">
+      <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+      
+      <div className="flex-1 flex flex-col overflow-hidden">
+        <DashboardHeader onMenuClick={() => setSidebarOpen(true)} />
+       
           <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6">
             <div className="mb-8">
               <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Settings</h1>
@@ -55,7 +62,7 @@ export default function SettingsPage() {
                 <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
                   {activeTab === 'profile' && (
                     <div>
-                      <h2 className="text-xl font-semibold text-gray-900 mb-6">Profile Settings</h2>
+                      <h2 className="text-xl font-semibold text-gray-900 mb-6">Profile</h2>
                       <div className="space-y-6">
                         <div className="flex items-center space-x-6">
                           <img
@@ -218,9 +225,9 @@ export default function SettingsPage() {
                     </div>
                   )}
 
-                  {activeTab === 'billing' && (
+                  {activeTab === 'role' && (
                     <div>
-                      <h2 className="text-xl font-semibold text-gray-900 mb-6">Billing & Payments</h2>
+                      <h2 className="text-xl font-semibold text-gray-900 mb-6">Role & Permissions</h2>
                       <div className="space-y-6">
                         <div>
                           <h3 className="font-medium text-gray-900 mb-4">Payment Methods</h3>

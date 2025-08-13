@@ -61,7 +61,7 @@ export default function CompactDashboardPage() {
 
   // Tab content components
   const overviewContent = (
-    <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+    <div className="mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6 font-rubik">
       {/* Compact Market Metrics */}
       <CompactMarketMetrics 
         metrics={mockHeaderMetrics}
@@ -130,7 +130,7 @@ export default function CompactDashboardPage() {
   );
 
   const opportunitiesContent = (
-    <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6">
+    <div className=" mx-auto px-4 sm:px-6 lg:px-8 py-6">
       <OpportunityDiscoveryHub
         opportunities={mockJobOpportunities}
         savedSearches={mockSavedSearches}
@@ -144,7 +144,7 @@ export default function CompactDashboardPage() {
   );
 
   const activityContent = (
-    <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-8">
+    <div className=" mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-8">
       {/* Application Pipeline */}
       <ApplicationPipelineManager
         applications={mockApplications}
@@ -163,7 +163,7 @@ export default function CompactDashboardPage() {
   );
 
   const messagesContent = (
-    <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6">
+    <div className=" mx-auto px-4 sm:px-6 lg:px-8 py-6">
       <div style={{ height: 'calc(100vh - 200px)' }}>
         <CommunicationCenter
           conversations={mockConversations}
@@ -177,7 +177,7 @@ export default function CompactDashboardPage() {
   );
 
   const profileContent = (
-    <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+    <div className=" mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
       {/* Strategic Profile Optimizer */}
       <StrategicProfileOptimizer
         profileData={mockProfileOptimizationHub}
@@ -202,7 +202,7 @@ export default function CompactDashboardPage() {
   );
 
   const insightsContent = (
-    <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+    <div className=" mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
       {/* Profile Level and Achievements Row */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Profile Level */}
@@ -282,19 +282,54 @@ export default function CompactDashboardPage() {
   );
 
   return (
-    <ModernLayoutWrapper>
-      <div>
-        {/* Welcome Section */}
-        <div className="bg-white border-b border-gray-200 mb-6">
-          <div className="px-6 py-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <h1 className="text-xl md:text-2xl font-bold text-gray-900">
-                  Welcome back, {userName}!
-                </h1>
-                <p className="text-sm text-gray-600">
-                  Your career marketplace overview
-                </p>
+    <div className="flex min-h-screen bg-gray-50 max-w-full">
+      <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+      
+      <div className="flex-1 flex flex-col overflow-hidden">
+        <DashboardHeader onMenuClick={() => setSidebarOpen(true)} />
+        
+        <main className="flex-1 overflow-y-auto scrollbar-custom">
+          {/* Custom scrollbar styles */}
+          <style jsx global>{`
+            .scrollbar-custom::-webkit-scrollbar {
+              width: 8px;
+            }
+            .scrollbar-custom::-webkit-scrollbar-track {
+              background: transparent;
+            }
+            .scrollbar-custom::-webkit-scrollbar-thumb {
+              background-color: rgba(255, 255, 255, 0.7);
+              border-radius: 20px;
+            }
+            .scrollbar-custom::-webkit-scrollbar-thumb:hover {
+              background-color: rgba(255, 255, 255, 0.9);
+            }
+            /* For Firefox */
+            .scrollbar-custom {
+              scrollbar-width: thin;
+              scrollbar-color: rgba(255, 255, 255, 0.7) transparent;
+            }
+          `}</style>
+          {/* Welcome Section - Minimal */}
+          <div className="bg-white border-b border-gray-200 max-w-full">
+            <div className="w-full mx-auto px-4 sm:px-6 lg:px-8 py-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h1 className="text-xl md:text-2xl font-bold text-gray-900">
+                    Welcome back, {userName}!
+                  </h1>
+                  <p className="text-sm text-gray-600">
+                    Your career marketplace overview
+                  </p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button className="px-4 py-2 bg-gradient-to-r from-orange-500 to-blue-500 text-white font-medium rounded-lg hover:shadow-lg transition-all duration-300 text-sm">
+                    Quick Apply
+                  </button>
+                  <button className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg">
+                    <Bell size={20} />
+                  </button>
+                </div>
               </div>
             </div>
           </div>

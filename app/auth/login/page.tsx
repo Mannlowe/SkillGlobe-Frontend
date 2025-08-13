@@ -45,6 +45,12 @@ export default function AuthLoginPage() {
     } catch (error: any) {
       console.error('Login error in component:', error);
       
+      // Check for specific error codes in the API response
+      if (error?.response?.data?.message?.error_code === 'INVALID_CREDENTIALS') {
+        setError('Invalid username or password. Please try again.');
+      } else {
+        setError('Login failed. Please try again later.');
+      }
     } finally {
       setIsLoading(false);
     }
@@ -58,7 +64,7 @@ export default function AuthLoginPage() {
           <Link href="/" className="flex items-center">
             <div className="bg-gray-50 rounded-lg overflow-hidden">
               <Image 
-                src="/Images/logo_image.png" 
+                src="/Images/logo_image.jpg" 
                 alt="SkillGlobe Logo" 
                 width={220} 
                 height={30} 
@@ -83,11 +89,7 @@ export default function AuthLoginPage() {
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
         <div className="bg-white py-8 px-4 shadow-lg sm:rounded-lg sm:px-10">
           <form className="space-y-6" onSubmit={handleSubmit}>
-            {error && (
-              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
-                {error}
-              </div>
-            )}
+        
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700">
                 Email address
@@ -135,8 +137,8 @@ export default function AuthLoginPage() {
               </div>
             </div>
 
-            <div className="flex items-center justify-between">
-              <div className="flex items-center">
+            <div className="flex items-end justify-end">
+              {/* <div className="flex items-center">
                 <input
                   id="remember-me"
                   name="remember-me"
@@ -148,7 +150,7 @@ export default function AuthLoginPage() {
                 <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-900">
                   Remember me
                 </label>
-              </div>
+              </div> */}
 
               <div className="text-sm">
                 <Link href="/auth/forgot-password" className="font-medium text-orange-600 hover:text-orange-500">
@@ -156,6 +158,12 @@ export default function AuthLoginPage() {
                 </Link>
               </div>
             </div>
+
+            {error && (
+              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
+                {error}
+              </div>
+            )}
 
             <div>
               <button

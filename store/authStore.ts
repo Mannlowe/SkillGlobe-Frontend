@@ -9,11 +9,30 @@ interface UserData {
   user_type: string;
   roles: string[] | string | unknown;
   user_image: string | null;
+  mobile_no: string | null;
+}
+
+interface EntityData {
+  type: string | null;
+  category: string | null;
+  role: string | null;
+  details: {
+    name?: string;
+    entity_id?: string;
+    business_users?: Array<{
+      email: string;
+      name: string;
+      role: string;
+    }>;
+    [key: string]: any;
+  };
+  current_profile?: string;
 }
 
 interface AuthState {
   isAuthenticated: boolean;
   user: UserData | null;
+  entity: EntityData | null;
   token: string | null;
   isLoading: boolean;
   error: string | null;
@@ -26,6 +45,7 @@ export const useAuthStore = create<AuthState>()(
     (set) => ({
       isAuthenticated: false,
       user: null,
+      entity: null,
       token: null,
       isLoading: false,
       error: null,
@@ -45,14 +65,17 @@ export const useAuthStore = create<AuthState>()(
           // Store auth data in localStorage
           storeAuthData(response);
           
-          // Extract user data from response
+          // Extract user and entity data from response
           const userData = response.message.user;
+          const entityData = response.message.entity;
           console.log('User data extracted:', userData);
+          console.log('Entity data extracted:', entityData);
           
-          // Update state with user data and token
+          // Update state with user data, entity data and token
           set({
             isAuthenticated: true,
             user: userData,
+            entity: entityData,
             token: response.message.auth.token,
             isLoading: false,
             error: null
@@ -93,6 +116,7 @@ export const useAuthStore = create<AuthState>()(
           set({
             isAuthenticated: false,
             user: null,
+            entity: null,
             token: null,
             isLoading: false,
             error: error.message || 'Login failed'
@@ -103,18 +127,25 @@ export const useAuthStore = create<AuthState>()(
       },
       
       logout: () => {
-        // Clear localStorage
+        // Clear all user-specific data from localStorage
         if (typeof window !== 'undefined') {
+          // Clear all items shown in the screenshot
           localStorage.removeItem('auth_token');
           localStorage.removeItem('user_data');
           localStorage.removeItem('auth_expires');
+          
+          // Use localStorage.clear() as a fallback to ensure everything is cleared
+          // Uncomment if you want to clear ALL localStorage items (including non-user data)
+          // localStorage.clear();
         }
         
+        // Reset state
         set({
           isAuthenticated: false,
           user: null,
+          entity: null,
           token: null,
-          error: null,
+          error: null
         });
       },
     }),

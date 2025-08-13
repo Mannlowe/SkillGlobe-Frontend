@@ -38,7 +38,7 @@ export const startRegistration = async (
     console.log('Starting registration with:', { entity_type: entityType, entity_category: entityCategory });
     
     const response = await axios.post<UserTypeSelectionResponse>(
-      `${API_BASE_URL}/api/method/skillglobe_be.api.register.start_registration`,
+      `${API_BASE_URL}/api/method/skillglobe_be.api.register.register.start_registration`,
       {
         entity_type: entityType,
         entity_category: entityCategory

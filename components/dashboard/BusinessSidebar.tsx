@@ -16,7 +16,7 @@ import {
 
 const menuItems = [
   { icon: Home, label: 'Dashboard', href: '/business-dashboard' },
-  { icon: Briefcase, label: 'Job Postings', href: '/business-dashboard/job-postings' },
+  { icon: Briefcase, label: 'Opportunity Postings', href: '/business-dashboard/job-postings' },
   { icon: Shield, label: 'Document Verify', href: '/business-dashboard/document-verify' },
   { icon: Settings, label: 'Admin Access', href: '/business-dashboard/dashboard-setup' },
 ];
@@ -41,11 +41,23 @@ const useIsMobile = () => {
   return isMobile;
 };
 
-export default function BusinessSidebar() {
+interface BusinessSidebarProps {
+  mobileOpen?: boolean;
+}
+
+export default function BusinessSidebar({ mobileOpen }: BusinessSidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
   const isMobile = useIsMobile();
+  // Use mobileOpen prop if provided, otherwise default to true
   const [isOpen, setIsOpen] = useState(true);
+  
+  // Update isOpen when mobileOpen prop changes
+  useEffect(() => {
+    if (mobileOpen !== undefined && isMobile) {
+      setIsOpen(mobileOpen);
+    }
+  }, [mobileOpen, isMobile]);
   const [isCollapsed, setIsCollapsed] = useState(false);
   
   // Close sidebar on mobile when navigating
@@ -73,14 +85,14 @@ export default function BusinessSidebar() {
           ${isCollapsed && !isMobile ? 'w-20' : 'w-64'}
         `}
       >
-        <div className="flex flex-col h-full">
+        <div className="flex flex-col h-full font-rubik">
           {/* Header */}
           <div className={`flex items-center h-[85px] justify-between border-b border-gray-200 ${isCollapsed && !isMobile ? 'p-3' : 'p-4'}`}>
             {(!isCollapsed || isMobile) && (
               <Link href="/business-dashboard" className="flex items-center space-x-2">
                 <div className="relative w-40 h-40">
                   <Image 
-                    src="/Images/logo_image.png" 
+                    src="/Images/logo_image.jpg" 
                     alt="SkillGlobe Logo" 
                     fill 
                     className="object-contain"
@@ -92,7 +104,7 @@ export default function BusinessSidebar() {
             {isCollapsed && !isMobile && (
               <div className="relative w-8 h-8 mx-auto">
                 <Image 
-                  src="/Images/logo_image.png" 
+                  src="/Images/favicon/apple-touch-icon.png"
                   alt="SkillGlobe Logo" 
                   fill 
                   className="object-contain"
@@ -120,7 +132,7 @@ export default function BusinessSidebar() {
           </div>
           
           {/* Navigation */}
-          <nav className={`flex-1 overflow-y-auto ${isCollapsed && !isMobile ? 'p-2' : 'p-4'} space-y-2`}>
+          <nav className={`flex-1 w-72 overflow-y-auto ${isCollapsed && !isMobile ? 'p-2' : 'p-4'} space-y-2`}>
             {menuItems.map((item) => {
               const Icon = item.icon;
               const isActive = pathname === item.href;
@@ -131,7 +143,7 @@ export default function BusinessSidebar() {
                   href={item.href}
                   onClick={handleNavigate}
                   className={`
-                    flex items-center rounded-lg transition-colors
+                    flex items-center rounded-lg transition-colors w-60
                     ${isCollapsed && !isMobile ? 'justify-center p-3' : 'space-x-3 px-4 py-3'}
                     ${isActive 
                       ? 'bg-blue-50 text-blue-600' 

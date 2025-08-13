@@ -1,6 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useBusinessRegistrationStore } from '@/store/businessRegistrationStore';
+import { useRegistrationStore } from '@/store/registration';
 import { Building, User, Mail, Phone, Lock, Eye, EyeOff } from 'lucide-react';
 import PhoneInput from 'react-phone-input-2';
 import 'react-phone-input-2/lib/style.css';
@@ -15,16 +17,34 @@ export default function BusinessBasicInformation({ data, updateData, nextStep }:
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [errors, setErrors] = useState<any>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Business registration store
+  const {
+    updateBusinessData,
+    submitBusinessDetails,
+    isLoading,
+    error: apiError
+  } = useBusinessRegistrationStore();
+
+  // Get request_id from registration store
+  const { request_id } = useRegistrationStore();
+
+  useEffect(() => {
+    console.log('Current request_id from registration store:', request_id);
+  }, [request_id]);
+
+  const digitsOnly = data.mobile.replace(/\D/g, '');
 
   const validateForm = () => {
     const newErrors: any = {};
 
     if (!data.businessName?.trim()) newErrors.businessName = 'Business name is required';
     if (data.businessName?.trim().length < 2) newErrors.businessName = 'Business name must be at least 2 characters';
-    
+
     if (!data.contactPersonName?.trim()) newErrors.contactPersonName = 'Contact person name is required';
     if (!/^[a-zA-Z\s]+$/.test(data.contactPersonName || '')) newErrors.contactPersonName = 'Only alphabetical characters allowed';
-    
+
     if (!data.email?.trim()) newErrors.email = 'Official email is required';
     if (!data.mobile?.trim()) newErrors.mobile = 'Mobile number is required';
     if (!data.password) newErrors.password = 'Password is required';
@@ -32,15 +52,16 @@ export default function BusinessBasicInformation({ data, updateData, nextStep }:
 
     // Business email validation (must have business domain)
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
     if (data.email && !emailRegex.test(data.email)) {
       newErrors.email = 'Please enter a valid email address';
-    } else if (data.email && (data.email.includes('@gmail.com') || data.email.includes('@yahoo.com') || data.email.includes('@hotmail.com'))) {
-      newErrors.email = 'Please use a business domain email (e.g., @yourcompany.com)';
     }
 
-    // Mobile validation
+
     if (!data.mobile) {
       newErrors.mobile = 'Mobile number is required';
+    } else if (digitsOnly.length !== 12) {
+      newErrors.mobile = 'Mobile number must be exactly 10 digits';
     }
 
     // Password validation
@@ -55,10 +76,57 @@ export default function BusinessBasicInformation({ data, updateData, nextStep }:
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  // Effect to sync component data with store
+  useEffect(() => {
+    updateBusinessData({
+      businessName: data.businessName,
+      businessEmail: data.email,
+      businessPhone: data.mobile,
+      contactPersonName: data.contactPersonName,
+      contactPersonEmail: data.contactPersonEmail || data.email, // Default to business email if not provided
+      contactPersonPhone: data.contactPersonPhone || data.mobile, // Default to business phone if not provided
+      password: data.password,
+      confirmPassword: data.confirmPassword
+    });
+  }, [data, updateBusinessData]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (validateForm()) {
-      nextStep();
+      setIsSubmitting(true);
+      try {
+        // Update store with latest form data
+        updateBusinessData({
+          businessName: data.businessName,
+          businessEmail: data.email,
+          businessPhone: data.mobile,
+          contactPersonName: data.contactPersonName,
+          contactPersonEmail: data.contactPersonEmail || data.email,
+          contactPersonPhone: data.contactPersonPhone || data.mobile,
+          password: data.password
+        });
+
+        // Submit business details to API
+        const response = await submitBusinessDetails();
+
+        // Update data with response information if needed
+        updateData({
+          emailVerificationId: response.message.email_verification_id,
+          phoneVerificationId: response.message.phone_verification_id,
+          registrationStep: response.message.registration_step
+        });
+
+        // Move to next step
+        nextStep();
+      } catch (error: any) {
+        console.error('Error submitting business details:', error);
+        setErrors((prev: Record<string, string>) => ({
+          ...prev,
+          apiError: error.message || 'Failed to submit business details. Please try again.'
+        }));
+      } finally {
+        setIsSubmitting(false);
+      }
     }
   };
 
@@ -88,9 +156,8 @@ export default function BusinessBasicInformation({ data, updateData, nextStep }:
               type="text"
               value={data.businessName || ''}
               onChange={(e) => updateData({ businessName: e.target.value })}
-              className={`w-full pl-10 pr-4 py-3 bg-gray-50 rounded-xl border-0 focus:ring-2 focus:ring-orange-500 focus:bg-white transition-all ${
-                errors.businessName ? 'ring-2 ring-red-500' : ''
-              }`}
+              className={`w-full pl-10 pr-4 py-3 bg-gray-50 rounded-xl border-0 focus:ring-2 focus:ring-orange-500 focus:bg-white transition-all ${errors.businessName ? 'ring-2 ring-red-500' : ''
+                }`}
               placeholder="Your Company Name"
             />
           </div>
@@ -108,9 +175,8 @@ export default function BusinessBasicInformation({ data, updateData, nextStep }:
               type="text"
               value={data.contactPersonName || ''}
               onChange={(e) => updateData({ contactPersonName: e.target.value })}
-              className={`w-full pl-10 pr-4 py-3 bg-gray-50 rounded-xl border-0 focus:ring-2 focus:ring-orange-500 focus:bg-white transition-all ${
-                errors.contactPersonName ? 'ring-2 ring-red-500' : ''
-              }`}
+              className={`w-full pl-10 pr-4 py-3 bg-gray-50 rounded-xl border-0 focus:ring-2 focus:ring-orange-500 focus:bg-white transition-all ${errors.contactPersonName ? 'ring-2 ring-red-500' : ''
+                }`}
               placeholder="Full Name"
             />
           </div>
@@ -128,9 +194,8 @@ export default function BusinessBasicInformation({ data, updateData, nextStep }:
               type="email"
               value={data.email || ''}
               onChange={(e) => updateData({ email: e.target.value })}
-              className={`w-full pl-10 pr-4 py-3 bg-gray-50 rounded-xl border-0 focus:ring-2 focus:ring-orange-500 focus:bg-white transition-all ${
-                errors.email ? 'ring-2 ring-red-500' : ''
-              }`}
+              className={`w-full pl-10 pr-4 py-3 bg-gray-50 rounded-xl border-0 focus:ring-2 focus:ring-orange-500 focus:bg-white transition-all ${errors.email ? 'ring-2 ring-red-500' : ''
+                }`}
               placeholder="admin@yourcompany.com"
             />
           </div>
@@ -144,25 +209,43 @@ export default function BusinessBasicInformation({ data, updateData, nextStep }:
             Mobile Number <span className="text-red-500">*</span>
           </label>
           <div className="phone-input-container">
-            <PhoneInput
-              country={'in'}
-              value={data.mobile}
-              onChange={(phone) => updateData({ mobile: phone })}
-              inputClass={`w-full py-3 bg-gray-50 rounded-xl border-0 focus:ring-2 focus:ring-orange-500 focus:bg-white transition-all ${
-                errors.mobile ? 'ring-2 ring-red-500' : ''
-              }`}
-              containerClass="phone-input-container"
-              buttonClass="phone-input-button"
-              dropdownClass="phone-input-dropdown"
-              enableSearch={true}
-              disableSearchIcon={false}
-              searchPlaceholder="Search country..."
-              inputProps={{
-                name: 'phone',
-                required: true,
-                autoFocus: false
-              }}
-            />
+          <PhoneInput
+  country={'in'}
+  value={data.mobile}
+  onChange={(phone) => {
+    const digitsOnly = phone.replace(/\D/g, '');
+
+    // Limit to 12 digits
+    if (digitsOnly.length <= 12) {
+      updateData({ mobile: digitsOnly });
+
+      // Live validation
+      if (!digitsOnly) {
+        setErrors((prev: any) => ({ ...prev, mobile: 'Mobile number is required' }));
+      } else if (digitsOnly.length !== 12) {
+        setErrors((prev: any) => ({ ...prev, mobile: 'Mobile number must be exactly 10 digits' }));
+      } else {
+        setErrors((prev: any) => ({ ...prev, mobile: '' }));
+      }
+    }
+  }}
+  inputClass={`w-full py-3 bg-gray-50 rounded-xl border-0 focus:ring-2 focus:ring-orange-500 focus:bg-white transition-all ${
+    errors.mobile ? 'ring-2 ring-red-500' : ''
+  }`}
+  containerClass="phone-input-container"
+  buttonClass="phone-input-button"
+  dropdownClass="phone-input-dropdown"
+  enableSearch={true}
+  disableSearchIcon={false}
+  searchPlaceholder="Search country..."
+  inputProps={{
+    name: 'phone',
+    required: true,
+    autoFocus: false
+  }}
+/>
+
+
           </div>
           {errors.mobile && <p className="text-red-500 text-xs mt-1">{errors.mobile}</p>}
         </div>
@@ -178,9 +261,8 @@ export default function BusinessBasicInformation({ data, updateData, nextStep }:
               type={showPassword ? 'text' : 'password'}
               value={data.password || ''}
               onChange={(e) => updateData({ password: e.target.value })}
-              className={`w-full pl-10 pr-12 py-3 bg-gray-50 rounded-xl border-0 focus:ring-2 focus:ring-orange-500 focus:bg-white transition-all ${
-                errors.password ? 'ring-2 ring-red-500' : ''
-              }`}
+              className={`w-full pl-10 pr-12 py-3 bg-gray-50 rounded-xl border-0 focus:ring-2 focus:ring-orange-500 focus:bg-white transition-all ${errors.password ? 'ring-2 ring-red-500' : ''
+                }`}
               placeholder="Create a strong password"
             />
             <button
@@ -206,9 +288,8 @@ export default function BusinessBasicInformation({ data, updateData, nextStep }:
               type={showConfirmPassword ? 'text' : 'password'}
               value={data.confirmPassword || ''}
               onChange={(e) => updateData({ confirmPassword: e.target.value })}
-              className={`w-full pl-10 pr-12 py-3 bg-gray-50 rounded-xl border-0 focus:ring-2 focus:ring-orange-500 focus:bg-white transition-all ${
-                errors.confirmPassword ? 'ring-2 ring-red-500' : ''
-              }`}
+              className={`w-full pl-10 pr-12 py-3 bg-gray-50 rounded-xl border-0 focus:ring-2 focus:ring-orange-500 focus:bg-white transition-all ${errors.confirmPassword ? 'ring-2 ring-red-500' : ''
+                }`}
               placeholder="Confirm your password"
             />
             <button
@@ -222,11 +303,19 @@ export default function BusinessBasicInformation({ data, updateData, nextStep }:
           {errors.confirmPassword && <p className="text-red-500 text-xs mt-1">{errors.confirmPassword}</p>}
         </div>
 
+        {/* API Error Message */}
+        {(errors.apiError || apiError) && (
+          <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-red-600 text-sm mb-4">
+            {errors.apiError || apiError}
+          </div>
+        )}
+
         <button
           type="submit"
-          className="w-full bg-blue-500 text-white font-semibold py-3 px-6 rounded-xl hover:shadow-lg transition-all duration-300"
+          disabled={isSubmitting || isLoading}
+          className={`w-full bg-blue-500 text-white font-semibold py-3 px-6 rounded-xl hover:shadow-lg transition-all duration-300 ${(isSubmitting || isLoading) ? 'opacity-70 cursor-not-allowed' : ''}`}
         >
-          Continue
+          {isSubmitting || isLoading ? 'Submitting...' : 'Continue'}
         </button>
       </form>
     </div>

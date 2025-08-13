@@ -2,6 +2,10 @@
 
 import { useState, useEffect } from 'react';
 import { Shield, Upload, CreditCard, FileText, CheckCircle, X, IdCard } from 'lucide-react';
+import { OtpModal } from '../modal/OtpModal';
+import { toast } from 'sonner';
+import { useRouter } from 'next/navigation';
+import { useVerificationStore } from '@/store/verificationStore';
 
 const documentTypes = [
   { id: 'aadhaar', name: 'Aadhaar Card', icon: IdCard, description: 'Most trusted verification' },
@@ -21,11 +25,16 @@ export default function IdentityVerification({
   onSkip,
   className = '' 
 }: IdentityVerificationProps) {
-  const [selectedDoc, setSelectedDoc] = useState('');
+  const router = useRouter();
+  const { isIdentityVerified, verifiedDocType, setIdentityVerified } = useVerificationStore();
+  
+  const [selectedDoc, setSelectedDoc] = useState(verifiedDocType || '');
   const [isUploading, setIsUploading] = useState(false);
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
-  const [identityVerified, setIdentityVerified] = useState(false);
+  const [showVerifiedUI, setShowVerifiedUI] = useState(isIdentityVerified);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [isOtpModalOpen, setIsOtpModalOpen] = useState(false);
+  const [isVerifying, setIsVerifying] = useState(false);
 
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -46,13 +55,44 @@ export default function IdentityVerification({
   };
 
   const handleVerify = () => {
-    // Set verification to true when button is clicked
-    setIdentityVerified(true);
-    
-    // Call the callback if provided
-    if (onVerificationComplete) {
-      onVerificationComplete();
+    // For Aadhaar card, show OTP modal
+    if (selectedDoc === 'aadhaar' && uploadedFile) {
+      setIsOtpModalOpen(true);
+    } else {
+      // For other documents, directly mark as verified
+      setShowVerifiedUI(true);
+      setIdentityVerified(true, selectedDoc);
+      
+      // Navigate to verification page after a delay
+      setTimeout(() => {
+        router.push('/verification');
+      }, 2000);
     }
+  };
+  
+  const handleOtpVerify = (otp: string) => {
+    setIsVerifying(true);
+    
+    // Simulate OTP verification
+    setTimeout(() => {
+      setIsVerifying(false);
+      setIsOtpModalOpen(false);
+      setShowVerifiedUI(true);
+      
+      // Update the persistent store
+      setIdentityVerified(true, selectedDoc);
+      
+      toast.success('Aadhaar verification successful!');
+      
+      // Navigate to verification page after showing success UI
+      setTimeout(() => {
+        router.push('/verification');
+      }, 4000);
+    }, 1500);
+  };
+  
+  const handleOtpClose = () => {
+    setIsOtpModalOpen(false);
   };
 
   // Clean up object URLs when component unmounts or when file changes
@@ -65,8 +105,9 @@ export default function IdentityVerification({
   }, [previewUrl]);
 
   return (
+    <>
     <div className={`bg-white rounded-xl shadow-sm p-3 space-y-6 w-full font-rubik ${className}`}>
-      <div className="text-center">
+      {/* <div className="text-center">
         <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
           <Shield className="text-green-600" size={32} />
         </div>
@@ -76,12 +117,12 @@ export default function IdentityVerification({
         <p className="text-gray-600">
           Verify your identity to build trust and unlock premium features
         </p>
-        {/* <div className="inline-flex items-center px-3 py-1 bg-blue-100 text-blue-800 text-sm font-medium rounded-full mt-2">
+        <div className="inline-flex items-center px-3 py-1 bg-blue-100 text-blue-800 text-sm font-medium rounded-full mt-2">
           Optional - Skip for now
-        </div> */}
-      </div>
+        </div>
+      </div> */}
 
-      {!identityVerified ? (
+      {!showVerifiedUI ? (
         <div className="space-y-4">
           {/* Document Type Selection */}
           <div>
@@ -94,12 +135,14 @@ export default function IdentityVerification({
                     key={doc.id}
                     onClick={() => setSelectedDoc(doc.id)}
                     className={`p-4 rounded-xl border-2 transition-all flex flex-col items-center justify-center h-full ${
-                      selectedDoc === doc.id
-                        ? 'border-orange-500 bg-orange-50'
-                        : 'border-gray-200 bg-white hover:border-orange-300'
+                      isIdentityVerified && verifiedDocType === doc.id
+                        ? 'border-green-500 bg-green-50'
+                        : selectedDoc === doc.id
+                          ? 'border-blue-500 bg-blue-50'
+                          : 'border-gray-200 bg-white hover:border-blue-300'
                     }`}
                   >
-                    <Icon className={`${selectedDoc === doc.id ? 'text-orange-600' : 'text-gray-600'} mb-3`} size={30} />
+                    <Icon className={`${isIdentityVerified && verifiedDocType === doc.id ? 'text-green-600' : selectedDoc === doc.id ? 'text-blue-600' : 'text-gray-600'} mb-3`} size={30} />
                     <p className="text-sm font-medium text-gray-900">{doc.name}</p>
                     <p className="text-xs text-gray-500 text-center">{doc.description}</p>
                   </button>
@@ -150,7 +193,7 @@ export default function IdentityVerification({
                           setPreviewUrl(null);
                         }
                         setUploadedFile(null);
-                        setIdentityVerified(false);
+                        setIdentityVerified(false, null);
                       }}
                       className="text-gray-400 hover:text-gray-600"
                     >
@@ -203,25 +246,48 @@ export default function IdentityVerification({
         </div>
       ) : (
         <div className="text-center py-8">
-          <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <CheckCircle className="text-green-600" size={32} />
-          </div>
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">Verification Complete!</h3>
-          <p className="text-gray-600">Your identity has been successfully verified</p>
-        </div>
+  <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+    <CheckCircle className="text-green-600" size={32} />
+  </div>
+  <h3 className="text-lg font-semibold text-gray-900 mb-2">Verification Complete!</h3>
+  <p className="text-gray-600 mb-4">Your identity has been successfully verified</p>
+
+  <button
+    onClick={() => {
+      setShowVerifiedUI(false);
+      setSelectedDoc('');
+      setUploadedFile(null);
+      setPreviewUrl(null);
+    }}
+    className="mt-4 inline-flex items-center px-4 py-2 text-sm font-medium text-blue-600 hover:underline"
+  >
+    ← Back to document selection
+  </button>
+</div>
+
       )}
 
-      <div className="flex space-x-3 pt-4">
-        {!identityVerified && (
-          <button
-            onClick={handleVerify}
-            disabled={!uploadedFile || isUploading}
-            className="max-w-xs mx-auto flex-1 bg-blue-500 text-white font-semibold py-3 px-6 rounded-xl hover:shadow-lg transition-all duration-300 disabled:cursor-not-allowed"
-          >
-            Verify Identity
-          </button>
-        )}
-      </div>
+{!showVerifiedUI && (
+  <div className="flex space-x-3 pt-4">
+    <button
+      onClick={handleVerify}
+      disabled={!uploadedFile || isUploading}
+      className="max-w-xs mx-auto flex-1 bg-blue-500 text-white font-semibold py-3 px-6 rounded-xl hover:shadow-lg transition-all duration-300 disabled:cursor-not-allowed"
+    >
+      Verify Identity
+    </button>
+  </div>
+)}
+
     </div>
+    
+ 
+    <OtpModal
+      isOpen={isOtpModalOpen}
+      onClose={handleOtpClose}
+      onVerify={handleOtpVerify}
+      phoneNumber="XXXXXXXX12" // Masked phone number
+    />
+    </>
   );
 }

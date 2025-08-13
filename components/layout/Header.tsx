@@ -7,14 +7,14 @@ import { StandardizedButton } from '@/components/ui/StandardizedButton';
 
 export default function Header() {
   return (
-    <header className="bg-white shadow-sm border-b border-gray-100 sticky top-0 z-30">
+    <header className="bg-white shadow-sm border-b border-gray-100 sticky top-0 z-30 h-20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-18">
+        <div className="flex justify-between items-center h-20">
           {/* Logo */}
-          <Link href="/" className="flex items-center">
+          <Link href="/" className="flex items-center justify-center">
             <div className="bg-white rounded-lg overflow-hidden">
               <Image
-                src="/Images/logo_image.png"
+                src="/Images/logo_image.jpg"
                 alt="SkillGlobe Logo"
                 width={180}
                 height={30}
@@ -25,7 +25,7 @@ export default function Header() {
           </Link>
 
           {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center space-x-8">
+          {/* <nav className="hidden md:flex items-center space-x-8">
             <Link href="/discover" className="text-gray-700 hover:text-orange-500 font-medium transition-colors">
               Discover
             </Link>
@@ -38,7 +38,7 @@ export default function Header() {
             <Link href="/services" className="text-gray-700 hover:text-orange-500 font-medium transition-colors">
               Services
             </Link>
-          </nav>
+          </nav> */}
 
           {/* Right Side Actions */}
           <div className="flex items-center space-x-4">

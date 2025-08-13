@@ -24,6 +24,7 @@ export interface LoginResponse {
       user_type: string;
       roles: string[];
       user_image: string | null;
+      mobile_no: string | null;
     };
     entity: {
       type: string | null;
@@ -53,7 +54,7 @@ export const login = async (email: string, password: string): Promise<LoginRespo
     console.log('Attempting login with:', { usr: email, pwd: password });
     
     const response = await axios.post<LoginResponse>(
-      `${API_BASE_URL}/api/method/skillglobe_be.api.auth.login`,
+      `${API_BASE_URL}/api/method/skillglobe_be.api.auth.auth.login`,
       {
         usr: email,
         pwd: password
@@ -91,9 +92,17 @@ export const isAuthenticated = (): boolean => {
  */
 export const storeAuthData = (authData: LoginResponse): void => {
   if (typeof window !== 'undefined') {
+    // Store basic auth data
     localStorage.setItem('auth_token', authData.message.auth.token);
     localStorage.setItem('user_data', JSON.stringify(authData.message.user));
+    localStorage.setItem('entity_data', JSON.stringify(authData.message.entity));
     localStorage.setItem('auth_expires', authData.message.auth.expires_on);
+    
+    // Store API credentials for resume upload and other API calls
+    localStorage.setItem('auth_api_key', authData.message.auth.api_key);
+    localStorage.setItem('auth_api_secret', authData.message.auth.api_secret);
+    
+    console.log('Auth data stored in localStorage, including API credentials');
   }
 };
 
@@ -104,6 +113,7 @@ export const clearAuthData = (): void => {
   if (typeof window !== 'undefined') {
     localStorage.removeItem('auth_token');
     localStorage.removeItem('user_data');
+    localStorage.removeItem('entity_data');
     localStorage.removeItem('auth_expires');
   }
 };

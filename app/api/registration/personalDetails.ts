@@ -47,7 +47,7 @@ export const updatePersonalDetails = async (
     console.log('Updating personal details:', { requestId, email, phone, fullName });
     
     const response = await axios.post<PersonalDetailsResponse>(
-      `${API_BASE_URL}/api/method/skillglobe_be.api.register.update_personal_details`,
+      `${API_BASE_URL}/api/method/skillglobe_be.api.register.register.update_personal_details`,
       {
         request_id: requestId,
         email: email,

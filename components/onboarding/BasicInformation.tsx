@@ -27,7 +27,7 @@ export default function BasicInformation({ data, updateData, nextStep }: BasicIn
 
   const validateField = (name: string, value: string) => {
     let error = '';
-    
+
     switch (name) {
       case 'firstName':
         if (!value.trim()) error = 'First name is required';
@@ -70,20 +70,20 @@ export default function BasicInformation({ data, updateData, nextStep }: BasicIn
       default:
         break;
     }
-    
+
     return error;
   };
 
   const handleFieldChange = (name: string, value: string) => {
     updateData({ [name]: value });
-    
+
     if (touched[name]) {
       const fieldError = validateField(name, value);
       setErrors((prev: any) => ({
         ...prev,
         [name]: fieldError
       }));
-      
+
       // Special case for password and confirmPassword
       if (name === 'password' && touched.confirmPassword) {
         const confirmError = data.confirmPassword !== value ? 'Passwords do not match' : '';
@@ -94,13 +94,13 @@ export default function BasicInformation({ data, updateData, nextStep }: BasicIn
       }
     }
   };
-  
+
   const handleFieldBlur = (name: string) => {
     setTouched(prev => ({
       ...prev,
       [name]: true
     }));
-    
+
     const fieldError = validateField(name, data[name]);
     setErrors((prev: any) => ({
       ...prev,
@@ -110,13 +110,13 @@ export default function BasicInformation({ data, updateData, nextStep }: BasicIn
 
   const validateForm = () => {
     const newErrors: any = {};
-    
+
     // Mark all fields as touched
     const allTouched = Object.keys(touched).reduce((acc, key) => {
       acc[key] = true;
       return acc;
     }, {} as Record<string, boolean>);
-    
+
     setTouched(allTouched);
 
     // Validate all fields
@@ -146,7 +146,7 @@ export default function BasicInformation({ data, updateData, nextStep }: BasicIn
           }));
           return;
         }
-        
+
         // Call API to update personal details
         await updatePersonalDetails(
           data.firstName,
@@ -155,7 +155,7 @@ export default function BasicInformation({ data, updateData, nextStep }: BasicIn
           data.mobile,
           data.password
         );
-        
+
         // Proceed to next step on success
         nextStep();
       } catch (error) {
@@ -190,15 +190,14 @@ export default function BasicInformation({ data, updateData, nextStep }: BasicIn
                 value={data.firstName}
                 onChange={(e) => handleFieldChange('firstName', e.target.value)}
                 onBlur={() => handleFieldBlur('firstName')}
-                className={`w-full pl-10 pr-4 py-3 bg-gray-50 rounded-xl border-0 focus:ring-2 focus:ring-orange-500 focus:bg-white transition-all ${
-                  errors.firstName ? 'ring-2 ring-red-500' : ''
-                }`}
+                className={`w-full pl-10 pr-4 py-3 bg-gray-50 rounded-xl border-0 focus:ring-2 focus:ring-orange-500 focus:bg-white transition-all ${errors.firstName ? 'ring-2 ring-red-500' : ''
+                  }`}
                 placeholder="First name"
               />
             </div>
             {errors.firstName && <p className="text-red-500 text-xs mt-1">{errors.firstName}</p>}
           </div>
-          
+
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Last Name <span className="text-red-500">*</span>
@@ -210,9 +209,8 @@ export default function BasicInformation({ data, updateData, nextStep }: BasicIn
                 value={data.lastName}
                 onChange={(e) => handleFieldChange('lastName', e.target.value)}
                 onBlur={() => handleFieldBlur('lastName')}
-                className={`w-full pl-10 pr-4 py-3 bg-gray-50 rounded-xl border-0 focus:ring-2 focus:ring-orange-500 focus:bg-white transition-all ${
-                  errors.lastName ? 'ring-2 ring-red-500' : ''
-                }`}
+                className={`w-full pl-10 pr-4 py-3 bg-gray-50 rounded-xl border-0 focus:ring-2 focus:ring-orange-500 focus:bg-white transition-all ${errors.lastName ? 'ring-2 ring-red-500' : ''
+                  }`}
                 placeholder="Last name"
               />
             </div>
@@ -232,16 +230,14 @@ export default function BasicInformation({ data, updateData, nextStep }: BasicIn
               value={data.email}
               onChange={(e) => handleFieldChange('email', e.target.value)}
               onBlur={() => handleFieldBlur('email')}
-              className={`w-full pl-10 pr-4 py-3 bg-gray-50 rounded-xl border-0 focus:ring-2 focus:ring-orange-500 focus:bg-white transition-all ${
-                errors.email ? 'ring-2 ring-red-500' : ''
-              }`}
+              className={`w-full pl-10 pr-4 py-3 bg-gray-50 rounded-xl border-0 focus:ring-2 focus:ring-orange-500 focus:bg-white transition-all ${errors.email ? 'ring-2 ring-red-500' : ''
+                }`}
               placeholder="your@email.com"
             />
           </div>
           {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email}</p>}
         </div>
 
-        {/* Mobile */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
             Mobile Number <span className="text-red-500">*</span>
@@ -250,11 +246,25 @@ export default function BasicInformation({ data, updateData, nextStep }: BasicIn
             <PhoneInput
               country={'in'}
               value={data.mobile}
-              onChange={(phone) => handleFieldChange('mobile', phone)}
-              onBlur={() => handleFieldBlur('mobile')}
-              inputClass={`w-full py-3 bg-gray-50 rounded-xl border-0 focus:ring-2 focus:ring-orange-500 focus:bg-white transition-all ${
-                errors.mobile ? 'ring-2 ring-red-500' : ''
-              }`}
+              onChange={(phone) => {
+                const digitsOnly = phone.replace(/\D/g, '');
+
+                // Limit to 12 digits
+                if (digitsOnly.length <= 12) {
+                  updateData({ mobile: digitsOnly });
+
+                  // Live validation
+                  if (!digitsOnly) {
+                    setErrors((prev: any) => ({ ...prev, mobile: 'Mobile number is required' }));
+                  } else if (digitsOnly.length !== 12) {
+                    setErrors((prev: any) => ({ ...prev, mobile: 'Mobile number must be exactly 10 digits' }));
+                  } else {
+                    setErrors((prev: any) => ({ ...prev, mobile: '' }));
+                  }
+                }
+              }}
+              inputClass={`w-full py-3 bg-gray-50 rounded-xl border-0 focus:ring-2 focus:ring-orange-500 focus:bg-white transition-all ${errors.mobile ? 'ring-2 ring-red-500' : ''
+                }`}
               containerClass="phone-input-container"
               buttonClass="phone-input-button"
               dropdownClass="phone-input-dropdown"
@@ -271,6 +281,7 @@ export default function BasicInformation({ data, updateData, nextStep }: BasicIn
           {errors.mobile && <p className="text-red-500 text-xs mt-1">{errors.mobile}</p>}
         </div>
 
+
         {/* Password */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -283,9 +294,8 @@ export default function BasicInformation({ data, updateData, nextStep }: BasicIn
               value={data.password}
               onChange={(e) => handleFieldChange('password', e.target.value)}
               onBlur={() => handleFieldBlur('password')}
-              className={`w-full pl-10 pr-12 py-3 bg-gray-50 rounded-xl border-0 focus:ring-2 focus:ring-orange-500 focus:bg-white transition-all ${
-                errors.password ? 'ring-2 ring-red-500' : ''
-              }`}
+              className={`w-full pl-10 pr-12 py-3 bg-gray-50 rounded-xl border-0 focus:ring-2 focus:ring-orange-500 focus:bg-white transition-all ${errors.password ? 'ring-2 ring-red-500' : ''
+                }`}
               placeholder="Create a strong password"
             />
             <button
@@ -311,9 +321,8 @@ export default function BasicInformation({ data, updateData, nextStep }: BasicIn
               value={data.confirmPassword}
               onChange={(e) => handleFieldChange('confirmPassword', e.target.value)}
               onBlur={() => handleFieldBlur('confirmPassword')}
-              className={`w-full pl-10 pr-12 py-3 bg-gray-50 rounded-xl border-0 focus:ring-2 focus:ring-orange-500 focus:bg-white transition-all ${
-                errors.confirmPassword ? 'ring-2 ring-red-500' : ''
-              }`}
+              className={`w-full pl-10 pr-12 py-3 bg-gray-50 rounded-xl border-0 focus:ring-2 focus:ring-orange-500 focus:bg-white transition-all ${errors.confirmPassword ? 'ring-2 ring-red-500' : ''
+                }`}
               placeholder="Confirm your password"
             />
             <button

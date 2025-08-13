@@ -24,15 +24,29 @@ export default function TermsAcceptance({ data, updateData, nextStep }: TermsAcc
       return;
     }
     
-    // Check if request_id and password exist
-    if (!request_id || !password) {
-      setError('Registration information is missing. Please complete previous steps first.');
+    // Check if request_id exists
+    if (!request_id) {
+      setError('Registration ID is missing. Please complete previous steps first.');
       return;
     }
     
+    // For password, we'll handle it differently since it's not persisted in localStorage
+    if (!password) {
+      // If we have data.password from the form, we can use that
+      if (data.password) {
+        // Update the password in the registration store
+        useRegistrationStore.setState({ password: data.password });
+        console.log('Using password from form data');
+      } else {
+        // If no password is available, we need to ask the user to re-enter it
+        setError('For security reasons, your password is not stored. Please go back to the personal information step to re-enter your password.');
+        return;
+      }
+    }
+    
     try {
-      // Call API to complete registration
-      await completeRegistration();
+      // Call API to complete registration with agreed parameter based on checkbox state
+      await completeRegistration(data.termsAccepted ? 1 : 0);
       
       // Proceed to next step on success
       nextStep();

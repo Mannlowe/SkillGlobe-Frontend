@@ -9,7 +9,7 @@ export default function HeroSection() {
   const [location, setLocation] = useState('');
 
   return (
-    <section className="relative overflow-hidden bg-gradient-to-br from-blue-600 via-blue-700 to-orange-600 text-white">
+    <section className="relative overflow-hidden bg-gradient-to-br from-blue-500 via-blue-600 to-orange-500 text-white">
       <div className="absolute inset-0 bg-black bg-opacity-20"></div>
       
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-20">
@@ -79,10 +79,10 @@ export default function HeroSection() {
         {/* Quick Stats */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8 mt-8 md:mt-12">
           {[
-            { number: '50K+', label: 'Active Users' },
-            { number: '10K+', label: 'Job Opportunities' },
+            { number: '5K+', label: 'Active Users' },
+            { number: '1K+', label: 'Job Opportunities' },
             { number: '5K+', label: 'Skills Available' },
-            { number: '95%', label: 'Success Rate' },
+            { number: '85%', label: 'Success Rate' },
           ].map((stat, index) => (
             <div key={index} className="text-center">
               <div className="text-2xl md:text-3xl font-bold text-orange-300">{stat.number}</div>

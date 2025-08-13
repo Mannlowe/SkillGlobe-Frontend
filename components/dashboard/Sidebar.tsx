@@ -3,11 +3,11 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { 
-  Home, 
-  Briefcase, 
-  User, 
-  Settings, 
+import {
+  Home,
+  Briefcase,
+  User,
+  Settings,
   X,
   ChevronLeft,
   ChevronRight,
@@ -20,12 +20,13 @@ import Image from 'next/image';
 interface SidebarProps {
   isOpen: boolean;
   onClose: () => void;
+  forceCollapsed?: boolean;
 }
 
 const menuItems = [
   { icon: Home, label: 'Dashboard', href: '/individual-dashboard' },
-  { icon: Briefcase, label: 'Jobs', href: '/jobs' },
-  { icon: Shield, label: 'Identity Verification', href: '/verification' },
+  { icon: Briefcase, label: 'Opportunities', href: '/jobs' },
+  { icon: Shield, label: 'Identity Curation', href: '/verification' },
   { icon: FileText, label: 'Portfolio', href: '/portfolio' },
   { icon: Award, label: 'Skills', href: '/skills' },
   { icon: User, label: 'Profile', href: '/profile' },
@@ -34,7 +35,7 @@ const menuItems = [
 // Custom hook to detect mobile
 function useIsMobile(breakpoint = 1024) {
   const [isMobile, setIsMobile] = useState(false);
-  
+
   useEffect(() => {
     function update() {
       setIsMobile(window.innerWidth < breakpoint);
@@ -43,11 +44,11 @@ function useIsMobile(breakpoint = 1024) {
     window.addEventListener('resize', update);
     return () => window.removeEventListener('resize', update);
   }, [breakpoint]);
-  
+
   return isMobile;
 }
 
-export default function Sidebar({ isOpen, onClose }: SidebarProps) {
+export default function Sidebar({ isOpen, onClose, forceCollapsed }: SidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
   const isMobile = useIsMobile();
@@ -69,16 +70,19 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
         }
       }
     };
-    
+
     getUserInfo();
   }, []);
 
   // On mobile, force expanded when visible
+  // When forceCollapsed is provided, use that value
   useEffect(() => {
     if (isMobile) {
       setIsCollapsed(false);
+    } else if (forceCollapsed !== undefined) {
+      setIsCollapsed(forceCollapsed);
     }
-  }, [isMobile]);
+  }, [isMobile, forceCollapsed]);
 
   // Handle navigation - separate from collapse toggle
   const handleNavigate = (e: React.MouseEvent) => {
@@ -101,16 +105,16 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
   // Handle logout
   const handleLogout = (e: React.MouseEvent) => {
     e.preventDefault();
-    
+
     // Close mobile sidebar if open
     if (isMobile) {
       onClose();
     }
-    
+
     // Clear any stored authentication data
     localStorage.removeItem('authToken');
     sessionStorage.removeItem('authToken');
-    
+
     // Redirect to login page
     router.push('/auth/login');
   };
@@ -119,7 +123,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
     <>
       {/* Mobile Overlay */}
       {isOpen && isMobile && (
-        <div 
+        <div
           className="fixed inset-0 bg-black bg-opacity-50 z-40"
           onClick={onClose}
         />
@@ -128,7 +132,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
       {/* Sidebar */}
       <div className={`
         ${isMobile ? 'fixed' : 'static'} inset-y-0 left-0 z-50 bg-white shadow-lg transform transition-all duration-300 ease-in-out
-        ${isMobile 
+        ${isMobile
           ? `w-64 ${isOpen ? 'translate-x-0' : '-translate-x-full'}`
           : `${isCollapsed ? 'w-20' : 'w-64'} translate-x-0`
         }
@@ -137,43 +141,49 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
           {/* Header */}
           <div className={`flex items-center h-[82px] justify-between border-b border-gray-200 ${isCollapsed && !isMobile ? 'p-3' : 'p-4'}`}>
             {(!isCollapsed || isMobile) && (
-              <Link href="/business-dashboard" className="flex items-center space-x-2">
-              <div className="relative w-40 h-40">
-                <Image 
-                  src="/Images/logo_image.png" 
-                  alt="SkillGlobe Logo" 
-                  fill 
-                  className="object-contain"
-                />
-              </div>
-            </Link>
+              <Link href="/individual-dashboard" className="flex items-center space-x-2">
+                <div className="relative w-40 h-40">
+                  <Image
+                    src="/Images/logo_image.jpg"
+                    alt="SkillGlobe Logo"
+                    fill
+                    className="object-contain"
+                  />
+                </div>
+              </Link>
             )}
-            
+
             {isCollapsed && !isMobile && (
               <div className="flex justify-center w-full">
-                <div className="w-8 h-8 bg-gradient-to-r from-orange-500 to-blue-500 rounded-xl flex items-center justify-center">
-                  <span className="text-white font-bold text-sm">SG</span>
+                <div className="w-8 h-8 rounded-xl overflow-hidden flex items-center justify-center">
+                  <Image
+                    onClick={handleCollapseToggle}
+                    src="/Images/favicon/apple-touch-icon.png"
+                    alt="Logo"
+                    width={32}
+                    height={32}
+                  />
                 </div>
               </div>
             )}
 
             <div className="flex items-center space-x-2">
               {/* Collapse Toggle - Desktop Only */}
-              {!isMobile && (
-                <button 
+              {!isMobile && !isCollapsed && (
+                <button
                   type="button"
                   onClick={handleCollapseToggle}
                   className="p-2 rounded-lg hover:bg-gray-100 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
                   title={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
                   aria-label={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
                 >
-                  {isCollapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
+                  <ChevronLeft size={16} />
                 </button>
               )}
-              
+
               {/* Close Button - Mobile Only */}
               {isMobile && (
-                <button 
+                <button
                   type="button"
                   onClick={onClose}
                   className="p-2 rounded-lg hover:bg-gray-100 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
@@ -183,14 +193,15 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                 </button>
               )}
             </div>
+
           </div>
 
           {/* Navigation */}
-          <nav className={`flex-1 py-6 space-y-2 overflow-y-auto ${isCollapsed && !isMobile ? 'px-2' : 'px-4'}`}>
+          <nav className={`flex-1 py-6 space-y-2 overflow-y-auto font-rubik ${isCollapsed && !isMobile ? 'px-2' : 'px-4'}`}>
             {menuItems.map((item) => {
               const Icon = item.icon;
               const isActive = pathname === item.href;
-              
+
               return (
                 <Link
                   key={item.href}
@@ -199,8 +210,8 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                   className={`
                     flex items-center rounded-lg transition-colors relative
                     ${isCollapsed && !isMobile ? 'justify-center p-3' : 'space-x-3 px-4 py-3'}
-                    ${isActive 
-                      ? 'bg-orange-50 text-orange-600 border-r-2 border-orange-500' 
+                    ${isActive
+                      ? 'bg-orange-50 text-orange-600 border-r-2 border-orange-500'
                       : 'text-gray-700 hover:bg-gray-100'
                     }
                   `}

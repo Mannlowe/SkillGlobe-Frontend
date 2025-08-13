@@ -1,89 +1,42 @@
 'use client';
 
-import { useState } from 'react';
-import { Calendar, MapPin, Globe, Upload, AtSign, Phone, User, Landmark, Locate } from 'lucide-react';
+import { Calendar, MapPin, Globe, Upload, AtSign, Phone, User, Landmark, Locate, Briefcase, FileText, Check } from 'lucide-react';
+import PhoneInput from 'react-phone-input-2';
+import 'react-phone-input-2/lib/style.css';
 import Image from 'next/image';
-
-interface PersonalInfoFormProps {
-  onSave?: (data: any) => void;
-  onCancel?: () => void;
-  initialData?: any;
-}
+import { usePersonalInfoForm, PersonalInfoFormProps } from './PersonalInfoConstant';
 
 export default function PersonalInfoForm({ onSave, onCancel, initialData = {} }: PersonalInfoFormProps) {
-  const [formData, setFormData] = useState({
-    fullName: initialData.fullName || '',
-    email: initialData.email || '',
-    phone: initialData.phone || '',
-    gender: initialData.gender || '',
-    dateOfBirth: initialData.dateOfBirth || '',
-    nationality: initialData.nationality || '',
-    country: initialData.country || '',
-    city: initialData.city || '',
-    landmark: initialData.landmark || '',
-    pincode: initialData.pincode || '',
-    currentAddress: initialData.currentAddress || '',
-    permanentAddress: initialData.permanentAddress || '',
-    sameAsCurrentAddress: initialData.permanentAddress === initialData.currentAddress,
-    twitterHandle: initialData.twitterHandle || '',
-    linkedinHandle: initialData.linkedinHandle || '',
-    employmentStatus: initialData.employmentStatus || '',
-    profilePicture: initialData.profilePicture || null,
-  });
-
-  const [profilePreview, setProfilePreview] = useState<string | null>(null);
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
-    const { name, value, type } = e.target;
-    
-    if (type === 'checkbox') {
-      const checked = (e.target as HTMLInputElement).checked;
-      setFormData(prev => ({
-        ...prev,
-        [name]: checked,
-        ...(name === 'sameAsCurrentAddress' && checked ? { permanentAddress: formData.currentAddress } : {})
-      }));
-    } else {
-      setFormData(prev => ({
-        ...prev,
-        [name]: value,
-        ...(name === 'currentAddress' && formData.sameAsCurrentAddress ? { permanentAddress: value } : {})
-      }));
-    }
-  };
-
-  const handleProfilePictureChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setFormData(prev => ({ ...prev, profilePicture: file }));
-      
-      // Create preview URL
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setProfilePreview(reader.result as string);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (onSave) {
-      onSave(formData);
-    }
-  };
+  // Use the custom hook from PersonalInfoConstant.tsx
+  const {
+    formData,
+    profilePreview,
+    isLoading,
+    isSubmitting,
+    error,
+    submitError,
+    isSuccess,
+    errors,
+    setErrors,
+    handleInputChange,
+    handleProfilePictureChange,
+    handleSubmit,
+    userName,
+    userEmail,
+    userMobile, // Get userName from the hook
+  } = usePersonalInfoForm({ onSave, onCancel, initialData });
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      <div className="bg-white p-6 rounded-xl border border-gray-200">
+      <div className="bg-white p-6 rounded-xl shadow-lg">
         <h3 className="font-semibold text-gray-900 mb-4">Personal Information</h3>
-        
+
         {/* Profile Picture Upload */}
         <div className="flex flex-col items-center mb-6">
           <div className="relative mb-3">
             {profilePreview ? (
               <div className="w-24 h-24 rounded-full border-2 border-gray-200 overflow-hidden">
-                <Image 
+                <Image
                   src={profilePreview}
                   alt="Profile Preview"
                   width={96}
@@ -96,7 +49,7 @@ export default function PersonalInfoForm({ onSave, onCancel, initialData = {} }:
                 <User className="text-gray-400" size={40} />
               </div>
             )}
-            
+
             <label className="absolute bottom-0 right-0 bg-blue-500 text-white p-1 rounded-full cursor-pointer hover:bg-blue-600 transition-colors">
               <Upload size={16} />
               <input
@@ -110,7 +63,7 @@ export default function PersonalInfoForm({ onSave, onCancel, initialData = {} }:
           </div>
           <p className="text-sm text-gray-500">Profile Picture</p>
         </div>
-        
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {/* Full Name */}
           <div>
@@ -120,15 +73,14 @@ export default function PersonalInfoForm({ onSave, onCancel, initialData = {} }:
             <input
               type="text"
               name="fullName"
-              value={formData.fullName}
-              onChange={handleInputChange}
-              required
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              placeholder="Enter your full name"
+              value={userName}
+              readOnly
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-50"
+              placeholder="Full name from your account"
             />
             <p className="text-xs text-gray-500 mt-1">Auto-filled from your account</p>
           </div>
-          
+
           {/* Email */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -139,7 +91,7 @@ export default function PersonalInfoForm({ onSave, onCancel, initialData = {} }:
               <input
                 type="email"
                 name="email"
-                value={formData.email}
+                value={formData.email || userEmail}
                 onChange={handleInputChange}
                 required
                 className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
@@ -148,27 +100,58 @@ export default function PersonalInfoForm({ onSave, onCancel, initialData = {} }:
             </div>
             <p className="text-xs text-gray-500 mt-1">Auto-filled from your account</p>
           </div>
-          
+
           {/* Phone */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Phone <span className="text-red-500">*</span>
             </label>
-            <div className="relative">
-              <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
-              <input
-                type="tel"
-                name="phone"
-                value={formData.phone}
-                onChange={handleInputChange}
-                required
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                placeholder="+1 (123) 456-7890"
+            <div className="phone-input-container">
+              <PhoneInput
+                country={'in'}
+                value={formData.mobile_no || userMobile}
+                onChange={(phone) => {
+                  const digitsOnly = phone.replace(/\D/g, '');
+                  
+                  // Update formData with the new phone number
+                  handleInputChange({
+                    target: {
+                      name: 'mobile_no',
+                      value: digitsOnly,
+                      type: 'tel'
+                    }
+                  } as React.ChangeEvent<HTMLInputElement>);
+                  
+                  // Validate phone number length
+                  if (!digitsOnly) {
+                    setErrors(prev => ({ ...prev, phone: 'Mobile number is required' }));
+                  } else if (digitsOnly.length < 10) {
+                    setErrors(prev => ({ ...prev, mobile_no: 'Mobile number must be at least 10 digits' }));
+                  } else {
+                    setErrors(prev => ({ ...prev, mobile_no: '' }));
+                  }
+                }}
+                inputClass={`w-full py-2 border ${errors.mobile_no ? 'border-red-500 ring-1 ring-red-500' : 'border-gray-300'} rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500`}
+                containerClass="phone-input-container"
+                buttonClass="phone-input-button"
+                dropdownClass="phone-input-dropdown"
+                enableSearch={true}
+                disableSearchIcon={false}
+                searchPlaceholder="Search country..."
+                inputProps={{
+                  name: 'phone',
+                  required: true,
+                  autoFocus: false,
+                }}
               />
             </div>
-            <p className="text-xs text-gray-500 mt-1">Auto-filled from your account</p>
+            {errors.mobile_no ? (
+              <p className="text-red-500 text-xs mt-1">{errors.mobile_no}</p>
+            ) : (
+              <p className="text-xs text-gray-500 mt-1">Auto-filled from your account</p>
+            )}
           </div>
-          
+
           {/* Gender */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -182,6 +165,7 @@ export default function PersonalInfoForm({ onSave, onCancel, initialData = {} }:
                   value="Male"
                   checked={formData.gender === 'Male'}
                   onChange={handleInputChange}
+                  required
                   className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
                 />
                 <span className="ml-2 text-sm text-gray-700">Male</span>
@@ -193,6 +177,7 @@ export default function PersonalInfoForm({ onSave, onCancel, initialData = {} }:
                   value="Female"
                   checked={formData.gender === 'Female'}
                   onChange={handleInputChange}
+                  required
                   className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
                 />
                 <span className="ml-2 text-sm text-gray-700">Female</span>
@@ -204,13 +189,14 @@ export default function PersonalInfoForm({ onSave, onCancel, initialData = {} }:
                   value="Other"
                   checked={formData.gender === 'Other'}
                   onChange={handleInputChange}
+                  required
                   className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
                 />
                 <span className="ml-2 text-sm text-gray-700">Other</span>
               </label>
             </div>
           </div>
-          
+
           {/* Date of Birth */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -224,11 +210,14 @@ export default function PersonalInfoForm({ onSave, onCancel, initialData = {} }:
                 value={formData.dateOfBirth}
                 onChange={handleInputChange}
                 required
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className={`w-full pl-10 pr-4 py-2 border ${errors.dateOfBirth ? 'border-red-500 ring-1 ring-red-500' : 'border-gray-300'} rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500`}
               />
             </div>
+            {errors.dateOfBirth && (
+              <p className="text-red-500 text-xs mt-1">{errors.dateOfBirth}</p>
+            )}
           </div>
-          
+
           {/* Nationality */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -244,11 +233,25 @@ export default function PersonalInfoForm({ onSave, onCancel, initialData = {} }:
               placeholder="Enter your nationality"
             />
           </div>
-          
+
           {/* Country */}
+          <div className="md:col-span-2">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Current Address
+            </label>
+            <textarea
+              name="currentAddress"
+              value={formData.currentAddress}
+              onChange={handleInputChange}
+              rows={2}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              placeholder="Enter your current address"
+            ></textarea>
+          </div>
+
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Country <span className="text-red-500">*</span>
+              Country
             </label>
             <div className="relative">
               <Globe className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
@@ -256,7 +259,6 @@ export default function PersonalInfoForm({ onSave, onCancel, initialData = {} }:
                 name="country"
                 value={formData.country}
                 onChange={handleInputChange}
-                required
                 className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none"
               >
                 <option value="">Select your country</option>
@@ -269,7 +271,7 @@ export default function PersonalInfoForm({ onSave, onCancel, initialData = {} }:
               </select>
             </div>
           </div>
-          
+
           {/* City */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -296,11 +298,11 @@ export default function PersonalInfoForm({ onSave, onCancel, initialData = {} }:
               <Landmark className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
               <input
                 type="text"
-                name="city"
+                name="landmark"
                 value={formData.landmark}
                 onChange={handleInputChange}
                 className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                placeholder="Enter your city"
+                placeholder="Enter your landmark"
               />
             </div>
           </div>
@@ -312,106 +314,30 @@ export default function PersonalInfoForm({ onSave, onCancel, initialData = {} }:
             <div className="relative">
               <Locate className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
               <input
-                type="text"
-                name="city"
+                type="text" // Keep as text to prevent issues with leading 0
+                name="pincode"
+                inputMode="numeric"
+                maxLength={6}
                 value={formData.pincode}
                 onChange={handleInputChange}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                placeholder="Enter your city"
+                className={`w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${errors.pincode ? 'border-red-500' : 'border-gray-300'
+                  }`}
+                placeholder="Enter your pincode"
               />
             </div>
-          </div>
-          
-          {/* Current Address */}
-          <div className="md:col-span-2">
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Current Address <span className="text-red-500">*</span>
-            </label>
-            <textarea
-              name="currentAddress"
-              value={formData.currentAddress}
-              onChange={handleInputChange}
-              required
-              rows={2}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              placeholder="Enter your current address"
-            ></textarea>
-          </div>
-          
-          {/* Same as Current Address Checkbox */}
-          <div className="md:col-span-2">
-            <label className="inline-flex items-center cursor-pointer">
-              <input
-                type="checkbox"
-                name="sameAsCurrentAddress"
-                checked={formData.sameAsCurrentAddress}
-                onChange={handleInputChange}
-                className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-              />
-              <span className="ml-2 text-sm text-gray-700">Permanent address same as current address</span>
-            </label>
-          </div>
-          
-          {/* Permanent Address */}
-          {!formData.sameAsCurrentAddress && (
-                <><div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Country <span className="text-red-500">*</span>
-              </label>
-              <div className="relative">
-                <Globe className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
-                <select
-                  name="country"
-                  value={formData.country}
-                  onChange={handleInputChange}
-                  required
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none"
-                >
-                  <option value="">Select your country</option>
-                  <option value="US">United States</option>
-                  <option value="CA">Canada</option>
-                  <option value="UK">United Kingdom</option>
-                  <option value="IN">India</option>
-                  <option value="AU">Australia</option>
-                  {/* Add more countries as needed */}
-                </select>
-              </div>
 
-              
-            </div>
-            <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              City
-            </label>
-            <div className="relative">
-              <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
-              <input
-                type="text"
-                name="city"
-                value={formData.city}
-                onChange={handleInputChange}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                placeholder="Enter your city"
-              />
-            </div>
+            {errors.pincode && (
+              <p className="text-red-500 text-sm mt-1">{errors.pincode}</p>
+            )}
           </div>
-            
-            <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Permanent Address <span className="text-red-500">*</span>
-                </label>
-                <textarea
-                  name="permanentAddress"
-                  value={formData.permanentAddress}
-                  onChange={handleInputChange}
-                  required
-                  rows={2}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="Enter your permanent address"
-                ></textarea>
-              </div></>
-          )}
-          
+
+        </div>
+      </div>
+
+      {/* Social Media - Full Width Section */}
+      <div className="bg-white p-6 rounded-xl shadow-lg mt-6">
+        <h3 className="font-semibold text-gray-900 mb-4">Social Media</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {/* Twitter Handle */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -424,12 +350,12 @@ export default function PersonalInfoForm({ onSave, onCancel, initialData = {} }:
                 name="twitterHandle"
                 value={formData.twitterHandle}
                 onChange={handleInputChange}
-                className="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full pl-8 pr-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:outline-none"
                 placeholder="username"
               />
             </div>
           </div>
-          
+
           {/* LinkedIn Handle */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -442,49 +368,185 @@ export default function PersonalInfoForm({ onSave, onCancel, initialData = {} }:
                 name="linkedinHandle"
                 value={formData.linkedinHandle}
                 onChange={handleInputChange}
-                className="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:outline-none"
                 placeholder="username"
               />
             </div>
           </div>
-          
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Instagram Profile
+            </label>
+            <div className="relative">
+              <input
+                type="text"
+                name="instagramHandle"
+                value={formData.instagramHandle}
+                onChange={handleInputChange}
+                className="w-full pl-4 pr-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:outline-none"
+                placeholder="https://instagram.com/your_username"
+              />
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      {/* Employment Status - Separate Section */}
+      <div className="bg-white p-6 rounded-xl shadow-lg mt-6">
+        <h3 className="font-semibold text-gray-900 mb-4">Professional Information</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {/* Employment Status */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Employment Status <span className="text-red-500">*</span>
             </label>
-            <select
-              name="employmentStatus"
-              value={formData.employmentStatus}
-              onChange={handleInputChange}
-              required
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none"
-            >
-              <option value="">Select status</option>
-              <option value="Working">Working</option>
-              <option value="Not Working">Not Working</option>
-            </select>
+            <div className="relative">
+              <Briefcase className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
+              <select
+                name="employmentStatus"
+                value={formData.employmentStatus}
+                onChange={handleInputChange}
+                required
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none"
+              >
+                <option value="">Select your employment status</option>
+                <option value="Employed">Employed</option>
+                <option value="Self-Employed">Self-Employed</option>
+                <option value="Unemployed">Unemployed</option>
+                <option value="Student">Student</option>
+                <option value="Retired">Retired</option>
+              </select>
+            </div>
           </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Own Website
+            </label>
+            <div className="relative">
+              <Globe className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
+              <input
+                type="url"
+                name="website"
+                value={formData.website}
+                onChange={handleInputChange}
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                placeholder="https://www.example.com"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Total Experience <span className="text-red-500">*</span>
+            </label>
+            <div className="relative">
+              <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
+              <input
+                type="number"
+                min={0}
+                name="totalExperience"
+                value={formData.totalExperience}
+                onChange={handleInputChange}
+                required
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                placeholder="e.g., 5.5"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Notice Period
+            </label>
+            <div className="relative">
+              <Briefcase className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
+              <select
+                name="noticePeriod"
+                value={formData.noticePeriod}
+                onChange={handleInputChange}
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none"
+              >
+                <option value="">Select notice period</option>
+                <option value="Immediate">Immediate</option>
+                <option value="15 Days">15 Days</option>
+                <option value="30 Days">30 Days</option>
+                <option value="60 Days">60 Days</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="md:col-span-2">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Professional Summary
+            </label>
+            <div className="relative">
+              <FileText className="absolute left-3 top-3 text-gray-400" size={16} />
+              <textarea
+                rows={1}
+                name="professionalSummary"
+                value={formData.professionalSummary}
+                onChange={handleInputChange}
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-h-[120px]"
+                placeholder="Short paragraph describing experience & strengths"
+              />
+            </div>
+          </div>
+
         </div>
       </div>
-      
+
+      {/* Error message */}
+      {submitError && (
+        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4">
+          <p className="font-medium">Error</p>
+          <p className="text-sm">{submitError}</p>
+        </div>
+      )}
+
       <div className="flex justify-end space-x-3">
         {onCancel && (
           <button
             type="button"
             onClick={onCancel}
             className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
+            disabled={isSubmitting}
           >
             Cancel
           </button>
         )}
         <button
           type="submit"
-          className="px-6 py-2 bg-blue-500 text-white font-medium rounded-lg hover:bg-blue-600 transition-colors"
+          disabled={isSubmitting}
+          className={`px-6 py-2 font-medium rounded-lg transition-colors flex items-center justify-center min-w-[150px] ${isSuccess
+            ? 'bg-green-500 hover:bg-green-600 text-white'
+            : isSubmitting
+              ? 'bg-blue-300 text-white cursor-not-allowed'
+              : 'bg-blue-500 hover:bg-blue-600 text-white'}`}
         >
-          Save Information
+          {isSubmitting ? (
+            'Saving...'
+          ) : isSuccess ? (
+            <>
+              <Check className="mr-1" size={18} />
+              Saved
+            </>
+          ) : (
+            'Save Information'
+          )}
         </button>
       </div>
+
+      {/* Loading state for initial data fetch */}
+      {isLoading && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg shadow-lg">
+            <p className="text-lg font-medium">Loading your information...</p>
+          </div>
+        </div>
+      )}
     </form>
   );
 }

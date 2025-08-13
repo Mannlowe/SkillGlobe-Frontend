@@ -13,8 +13,11 @@ import {
   CheckCircle,
   Clock,
   AlertCircle,
-  BarChart3
+  BarChart3,
+  Check as CheckIcon
 } from 'lucide-react';
+import { useAuthStore } from '@/store/authStore';
+import { useToast } from '@/hooks/use-toast';
 
 const stats = [
   {
@@ -26,7 +29,7 @@ const stats = [
     color: 'bg-blue-500',
   },
   {
-    title: 'Total Applications',
+    title: 'Total Profiles',
     value: '156',
     change: '+23 this week',
     trend: 'up',
@@ -113,30 +116,51 @@ const recentApplications = [
 
 export default function BusinessDashboardPage() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [userName, setUserName] = useState('User');
-  const [companyName, setCompanyName] = useState('');
+  const { user, entity, isAuthenticated } = useAuthStore();
+  const { toast } = useToast();
+  
+  // Get business name from entity details or fall back to user name
+  const businessName = entity?.details?.name || 'Your Business';
+  // const userName = user?.full_name || user?.name || 'User';
+  // const userEmail = user?.email || 'business@example.com';
   
   useEffect(() => {
-    // Get user info from localStorage on component mount
-    const getUserInfo = () => {
-      if (typeof window !== 'undefined') {
-        const userInfoStr = localStorage.getItem('userInfo');
-        if (userInfoStr) {
-          try {
-            const userInfo = JSON.parse(userInfoStr);
-            setUserName(userInfo.name);
-            if (userInfo.company) {
-              setCompanyName(userInfo.company);
-            }
-          } catch (error) {
-            console.error('Error parsing user info:', error);
-          }
-        }
+    if (isAuthenticated && user && window.location.pathname.includes('business-dashboard')) {      
+      // Show toast notification for Business Buyer
+      const roles = user.roles;
+      let isBusinessBuyer = false;
+      
+      // Check roles in different formats
+      if (Array.isArray(roles)) {
+        isBusinessBuyer = roles.includes('Business Buyer');
+      } else if (typeof roles === 'string') {
+        isBusinessBuyer = (roles as string).indexOf('Business Buyer') >= 0;
       }
-    };
-    
-    getUserInfo();
-  }, []);
+      
+      // Use URL parameter to detect fresh login vs refresh
+      const urlParams = new URLSearchParams(window.location.search);
+      const fromLogin = urlParams.get('fromLogin') === 'true';
+      
+      // Show toast on fresh login or if fromLogin parameter is present
+      if (isBusinessBuyer && fromLogin) {
+        // Create toast with custom timeout
+        const { dismiss } = toast({
+          title: "Login Successful",
+          description: `You are logged in as ${user.full_name || user.name}`,
+          variant: "default",
+          action: <div className="h-6 w-6 rounded-full bg-green-100 flex items-center justify-center"><CheckIcon className="h-4 w-4 text-green-600" /></div>,
+        });
+        
+        // Set custom timeout (e.g., 3000ms = 3 seconds)
+        setTimeout(() => {
+          dismiss();
+        }, 20000);
+        
+        // Remove the fromLogin parameter from URL without refreshing
+        window.history.replaceState({}, document.title, window.location.pathname);
+      }
+    }
+  }, [isAuthenticated, user, toast]);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -149,23 +173,34 @@ export default function BusinessDashboardPage() {
     }
   };
 
+  // State for mobile sidebar toggle
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  // Toggle mobile menu
+  const toggleMobileMenu = () => {
+    setMobileMenuOpen(!mobileMenuOpen);
+  };
+
   return (
-    <div className="min-h-screen bg-gray-50">
-      <BusinessSidebar />
+    <div className="min-h-screen bg-gray-50 font-rubik">
+      <BusinessSidebar mobileOpen={mobileMenuOpen} />
       
       <div className="lg:pl-64 pt-1">
-        <BusinessDashboardHeader title="Business Dashboard" />
+        <BusinessDashboardHeader 
+          title="Business Dashboard" 
+          onMenuClick={toggleMobileMenu}
+        />
         
         <main className="flex-1 overflow-x-hidden overflow-y-auto bg-gray-50">
           <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6">
             {/* Welcome Section */}
             <div className="mb-8">
               <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">
-                Welcome, {userName}! 🚀
+                Welcome to {businessName}! 🚀
               </h1>
+              {/* <p className="text-gray-600">{userName} ({userEmail})</p> */}
               <p className="text-gray-600">
-                {companyName ? `Manage ${companyName}'s opportunities, review applications, and grow your team.` : 
-                'Manage your opportunities, review applications, and grow your team.'}
+                Manage your opportunities, review applications, and grow your team.
               </p>
             </div>
 
@@ -243,8 +278,8 @@ export default function BusinessDashboardPage() {
                       <button className="w-full bg-gradient-to-r from-orange-500 to-blue-500 text-white font-semibold py-3 px-4 rounded-lg hover:shadow-lg transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2">
                         Post New Opportunity
                       </button>
-                      <button className="w-full border-2 border-orange-500 text-orange-600 font-semibold py-3 px-4 rounded-lg hover:bg-orange-50 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2">
-                        Review Applications
+                      <button className="w-full border-2 border-orange-500 text-orange-600 font-semibold py-3 px-4 rounded-lg hover:bg-orange-50 transition-all duration-300">
+                        Review Profiles
                       </button>
                       <button className="w-full border-2 border-blue-500 text-blue-600 font-semibold py-3 px-4 rounded-lg hover:bg-blue-50 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
                         Manage Team

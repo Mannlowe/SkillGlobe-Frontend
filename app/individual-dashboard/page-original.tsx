@@ -93,8 +93,6 @@ export default function DashboardPage() {
   
   // Separate effect for toast to ensure it only runs once after login
   useEffect(() => {
-    // Only show toast when user is authenticated and we're actually on the dashboard page
-    // This prevents the toast from showing on redirects
     if (isAuthenticated && user && window.location.pathname.includes('individual-dashboard')) {
       setUserName(user.full_name || user.name);
       

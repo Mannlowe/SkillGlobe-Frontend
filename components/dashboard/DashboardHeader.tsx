@@ -5,6 +5,7 @@ import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { Menu, Search, Bell, MessageCircle, ChevronDown } from 'lucide-react';
 import useOutsideClick from '@/hooks/useOutsideClick'; // adjust path as needed
+import { useAuthStore } from '@/store/authStore';
 
 interface DashboardHeaderProps {
   onMenuClick?: () => void;
@@ -15,7 +16,7 @@ export default function DashboardHeader({ onMenuClick, title }: DashboardHeaderP
   const router = useRouter();
   const [showNotifications, setShowNotifications] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
-  const [user, setUser] = useState<{ name: string; email: string; userType?: string; company?: string } | null>(null);
+  const { user, isAuthenticated } = useAuthStore();
 
   const profileRef = useRef<HTMLDivElement>(null);
   const notificationsRef = useRef<HTMLDivElement>(null);
@@ -24,19 +25,7 @@ export default function DashboardHeader({ onMenuClick, title }: DashboardHeaderP
   useOutsideClick(profileRef, () => setShowProfile(false));
   useOutsideClick(notificationsRef, () => setShowNotifications(false));
 
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const userInfoStr = localStorage.getItem('userInfo');
-      if (userInfoStr) {
-        try {
-          const userInfo = JSON.parse(userInfoStr);
-          setUser(userInfo);
-        } catch (error) {
-          console.error('Error parsing user info:', error);
-        }
-      }
-    }
-  }, []);
+  // User data is now handled by useAuthStore
 
   const notifications = [
     { id: 1, title: 'New job match found', time: '5 min ago', unread: true },
@@ -45,7 +34,7 @@ export default function DashboardHeader({ onMenuClick, title }: DashboardHeaderP
   ];
 
   return (
-    <header className="bg-white shadow-sm border-b border-gray-200 relative z-30">
+    <header className="bg-white shadow-sm border-b border-gray-200 relative z-30 font-rubik h-[82px]">
       <div className="flex items-center justify-between px-4 sm:px-6 lg:px-8 py-4">
         {/* Left Side */}
         <div className="flex items-center space-x-4">
@@ -130,24 +119,21 @@ export default function DashboardHeader({ onMenuClick, title }: DashboardHeaderP
               <ChevronDown size={16} className="text-gray-500" />
             </button>
             {showProfile && (
-              <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-50">
+              <div className="absolute right-0 mt-2 w-60 bg-white rounded-lg shadow-lg border border-gray-200 z-50">
                 <div className="p-4 border-b border-gray-200">
-                  <p className="font-semibold text-gray-900">{user?.name || 'User'}</p>
+                  <p className="font-semibold text-gray-900">{user?.full_name || user?.name || 'User'}</p>
                   <p className="text-sm text-gray-600">{user?.email || 'user@example.com'}</p>
-                  {user?.company && (
-                    <p className="text-xs text-gray-500 mt-1">{user.company}</p>
-                  )}
                 </div>
                 <div className="py-2">
-                  <a href="/profile" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                  {/* <a href="/profile" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
                     View Profile
-                  </a>
-                  <a 
-                    href={user?.userType === 'business' ? '/business-dashboard/settings' : '/settings'} 
+                  </a> */}
+                  {/* <a 
+                    href={user?.user_type === 'business' ? '/business-dashboard/settings' : '/settings'} 
                     className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                   >
-                    Settings
-                  </a>
+                    View Profile
+                  </a> */}
                   <a href="/help" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
                     Help & Support
                   </a>

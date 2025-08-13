@@ -1,12 +1,10 @@
 'use client';
 
 import { useState } from 'react';
-import Sidebar from '@/components/dashboard/Sidebar';
-import DashboardHeader from '@/components/dashboard/DashboardHeader';
+import ModernLayoutWrapper from '@/components/layout/ModernLayoutWrapper';
 import { Search, Send, Paperclip, MoreVertical } from 'lucide-react';
 
 export default function MessagesPage() {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [selectedChat, setSelectedChat] = useState(1);
   const [message, setMessage] = useState('');
 
@@ -72,13 +70,8 @@ export default function MessagesPage() {
   ];
 
   return (
-    <div className="flex h-screen bg-gray-50">
-      <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
-      
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <DashboardHeader onMenuClick={() => setSidebarOpen(true)} />
-        
-        <div className="flex-1 flex overflow-hidden">
+    <ModernLayoutWrapper>
+      <div className="flex-1 flex overflow-hidden">
           {/* Conversations List */}
           <div className="w-full md:w-1/3 bg-white border-r border-gray-200 flex flex-col">
             <div className="p-4 border-b border-gray-200">
@@ -195,8 +188,7 @@ export default function MessagesPage() {
               </div>
             </div>
           </div>
-        </div>
       </div>
-    </div>
+    </ModernLayoutWrapper>
   );
 }

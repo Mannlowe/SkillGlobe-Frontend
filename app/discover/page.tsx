@@ -1,8 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import Sidebar from '@/components/dashboard/Sidebar';
-import DashboardHeader from '@/components/dashboard/DashboardHeader';
+import ModernLayoutWrapper from '@/components/ModernLayoutWrapper';
 import { Search, Filter, MapPin, Clock, Star, Bookmark } from 'lucide-react';
 
 const opportunities = [
@@ -57,18 +56,11 @@ const opportunities = [
 ];
 
 export default function DiscoverPage() {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedFilter, setSelectedFilter] = useState('all');
 
   return (
-    <div className="flex h-screen bg-gray-50">
-      <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
-      
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <DashboardHeader onMenuClick={() => setSidebarOpen(true)} />
-        
-        <main className="flex-1 overflow-x-hidden overflow-y-auto bg-gray-50">
+    <ModernLayoutWrapper>
           <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6">
             <div className="mb-8">
               <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">
@@ -183,8 +175,6 @@ export default function DiscoverPage() {
               </button>
             </div>
           </div>
-        </main>
-      </div>
-    </div>
+    </ModernLayoutWrapper>
   );
 }

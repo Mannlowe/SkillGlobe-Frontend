@@ -61,11 +61,11 @@ export default function DashboardHeader({ onMenuClick, title }: DashboardHeaderP
 
         {/* Right Side */}
         <div className="flex items-center space-x-4">
-          <button className="md:hidden p-2 rounded-lg hover:bg-gray-100 transition-colors">
+          <button className="md:hidden p-2 rounded-lg hover:bg-gray-100 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2" aria-label="Search">
             <Search size={20} />
           </button>
 
-          <button className="p-2 rounded-lg hover:bg-gray-100 transition-colors relative">
+          <button className="p-2 rounded-lg hover:bg-gray-100 transition-colors relative focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2" aria-label="Messages (3 unread)">
             <MessageCircle size={20} />
             <span className="absolute -top-1 -right-1 w-5 h-5 bg-orange-500 text-white text-xs rounded-full flex items-center justify-center">3</span>
           </button>
@@ -74,7 +74,9 @@ export default function DashboardHeader({ onMenuClick, title }: DashboardHeaderP
           <div className="relative" ref={notificationsRef}>
             <button 
               onClick={() => setShowNotifications(!showNotifications)}
-              className="p-2 rounded-lg hover:bg-gray-100 transition-colors relative"
+              className="p-2 rounded-lg hover:bg-gray-100 transition-colors relative focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
+              aria-label="Notifications (2 unread)"
+              aria-expanded={showNotifications}
             >
               <Bell size={20} />
               <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">2</span>

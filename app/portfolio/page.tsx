@@ -2,8 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import Sidebar from '@/components/dashboard/Sidebar';
-import DashboardHeader from '@/components/dashboard/DashboardHeader';
+import ModernLayoutWrapper from '@/components/layout/ModernLayoutWrapper';
 import Portfolio from '@/components/portfolio/Portfolio';
 import PortfolioSidebar from '@/components/portfolio/PortfolioSidebar';
 import { Upload, User, GraduationCap, Briefcase, Award, FileText } from 'lucide-react';
@@ -31,12 +30,12 @@ export default function PortfolioPage() {
 
   const handlePortfolioComplete = () => {
     // Navigate to dashboard or another page after portfolio completion
-    router.push('/dashboard');
+    router.push('/individual-dashboard');
   };
 
   const handleSkip = () => {
     // Navigate to dashboard or another page if user skips portfolio setup
-    router.push('/dashboard');
+    router.push('/individual-dashboard');
   };
 
   // When Portfolio link is clicked in main sidebar, this will be called
@@ -49,13 +48,10 @@ export default function PortfolioPage() {
   }, []);
 
   return (
-    <div className="flex h-screen bg-gray-50">
-      {/* Main Sidebar - collapsed when portfolio sidebar is open */}
-      <Sidebar 
-        isOpen={mainSidebarOpen} 
-        onClose={() => setMainSidebarOpen(false)}
-        forceCollapsed={portfolioSidebarOpen}
-      />
+    <ModernLayoutWrapper>
+      <div className="max-w-7xl mx-auto">
+        <div className="flex justify-center">
+          <div className="w-full md:w-11/12">
       
       {/* Portfolio Sidebar */}
       {portfolioSidebarOpen && (
@@ -98,8 +94,8 @@ export default function PortfolioPage() {
               className="mt-4"
             />
           </div>
-        </main>
+        </div>
       </div>
-    </div>
+    </ModernLayoutWrapper>
   );
 }

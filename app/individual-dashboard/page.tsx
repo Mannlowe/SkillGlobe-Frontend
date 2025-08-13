@@ -1,9 +1,10 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import Sidebar from '@/components/dashboard/Sidebar';
-import DashboardHeader from '@/components/dashboard/DashboardHeader';
-import CompactDashboardLayout from '@/components/dashboard/CompactDashboardLayout';
+import ModernLayoutWrapper from '@/components/layout/ModernLayoutWrapper';
+import { ProgressiveGrid, ProgressiveList } from '@/components/ui/ProgressiveLoader';
+import { DashboardStatsSkeleton, OpportunityCardSkeleton, ProfileCardSkeleton } from '@/components/ui/SkeletonLoader';
+import LazyImage, { LazyAvatar } from '@/components/ui/LazyImage';
 import CompactMarketMetrics from '@/components/dashboard/CompactMarketMetrics';
 import CompactOpportunityCard from '@/components/dashboard/CompactOpportunityCard';
 import EnhancedStatsGrid from '@/components/dashboard/EnhancedStatsGrid';
@@ -73,7 +74,7 @@ export default function CompactDashboardPage() {
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-semibold text-gray-900">Top Matches</h3>
-            <button className="text-sm text-blue-600 hover:text-blue-700">View all →</button>
+            <button className="text-sm text-blue-600 hover:text-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded-md px-2 py-1">View all →</button>
           </div>
           <div className="space-y-3">
             {mockJobOpportunities.slice(0, 2).map((job) => (
@@ -92,7 +93,7 @@ export default function CompactDashboardPage() {
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-semibold text-gray-900">Recent Activity</h3>
-            <button className="text-sm text-blue-600 hover:text-blue-700">View all →</button>
+            <button className="text-sm text-blue-600 hover:text-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded-md px-2 py-1">View all →</button>
           </div>
           <div className="space-y-3">
             {recentActivities.map((activity) => (
@@ -332,19 +333,9 @@ export default function CompactDashboardPage() {
               </div>
             </div>
           </div>
+        </div>
 
-          {/* Tab-based Layout */}
-          <CompactDashboardLayout>
-            {{
-              overview: overviewContent,
-              opportunities: opportunitiesContent,
-              activity: activityContent,
-              messages: messagesContent,
-              profile: profileContent,
-              insights: insightsContent,
-            }}
-          </CompactDashboardLayout>
-        </main>
+        {overviewContent}
       </div>
       
       {/* Floating Career Coach */}
@@ -363,6 +354,6 @@ export default function CompactDashboardPage() {
           }}
         />
       )}
-    </div>
+    </ModernLayoutWrapper>
   );
 }

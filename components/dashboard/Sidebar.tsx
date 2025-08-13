@@ -173,8 +173,9 @@ export default function Sidebar({ isOpen, onClose, forceCollapsed }: SidebarProp
                 <button
                   type="button"
                   onClick={handleCollapseToggle}
-                  className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
-                  title="Collapse sidebar"
+                  className="p-2 rounded-lg hover:bg-gray-100 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
+                  title={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+                  aria-label={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
                 >
                   <ChevronLeft size={16} />
                 </button>
@@ -185,7 +186,8 @@ export default function Sidebar({ isOpen, onClose, forceCollapsed }: SidebarProp
                 <button
                   type="button"
                   onClick={onClose}
-                  className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
+                  className="p-2 rounded-lg hover:bg-gray-100 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
+                  aria-label="Close sidebar"
                 >
                   <X size={20} />
                 </button>

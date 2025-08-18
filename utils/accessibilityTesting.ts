@@ -5,7 +5,7 @@ import { checkContrast, validateColorTheme } from './colorContrast';
 // Accessibility Testing Utilities for WCAG 2.1 AA Compliance
 
 export interface AccessibilityIssue {
-  element: HTMLElement;
+  element: Element;
   type: 'error' | 'warning' | 'info';
   rule: string;
   message: string;

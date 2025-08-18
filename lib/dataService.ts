@@ -50,6 +50,9 @@ const API_FEATURES = {
 
 // Data service that switches between mock and real data
 class DataService {
+  uploadIdentityDocument(file: File, documentType: string) {
+    throw new Error('Method not implemented.');
+  }
   // Opportunities
   async getOpportunities(params?: any) {
     if (API_FEATURES.USE_REAL_OPPORTUNITIES) {

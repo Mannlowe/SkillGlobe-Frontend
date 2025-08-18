@@ -12,9 +12,30 @@ import {
   mockConversations 
 } from './mockPhase2Data';
 import { 
-  mockProfileOptimizationHub, 
+  mockProfileOptimizationHub as baseProfileOptimizationHub, 
   mockProfileAnalytics 
 } from './mockPhase3Data';
+
+// Extended mock data with skills for search functionality
+interface Skill {
+  name: string;
+  level: string;
+}
+
+// Extend the imported mock data with skills property
+const mockProfileOptimizationHub = {
+  ...baseProfileOptimizationHub,
+  skills: [
+    { name: 'React', level: 'Advanced' },
+    { name: 'TypeScript', level: 'Advanced' },
+    { name: 'Node.js', level: 'Intermediate' },
+    { name: 'GraphQL', level: 'Intermediate' },
+    { name: 'AWS', level: 'Beginner' },
+    { name: 'Next.js', level: 'Advanced' },
+    { name: 'Docker', level: 'Intermediate' },
+    { name: 'Kubernetes', level: 'Beginner' }
+  ] as Skill[]
+};
 
 // Feature flags for gradual API migration
 const API_FEATURES = {
@@ -48,6 +69,7 @@ class DataService {
       filteredOpportunities = filteredOpportunities.filter(opp => 
         opp.title.toLowerCase().includes(searchLower) ||
         opp.company.toLowerCase().includes(searchLower) ||
+       
         opp.location.toLowerCase().includes(searchLower)
       );
     }
@@ -295,8 +317,16 @@ class DataService {
 
   // Search
   async globalSearch(query: string, filters?: any) {
+    // Define result types
+    interface SearchResult {
+      opportunities: typeof mockJobOpportunities;
+      people: Array<{ id: string; name: string; title: string; avatar?: string }>;
+      skills: Array<{ id: string; name: string; level: string }>;
+      pages: Array<{ name: string; path: string }>;
+    }
+    
     // For now, search across mock data
-    const results = {
+    const results: SearchResult = {
       opportunities: [],
       people: [],
       skills: [],
@@ -310,7 +340,7 @@ class DataService {
       .filter(opp => 
         opp.title.toLowerCase().includes(queryLower) ||
         opp.company.toLowerCase().includes(queryLower) ||
-        opp.description.toLowerCase().includes(queryLower)
+        opp.location.toLowerCase().includes(queryLower)
       )
       .slice(0, 5);
 
@@ -318,6 +348,11 @@ class DataService {
     const mockSkills = mockProfileOptimizationHub.skills;
     results.skills = mockSkills
       .filter(skill => skill.name.toLowerCase().includes(queryLower))
+      .map(skill => ({
+        id: skill.name.toLowerCase().replace(/\s+/g, '-'),
+        name: skill.name,
+        level: skill.level
+      }))
       .slice(0, 5);
 
     // Search pages (navigation items)

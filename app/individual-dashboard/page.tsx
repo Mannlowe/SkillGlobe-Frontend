@@ -424,7 +424,7 @@ export default function CompactDashboardPage() {
 
   // Tab content components
   const overviewContent = (
-    <div className="mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6 font-rubik">
+    <div className="w-full py-6 space-y-6 font-rubik">
       {/* Compact Market Metrics */}
       <CompactMarketMetrics 
         metrics={mockHeaderMetrics}
@@ -432,14 +432,14 @@ export default function CompactDashboardPage() {
       />
 
       {/* Two Column Layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-1 gap-6">
         {/* Top Opportunities */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-semibold text-gray-900">Top Matches</h3>
             <button className="text-sm text-blue-600 hover:text-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded-md px-2 py-1">View all →</button>
           </div>
-          <div className="space-y-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {mockJobOpportunities.slice(0, 2).map((job) => (
               <CompactOpportunityCard 
                 key={job.id}
@@ -453,7 +453,7 @@ export default function CompactDashboardPage() {
         </div>
 
         {/* Recent Activity */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+        {/* <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-semibold text-gray-900">Recent Activity</h3>
             <button className="text-sm text-blue-600 hover:text-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded-md px-2 py-1">View all →</button>
@@ -486,7 +486,7 @@ export default function CompactDashboardPage() {
               </div>
             ))}
           </div>
-        </div>
+        </div> */}
       </div>
 
     </div>
@@ -524,7 +524,7 @@ export default function CompactDashboardPage() {
             `}</style>
 
             {/* Welcome Section - Minimal */}
-            <div className="bg-white border-b border-gray-200 max-w-full">
+            <div className="bg-white border-b border-gray-200 max-w-full rounded-lg">
               <div className="w-full mx-auto px-4 sm:px-6 lg:px-8 py-4">
                 <div className="flex items-center justify-between">
                   <div>

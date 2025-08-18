@@ -1,9 +1,10 @@
 'use client';
 
 import React, { useState } from 'react';
-import { X, MapPin, DollarSign, Calendar, Star, Bookmark, Send, MessageCircle, ExternalLink, Clock, CheckCircle, AlertCircle } from 'lucide-react';
+import { X, MapPin, DollarSign, Calendar, Star, Bookmark, Send, MessageCircle, ExternalLink, Clock, CheckCircle, AlertCircle, Info } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Progress } from '@/components/ui/progress';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Textarea } from '@/components/ui/textarea';
@@ -80,7 +81,7 @@ export default function SlideInDetailPane({
     if (requirement.userHas) {
       return <CheckCircle className="w-4 h-4 text-green-600" />;
     }
-    if (requirement.level === 'required') {
+    if (requirement.level.toLowerCase() === 'required') {
       return <AlertCircle className="w-4 h-4 text-red-600" />;
     }
     return <Clock className="w-4 h-4 text-gray-400" />;
@@ -88,8 +89,8 @@ export default function SlideInDetailPane({
 
   const getRequirementColor = (requirement: Opportunity['requirements'][0]) => {
     if (requirement.userHas) return 'text-green-700 bg-green-50 border-green-200';
-    if (requirement.level === 'required') return 'text-red-700 bg-red-50 border-red-200';
-    if (requirement.level === 'preferred') return 'text-orange-700 bg-orange-50 border-orange-200';
+    if (requirement.level.toLowerCase() === 'required') return 'text-red-700 bg-red-50 border-red-200';
+    if (requirement.level.toLowerCase() === 'preferred') return 'text-yellow-700 bg-yellow-50 border-yellow-200';
     return 'text-gray-700 bg-gray-50 border-gray-200';
   };
 
@@ -145,7 +146,7 @@ export default function SlideInDetailPane({
 
       {/* Detail Pane */}
       <div className={cn(
-        "fixed right-0 top-16 bottom-0 bg-white border-l border-gray-200 z-50 transition-transform duration-300 overflow-hidden",
+        "fixed right-0 top-16 bottom-0 bg-white border-l border-gray-200 z-50 transition-transform duration-300 overflow-hidden font-rubik",
         isMobile ? "w-full" : "w-[600px] lg:w-[700px]",
         isOpen ? "translate-x-0" : "translate-x-full"
       )}>
@@ -233,29 +234,58 @@ export default function SlideInDetailPane({
 
               {/* Requirements */}
               <div>
-                <h3 className="font-semibold text-gray-900 mb-3">Requirements</h3>
-                <div className="space-y-2">
+                <div className="flex items-center space-x-2 mb-3">
+                  <h3 className="font-medium text-gray-900">Requirements</h3>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <div className="cursor-help">
+                          <Info className="w-4 h-4 text-gray-500" />
+                        </div>
+                      </TooltipTrigger>
+                      <TooltipContent className="p-2 max-w-xs">
+                        <div className="space-y-2">
+                          <div className="flex items-center space-x-2">
+                            <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                            <span className="text-xs">Required</span>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <div className="w-3 h-3 rounded-full bg-yellow-200"></div>
+                            <span className="text-xs">Preferred</span>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <div className="w-3 h-3 rounded-full bg-gray-300"></div>
+                            <span className="text-xs">Nice-to-have</span>
+                          </div>
+                        </div>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-1">
                   {opportunity.requirements.map((requirement, index) => (
                     <div
                       key={index}
                       className={cn(
-                        "flex items-center justify-between p-3 rounded-lg border",
+                        "flex flex-col h-full p-4 rounded-lg transition-all hover:shadow-md",
                         getRequirementColor(requirement)
                       )}
                     >
-                      <div className="flex items-center space-x-3">
-                        {getRequirementIcon(requirement)}
-                        <div>
-                          <span className="font-medium">{requirement.skill}</span>
-                          <div className="flex items-center space-x-2 mt-1">
-                            <Badge variant="outline" className="text-xs">
+                      <div className="flex items-start space-x-2 h-6">
+                        <div className="mt-1 text-xs font-medium">
+                          {getRequirementIcon(requirement)}
+                        </div>
+                        <div className="flex-1">
+                          <span className=" text-gray-900">{requirement.skill}</span>
+                          <div className="flex flex-wrap items-center gap-2 mt-2 ">
+                            {/* <Badge variant="outline" className="text-xs font-medium py-1">
                               {requirement.level}
-                            </Badge>
-                            {requirement.userHas && requirement.userLevel && (
-                              <Badge className={cn("text-xs", getLevelBadgeColor(requirement.userLevel))}>
+                            </Badge> */}
+                            {/* {requirement.userHas && requirement.userLevel && (
+                              <Badge className={cn("text-xs font-medium px-2 py-1", getLevelBadgeColor(requirement.userLevel))}>
                                 Your level: {requirement.userLevel}
                               </Badge>
-                            )}
+                            )} */}
                           </div>
                         </div>
                       </div>

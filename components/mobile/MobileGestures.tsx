@@ -50,15 +50,20 @@ export default function MobileGesturesWrapper({
     disabled: !enableNavigationSwipes
   });
 
-  // Combine refs
-  const combinedRef = (element: HTMLDivElement | null) => {
-    if (pullRef.current !== element) {
-      pullRef.current = element;
+  // Create a combined ref function that works with both refs
+  const combinedRef = React.useCallback((element: HTMLDivElement | null) => {
+    // Handle the pullRef from usePullToRefresh
+    if (pullRef) {
+      // Cast to mutable ref to avoid TypeScript errors
+      (pullRef as React.MutableRefObject<HTMLDivElement | null>).current = element;
     }
-    if (navigationRef.current !== element) {
-      navigationRef.current = element;
+    
+    // Handle the navigationRef from useNavigationSwipes
+    if (navigationRef) {
+      // Cast to mutable ref to avoid TypeScript errors
+      (navigationRef as React.MutableRefObject<HTMLDivElement | null>).current = element;
     }
-  };
+  }, [pullRef, navigationRef]);
 
   return (
     <div

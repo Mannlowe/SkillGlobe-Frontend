@@ -12,6 +12,7 @@ interface Notification {
   message: string;
   read: boolean;
   priority: 'low' | 'medium' | 'high';
+  timestamp: Date;
   actionUrl?: string;
   actionLabel?: string;
   createdAt: string;

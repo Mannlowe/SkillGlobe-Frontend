@@ -68,6 +68,7 @@ interface NotificationsState {
   getUnreadNotifications: () => Notification[];
   getNotificationGroups: () => NotificationGroup[];
   getHighPriorityNotifications: () => Notification[];
+
 }
 
 export const useNotificationsStore = create<NotificationsState>()(

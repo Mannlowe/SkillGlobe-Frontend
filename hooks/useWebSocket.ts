@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState, useCallback } from 'react';
-import { useNotificationStore } from '@/store/notificationStore';
+import { useNotificationsStore } from '@/store/notificationsStore';
 import { useUserStore } from '@/store/userStore';
 
 export interface WebSocketMessage {
@@ -260,8 +260,8 @@ export function useWebSocket(config: WebSocketConfig) {
 
 // Specialized hook for SkillGlobe notifications
 export function useSkillGlobeWebSocket() {
-  const { user } = useUserStore();
-  const { addNotification, markAsRead, updateUnreadCount } = useNotificationStore();
+  const { profile, token } = useUserStore();
+  const { addNotification, markAsRead } = useNotificationsStore();
   
   const websocketUrl = process.env.NEXT_PUBLIC_WS_URL || 'wss://skillglobedev.m.frappe.cloud/ws';
   
@@ -269,7 +269,6 @@ export function useSkillGlobeWebSocket() {
     switch (message.type) {
       case 'notification':
         addNotification({
-          id: message.data.id || `ws-${Date.now()}`,
           type: message.data.type || 'info',
           title: message.data.title,
           message: message.data.message,
@@ -277,7 +276,8 @@ export function useSkillGlobeWebSocket() {
           read: false,
           priority: message.data.priority || 'medium',
           actionUrl: message.data.actionUrl,
-          actionText: message.data.actionText
+          actionLabel: message.data.actionText,
+          createdAt: new Date(message.timestamp).toISOString()
         });
         break;
 
@@ -286,82 +286,88 @@ export function useSkillGlobeWebSocket() {
         break;
 
       case 'unread_count':
-        updateUnreadCount(message.data.count);
+        useNotificationsStore.setState(state => ({
+          ...state,
+          unreadCount: message.data.count
+        }));
         break;
 
       case 'opportunity_match':
         addNotification({
-          id: `match-${message.data.opportunityId}`,
-          type: 'success',
+          type: 'opportunity',
           title: 'New Opportunity Match!',
           message: `You have a ${message.data.matchPercentage}% match with ${message.data.company}`,
           timestamp: new Date(message.timestamp),
           read: false,
           priority: 'high',
           actionUrl: `/opportunities/${message.data.opportunityId}`,
-          actionText: 'View Opportunity'
+          actionLabel: message.data.actionText,
+          createdAt: new Date(message.timestamp).toISOString()
         });
         break;
 
       case 'interview_scheduled':
         addNotification({
-          id: `interview-${message.data.interviewId}`,
-          type: 'info',
+          // Remove id as it's not in the expected type
+          type: message.data.type || 'info',
           title: 'Interview Scheduled',
           message: `Interview with ${message.data.company} scheduled for ${new Date(message.data.scheduledAt).toLocaleDateString()}`,
           timestamp: new Date(message.timestamp),
           read: false,
           priority: 'high',
           actionUrl: `/interviews/${message.data.interviewId}`,
-          actionText: 'View Details'
+          actionLabel: message.data.actionText,
+          createdAt: new Date(message.timestamp).toISOString()
         });
         break;
 
       case 'skill_verification_complete':
         addNotification({
-          id: `skill-${message.data.skillId}`,
-          type: 'success',
+          // Remove id as it's not in the expected type
+          type: 'verification',
           title: 'Skill Verified!',
           message: `Your ${message.data.skillName} skill has been verified`,
           timestamp: new Date(message.timestamp),
           read: false,
           priority: 'medium',
           actionUrl: '/skills',
-          actionText: 'View Skills'
+          actionLabel: message.data.actionText,
+          createdAt: new Date(message.timestamp).toISOString()
         });
         break;
 
       case 'message':
         addNotification({
-          id: `msg-${message.data.messageId}`,
-          type: 'info',
+          // Remove id as it's not in the expected type
+          type: message.data.type || 'info',
           title: `New message from ${message.data.senderName}`,
           message: message.data.preview,
           timestamp: new Date(message.timestamp),
           read: false,
           priority: 'medium',
           actionUrl: `/messages/${message.data.conversationId}`,
-          actionText: 'View Message'
+          actionLabel: message.data.actionText,
+          createdAt: new Date(message.timestamp).toISOString()
         });
         break;
 
       default:
         console.log('Unknown WebSocket message type:', message.type);
     }
-  }, [addNotification, markAsRead, updateUnreadCount]);
+  }, [addNotification, markAsRead]);
 
   const webSocket = useWebSocket({
-    url: user ? `${websocketUrl}?userId=${user.id}&token=${user.token}` : websocketUrl,
+    url: profile && token ? `${websocketUrl}?userId=${profile.id}&token=${token}` : websocketUrl,
     reconnectAttempts: 10,
     reconnectInterval: 2000,
     heartbeatInterval: 25000,
     onConnect: () => {
       console.log('Connected to SkillGlobe WebSocket');
       // Send authentication if needed
-      if (user) {
+      if (profile && token) {
         webSocket.sendMessage({
           type: 'authenticate',
-          data: { userId: user.id, token: user.token }
+          data: { userId: profile.id, token: token }
         });
       }
     },
@@ -407,11 +413,11 @@ export function useSkillGlobeWebSocket() {
   }, [webSocket]);
 
   useEffect(() => {
-    if (webSocket.isConnected && user) {
+    if (webSocket.isConnected && profile) {
       subscribeToNotifications();
       subscribeToMessages();
     }
-  }, [webSocket.isConnected, user, subscribeToNotifications, subscribeToMessages]);
+  }, [webSocket.isConnected, profile, subscribeToNotifications, subscribeToMessages]);
 
   return {
     ...webSocket,

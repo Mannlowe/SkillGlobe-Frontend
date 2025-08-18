@@ -24,7 +24,7 @@ export default function CompactMarketMetrics({ metrics, onViewDetails }: Compact
         <div>
           <h3 className="text-lg font-semibold text-gray-900">Market Performance</h3>
           <p className="text-sm text-gray-600">
-            You're in the {formatPercentile(metrics.market_visibility.search_rank_percentile)} of profiles
+            You&apos;re in the {formatPercentile(metrics.market_visibility.search_rank_percentile)} of profiles
           </p>
         </div>
         <button 

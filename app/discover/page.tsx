@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import ModernLayoutWrapper from '@/components/ModernLayoutWrapper';
+import ModernLayoutWrapper from '@/components/layout/ModernLayoutWrapper';
 import { Search, Filter, MapPin, Clock, Star, Bookmark } from 'lucide-react';
 
 const opportunities = [

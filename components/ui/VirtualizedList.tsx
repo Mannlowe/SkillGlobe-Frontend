@@ -7,6 +7,7 @@ import { cn } from '@/lib/utils';
 interface VirtualizedListProps<T> {
   items: T[];
   height: number;
+  width?: number | string;
   itemHeight: number;
   renderItem: (item: T, index: number, style: React.CSSProperties) => React.ReactNode;
   className?: string;
@@ -17,6 +18,7 @@ interface VirtualizedListProps<T> {
 export default function VirtualizedList<T>({
   items,
   height,
+  width = '100%',
   itemHeight,
   renderItem,
   className,
@@ -24,7 +26,7 @@ export default function VirtualizedList<T>({
   onScroll
 }: VirtualizedListProps<T>) {
   const ItemRenderer = useMemo(() => {
-    return ({ index, style }: { index: number; style: React.CSSProperties }) => {
+    const RowRenderer = ({ index, style }: { index: number; style: React.CSSProperties }) => {
       const item = items[index];
       if (!item) return null;
       
@@ -34,10 +36,13 @@ export default function VirtualizedList<T>({
         </div>
       );
     };
+    
+    RowRenderer.displayName = 'VirtualizedListRow';
+    return RowRenderer;
   }, [items, renderItem]);
 
-  const handleScroll = ({ scrollTop }: { scrollTop: number }) => {
-    onScroll?.(scrollTop);
+  const handleScroll = (props: { scrollOffset: number; scrollDirection: 'forward' | 'backward' }) => {
+    onScroll?.(props.scrollOffset);
   };
 
   if (items.length === 0) {
@@ -55,6 +60,7 @@ export default function VirtualizedList<T>({
     <List
       className={cn("scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100", className)}
       height={height}
+      width={width}
       itemCount={items.length}
       itemSize={itemHeight}
       overscanCount={overscan}

@@ -126,15 +126,17 @@ export default function SwipeableCard({
     isDragging.current = false;
   };
 
-  // Combine refs
+  // Create a local ref for the DOM element
+  const localRef = useRef<HTMLDivElement | null>(null);
+  
+  // Use a callback ref pattern
   const combinedRef = (element: HTMLDivElement | null) => {
-    if (swipeRef.current !== element) {
-      swipeRef.current = element;
-    }
-    if (longPressRef.current !== element) {
-      longPressRef.current = element;
-    }
+    // Store the element in our local ref
+    localRef.current = element;
   };
+  
+  // Let the hooks handle their own refs through their APIs
+  // No need to try to modify their .current properties directly
 
   return (
     <div className="relative overflow-hidden rounded-lg">

@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { InteractiveCard, FloatingActionButton } from '@/components/animations/MicroInteractions';
-import { AnimatedCounter } from '@/components/animations/AnimatedCounter';
+import AnimatedCounter from '@/components/animations/AnimatedCounter';
 import { GradientText } from '@/components/animations/VisualEffects';
 import { MapPin, Clock, DollarSign, Users, Bookmark, Send, Eye } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -23,9 +23,9 @@ interface EnhancedOpportunityCardProps {
     applied?: boolean;
     tags?: string[];
   };
-  onSave?: () => void;
-  onApply?: () => void;
-  onView?: () => void;
+  onSave?: (e?: React.MouseEvent) => void;
+  onApply?: (e?: React.MouseEvent) => void;
+  onView?: (e?: React.MouseEvent) => void;
   className?: string;
   compact?: boolean;
 }
@@ -62,7 +62,7 @@ export default function EnhancedOpportunityCard({
     const date = new Date(dateString);
     const now = new Date();
     const diffInHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60));
-    
+
     if (diffInHours < 24) {
       return `${diffInHours}h ago`;
     } else {
@@ -99,7 +99,7 @@ export default function EnhancedOpportunityCard({
               </span>
             )}
           </div>
-          
+
           <div className="flex items-center space-x-4 text-sm text-gray-600">
             <span className="font-medium">{company}</span>
             <div className="flex items-center space-x-1">
@@ -115,7 +115,7 @@ export default function EnhancedOpportunityCard({
             <div className={cn(
               "font-bold",
               match_percentage >= 80 ? "text-green-600" :
-              match_percentage >= 60 ? "text-yellow-600" : "text-gray-600",
+                match_percentage >= 60 ? "text-yellow-600" : "text-gray-600",
               compact ? "text-lg" : "text-xl"
             )}>
               <AnimatedCounter value={match_percentage} suffix="%" />
@@ -158,14 +158,14 @@ export default function EnhancedOpportunityCard({
             <Clock className="w-3 h-3" />
             <span>{getTimeAgo(posted_date)}</span>
           </div>
-          
+
           {salary && (
             <div className="flex items-center space-x-1">
               <DollarSign className="w-3 h-3" />
               <span>{salary}</span>
             </div>
           )}
-          
+
           {applicants && (
             <div className="flex items-center space-x-1">
               <Users className="w-3 h-3" />
@@ -181,19 +181,21 @@ export default function EnhancedOpportunityCard({
             <>
               <FloatingActionButton
                 icon={<Bookmark className="w-4 h-4" />}
-                onClick={(e) => {
-                  e?.stopPropagation();
+                onClick={() => {
+                  // prevent parent card click
+                  event?.stopPropagation();
                   onSave?.();
                 }}
                 size="sm"
                 color={saved ? "bg-blue-500" : "bg-gray-400"}
                 tooltip={saved ? "Saved" : "Save"}
               />
-              
+
+
               <FloatingActionButton
                 icon={<Send className="w-4 h-4" />}
-                onClick={(e) => {
-                  e?.stopPropagation();
+                onClick={() => {
+                  event?.stopPropagation();
                   onApply?.();
                 }}
                 size="sm"
@@ -205,8 +207,8 @@ export default function EnhancedOpportunityCard({
 
           <FloatingActionButton
             icon={<Eye className="w-4 h-4" />}
-            onClick={(e) => {
-              e?.stopPropagation();
+            onClick={() => {
+              event?.stopPropagation();
               onView?.();
             }}
             size="sm"
@@ -299,7 +301,7 @@ export function EnhancedOpportunityList({
           />
         </div>
       ))}
-      
+
       <style jsx>{`
         @keyframes fadeInUp {
           from {

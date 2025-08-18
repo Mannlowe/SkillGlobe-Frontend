@@ -212,6 +212,8 @@ export default function Skills({ onSkillsComplete, onSkip, className = '' }: Ski
         console.log('No new skills to submit.');
         return;
       }
+      
+      console.log('Submitting only newly added skills:', newlyAddedSkills);
   
       const apiSkills: ApiSkillData[] = newlyAddedSkills.map(skill => ({
         skills: skill.name,
@@ -221,12 +223,16 @@ export default function Skills({ onSkillsComplete, onSkip, className = '' }: Ski
       const success = await addSkills(apiSkills);
   
       if (success) {
+        // Update initialSkills to include the newly added skills
+        setInitialSkills([...initialSkills, ...newlyAddedSkills]);
         setShowSuccessModal(true);
       } else {
         console.error('Failed to add skills:', submitError);
+        toast.error(submitError || 'Failed to add skills');
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error adding skills:', error);
+      toast.error(error.message || 'An error occurred while adding skills');
     }
   };
   
@@ -300,20 +306,20 @@ export default function Skills({ onSkillsComplete, onSkip, className = '' }: Ski
       </div>
 
       {/* Selected Skills */}
-      {selectedSkills.length > 0 && (
+      {/* {selectedSkills.length > 0 && (
         <div className="bg-white p-4 rounded-xl border border-gray-200">
           <h3 className="font-semibold text-gray-900 mb-3">Selected Skills ({selectedSkills.length})</h3>
           <div className="flex flex-wrap gap-2">
             {selectedSkills.map((skill) => (
               <div
-                key={skill}
+                key={`${skill.category}-${skill.name}`}
                 className="flex items-center space-x-2 bg-orange-100 text-orange-800 px-3 py-1 rounded-lg"
               >
-                <span className="text-sm font-medium">{skill}</span>
+                <span className="text-sm font-medium">{skill.name}</span>
                 <button
-                  onClick={() => removeSkill(skill)}
+                  onClick={() => removeSkill(skill.name, skill.id)}
                   className="text-orange-600 hover:text-orange-800 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 rounded-sm p-1"
-                  aria-label={`Remove ${skill} skill`}
+                  aria-label={`Remove ${skill.name} skill`}
                 >
                   <X size={14} />
                 </button>
@@ -321,7 +327,7 @@ export default function Skills({ onSkillsComplete, onSkip, className = '' }: Ski
             ))}
           </div>
         </div>
-      )}
+      )} */}
 
       {/* Search */}
       <div className="relative">

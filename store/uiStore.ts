@@ -4,6 +4,7 @@ import { create } from 'zustand';
 import { immer } from 'zustand/middleware/immer';
 import { subscribeWithSelector } from 'zustand/middleware';
 import { persist } from 'zustand/middleware';
+import { createWithEqualityFn } from 'zustand/traditional';
 
 interface ToastNotification {
   id: string;
@@ -109,6 +110,7 @@ interface UIState {
   getCurrentTheme: () => 'light' | 'dark';
 }
 
+// Create a store with proper hydration handling for Next.js
 export const useUIStore = create<UIState>()(
   persist(
     subscribeWithSelector(
@@ -234,10 +236,10 @@ export const useUIStore = create<UIState>()(
           });
           
           // Auto-hide toast after duration
-          if (toast.duration > 0) {
+          if ((toast.duration ?? 0) > 0) {
             setTimeout(() => {
               get().hideToast(toast.id);
-            }, toast.duration);
+            }, toast.duration ?? 5000);
           }
         },
         
@@ -367,9 +369,11 @@ export const useUIStore = create<UIState>()(
         highContrast: state.highContrast,
         recentSearches: state.recentSearches,
         recentlyViewed: state.recentlyViewed
-      })
+      }),
+      // Fix for Next.js hydration and infinite loop issues
+      skipHydration: true
     }
-  )
+  ),
 );
 
 // Selectors for performance
@@ -387,19 +391,24 @@ export const useGlobalSearch = () => useUIStore(state => ({
   close: state.closeGlobalSearch
 }));
 
-export const useToasts = () => useUIStore(state => ({
-  toasts: state.toasts,
-  showToast: state.showToast,
-  hideToast: state.hideToast,
-  clearToasts: state.clearToasts
-}));
+// Use shallow equality check to prevent unnecessary re-renders
+export const useToasts = () => useUIStore(
+  state => ({
+    toasts: state.toasts,
+    showToast: state.showToast,
+    hideToast: state.hideToast,
+    clearToasts: state.clearToasts
+  })
+);
 
-export const useModals = () => useUIStore(state => ({
-  modals: state.modals,
-  openModal: state.openModal,
-  closeModal: state.closeModal,
-  closeAllModals: state.closeAllModals
-}));
+export const useModals = () => useUIStore(
+  state => ({
+    modals: state.modals,
+    openModal: state.openModal,
+    closeModal: state.closeModal,
+    closeAllModals: state.closeAllModals
+  })
+);
 
 export const useRecentActivity = () => useUIStore(state => ({
   recentSearches: state.recentSearches,

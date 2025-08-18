@@ -3,7 +3,7 @@
 import React, { useEffect } from 'react';
 import { initializeNotifications, initializeUIStore } from '@/store';
 import { useToasts } from '@/store/uiStore';
-import { Toast } from '@/components/ui/Toast';
+import { Toast } from '@/components/ui/toast';
 import { ModalContainer } from '@/components/ui/ModalContainer';
 
 interface StoreProviderProps {
@@ -31,7 +31,7 @@ export function StoreProvider({ children }: StoreProviderProps) {
       {/* Global toast notifications */}
       <div className="fixed top-4 right-4 z-50 space-y-2">
         {toasts.map((toast) => (
-          <Toast key={toast.id} {...toast} />
+          <Toast key={toast.id} {...toast}  type="foreground" />
         ))}
       </div>
       

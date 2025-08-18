@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useWebSocketContext } from './WebSocketProvider';
-import { useNotificationStore } from '@/store/notificationStore';
+import { useNotificationsStore } from '@/store/notificationsStore';
 import { useAccessibilityContext } from '@/components/accessibility/AccessibilityProvider';
 import { cn } from '@/lib/utils';
 import { Clock, Users, TrendingUp, Briefcase, Star, MessageSquare } from 'lucide-react';
@@ -22,7 +22,7 @@ export function LiveActivityFeed() {
   const [activities, setActivities] = useState<LiveActivity[]>([]);
   const [isExpanded, setIsExpanded] = useState(false);
   const { isConnected } = useWebSocketContext();
-  const { notifications } = useNotificationStore();
+  const { notifications } = useNotificationsStore();
   const { announcePolite } = useAccessibilityContext();
 
   // Convert notifications to activities
@@ -240,7 +240,7 @@ export function LiveActivityFeed() {
 export function CompactLiveActivity() {
   const [recentActivities, setRecentActivities] = useState<LiveActivity[]>([]);
   const { isConnected } = useWebSocketContext();
-  const { notifications } = useNotificationStore();
+  const { notifications } = useNotificationsStore();
 
   useEffect(() => {
     const recent = notifications

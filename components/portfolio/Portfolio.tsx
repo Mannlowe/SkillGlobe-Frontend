@@ -354,7 +354,7 @@ export default function Portfolio({
   };
 
   return (
-    <div className={`bg-white rounded-xl max-w-full shadow-sm p-3 space-y-6 font-rubik ${className}`}>
+    <div className={`bg-white rounded-xl w-full shadow-sm p-3 space-y-6 font-rubik ${className}`} style={{ width: '100%' }}>
 
       {/* Active Section Content */}
       <div className="bg-white p-4 rounded-xl shadow-lg">

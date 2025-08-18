@@ -1,6 +1,6 @@
 'use client';
 
-import ModernLayoutWrapper from '@/components/ModernLayoutWrapper';
+import ModernLayoutWrapper from '@/components/layout/ModernLayoutWrapper';
 import { DollarSign, TrendingUp, Calendar, Download, CreditCard } from 'lucide-react';
 
 export default function EarningsPage() {

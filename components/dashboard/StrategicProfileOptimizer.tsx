@@ -113,7 +113,7 @@ export default function StrategicProfileOptimizer({
       )}
 
       {/* Category Filters */}
-      <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
+      {/* <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
         {categories.map((category) => {
           const Icon = category.icon;
           const count = category.id === 'all' 
@@ -140,10 +140,10 @@ export default function StrategicProfileOptimizer({
             </button>
           );
         })}
-      </div>
+      </div> */}
 
       {/* Task List */}
-      <div className="space-y-3">
+      {/* <div className="space-y-3">
         {filteredTasks.map((task) => {
           const TaskIcon = getTaskIcon(task.category);
           const isExpanded = expandedTask === task.id;
@@ -162,7 +162,7 @@ export default function StrategicProfileOptimizer({
                 onClick={() => setExpandedTask(isExpanded ? null : task.id)}
               >
                 <div className="flex items-start gap-3">
-                  {/* Status Icon */}
+               
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
@@ -179,7 +179,7 @@ export default function StrategicProfileOptimizer({
                     )}
                   </button>
 
-                  {/* Task Content */}
+               
                   <div className="flex-1">
                     <div className="flex items-start justify-between gap-3">
                       <div>
@@ -191,7 +191,7 @@ export default function StrategicProfileOptimizer({
                         <p className="text-sm text-gray-600 mt-1">{task.description}</p>
                       </div>
                       
-                      {/* Priority Score */}
+            
                       <div className="flex items-center gap-2">
                         <div className="text-right">
                           <p className="text-lg font-bold text-gray-900">{task.priority_score}</p>
@@ -200,7 +200,7 @@ export default function StrategicProfileOptimizer({
                       </div>
                     </div>
 
-                    {/* Task Metadata */}
+                 
                     <div className="flex flex-wrap items-center gap-3 mt-3">
                       <span className={`px-2 py-1 rounded-full text-xs font-medium ${getImpactColor(task.market_impact)}`}>
                         {task.market_impact} Impact
@@ -220,7 +220,7 @@ export default function StrategicProfileOptimizer({
                     </div>
                   </div>
 
-                  {/* Expand Icon */}
+                 
                   <ChevronRight 
                     className={`text-gray-400 transition-transform ${isExpanded ? 'rotate-90' : ''}`} 
                     size={20} 
@@ -228,7 +228,7 @@ export default function StrategicProfileOptimizer({
                 </div>
               </div>
 
-              {/* Expanded Content */}
+           
               {isExpanded && (
                 <div className="px-4 pb-4 border-t border-gray-200">
                   <div className="pt-4">
@@ -254,10 +254,10 @@ export default function StrategicProfileOptimizer({
             </div>
           );
         })}
-      </div>
+      </div> */}
 
       {/* Competitive Gaps */}
-      {profileData.strategic_completion.competitive_gaps.length > 0 && (
+      {/* {profileData.strategic_completion.competitive_gaps.length > 0 && (
         <div className="mt-6 pt-6 border-t border-gray-200">
           <h3 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
             <BarChart3 size={18} />
@@ -272,7 +272,7 @@ export default function StrategicProfileOptimizer({
             ))}
           </div>
         </div>
-      )}
+      )} */}
     </div>
   );
 }

@@ -97,7 +97,7 @@ export default function ProfileAnalytics({ analytics, onViewDetails }: ProfileAn
       </div>
 
       {/* Competitive Analysis */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+      {/* <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-semibold text-gray-900">Competitive Analysis</h3>
           <div className={`px-3 py-1 rounded-full text-sm font-medium ${getPercentileColor(analytics.competitive_analysis.market_position)}`}>
@@ -105,7 +105,7 @@ export default function ProfileAnalytics({ analytics, onViewDetails }: ProfileAn
           </div>
         </div>
 
-        {/* Market Position */}
+   
         <div className="mb-6">
           <div className="flex items-center justify-between mb-2">
             <span className="text-sm text-gray-600">Market Position</span>
@@ -121,7 +121,7 @@ export default function ProfileAnalytics({ analytics, onViewDetails }: ProfileAn
           </div>
         </div>
 
-        {/* Peer Comparison */}
+      
         <div className="space-y-3">
           <h4 className="font-medium text-gray-900">Peer Comparison</h4>
           {Object.entries(analytics.competitive_analysis.peer_comparison).map(([category, score]) => (
@@ -144,7 +144,7 @@ export default function ProfileAnalytics({ analytics, onViewDetails }: ProfileAn
           ))}
         </div>
 
-        {/* Improvement Areas */}
+     
         <div className="mt-4 pt-4 border-t border-gray-200">
           <h4 className="font-medium text-gray-900 mb-2">Areas for Improvement</h4>
           <div className="flex flex-wrap gap-2">
@@ -158,10 +158,10 @@ export default function ProfileAnalytics({ analytics, onViewDetails }: ProfileAn
             ))}
           </div>
         </div>
-      </div>
+      </div> */}
 
       {/* Optimization Impact */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+      {/* <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
         <h3 className="text-lg font-semibold text-gray-900 mb-4">Optimization Impact</h3>
         
         <div className="flex items-center justify-between mb-6">
@@ -207,7 +207,7 @@ export default function ProfileAnalytics({ analytics, onViewDetails }: ProfileAn
             View Detailed Report
           </button>
         )}
-      </div>
+      </div> */}
     </div>
   );
 }

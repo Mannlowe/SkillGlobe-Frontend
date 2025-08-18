@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { useSkillGlobeWebSocket } from '@/hooks/useWebSocket';
-import { useNotificationStore } from '@/store/notificationStore';
+import { useNotificationsStore } from '@/store/notificationsStore';
 import { useUserStore } from '@/store/userStore';
 import { useAccessibilityContext } from '@/components/accessibility/AccessibilityProvider';
 
@@ -20,7 +20,7 @@ interface WebSocketProviderProps {
 }
 
 export function WebSocketProvider({ children }: WebSocketProviderProps) {
-  const { user } = useUserStore();
+  // const { user } = useUserStore();
   const { announcePolite } = useAccessibilityContext();
   const [hasShownConnectionStatus, setHasShownConnectionStatus] = useState(false);
   
@@ -294,7 +294,7 @@ export function RealtimeNotification({
 // Hook for managing real-time notifications display
 export function useRealtimeNotifications() {
   const [displayedNotifications, setDisplayedNotifications] = useState<string[]>([]);
-  const { notifications } = useNotificationStore();
+  const { notifications } = useNotificationsStore();
 
   // Show new unread notifications
   useEffect(() => {

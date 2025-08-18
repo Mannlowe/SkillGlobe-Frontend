@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { useProgressiveLoading } from '@/hooks/useIntersectionObserver';
+import { useInfiniteLoading, useProgressiveLoading } from '@/hooks/useIntersectionObserver';
 import { Skeleton, ListSkeleton } from './SkeletonLoader';
 import { cn } from '@/lib/utils';
 
@@ -13,6 +13,7 @@ interface ProgressiveLoaderProps<T> {
   className?: string;
   dependencies?: React.DependencyList;
 }
+
 
 export default function ProgressiveLoader<T>({
   loadingFunction,

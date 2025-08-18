@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import ModernLayoutWrapper from '@/components/ModernLayoutWrapper';
+import ModernLayoutWrapper from '@/components/layout/ModernLayoutWrapper';
 import { Search, Filter, Star, MapPin, Clock, Users, CheckCircle } from 'lucide-react';
 
 const services = [

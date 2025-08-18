@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import ModernLayoutWrapper from '@/components/ModernLayoutWrapper';
+import ModernLayoutWrapper from '@/components/layout/ModernLayoutWrapper';
 import { Play, Clock, Users, Star, BookOpen, Award, TrendingUp } from 'lucide-react';
 
 const courses = [

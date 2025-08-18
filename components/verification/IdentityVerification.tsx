@@ -18,17 +18,20 @@ interface IdentityVerificationProps {
   onVerificationComplete?: () => void;
   onSkip?: () => void;
   className?: string;
+  initialStep?: string;
 }
 
 export default function IdentityVerification({ 
   onVerificationComplete, 
   onSkip,
-  className = '' 
+  className = '',
+  initialStep
 }: IdentityVerificationProps) {
   const router = useRouter();
   const { isIdentityVerified, verifiedDocType, setIdentityVerified } = useVerificationStore();
   
-  const [selectedDoc, setSelectedDoc] = useState(verifiedDocType || '');
+  // Use initialStep if provided, otherwise fallback to verifiedDocType or empty string
+  const [selectedDoc, setSelectedDoc] = useState(initialStep || verifiedDocType || '');
   const [isUploading, setIsUploading] = useState(false);
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [showVerifiedUI, setShowVerifiedUI] = useState(isIdentityVerified);

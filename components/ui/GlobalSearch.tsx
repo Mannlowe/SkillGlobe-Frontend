@@ -12,7 +12,7 @@ interface Opportunity {
   title: string;
   company: string;
   location: string;
-  description: string;
+  description?: string;
   salary?: string;
   match_percentage?: number;
 }

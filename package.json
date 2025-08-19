@@ -79,5 +79,9 @@
     "vaul": "^0.9.9",
     "zod": "^3.23.8",
     "zustand": "^5.0.6"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.28.3",
+    "@babel/eslint-parser": "^7.28.0"
   }
 }

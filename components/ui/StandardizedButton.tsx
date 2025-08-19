@@ -37,7 +37,16 @@ const buttonVariants = cva(
         orange: 'bg-orange-500 text-white hover:bg-orange-600 focus:ring-orange-500',
         
         // Blue solid  
-        blue: 'bg-blue-500 text-white hover:bg-blue-600 focus:ring-blue-500'
+        blue: 'bg-blue-500 text-white hover:bg-blue-600 focus:ring-blue-500',
+        
+        // Gradient border button
+        'gradient-border': 'border-2 border-transparent bg-white text-transparent bg-clip-padding hover:shadow-lg relative before:absolute before:inset-0 before:p-[2px] before:rounded-full before:bg-gradient-to-r before:from-orange-500 before:to-blue-500 before:content-[""] before:-z-10 before:m-[-2px]',
+        
+        // Get Started button style (from first image)
+        'gradient-text': 'bg-white text-[#4a7bfc] border border-orange-500 rounded-lg px-6 py-2 font-medium hover:translate-y-[-4px]',
+        
+        // Gradient text only (for use inside other elements)
+        'gradient-text-only': 'bg-gradient-to-r from-orange-500 to-blue-500 bg-clip-text text-transparent'
       },
       size: {
         // Small buttons (32px height)
@@ -116,7 +125,13 @@ export const StandardizedButton = React.forwardRef<HTMLButtonElement, Standardiz
           </span>
         )}
         
-        {children}
+        {variant === 'gradient-text' ? (
+          <span className="bg-gradient-to-r from-orange-500 to-blue-500 bg-clip-text text-transparent">
+            {children}
+          </span>
+        ) : (
+          children
+        )}
         
         {rightIcon && (
           <span className="ml-2 flex items-center" aria-hidden="true">

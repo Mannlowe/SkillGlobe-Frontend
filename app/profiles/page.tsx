@@ -274,10 +274,10 @@ export default function ProfilesPage() {
           
           <button 
             onClick={handleCreateProfile}
-            className="flex items-center px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors"
+            className=" flex items-center px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors"
           >
-            <Plus size={16} className="mr-2" />
-            Create Profile
+            <Plus size={16} className="mr-1" />
+            Add Profile
           </button>
         </div>
 

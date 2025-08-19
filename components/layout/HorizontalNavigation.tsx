@@ -98,10 +98,10 @@ export default function HorizontalNavigation({
       icon: <User className="w-4 h-4" />,
       children: [
         {
-          id: 'verification',
-          label: 'Verification',
+          id: 'curation',
+          label: 'Curation',
           icon: <Shield className="w-4 h-4" />,
-          href: '/verification',
+          href: '/curation',
           description: 'Verify your identity for premium opportunities'
         },
         {
@@ -249,7 +249,7 @@ export default function HorizontalNavigation({
                         onClick={() => handleNavigation(child.href)}
                         className={cn(
                           "cursor-pointer",
-                          child.id === 'verification'
+                          child.id === 'curation'
                             ? "border border-orange-200 bg-gradient-to-r from-orange-50 to-red-50 hover:from-orange-100 hover:to-red-100"
                             : "",
                           isChildActive(child.href) && "bg-[#FF6B35]/10"
@@ -258,7 +258,7 @@ export default function HorizontalNavigation({
                         <div className="flex items-start space-x-3 py-1">
                           <div className={cn(
                             "mt-0.5",
-                            child.id === 'verification'
+                            child.id === 'curation'
                               ? "text-orange-600"
                               : isChildActive(child.href)
                                 ? "text-[#FF6B35]"
@@ -269,14 +269,14 @@ export default function HorizontalNavigation({
                           <div className="flex-1">
                             <div className={cn(
                               "font-medium text-sm flex items-center gap-2",
-                              child.id === 'verification'
+                              child.id === 'curation'
                                 ? "text-orange-700"
                                 : isChildActive(child.href)
                                   ? "text-[#FF6B35]"
                                   : "text-gray-900"
                             )}>
                               {child.label}
-                              {child.id === 'verification' && (
+                              {child.id === 'curation' && (
                                 <span className="px-1.5 py-0.5 text-xs bg-orange-200 text-orange-800 rounded-full font-medium">
                                   Important
                                 </span>
@@ -360,14 +360,14 @@ export default function HorizontalNavigation({
           </Button>
 
           {/* Settings */}
-          <Button
+          {/* <Button
             variant="ghost"
             size="icon"
             onClick={onSettingsClick}
             className="hidden sm:flex"
           >
             <Settings className="w-5 h-5" />
-          </Button>
+          </Button> */}
 
           {/* User Profile */}
           <DropdownMenu>
@@ -375,7 +375,7 @@ export default function HorizontalNavigation({
               <Button
                 variant="ghost"
                 size="icon"
-                className="relative rounded-full"
+                className="relative rounded-md"
               >
                 {userAvatar ? (
                   <Image
@@ -383,10 +383,10 @@ export default function HorizontalNavigation({
                     alt={userName}
                     width={32}
                     height={32}
-                    className="rounded-full"
+                    className="rounded-md"
                   />
                 ) : (
-                  <div className="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center">
+                  <div className="w-8 h-8 bg-gray-300 rounded-md flex items-center justify-center">
                     <User className="w-4 h-4 text-gray-600" />
                   </div>
                 )}

@@ -21,7 +21,7 @@ const withPWA = require("next-pwa")({
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   output: "export",        // required for Azure static
-  distDir: "out",         // specify output directory explicitly
+  distDir: "out",         // specify output directory explicitly - this replaces the need for next export -o out
   eslint: { ignoreDuringBuilds: true },
   images: { unoptimized: true },
   experimental: {

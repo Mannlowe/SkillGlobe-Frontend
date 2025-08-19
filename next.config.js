@@ -21,11 +21,19 @@ const withPWA = require("next-pwa")({
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   output: "export",        // required for Azure static
+  distDir: "out",         // specify output directory explicitly
   eslint: { ignoreDuringBuilds: true },
   images: { unoptimized: true },
   experimental: {
     outputFileTracingRoot: undefined,  // disable tracing to avoid EPERM on Windows
   },
+  // Temporarily disable PWA to fix build issues
+  webpack: (config) => {
+    // Fix for syntax errors in build process
+    config.optimization.minimize = false;
+    return config;
+  }
 };
 
-module.exports = withPWA(nextConfig);
+// Temporarily bypass PWA to fix build issues
+module.exports = nextConfig;

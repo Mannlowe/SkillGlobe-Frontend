@@ -24,6 +24,7 @@ const nextConfig = {
   distDir: "out",         // specify output directory explicitly - this replaces the need for next export -o out
   eslint: { ignoreDuringBuilds: true },
   images: { unoptimized: true },
+  trailingSlash: true,    // Add trailing slashes to ensure proper routing in Azure
   experimental: {
     outputFileTracingRoot: undefined,  // disable tracing to avoid EPERM on Windows
   },

@@ -411,7 +411,13 @@ export default function HorizontalNavigation({
                 Settings
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem className="cursor-pointer text-red-600">
+              <DropdownMenuItem 
+                onClick={() => {
+                  localStorage.clear();
+                  router.push('/auth/login');
+                }} 
+                className="cursor-pointer text-red-600"
+              >
                 Log out
               </DropdownMenuItem>
             </DropdownMenuContent>

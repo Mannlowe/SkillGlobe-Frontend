@@ -210,7 +210,7 @@ export default function ModernLayout({ children, className }: ModernLayoutProps)
           isMobile ? "pb-16" : "", // Space for mobile bottom nav
           isDetailPaneOpen && !isMobile ? "mr-[600px] lg:mr-[700px]" : ""
         )}>
-          <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          <div className=" mx-auto px-4 sm:px-6 lg:px-8 py-6">
             {/* Demo Content for opportunities page */}
             {pathname === '/opportunities' && (
               <div className="space-y-6">

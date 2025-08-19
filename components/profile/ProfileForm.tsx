@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   MapPin, 
   Briefcase, 
@@ -17,6 +17,8 @@ interface ProfileFormProps {
   onSave: (data: ProfileEntry[]) => void;
   onCancel: () => void;
   initialData?: ProfileEntry[];
+  showFormDirectly?: boolean;
+  isEditing?: boolean;
 }
 
 export interface ProfileEntry {
@@ -34,15 +36,42 @@ export interface ProfileEntry {
   resume?: File | null;
 }
 
-export default function ProfileForm({ onSave, onCancel, initialData = [] }: ProfileFormProps) {
+export default function ProfileForm({ onSave, onCancel, initialData = [], showFormDirectly = false, isEditing = false }: ProfileFormProps) {
   const [profileEntries, setProfileEntries] = useState<ProfileEntry[]>(
     initialData.length > 0 ? initialData : []
   );
   
   const [editingEntry, setEditingEntry] = useState<ProfileEntry | null>(null);
-  const [isEditing, setIsEditing] = useState(false);
+  const [showEditForm, setShowEditForm] = useState(showFormDirectly || isEditing);
   const [resumeUploaded, setResumeUploaded] = useState(false);
   const [activeSection, setActiveSection] = useState('resume');
+  
+  // Initialize the form with initial data or create a new entry
+  useEffect(() => {
+    // If we have initial data (for editing), use that
+    if (initialData.length > 0 && !editingEntry) {
+      setEditingEntry(initialData[0]);
+      setShowEditForm(true); // Always show the form when we have initial data
+    } 
+    // Otherwise if showFormDirectly is true, create a new entry
+    else if (showFormDirectly && !editingEntry) {
+      setEditingEntry({
+        id: crypto.randomUUID(),
+        role: '',
+        employmentType: '',
+        natureOfWork: '',
+        workMode: '',
+        minimumEarnings: '',
+        currency: '',
+        preferredCity: '',
+        preferredCountry: '',
+        totalExperience: '',
+        relevantExperience: '',
+        resume: null
+      });
+      setShowEditForm(true);
+    }
+  }, [showFormDirectly, editingEntry, initialData, isEditing]);
   
   const employmentTypes = ['Permanent', 'Contract', 'Internship'];
   const workNatures = ['Full-time', 'Part-time'];
@@ -63,12 +92,12 @@ export default function ProfileForm({ onSave, onCancel, initialData = [] }: Prof
       relevantExperience: '',
       resume: null
     });
-    setIsEditing(true);
+    setShowEditForm(true);
   };
 
   const handleEditProfile = (entry: ProfileEntry) => {
     setEditingEntry({ ...entry });
-    setIsEditing(true);
+    setShowEditForm(true);
   };
 
   const handleDeleteProfile = (id: string) => {
@@ -115,13 +144,19 @@ export default function ProfileForm({ onSave, onCancel, initialData = [] }: Prof
       setProfileEntries([...profileEntries, editingEntry]);
     }
     
-    setEditingEntry(null);
-    setIsEditing(false);
+    // If showFormDirectly is true, save the profile immediately
+    if (showFormDirectly) {
+      onSave([editingEntry]);
+    } else {
+      setEditingEntry(null);
+      setShowEditForm(false);
+    }
   };
 
   const handleCancelEdit = () => {
     setEditingEntry(null);
-    setIsEditing(false);
+    setShowEditForm(false);
+    onCancel(); // Call the onCancel prop to close the modal
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -129,9 +164,21 @@ export default function ProfileForm({ onSave, onCancel, initialData = [] }: Prof
     onSave(profileEntries);
   };
 
+  // Force show edit form if we're in edit mode or have initial data
+  useEffect(() => {
+    if (isEditing || initialData.length > 0) {
+      setShowEditForm(true);
+      
+      // If we have initial data and no editing entry yet, set it
+      if (initialData.length > 0 && !editingEntry) {
+        setEditingEntry(initialData[0]);
+      }
+    }
+  }, [isEditing, initialData, editingEntry]);
+
   return (
     <form onSubmit={handleSubmit} className="space-y-6 font-rubik">
-      {!isEditing ? (
+      {!showEditForm ? (
         <>
           {profileEntries.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12 px-4 border-2 border-dashed border-gray-300 rounded-lg">

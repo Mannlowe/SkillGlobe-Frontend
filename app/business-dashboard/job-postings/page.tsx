@@ -138,7 +138,7 @@ export default function JobPostingsPage() {
         location: job.location || 'Not specified',
         // Additional fields stored but not displayed in table
         salary: job.minRemuneration,
-        skillsRequired: job.skillsRequired,
+        skillsRequired: [...job.primarySkills, ...job.secondarySkills], // Combine both primary and secondary skills for backward compatibility
         genderPreference: job.gender,
         languageRequirement: job.language,
         description: job.description,
@@ -163,7 +163,7 @@ export default function JobPostingsPage() {
         location: job.location || 'Not specified',
         // Additional fields stored but not displayed in table
         salary: job.minRemuneration,
-        skillsRequired: job.skillsRequired,
+        skillsRequired: [...job.primarySkills, ...job.secondarySkills], // Combine both primary and secondary skills for backward compatibility
         genderPreference: job.gender,
         languageRequirement: job.language,
         description: job.description,

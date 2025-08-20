@@ -80,8 +80,8 @@ export default function Skills({ onSkillsComplete, onSkip, className = '' }: Ski
           ...categoriesData,
           // Add missing categories if they don't exist in the API response
           'Technical': categoriesData['Technical'] || [],
-          // 'Tools': categoriesData['Tool'] || categoriesData['Tools'] || [], // Map 'Tool' to 'Tools' if needed
-          // 'Soft Skills': categoriesData['Soft Skills'] || []
+          'Tools': categoriesData['Tool'] || categoriesData['Tools'] || [], // Map 'Tool' to 'Tools' if needed
+          'Soft Skills': categoriesData['Soft Skills'] || []
         };
         
         console.log('Updated categories:', updatedCategories);

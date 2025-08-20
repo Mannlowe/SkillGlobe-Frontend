@@ -1,14 +1,15 @@
-const withPWA = require('next-pwa')({
-  dest: 'public',
+const withPWA = require("next-pwa")({
+  dest: "public",
   register: true,
   skipWaiting: true,
-  disable: process.env.NODE_ENV === 'development',
+  disable: process.env.NODE_ENV === "development",
+  buildExcludes: [/middleware-manifest\.json$/], // prevent SSR leftovers
   runtimeCaching: [
     {
       urlPattern: /^https?.*/,
-      handler: 'NetworkFirst',
+      handler: "NetworkFirst",
       options: {
-        cacheName: 'offlineCache',
+        cacheName: "offlineCache",
         expiration: {
           maxEntries: 200,
         },
@@ -19,11 +20,21 @@ const withPWA = require('next-pwa')({
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  output: 'export',
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
+  output: "export",        // required for Azure static
+  distDir: "out",         // specify output directory explicitly - this replaces the need for next export -o out
+  eslint: { ignoreDuringBuilds: true },
   images: { unoptimized: true },
+  trailingSlash: true,    // Add trailing slashes to ensure proper routing in Azure
+  experimental: {
+    outputFileTracingRoot: undefined,  // disable tracing to avoid EPERM on Windows
+  },
+  // Temporarily disable PWA to fix build issues
+  webpack: (config) => {
+    // Fix for syntax errors in build process
+    config.optimization.minimize = false;
+    return config;
+  }
 };
 
-module.exports = withPWA(nextConfig);
+// Temporarily bypass PWA to fix build issues
+module.exports = nextConfig;

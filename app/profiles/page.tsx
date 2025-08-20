@@ -9,7 +9,7 @@ import { mockProfileOptimizationHub, mockProfileAnalytics } from '@/lib/mockPhas
 import { useToast } from '@/hooks/use-toast';
 // Import useModals but use it inside useEffect to prevent infinite loop
 import { useModals } from '@/store/uiStore';
-import { Plus, User, Settings, Eye, Share2 } from 'lucide-react';
+import { Plus, User, Settings, Eye, Share2, Pencil, Trash2, AlertCircle } from 'lucide-react';
 
 export default function ProfilesPage() {
   const { toast } = useToast();
@@ -23,6 +23,8 @@ export default function ProfilesPage() {
   } | null;
   const [modalContent, setModalContent] = useState<ModalContentType>(null);
   const [activeProfile, setActiveProfile] = useState('default');
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [profileToDelete, setProfileToDelete] = useState<string | null>(null);
 
   const [profiles, setProfiles] = useState([
     {
@@ -68,13 +70,14 @@ export default function ProfilesPage() {
   };
 
   const handleCreateProfile = () => {
-    // Use local state to manage modal instead of Zustand store
+    // Create a new profile entry directly
     setModalContent({
       component: ProfileForm,
       props: {
         onSave: handleProfileFormSave,
         onCancel: () => setIsModalOpen(false),
-        initialData: []
+        initialData: [],
+        showFormDirectly: true  // Add this flag to show form directly
       }
     });
     setIsModalOpen(true);
@@ -82,31 +85,56 @@ export default function ProfilesPage() {
 
   const handleProfileFormSave = (profileData: ProfileEntry[]) => {
     console.log('Profile data saved:', profileData);
-
-    // Create a new profile based on the form data
-    const newProfile = {
-      id: `profile-${Date.now()}`,
-      name: profileData[0]?.role || 'New Profile',
-      type: 'Specialized',
-      completeness: 60,
-      views: 0,
-      isActive: false
-    };
-
-    // Add the new profile to the list using a callback to avoid stale state
-    setProfiles(prevProfiles => [...prevProfiles, newProfile]);
     
-    // First close the modal
+    if (!profileData.length) return;
+    
+    const profileEntry = profileData[0];
+    const existingProfileIndex = profiles.findIndex(p => p.id === profileEntry.id);
+    
+    if (existingProfileIndex >= 0) {
+      // Update existing profile
+      const updatedProfiles = [...profiles];
+      updatedProfiles[existingProfileIndex] = {
+        ...updatedProfiles[existingProfileIndex],
+        name: profileEntry.role || updatedProfiles[existingProfileIndex].name,
+        completeness: Math.min(updatedProfiles[existingProfileIndex].completeness + 5, 100) // Increase completeness slightly
+      };
+      
+      setProfiles(updatedProfiles);
+      
+      // Show toast notification
+      setTimeout(() => {
+        toast({
+          title: "Profile Updated",
+          description: "Your profile has been updated successfully.",
+        });
+      }, 100);
+    } else {
+      // Create a new profile based on the form data
+      const newProfile = {
+        id: profileEntry.id || `profile-${Date.now()}`,
+        name: profileEntry.role || 'New Profile',
+        type: 'Specialized',
+        completeness: 60,
+        views: 0,
+        isActive: false
+      };
+
+      // Add the new profile to the list using a callback to avoid stale state
+      setProfiles(prevProfiles => [...prevProfiles, newProfile]);
+      
+      // Show toast notification
+      setTimeout(() => {
+        toast({
+          title: "Profile Created",
+          description: "Your new profile has been created successfully.",
+        });
+      }, 100);
+    }
+    
+    // Close the modal
     setIsModalOpen(false);
     setModalContent(null);
-    
-    // Then show toast notification
-    setTimeout(() => {
-      toast({
-        title: "Profile Created",
-        description: "Your new profile has been created successfully.",
-      });
-    }, 100);
   };
 
   const handleProfileSelect = (profileId: string) => {
@@ -116,6 +144,70 @@ export default function ProfilesPage() {
       title: "Profile Switched",
       description: `Switched to ${profile?.name} profile.`,
     });
+  };
+  
+  const handleEditProfile = (e: React.MouseEvent, profileId: string) => {
+    e.stopPropagation(); // Prevent profile selection
+    const profileToEdit = profiles.find(p => p.id === profileId);
+    
+    if (profileToEdit) {
+      // Create a ProfileEntry object from the profile data
+      const profileEntry: ProfileEntry = {
+        id: profileToEdit.id,
+        role: profileToEdit.name,
+        employmentType: 'Permanent', // Default values since we don't store these in the profile object
+        natureOfWork: 'Full-time',
+        workMode: 'No Preference',
+        minimumEarnings: '',
+        currency: '',
+        preferredCity: '',
+        preferredCountry: '',
+        totalExperience: '',
+        relevantExperience: '',
+        resume: null,
+        primarySkills: [],
+        secondarySkills: []
+      };
+      
+      // Directly show the form with the profile data
+      setModalContent({
+        component: ProfileForm,
+        props: {
+          onSave: handleProfileFormSave,
+          onCancel: () => setIsModalOpen(false),
+          initialData: [profileEntry],
+          showFormDirectly: true,
+          isEditing: true
+        }
+      });
+      setIsModalOpen(true);
+    }
+  };
+  
+  const handleDeleteClick = (e: React.MouseEvent, profileId: string) => {
+    e.stopPropagation(); // Prevent profile selection
+    setProfileToDelete(profileId);
+    setDeleteModalOpen(true);
+  };
+  
+  const confirmDeleteProfile = () => {
+    if (profileToDelete) {
+      setProfiles(profiles.filter(p => p.id !== profileToDelete));
+      
+      // If the deleted profile was active, set another one as active
+      if (profileToDelete === activeProfile && profiles.length > 1) {
+        const newActiveProfile = profiles.find(p => p.id !== profileToDelete)?.id || '';
+        setActiveProfile(newActiveProfile);
+      }
+      
+      toast({
+        title: "Profile Deleted",
+        description: "The profile has been deleted successfully.",
+      });
+      
+      setDeleteModalOpen(false);
+      setProfileToDelete(null);
+    }
   };
 
   // Render the modal if it's open and has content
@@ -132,10 +224,48 @@ export default function ProfilesPage() {
     }
     return null;
   };
+  
+  // Render delete confirmation modal
+  const renderDeleteModal = () => {
+    if (!deleteModalOpen) return null;
+    
+    const profileName = profiles.find(p => p.id === profileToDelete)?.name || 'this profile';
+    
+    return (
+      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+        <div className="bg-white rounded-xl p-6 shadow-lg max-w-md w-full">
+          <div className="flex flex-col items-center text-center space-y-4">
+            <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center">
+              <AlertCircle className="w-6 h-6 text-red-600" />
+            </div>
+            <h3 className="text-xl font-semibold text-gray-900">Delete Profile</h3>
+            <p className="text-gray-600">
+              Are you sure you want to delete <span className="font-medium">{profileName}</span>? This action cannot be undone.
+            </p>
+            <div className="flex space-x-3 w-full pt-4">
+              <button
+                onClick={() => setDeleteModalOpen(false)}
+                className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmDeleteProfile}
+                className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
 
   return (
     <ModernLayoutWrapper>
       {renderModal()}
+      {renderDeleteModal()}
       <div className="space-y-8 font-rubik">
         {/* Header */}
         <div className="flex justify-between items-center">
@@ -146,10 +276,10 @@ export default function ProfilesPage() {
           
           <button 
             onClick={handleCreateProfile}
-            className="flex items-center px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors"
+            className=" flex items-center px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors"
           >
-            <Plus size={16} className="mr-2" />
-            Create Profile
+            <Plus size={16} className="mr-1" />
+            Add Profile
           </button>
         </div>
 
@@ -177,11 +307,25 @@ export default function ProfilesPage() {
                     {/* <p className="text-sm text-gray-600">{profile.type}</p> */}
                   </div>
                 </div>
-                {profile.isActive && (
-                  <span className="px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded-full">
-                    Active
-                  </span>
-                )}
+                <div className="flex items-center space-x-1">
+                  {profile.isActive && (
+                    <span className="px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded-full mr-2">
+                      Active
+                    </span>
+                  )}
+                  <button 
+                    onClick={(e) => handleEditProfile(e, profile.id)}
+                    className="p-1.5 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
+                  >
+                    <Pencil className="w-4 h-4" />
+                  </button>
+                  <button 
+                    onClick={(e) => handleDeleteClick(e, profile.id)}
+                    className="p-1.5 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
               </div>
 
               <div className="space-y-3">

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import BusinessSidebar from '@/components/dashboard/BusinessSidebar';
 import BusinessDashboardHeader from '@/components/dashboard/BusinessDashboardHeader';
 import { 
@@ -118,13 +119,49 @@ export default function BusinessDashboardPage() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { user, entity, isAuthenticated } = useAuthStore();
   const { toast } = useToast();
+  const router = useRouter();
   
   // Get business name from entity details or fall back to user name
   const businessName = entity?.details?.name || 'Your Business';
   // const userName = user?.full_name || user?.name || 'User';
   // const userEmail = user?.email || 'business@example.com';
   
+  // Helper function to get user role from localStorage
+  const getUserRole = (): string | null => {
+    if (typeof window !== 'undefined') {
+      try {
+        const entityDataStr = localStorage.getItem('entity_data');
+        const userDataStr = localStorage.getItem('user_data');
+        
+        if (entityDataStr && userDataStr) {
+          const entityData = JSON.parse(entityDataStr);
+          const userData = JSON.parse(userDataStr);
+          
+          // Get current user's email
+          const currentUserEmail = userData.email;
+          
+          // Find user's role in business_users array
+          const businessUsers = entityData.details?.business_users;
+          if (businessUsers && Array.isArray(businessUsers)) {
+            const currentUser = businessUsers.find(user => user.email === currentUserEmail);
+            return currentUser?.role || null;
+          }
+        }
+      } catch (error) {
+        console.error('Error getting user role:', error);
+      }
+    }
+    return null;
+  };
+
   useEffect(() => {
+    // Check user role and redirect Business Users to opportunity postings
+    const userRole = getUserRole();
+    if (userRole === 'Business User' && window.location.pathname === '/business-dashboard') {
+      router.push('/business-dashboard/job-postings');
+      return;
+    }
+
     if (isAuthenticated && user && window.location.pathname.includes('business-dashboard')) {      
       // Show toast notification for Business Buyer
       const roles = user.roles;
@@ -160,7 +197,7 @@ export default function BusinessDashboardPage() {
         window.history.replaceState({}, document.title, window.location.pathname);
       }
     }
-  }, [isAuthenticated, user, toast]);
+  }, [isAuthenticated, user, toast, router]);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -192,7 +229,7 @@ export default function BusinessDashboardPage() {
         />
         
         <main className="flex-1 overflow-x-hidden overflow-y-auto bg-gray-50">
-          <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          <div className="mx-auto px-4 sm:px-6 lg:px-8 py-6">
             {/* Welcome Section */}
             <div className="mb-8">
               <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">

@@ -32,12 +32,15 @@ export default function AuthLoginPage() {
       
       if (result.success) {
         console.log('Login successful, user role:', result.userRole);
-        // Redirect based on user role with fromLogin parameter to trigger toast
+        // Redirect based on user role
         if (result.userRole === 'Individual Seller') {
-          router.push('/individual-dashboard?fromLogin=true');
+          router.push('/individual-dashboard');
+        } else if (result.userRole === 'Business User') {
+          // Business Users go directly to job postings
+          router.push('/business-dashboard/job-postings');
         } else {
-          // For other roles, redirect to business dashboard or other appropriate page
-          router.push('/business-dashboard?fromLogin=true');
+          // Business Admin and other roles go to main dashboard
+          router.push('/business-dashboard');
         }
       } else {
         setError('Login failed. Please check your credentials and try again.');

@@ -82,29 +82,35 @@ export const useAuthStore = create<AuthState>()(
           });
           
           // Determine user role from response
-          // Check if roles is an array and contains 'Individual Seller'
           let userRole = 'Unknown';
           
           // Safely check roles property
           const roles = userData.roles;
           
+          // First check if user is Individual Seller
           if (Array.isArray(roles)) {
-            // If roles is an array, check if it includes 'Individual Seller'
             if (roles.includes('Individual Seller')) {
               userRole = 'Individual Seller';
-            } else {
-              userRole = userData.user_type || 'Business';
             }
           } else if (typeof roles === 'string') {
-            // If roles is a string, check if it contains 'Individual Seller'
             const rolesStr = roles as string;
             if (rolesStr.indexOf('Individual Seller') >= 0) {
               userRole = 'Individual Seller';
+            }
+          }
+          
+          // If not Individual Seller, check business_users array for specific role
+          if (userRole === 'Unknown' && entityData?.details?.business_users) {
+            const currentUser = entityData.details.business_users.find(
+              (user: any) => user.email === userData.email
+            );
+            if (currentUser) {
+              userRole = currentUser.role; // This will be "Business User" or "Business Admin"
             } else {
               userRole = userData.user_type || 'Business';
             }
-          } else {
-            // Default to user_type if roles is not available
+          } else if (userRole === 'Unknown') {
+            // Default fallback
             userRole = userData.user_type || 'Business';
           }
           

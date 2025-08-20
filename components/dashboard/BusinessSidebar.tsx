@@ -14,12 +14,40 @@ import {
   Settings
 } from 'lucide-react';
 
-const menuItems = [
-  { icon: Home, label: 'Dashboard', href: '/business-dashboard' },
-  { icon: Briefcase, label: 'Opportunity Postings', href: '/business-dashboard/job-postings' },
-  { icon: Shield, label: 'Document Verify', href: '/business-dashboard/document-verify' },
-  { icon: Settings, label: 'Admin Access', href: '/business-dashboard/dashboard-setup' },
+const allMenuItems = [
+  { icon: Home, label: 'Dashboard', href: '/business-dashboard', roles: ['Business Admin'] },
+  { icon: Briefcase, label: 'Opportunity Postings', href: '/business-dashboard/job-postings', roles: ['Business Admin', 'Business User'] },
+  { icon: Shield, label: 'Document Verify', href: '/business-dashboard/document-verify', roles: ['Business Admin'] },
+  { icon: Settings, label: 'Admin Access', href: '/business-dashboard/business-team-member', roles: ['Business Admin'] },
 ];
+
+// Helper function to get user role from localStorage
+const getUserRole = (): string | null => {
+  if (typeof window !== 'undefined') {
+    try {
+      const entityDataStr = localStorage.getItem('entity_data');
+      const userDataStr = localStorage.getItem('user_data');
+      
+      if (entityDataStr && userDataStr) {
+        const entityData = JSON.parse(entityDataStr);
+        const userData = JSON.parse(userDataStr);
+        
+        // Get current user's email
+        const currentUserEmail = userData.email;
+        
+        // Find user's role in business_users array
+        const businessUsers = entityData.details?.business_users;
+        if (businessUsers && Array.isArray(businessUsers)) {
+          const currentUser = businessUsers.find(user => user.email === currentUserEmail);
+          return currentUser?.role || null;
+        }
+      }
+    } catch (error) {
+      console.error('Error getting user role:', error);
+    }
+  }
+  return null;
+};
 
 // Custom hook to detect mobile
 const useIsMobile = () => {
@@ -51,6 +79,19 @@ export default function BusinessSidebar({ mobileOpen }: BusinessSidebarProps) {
   const isMobile = useIsMobile();
   // Use mobileOpen prop if provided, otherwise default to true
   const [isOpen, setIsOpen] = useState(true);
+  const [userRole, setUserRole] = useState<string | null>(null);
+  
+  // Get user role on component mount
+  useEffect(() => {
+    const role = getUserRole();
+    setUserRole(role);
+  }, []);
+  
+  // Filter menu items based on user role
+  const menuItems = allMenuItems.filter(item => {
+    if (!userRole) return true; // Show all items if role is not determined
+    return item.roles.includes(userRole);
+  });
   
   // Update isOpen when mobileOpen prop changes
   useEffect(() => {
@@ -89,7 +130,10 @@ export default function BusinessSidebar({ mobileOpen }: BusinessSidebarProps) {
           {/* Header */}
           <div className={`flex items-center h-[85px] justify-between border-b border-gray-200 ${isCollapsed && !isMobile ? 'p-3' : 'p-4'}`}>
             {(!isCollapsed || isMobile) && (
-              <Link href="/business-dashboard" className="flex items-center space-x-2">
+              <Link 
+                href={userRole === 'Business User' ? '/business-dashboard/job-postings' : '/business-dashboard'} 
+                className="flex items-center space-x-2"
+              >
                 <div className="relative w-40 h-40">
                   <Image 
                     src="/Images/logo_image.jpg" 

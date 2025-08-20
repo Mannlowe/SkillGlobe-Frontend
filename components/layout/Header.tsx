@@ -44,21 +44,21 @@ export default function Header() {
           <div className="flex items-center space-x-4">
             {/* Login Button */}
             <Link href="/auth/login" className="hidden sm:inline-flex">
-              <StandardizedButton variant="outline" size="default">
+              <StandardizedButton variant="gradient-text" size="default">
                 Log In
               </StandardizedButton>
             </Link>
 
             {/* Get Started Button - Desktop */}
             <Link href="/onboarding" className="hidden sm:inline-block">
-              <StandardizedButton variant="primary" size="default">
+              <StandardizedButton variant="gradient-text" size="default">
                 Get Started
               </StandardizedButton>
             </Link>
             
             {/* Login Button - Mobile */}
             <Link href="/auth/login" className="sm:hidden">
-              <StandardizedButton variant="primary" size="default">
+              <StandardizedButton variant="gradient-text" size="default">
                 Login
               </StandardizedButton>
             </Link>

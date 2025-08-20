@@ -164,7 +164,9 @@ export default function ProfilesPage() {
         preferredCountry: '',
         totalExperience: '',
         relevantExperience: '',
-        resume: null
+        resume: null,
+        primarySkills: [],
+        secondarySkills: []
       };
       
       // Directly show the form with the profile data

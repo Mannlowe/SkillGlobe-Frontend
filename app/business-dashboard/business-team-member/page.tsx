@@ -1,10 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Users, UserPlus, Edit, Trash2, X } from 'lucide-react';
 import BusinessSidebar from '@/components/dashboard/BusinessSidebar';
 import BusinessDashboardHeader from '@/components/dashboard/BusinessDashboardHeader';
 import Image from 'next/image';
+import { useAddMemberStore } from '@/store/add-member/addmemberStore';
 
 type TeamMember = {
   id: string;
@@ -21,12 +22,34 @@ export default function AdminAccessPage() {
   const [isEditMode, setIsEditMode] = useState(false);
   const [currentMember, setCurrentMember] = useState<TeamMember | null>(null);
   const [memberToDelete, setMemberToDelete] = useState<string>('');
-  
+
   // Form state
   const [name, setName] = useState('');
-  const [role, setRole] = useState('');
+  const [password, setPassword] = useState('');
   const [email, setEmail] = useState('');
-  
+  const [sendWelcomeEmail, setSendWelcomeEmail] = useState(false);
+
+  // Store state
+  const { addMemberToTeam, isLoading, error, success, resetState } = useAddMemberStore();
+
+  // Handle success state
+  useEffect(() => {
+    if (success) {
+      const newMember: TeamMember = {
+        id: Date.now().toString(),
+        name,
+        role: 'Team Member',
+        email,
+        avatar: `https://randomuser.me/api/portraits/${Math.random() > 0.5 ? 'men' : 'women'}/${Math.floor(Math.random() * 100)}.jpg`
+      };
+      
+      setTeamMembers(prev => [...prev, newMember]);
+      setTimeout(() => {
+        closeModal();
+      }, 1500); // Close modal after showing success message
+    }
+  }, [success, name, email]);
+
   // Team members state
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([
     {
@@ -63,8 +86,10 @@ export default function AdminAccessPage() {
     setIsEditMode(false);
     setCurrentMember(null);
     setName('');
-    setRole('');
+    setPassword('');
     setEmail('');
+    setSendWelcomeEmail(false);
+    resetState();
     setIsModalOpen(true);
   };
 
@@ -72,8 +97,10 @@ export default function AdminAccessPage() {
     setIsEditMode(true);
     setCurrentMember(member);
     setName(member.name);
-    setRole(member.role);
+    setPassword('');
     setEmail(member.email);
+    setSendWelcomeEmail(false);
+    resetState();
     setIsModalOpen(true);
   };
 
@@ -81,38 +108,33 @@ export default function AdminAccessPage() {
     setIsModalOpen(false);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!name || !role || !email) {
+
+    if (!name || !password || !email) {
       alert('Please fill in all fields');
       return;
     }
 
     if (isEditMode && currentMember) {
-      // Update existing member
+      // Update existing member (local state only for now)
       setTeamMembers(teamMembers.map(member => 
         member.id === currentMember.id ? {
           ...member,
           name,
-          role,
           email
         } : member
       ));
+      closeModal();
     } else {
-      // Add new member
-      const newMember: TeamMember = {
-        id: Date.now().toString(),
-        name,
-        role,
+      // Add new member via API
+      await addMemberToTeam({
         email,
-        avatar: `https://randomuser.me/api/portraits/${Math.random() > 0.5 ? 'men' : 'women'}/${Math.floor(Math.random() * 100)}.jpg`
-      };
-      
-      setTeamMembers([...teamMembers, newMember]);
+        full_name: name,
+        password,
+        send_welcome_email: sendWelcomeEmail
+      });
     }
-    
-    closeModal();
   };
 
   const openDeleteModal = (id: string, name: string) => {
@@ -261,6 +283,21 @@ export default function AdminAccessPage() {
             </div>
             
             <form onSubmit={handleSubmit} className="p-6 space-y-4">
+
+            <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Email <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="email@example.com"
+                  required
+                />
+              </div>
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Name <span className="text-red-500">*</span>
@@ -277,38 +314,52 @@ export default function AdminAccessPage() {
               
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Role <span className="text-red-500">*</span>
+                  Password <span className="text-red-500">*</span>
                 </label>
                 <input
-                  type="text"
-                  value={role}
-                  onChange={(e) => setRole(e.target.value)}
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="Job title or role"
+                  placeholder="Enter password"
                   required
                 />
               </div>
               
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Email <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="email@example.com"
-                  required
-                />
+              <div className="mt-4">
+                <div className="flex items-center">
+                  <input
+                    type="checkbox"
+                    id="sendEmail"
+                    checked={sendWelcomeEmail}
+                    onChange={(e) => setSendWelcomeEmail(e.target.checked)}
+                    className="h-4 w-4 text-blue-500 focus:ring-blue-500 border-gray-300 rounded"
+                  />
+                  <label htmlFor="sendEmail" className="ml-2 block text-sm text-gray-700">
+                    Send email to member
+                  </label>
+                </div>
               </div>
+              
+              {error && (
+                <div className="mt-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded-lg">
+                  {error}
+                </div>
+              )}
+              
+              {success && (
+                <div className="mt-4 p-3 bg-green-100 border border-green-400 text-green-700 rounded-lg">
+                  Member added successfully!
+                </div>
+              )}
               
               <div className="pt-4 flex justify-center">
                 <button
                   type="submit"
-                  className="w-60 bg-blue-500 text-white font-semibold py-2 px-6 rounded-lg hover:bg-blue-600 transition-all duration-300"
+                  disabled={isLoading}
+                  className="w-32 bg-[#007BCA] text-white font-semibold py-2 px-6 rounded-lg hover:bg-blue-600 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {isEditMode ? 'Save Changes' : 'Add'}
+                  {isLoading ? 'Adding...' : (isEditMode ? 'Save Changes' : 'Add')}
                 </button>
               </div>
             </form>

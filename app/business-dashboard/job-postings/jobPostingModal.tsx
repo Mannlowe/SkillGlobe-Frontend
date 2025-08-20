@@ -21,7 +21,8 @@ export interface JobPosting {
   experienceRequired?: string;
   location: string;
   salary?: string;
-  skillsRequired?: string[];
+  primarySkills?: string[];
+  secondarySkills?: string[];
   genderPreference?: string[];
   languageRequirement?: string[];
   description?: string;
@@ -44,7 +45,8 @@ export interface JobFormState {
   opportunityClosed: boolean;
   numberOfOpenings: string;
   description: string;
-  skillsRequired: string[];
+  primarySkills: string[];
+  secondarySkills: string[];
   preferredQualifications: string;
   location: string;
   gender: string[];
@@ -62,10 +64,12 @@ interface JobPostingModalProps {
 }
 
 export default function JobPostingModal({ showModal, setShowModal, onSubmit, editData }: JobPostingModalProps) {
-  const [skillsDropdownOpen, setSkillsDropdownOpen] = useState(false);
+  const [primarySkillsDropdownOpen, setPrimarySkillsDropdownOpen] = useState(false);
+  const [secondarySkillsDropdownOpen, setSecondarySkillsDropdownOpen] = useState(false);
   const [genderDropdownOpen, setGenderDropdownOpen] = useState(false);
   const [languageDropdownOpen, setLanguageDropdownOpen] = useState(false);
-  const skillsDropdownRef = useRef<HTMLDivElement>(null);
+  const primarySkillsDropdownRef = useRef<HTMLDivElement>(null);
+  const secondarySkillsDropdownRef = useRef<HTMLDivElement>(null);
   const genderDropdownRef = useRef<HTMLDivElement>(null);
   const languageDropdownRef = useRef<HTMLDivElement>(null);
   
@@ -81,7 +85,8 @@ export default function JobPostingModal({ showModal, setShowModal, onSubmit, edi
     opportunityClosed: false,
     numberOfOpenings: '1',
     description: '',
-    skillsRequired: [],
+    primarySkills: [],
+    secondarySkills: [],
     preferredQualifications: '',
     location: '',
     gender: [],
@@ -118,17 +123,33 @@ export default function JobPostingModal({ showModal, setShowModal, onSubmit, edi
     }));
   };
   
-  const toggleSkill = (skill: string) => {
+  const togglePrimarySkill = (skill: string) => {
     setNewJob(prev => {
-      if (prev.skillsRequired.includes(skill)) {
+      if (prev.primarySkills.includes(skill)) {
         return {
           ...prev,
-          skillsRequired: prev.skillsRequired.filter(s => s !== skill)
+          primarySkills: prev.primarySkills.filter(s => s !== skill)
         };
       } else {
         return {
           ...prev,
-          skillsRequired: [...prev.skillsRequired, skill]
+          primarySkills: [...prev.primarySkills, skill]
+        };
+      }
+    });
+  };
+  
+  const toggleSecondarySkill = (skill: string) => {
+    setNewJob(prev => {
+      if (prev.secondarySkills.includes(skill)) {
+        return {
+          ...prev,
+          secondarySkills: prev.secondarySkills.filter(s => s !== skill)
+        };
+      } else {
+        return {
+          ...prev,
+          secondarySkills: [...prev.secondarySkills, skill]
         };
       }
     });
@@ -180,6 +201,21 @@ export default function JobPostingModal({ showModal, setShowModal, onSubmit, edi
         console.error('Error formatting application deadline:', error);
       }
       
+      // Handle backward compatibility with old data format
+      let primarySkills: string[] = [];
+      let secondarySkills: string[] = [];
+      
+      // If we have the new data structure with separate primary and secondary skills
+      if (editData.primarySkills || editData.secondarySkills) {
+        primarySkills = editData.primarySkills || [];
+        secondarySkills = editData.secondarySkills || [];
+      } 
+      // For backward compatibility with old data structure
+      else if ('skillsRequired' in editData && Array.isArray(editData.skillsRequired)) {
+        // Put all skills in primary skills for backward compatibility
+        primarySkills = editData.skillsRequired;
+      }
+      
       setNewJob({
         title: editData.title || '',
         skillCategory: editData.skillCategory || '',
@@ -192,7 +228,8 @@ export default function JobPostingModal({ showModal, setShowModal, onSubmit, edi
         opportunityClosed: false,
         numberOfOpenings: '1',
         description: editData.description || '',
-        skillsRequired: editData.skillsRequired || [],
+        primarySkills: primarySkills,
+        secondarySkills: secondarySkills,
         preferredQualifications: '',
         location: editData.location || '',
         gender: editData.genderPreference || [],
@@ -206,8 +243,11 @@ export default function JobPostingModal({ showModal, setShowModal, onSubmit, edi
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (skillsDropdownRef.current && !skillsDropdownRef.current.contains(event.target as Node)) {
-        setSkillsDropdownOpen(false);
+      if (primarySkillsDropdownRef.current && !primarySkillsDropdownRef.current.contains(event.target as Node)) {
+        setPrimarySkillsDropdownOpen(false);
+      }
+      if (secondarySkillsDropdownRef.current && !secondarySkillsDropdownRef.current.contains(event.target as Node)) {
+        setSecondarySkillsDropdownOpen(false);
       }
       if (genderDropdownRef.current && !genderDropdownRef.current.contains(event.target as Node)) {
         setGenderDropdownOpen(false);
@@ -223,10 +263,17 @@ export default function JobPostingModal({ showModal, setShowModal, onSubmit, edi
     };
   }, []);
   
-  const removeSkill = (skillToRemove: string) => {
+  const removePrimarySkill = (skillToRemove: string) => {
     setNewJob(prev => ({
       ...prev,
-      skillsRequired: prev.skillsRequired.filter(skill => skill !== skillToRemove)
+      primarySkills: prev.primarySkills.filter(skill => skill !== skillToRemove)
+    }));
+  };
+  
+  const removeSecondarySkill = (skillToRemove: string) => {
+    setNewJob(prev => ({
+      ...prev,
+      secondarySkills: prev.secondarySkills.filter(skill => skill !== skillToRemove)
     }));
   };
   
@@ -545,26 +592,26 @@ export default function JobPostingModal({ showModal, setShowModal, onSubmit, edi
       ></textarea>
     </div>
     
-    {/* Skills Required */}
+    {/* Primary Skills */}
     <div>
       <label className="block text-sm font-medium text-gray-700 mb-1">
-        Skills Required <span className="text-red-500">*</span>
+        Primary Skills <span className="text-red-500">*</span>
       </label>
       <div className="flex gap-4">
-        <div className="w-1/2 relative" ref={skillsDropdownRef}>
+        <div className="w-1/2 relative" ref={primarySkillsDropdownRef}>
           <div 
             className="w-full px-4 py-2 bg-gray-50 rounded-lg border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all flex justify-between items-center cursor-pointer"
-            onClick={() => setSkillsDropdownOpen(!skillsDropdownOpen)}
+            onClick={() => setPrimarySkillsDropdownOpen(!primarySkillsDropdownOpen)}
           >
-            <span className={newJob.skillsRequired.length === 0 ? "text-gray-500" : ""}>
-              {newJob.skillsRequired.length === 0 ? 'Select skills' : 'Skills selected'}
+            <span className={newJob.primarySkills.length === 0 ? "text-gray-500" : ""}>
+              {newJob.primarySkills.length === 0 ? 'Select primary skills' : 'Primary skills selected'}
             </span>
             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
               <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
             </svg>
           </div>
           
-          {skillsDropdownOpen && (
+          {primarySkillsDropdownOpen && (
             <div className="absolute z-10 mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-auto">
               {[
                 "React", "Angular", "Vue", "Node.js", "Python", "Java", ".NET", 
@@ -573,10 +620,10 @@ export default function JobPostingModal({ showModal, setShowModal, onSubmit, edi
                 <div 
                   key={skill} 
                   className="px-4 py-2 hover:bg-blue-50 cursor-pointer flex items-center justify-between"
-                  onClick={() => toggleSkill(skill)}
+                  onClick={() => togglePrimarySkill(skill)}
                 >
                   <span>{skill}</span>
-                  {newJob.skillsRequired.includes(skill) && (
+                  {newJob.primarySkills.includes(skill) && (
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-blue-600" viewBox="0 0 20 20" fill="currentColor">
                       <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                     </svg>
@@ -587,23 +634,83 @@ export default function JobPostingModal({ showModal, setShowModal, onSubmit, edi
           )}
         </div>
         <div className="w-1/2 bg-gray-50 border border-gray-200 rounded-lg p-2 min-h-[42px] max-h-[150px] overflow-y-auto">
-          {newJob.skillsRequired.length > 0 ? (
-            <div className="flex flex-wrap gap-2">
-              {newJob.skillsRequired.map((skill) => (
-                <div key={skill} className="bg-blue-100 text-blue-800 text-xs font-medium px-2 py-1 rounded-md flex items-center">
-                  {skill}
-                  <button 
-                    type="button" 
-                    className="ml-1 text-blue-600 hover:text-blue-800"
-                    onClick={() => removeSkill(skill)}
-                  >
-                    ×
-                  </button>
+          {newJob.primarySkills.length > 0 ? (
+            newJob.primarySkills.map((skill) => (
+              <div key={skill} className="inline-flex items-center bg-blue-100 text-blue-800 rounded-full px-3 py-1 text-sm mr-2 mb-2">
+                {skill}
+                <button 
+                  type="button"
+                  className="ml-1 text-blue-600 hover:text-blue-800"
+                  onClick={() => removePrimarySkill(skill)}
+                >
+                  ×
+                </button>
+              </div>
+            ))
+          ) : (
+            <p className="text-sm text-gray-500 italic">No primary skills selected</p>
+          )}
+        </div>
+      </div>
+    </div>
+    
+    {/* Secondary Skills */}
+    <div>
+      <label className="block text-sm font-medium text-gray-700 mb-1">
+        Secondary Skills
+      </label>
+      <div className="flex gap-4">
+        <div className="w-1/2 relative" ref={secondarySkillsDropdownRef}>
+          <div 
+            className="w-full px-4 py-2 bg-gray-50 rounded-lg border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all flex justify-between items-center cursor-pointer"
+            onClick={() => setSecondarySkillsDropdownOpen(!secondarySkillsDropdownOpen)}
+          >
+            <span className={newJob.secondarySkills.length === 0 ? "text-gray-500" : ""}>
+              {newJob.secondarySkills.length === 0 ? 'Select secondary skills' : 'Secondary skills selected'}
+            </span>
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+            </svg>
+          </div>
+          
+          {secondarySkillsDropdownOpen && (
+            <div className="absolute z-10 mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-auto">
+              {[
+                "React", "Angular", "Vue", "Node.js", "Python", "Java", ".NET", 
+                "AWS", "Azure", "Docker", "Kubernetes"
+              ].map((skill) => (
+                <div 
+                  key={skill} 
+                  className="px-4 py-2 hover:bg-blue-50 cursor-pointer flex items-center justify-between"
+                  onClick={() => toggleSecondarySkill(skill)}
+                >
+                  <span>{skill}</span>
+                  {newJob.secondarySkills.includes(skill) && (
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-blue-600" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                    </svg>
+                  )}
                 </div>
               ))}
             </div>
+          )}
+        </div>
+        <div className="w-1/2 bg-gray-50 border border-gray-200 rounded-lg p-2 min-h-[42px] max-h-[150px] overflow-y-auto">
+          {newJob.secondarySkills.length > 0 ? (
+            newJob.secondarySkills.map((skill) => (
+              <div key={skill} className="inline-flex items-center bg-blue-100 text-blue-800 rounded-full px-3 py-1 text-sm mr-2 mb-2">
+                {skill}
+                <button 
+                  type="button"
+                  className="ml-1 text-blue-600 hover:text-blue-800"
+                  onClick={() => removeSecondarySkill(skill)}
+                >
+                  ×
+                </button>
+              </div>
+            ))
           ) : (
-            <p className="text-sm text-gray-500 italic">No skills selected</p>
+            <p className="text-sm text-gray-500 italic">No secondary skills selected</p>
           )}
         </div>
       </div>

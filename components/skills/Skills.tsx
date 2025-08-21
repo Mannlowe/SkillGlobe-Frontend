@@ -80,8 +80,8 @@ export default function Skills({ onSkillsComplete, onSkip, className = '' }: Ski
           ...categoriesData,
           // Add missing categories if they don't exist in the API response
           'Technical': categoriesData['Technical'] || [],
-          'Tools': categoriesData['Tool'] || categoriesData['Tools'] || [], // Map 'Tool' to 'Tools' if needed
-          'Soft Skills': categoriesData['Soft Skills'] || []
+          'Tool': categoriesData['Tool'] || [], // Map 'Tool' to 'Tools' if needed
+          'Soft Skill': categoriesData['Soft Skill'] || []
         };
         
         console.log('Updated categories:', updatedCategories);
@@ -353,7 +353,7 @@ export default function Skills({ onSkillsComplete, onSkip, className = '' }: Ski
         ) : Object.keys(skillCategories).length === 0 ? (
           <div className="text-gray-500 px-4 py-2">No skill categories available</div>
         ) : (
-          Object.keys(skillCategories).map((category) => (
+          ["Technical", "Tool", "Soft Skill"].map((category) => (
             <button
               key={category}
               onClick={() => setActiveCategory(category)}

@@ -20,7 +20,7 @@ export default function HeroSection() {
             <span className="text-orange-300">Unlimited Opportunities</span>
           </h1>
           <p className="text-lg md:text-xl text-blue-100 max-w-3xl mx-auto leading-relaxed">
-            Connect with new opportunities, monetize your expertise, and grow your skills in our AI-powered talent ecosystem
+            Connect with opportunities, monetize your expertise, and grow your skills in our AI-powered talent ecosystem
           </p>
         </div>
 

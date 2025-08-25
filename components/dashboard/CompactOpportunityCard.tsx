@@ -51,9 +51,14 @@ export default function CompactOpportunityCard({ opportunity, onApply, onSave, o
 
   return (
     <div 
-      onClick={handleCardClick}
-      className="bg-white rounded-lg border border-gray-200 hover:shadow-md hover:border-orange-200 transition-all duration-200 p-4 cursor-pointer group relative"
+      className={`${
+        opportunity.buyer_interested ? 'buyer-interested-border' : ''
+      } rounded-lg`}
     >
+      <div 
+        onClick={handleCardClick}
+        className="inner bg-white rounded-lg border border-gray-200 hover:shadow-md hover:border-orange-200 transition-all duration-200 p-4 cursor-pointer group relative"
+      >
       {/* Bookmark Button - Top Right Corner */}
       <button
         onClick={handleBookmark}
@@ -70,9 +75,21 @@ export default function CompactOpportunityCard({ opportunity, onApply, onSave, o
       {/* Header Row */}
       <div className="flex items-start justify-between mb-3 pr-10">
         <div className="flex-1 min-w-0">
-          <h3 className="font-semibold text-gray-900 truncate group-hover:text-orange-600 transition-colors" title={opportunity.title}>
-            {opportunity.title}
-          </h3>
+        <div className="flex items-center gap-2">
+  <h3
+    className="font-semibold text-gray-900 truncate group-hover:text-orange-600 transition-colors"
+    title={opportunity.title}
+  >
+    {opportunity.title}
+  </h3>
+
+  {opportunity.buyer_interested && (
+    <span className="px-2 py-0.5 rounded-full text-xs bg-gradient-to-r from-yellow-400 to-yellow-600 text-white font-medium">
+      ⭐ Buyer Interested
+    </span>
+  )}
+</div>
+
           
           {/* Company and Match Score on same line */}
           <div className="flex items-center gap-2 mt-1">
@@ -117,6 +134,7 @@ export default function CompactOpportunityCard({ opportunity, onApply, onSave, o
             Urgent
           </span>
         )}
+        
       </div>
 
       {/* Top Match Reasons - Compact with subtle styling */}
@@ -159,6 +177,7 @@ export default function CompactOpportunityCard({ opportunity, onApply, onSave, o
       
       {/* Subtle indication this card is clickable */}
       <div className="absolute inset-0 rounded-lg border-2 border-transparent group-hover:border-orange-200 pointer-events-none transition-colors duration-200"></div>
+      </div>
     </div>
   );
 }

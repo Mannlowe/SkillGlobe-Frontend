@@ -124,6 +124,7 @@ export const mockJobOpportunities: JobOpportunity[] = [
     application_competition: 'Medium',
     hiring_urgency: 'Urgent',
     recruiter_activity: 'Actively reviewing applications',
+    buyer_interested: true,
   },
   {
     id: 'job-002',
@@ -146,6 +147,7 @@ export const mockJobOpportunities: JobOpportunity[] = [
     application_competition: 'Low',
     hiring_urgency: 'Normal',
     recruiter_activity: 'Recently posted',
+    buyer_interested: false,
   },
   {
     id: 'job-003',
@@ -168,5 +170,6 @@ export const mockJobOpportunities: JobOpportunity[] = [
     application_competition: 'High',
     hiring_urgency: 'Flexible',
     recruiter_activity: 'Multiple rounds of interviews',
+    buyer_interested: false,
   },
 ];

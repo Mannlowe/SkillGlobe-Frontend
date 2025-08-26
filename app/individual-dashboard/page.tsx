@@ -437,7 +437,9 @@ export default function CompactDashboardPage() {
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-semibold text-gray-900">Top Matches</h3>
-            <button className="text-sm text-blue-600 hover:text-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded-md px-2 py-1">View all →</button>
+            <button
+            onClick={() => router.push('/opportunities')}
+            className="text-sm text-blue-600 hover:text-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded-md px-2 py-1">View all →</button>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {mockJobOpportunities.slice(0, 2).map((job) => (

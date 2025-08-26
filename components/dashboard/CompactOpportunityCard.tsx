@@ -4,6 +4,8 @@ import { MapPin, DollarSign, Target, Clock, Zap, Bookmark, Send, Eye } from 'luc
 import type { JobOpportunity } from '@/types/dashboard';
 import { StandardizedButton } from '@/components/ui/StandardizedButton';
 import { useState } from 'react';
+import OpportunityDetails from '@/components/modal/OpportunityDetails';
+import SkillsSuccessModal from '@/components/modal/SkillsSuccessModal';
 
 interface CompactOpportunityCardProps {
   opportunity: JobOpportunity;
@@ -15,6 +17,8 @@ interface CompactOpportunityCardProps {
 export default function CompactOpportunityCard({ opportunity, onApply, onSave, onViewDetails }: CompactOpportunityCardProps) {
   const [showTooltip, setShowTooltip] = useState(false);
   const [isBookmarked, setIsBookmarked] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isApplicationModalOpen, setIsApplicationModalOpen] = useState(false);
 
   const getMatchScoreColor = (score: number) => {
     if (score >= 90) return 'text-green-600 bg-green-50 border-green-200';
@@ -42,11 +46,27 @@ export default function CompactOpportunityCard({ opportunity, onApply, onSave, o
 
   const handleApply = (e: React.MouseEvent) => {
     e.stopPropagation();
+    setIsApplicationModalOpen(true);
     onApply?.(opportunity.id);
   };
 
   const handleCardClick = () => {
+    setIsModalOpen(true);
     onViewDetails?.(opportunity.id);
+  };
+
+  const handleViewClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsModalOpen(true);
+    onViewDetails?.(opportunity.id);
+  };
+
+  const handleModalClose = () => {
+    setIsModalOpen(false);
+  };
+
+  const handleApplicationModalClose = () => {
+    setIsApplicationModalOpen(false);
   };
 
   return (
@@ -161,10 +181,7 @@ export default function CompactOpportunityCard({ opportunity, onApply, onSave, o
         {/* Secondary Actions */}
         <div className="flex items-center gap-2">
           <StandardizedButton
-            onClick={(e) => {
-              e.stopPropagation();
-              onViewDetails?.(opportunity.id);
-            }}
+            onClick={handleViewClick}
             variant="ghost"
             size="sm"
             leftIcon={<Eye size={14} />}
@@ -178,6 +195,24 @@ export default function CompactOpportunityCard({ opportunity, onApply, onSave, o
       {/* Subtle indication this card is clickable */}
       <div className="absolute inset-0 rounded-lg border-2 border-transparent group-hover:border-orange-200 pointer-events-none transition-colors duration-200"></div>
       </div>
+
+      {/* Opportunity Details Modal */}
+      <OpportunityDetails
+        opportunity={opportunity}
+        isOpen={isModalOpen}
+        onClose={handleModalClose}
+        onApply={onApply}
+        onSave={onSave}
+      />
+
+      {/* Application Success Modal */}
+      <SkillsSuccessModal
+        isOpen={isApplicationModalOpen}
+        onClose={handleApplicationModalClose}
+        type="application"
+        jobTitle={opportunity.title}
+        companyName={opportunity.company}
+      />
     </div>
   );
 }

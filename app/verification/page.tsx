@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import ModernLayoutWrapper from '@/components/layout/ModernLayoutWrapper';
-import IdentityVerification from '@/components/verification/IdentityVerification';
+import IdentityVerification from '@/components/curation/IdentityVerification';
 
 export default function VerificationPage() {
   const router = useRouter();

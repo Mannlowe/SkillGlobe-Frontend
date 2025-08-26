@@ -101,7 +101,7 @@ export default function HorizontalNavigation({
           id: 'curation',
           label: 'Curation',
           icon: <Shield className="w-4 h-4" />,
-          href: '/curation',
+          href: '/verification',
           description: 'Verify your identity for premium opportunities'
         },
         {

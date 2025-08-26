@@ -73,7 +73,7 @@ export default function CompactMarketMetrics({ metrics, onViewDetails }: Compact
         </div>
 
         {/* Current Rate */}
-        <div className="bg-orange-50 rounded-lg p-3">
+        {/* <div className="bg-orange-50 rounded-lg p-3">
           <div className="flex items-center justify-between mb-1">
             <DollarSign className="text-orange-500" size={16} />
             <span className={`text-xs font-medium ${
@@ -87,7 +87,7 @@ export default function CompactMarketMetrics({ metrics, onViewDetails }: Compact
           </p>
           <p className="text-xs text-gray-700 font-medium">Current Rate</p>
           <p className="text-xs text-gray-600">{metrics.earning_metrics.market_rate_position}</p>
-        </div>
+        </div> */}
 
         {/* Career Score */}
         <div className="bg-purple-50 rounded-lg p-3">

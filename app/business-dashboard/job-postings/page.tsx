@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Briefcase, Plus, Search } from 'lucide-react';
+import { Briefcase, Plus, Search, Users, Archive } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import BusinessSidebar from '@/components/dashboard/BusinessSidebar';
 import BusinessDashboardHeader from '@/components/dashboard/BusinessDashboardHeader';
 import JobPostingModal, { JobFormState, DocumentFile } from './jobPostingModal';
@@ -27,9 +28,10 @@ interface JobPosting {
   applicationDeadline?: string;
   postedDate: string;
   status: string;
+  applicantCount?: number;
 }
 
-// Sample job postings data
+// Sample job postings data with applicant counts
 const sampleJobPostings: JobPosting[] = [
   {
     id: '1',
@@ -40,7 +42,8 @@ const sampleJobPostings: JobPosting[] = [
     experienceRequired: '3-5 years',
     location: 'Remote',
     postedDate: '2 days ago',
-    status: 'Active'
+    status: 'Active',
+    applicantCount: 4
   },
   {
     id: '2',
@@ -51,7 +54,8 @@ const sampleJobPostings: JobPosting[] = [
     experienceRequired: '2-4 years',
     location: 'Bangalore, India',
     postedDate: '1 week ago',
-    status: 'Active'
+    status: 'Active',
+    applicantCount: 4
   },
   {
     id: '3',
@@ -62,14 +66,17 @@ const sampleJobPostings: JobPosting[] = [
     experienceRequired: '4+ years',
     location: 'Hybrid',
     postedDate: '3 days ago',
-    status: 'Active'
+    status: 'Active',
+    applicantCount: 4
   }
 ];
 
 export default function JobPostingsPage() {
+  const router = useRouter();
   const [showModal, setShowModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [jobPostings, setJobPostings] = useState<JobPosting[]>([]);
+  const [closedJobs, setClosedJobs] = useState<JobPosting[]>([]);
   const [currentJob, setCurrentJob] = useState<JobPosting | null>(null);
   const [editMode, setEditMode] = useState(false);
   
@@ -91,10 +98,17 @@ export default function JobPostingsPage() {
     console.log('Using entity ID:', entityId);
   }, [entity, entityId]);
   
-  // Fetch job postings when component mounts
+  // Fetch job postings when component mounts and entity_id is available
   useEffect(() => {
     const fetchJobPostings = async () => {
+      // Only fetch if we have a valid entity_id
+      if (!entityId) {
+        console.log('Waiting for entity_id to be loaded...');
+        return;
+      }
+      
       try {
+        console.log('Fetching job postings for entity_id:', entityId);
         await getJobPostings(entityId);
       } catch (error) {
         console.error('Error fetching job postings:', error);
@@ -116,7 +130,8 @@ export default function JobPostingsPage() {
         experienceRequired: job.experience_required,
         location: job.location || 'Not specified',
         postedDate: '2 days ago', // This would ideally come from the API
-        status: 'Active' // This would ideally come from the API
+        status: 'Active', // This would ideally come from the API
+        applicantCount: 4 // Fixed count to match sample data
       }));
       
       setJobPostings(mappedJobPostings);
@@ -170,7 +185,8 @@ export default function JobPostingsPage() {
         documents: job.documents,
         applicationDeadline: job.applicationDeadline,
         postedDate: new Date().toLocaleDateString(),
-        status: 'Active'
+        status: 'Active',
+        applicantCount: 0
       };
       
       setJobPostings([...jobPostings, newJobPosting]);
@@ -193,13 +209,34 @@ export default function JobPostingsPage() {
     setShowDeleteModal(true);
   };
   
-  const handleDeleteConfirm = () => {
+  const handleCloseJob = () => {
     if (currentJob) {
+      // Move job to closed opportunities with closed date
+      const closedJob = { 
+        ...currentJob, 
+        status: 'Closed',
+        closedDate: new Date().toLocaleDateString()
+      };
+      
+      // Update closed jobs state and localStorage
+      const updatedClosedJobs = [...closedJobs, closedJob];
+      setClosedJobs(updatedClosedJobs);
+      localStorage.setItem('closedJobs', JSON.stringify(updatedClosedJobs));
+      
+      // Remove from active job postings
       const updatedJobPostings = jobPostings.filter(jp => jp.id !== currentJob.id);
       setJobPostings(updatedJobPostings);
       setShowDeleteModal(false);
       setCurrentJob(null);
     }
+  };
+  
+  const handleTitleClick = (jobId: string) => {
+    router.push(`/business-dashboard/job-applied-users?jobId=${jobId}`);
+  };
+  
+  const navigateToClosedOpportunities = () => {
+    router.push('/business-dashboard/closed-opportunities');
   };
   
   const handleDeleteCancel = () => {
@@ -215,10 +252,13 @@ export default function JobPostingsPage() {
         <BusinessDashboardHeader title="Job Postings" />
         
         <div className="flex-1 bg-gray-50 p-8">
-          <div className="flex justify-end items-center mb-3">
-            {/* <h1 className="text-2xl font-bold flex items-center">
-              <Briefcase className="mr-2" /> Job Postings
-            </h1> */}
+          <div className="flex justify-end items-center mb-3 gap-3">
+            <button
+              onClick={navigateToClosedOpportunities}
+              className="bg-gray-600 hover:bg-gray-700 text-white py-2 px-4 rounded-lg flex items-center transition-all duration-300"
+            >
+              <Archive size={20} className="mr-1" /> Closed Opportunities
+            </button>
             <button
               onClick={() => {
                 setEditMode(false);
@@ -232,14 +272,16 @@ export default function JobPostingsPage() {
           </div>
           
           {/* Loading and error states */}
-          {isLoading && (
+          {(!entityId || isLoading) && (
             <div className="flex justify-center items-center p-8">
               <div className="w-8 h-8 border-4 border-orange-600 border-t-transparent rounded-full animate-spin"></div>
-              <span className="ml-2">Loading job postings...</span>
+              <span className="ml-2">
+                {!entityId ? 'Loading user session...' : 'Loading job postings...'}
+              </span>
             </div>
           )}
           
-          {error && (
+          {error && entityId && (
             <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4">
               {error}
             </div>
@@ -279,7 +321,16 @@ export default function JobPostingsPage() {
                             <Briefcase className="h-5 w-5 text-blue-600" />
                           </div>
                           <div className="ml-4">
-                            <div className="text-sm font-medium text-gray-900">{job.title}</div>
+                            <button
+                              onClick={() => handleTitleClick(job.id)}
+                              className="text-sm font-medium text-blue-600 hover:text-blue-800 hover:underline cursor-pointer flex items-center gap-2"
+                            >
+                              {job.title}
+                              <span className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full flex items-center gap-1">
+                                <Users size={12} />
+                                {job.applicantCount || 0}
+                              </span>
+                            </button>
                           </div>
                         </div>
                       </td>
@@ -335,9 +386,9 @@ export default function JobPostingsPage() {
       {showDeleteModal && (
         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-md">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Confirm Delete</h3>
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Close Job Posting</h3>
             <p className="text-gray-700 mb-6">
-              Are you sure you want to delete the job posting &ldquo;{currentJob?.title}&rdquo;? This action cannot be undone.
+              Are you sure you want to close the job posting &ldquo;{currentJob?.title}&rdquo;? This will move it to closed opportunities.
             </p>
             <div className="flex justify-end space-x-3">
               <button
@@ -347,10 +398,10 @@ export default function JobPostingsPage() {
                 Cancel
               </button>
               <button
-                onClick={handleDeleteConfirm}
+                onClick={handleCloseJob}
                 className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
               >
-                Delete
+                Close Job
               </button>
             </div>
           </div>

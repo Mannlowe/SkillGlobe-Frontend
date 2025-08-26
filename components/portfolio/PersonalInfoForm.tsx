@@ -265,7 +265,7 @@ export default function PersonalInfoForm({ onSave, onCancel, initialData = {} }:
                 <option value="US">United States</option>
                 <option value="CA">Canada</option>
                 <option value="UK">United Kingdom</option>
-                <option value="IN">India</option>
+                <option value="India">India</option>
                 <option value="AU">Australia</option>
                 {/* Add more countries as needed */}
               </select>

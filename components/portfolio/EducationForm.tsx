@@ -41,8 +41,19 @@ interface EducationFormProps {
 }
 
 export default function EducationForm({ onSave, onCancel, initialData = [] }: EducationFormProps) {
-  // Initialize state from localStorage or use initialData as fallback
+  // Initialize state from initialData first, then localStorage as fallback
   const [educationEntries, setEducationEntries] = useState<EducationEntry[]>(() => {
+    console.log('EducationForm initializing with initialData:', initialData);
+    
+    // If we have initialData from API, use it
+    if (initialData && initialData.length > 0) {
+      console.log('Using initialData from API:', initialData);
+      return initialData.map(entry => ({
+        ...entry,
+        certificateFile: null // Files can't be stored in localStorage
+      }));
+    }
+    
     // Check if we're in a browser environment (not during SSR)
     if (typeof window !== 'undefined') {
       try {
@@ -52,6 +63,7 @@ export default function EducationForm({ onSave, onCancel, initialData = [] }: Ed
           const parsedEntries = JSON.parse(savedEntries);
           // Make sure we have valid data
           if (Array.isArray(parsedEntries) && parsedEntries.length > 0) {
+            console.log('Using localStorage data:', parsedEntries);
             // Convert File objects which were serialized to null back to null
             return parsedEntries.map(entry => ({
               ...entry,
@@ -64,8 +76,9 @@ export default function EducationForm({ onSave, onCancel, initialData = [] }: Ed
       }
     }
 
-    // Fallback to initialData or create a new entry
-    return initialData.length > 0 ? initialData : [
+    // Fallback to create a new empty entry
+    console.log('No data found, creating empty entry');
+    return [
       {
         id: crypto.randomUUID(),
         educationLevel: '',
@@ -78,7 +91,7 @@ export default function EducationForm({ onSave, onCancel, initialData = [] }: Ed
     ];
   });
 
-  const [activeEntryId, setActiveEntryId] = useState<string>(educationEntries[0]?.id || '');
+  const [activeEntryId, setActiveEntryId] = useState<string>('');
   const [editMode, setEditMode] = useState<boolean>(true);
   const [validationErrors, setValidationErrors] = useState<{ [key: string]: string }>({});
   const [isUpdateMode, setIsUpdateMode] = useState<boolean>(false);
@@ -230,36 +243,39 @@ export default function EducationForm({ onSave, onCancel, initialData = [] }: Ed
     resetUpdateState
   } = useEducationStore();
 
+  // Update educationEntries when initialData changes
+  useEffect(() => {
+    console.log('EducationForm: initialData changed:', initialData);
+    if (initialData && initialData.length > 0) {
+      console.log('Updating educationEntries with new initialData');
+      setEducationEntries(initialData.map(entry => ({
+        ...entry,
+        certificateFile: null
+      })));
+      // Set first entry as active if no active entry
+      if (!activeEntryId && initialData.length > 0) {
+        setActiveEntryId(initialData[0].id);
+        setEditMode(false); // Show list view when we have data
+      }
+    }
+  }, [initialData, activeEntryId]);
+  
   useEffect(() => {
     // Reset upload state when component mounts
     resetUploadState();
     resetUpdateState();
     
-    // Try to fetch education list from API
-    fetchEducationList().then(entries => {
-      console.log('Fetched education entries:', entries);
-      if (entries.length > 0 && !activeEntryId) {
-        setActiveEntryId(entries[0].id);
+    // Set active entry if we have entries but no active entry
+    if (educationEntries.length > 0 && !activeEntryId) {
+      setActiveEntryId(educationEntries[0].id);
+      // If we have data from API, show list view, otherwise show edit mode
+      if (initialData && initialData.length > 0) {
+        setEditMode(false);
       }
-    }).catch(error => {
-      console.error('Failed to fetch education list on mount:', error);
-      // If API fails, try to load from localStorage
-      try {
-        const savedEntries = localStorage.getItem('educationEntries');
-        if (savedEntries) {
-          const parsedEntries = JSON.parse(savedEntries);
-          setEducationEntries(parsedEntries);
-          if (parsedEntries.length > 0 && !activeEntryId) {
-            setActiveEntryId(parsedEntries[0].id);
-          }
-        }
-      } catch (e) {
-        console.error('Error loading education entries from localStorage:', e);
-      }
-    });
+    }
     
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [educationEntries]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     // Prevent default form submission

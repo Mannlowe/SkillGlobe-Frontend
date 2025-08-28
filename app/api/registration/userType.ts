@@ -8,6 +8,8 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://skillglobe
 export interface UserTypeSelectionRequest {
   entity_type: 'Individual' | 'Business';
   entity_category: 'Buyer' | 'Seller' | 'Enhancer';
+  lead_reference?: string; // Optional
+  email_token?: string; // Optional
 }
 
 // Interface for user type selection response
@@ -28,11 +30,15 @@ export interface UserTypeSelectionResponse {
  * Start registration process with user type selection
  * @param entityType User type ('Individual' or 'Business')
  * @param entityCategory User category ('Buyer', 'Seller', or 'Enhancer')
+ * @param leadReference Optional lead reference for lead tracking
+ * @param emailToken Optional email token for lead verification
  * @returns Promise with registration response
  */
 export const startRegistration = async (
   entityType: 'Individual' | 'Business',
-  entityCategory: 'Buyer' | 'Seller' | 'Enhancer'
+  entityCategory: 'Buyer' | 'Seller' | 'Enhancer',
+  leadReference?: string,
+  emailToken?: string
 ): Promise<UserTypeSelectionResponse> => {
   try {
     console.log('Starting registration with:', { entity_type: entityType, entity_category: entityCategory });
@@ -41,7 +47,9 @@ export const startRegistration = async (
       `${API_BASE_URL}/api/method/skillglobe_be.api.register.register.start_registration`,
       {
         entity_type: entityType,
-        entity_category: entityCategory
+        entity_category: entityCategory,
+        ...(leadReference && { lead_reference: leadReference }),
+        ...(emailToken && { email_token: emailToken })
       },
       {
         headers: {

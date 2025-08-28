@@ -9,6 +9,8 @@ export interface VerifyOtpRequest {
   request_id: string;
   email_otp: string;
   phone_otp: string;
+  lead_reference?: string; // Optional
+  email_token?: string; // Optional
 }
 
 // Interface for OTP verification response
@@ -31,12 +33,16 @@ export interface VerifyOtpResponse {
  * @param requestId Registration request ID
  * @param emailOtp Email OTP code
  * @param phoneOtp Phone OTP code
+ * @param leadReference Optional lead reference for lead tracking
+ * @param emailToken Optional email token for lead verification
  * @returns Promise with verification response
  */
 export const verifyOtp = async (
   requestId: string,
   emailOtp: string,
-  phoneOtp: string
+  phoneOtp: string,
+  leadReference?: string,
+  emailToken?: string
 ): Promise<VerifyOtpResponse> => {
   try {
     console.log('Verifying OTP with:', { request_id: requestId, email_otp: emailOtp, phone_otp: phoneOtp });
@@ -46,7 +52,9 @@ export const verifyOtp = async (
       {
         request_id: requestId,
         email_otp: emailOtp,
-        phone_otp: phoneOtp
+        phone_otp: phoneOtp,
+        ...(leadReference && { lead_reference: leadReference }),
+        ...(emailToken && { email_token: emailToken })
       },
       {
         headers: {

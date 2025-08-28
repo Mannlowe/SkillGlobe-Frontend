@@ -267,7 +267,7 @@ export default function JobPostingsPage() {
               }}
               className="bg-[#007BCA] hover:bg-[#007BCA] text-white py-2 px-4 rounded-lg flex items-center transition-all duration-300"
             >
-              <Plus size={20} className="mr-1" /> Create Job Posting
+              <Plus size={20} className="mr-1" />New Job Posting
             </button>
           </div>
           

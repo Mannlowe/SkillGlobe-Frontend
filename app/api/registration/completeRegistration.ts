@@ -6,6 +6,8 @@ export interface CompleteRegistrationRequest {
   request_id: string;
   password: string;
   agreed?: number; // 1 for accepted, 0 for not accepted
+  lead_reference?: string; // Optional
+  email_token?: string; // Optional
 }
 // Interface for complete registration response
 export interface CompleteRegistrationResponse {
@@ -24,7 +26,9 @@ export interface CompleteRegistrationResponse {
 export const completeRegistration = async (
   requestId: string,
   password: string,
-  agreed: number = 1 // Default to 1 (accepted)
+  agreed: number = 1, // Default to 1 (accepted)
+  leadReference?: string,
+  emailToken?: string
 ): Promise<CompleteRegistrationResponse> => {
   try {
     console.log('Completing registration with:', { request_id: requestId });
@@ -34,7 +38,9 @@ export const completeRegistration = async (
       {
         request_id: requestId,
         password: password,
-        agreed: agreed
+        agreed: agreed,
+        ...(leadReference && { lead_reference: leadReference }),
+        ...(emailToken && { email_token: emailToken })
       },
       {
         headers: {

@@ -26,14 +26,6 @@ export interface UserTypeSelectionResponse {
   };
 }
 
-/**
- * Start registration process with user type selection
- * @param entityType User type ('Individual' or 'Business')
- * @param entityCategory User category ('Buyer', 'Seller', or 'Enhancer')
- * @param leadReference Optional lead reference for lead tracking
- * @param emailToken Optional email token for lead verification
- * @returns Promise with registration response
- */
 export const startRegistration = async (
   entityType: 'Individual' | 'Business',
   entityCategory: 'Buyer' | 'Seller' | 'Enhancer',
@@ -41,16 +33,19 @@ export const startRegistration = async (
   emailToken?: string
 ): Promise<UserTypeSelectionResponse> => {
   try {
-    console.log('Starting registration with:', { entity_type: entityType, entity_category: entityCategory });
+    const payload = {
+      entity_type: entityType,
+      entity_category: entityCategory,
+      ...(leadReference && { lead_reference: leadReference }),
+      ...(emailToken && { email_token: emailToken })
+    };
+    
+    console.log('Starting registration with payload:', payload);
+    console.log('Lead parameters:', { leadReference, emailToken });
     
     const response = await axios.post<UserTypeSelectionResponse>(
       `${API_BASE_URL}/api/method/skillglobe_be.api.register.register.start_registration`,
-      {
-        entity_type: entityType,
-        entity_category: entityCategory,
-        ...(leadReference && { lead_reference: leadReference }),
-        ...(emailToken && { email_token: emailToken })
-      },
+      payload,
       {
         headers: {
           'Content-Type': 'application/json',
@@ -60,6 +55,7 @@ export const startRegistration = async (
     );
     
     console.log('Registration response:', response.data);
+    console.log('Request ID generated:', response.data.message?.request_id);
     return response.data;
   } catch (error: any) {
     console.error('Registration error:', error.response?.data || error.message || error);

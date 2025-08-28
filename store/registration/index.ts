@@ -14,6 +14,10 @@ interface RegistrationState {
   entityCategory: 'Buyer' | 'Seller' | 'Enhancer' | null;
   request_id: string | null;
   
+  // Lead parameters
+  leadReference: string | null;
+  emailToken: string | null;
+  
   // Personal details
   firstName: string;
   lastName: string;
@@ -39,6 +43,8 @@ interface RegistrationState {
   // Actions
   setUserType: (userType: 'individual' | 'business') => Promise<void>;
   setEntityCategory: (category: 'Buyer' | 'Seller' | 'Enhancer') => void;
+  setLeadParameters: (leadReference: string | null, emailToken: string | null) => void;
+  initializeWithLead: (userType: 'individual' | 'business', leadReference: string, emailToken: string) => Promise<void>;
   updatePersonalDetails: (firstName: string, lastName: string, email: string, mobile: string, password: string) => Promise<any>;
   verifyOtpCodes: (emailOtp: string, phoneOtp: string) => Promise<any>;
   completeRegistration: (agreed?: number) => Promise<any>;
@@ -54,6 +60,8 @@ export const useRegistrationStore = create<RegistrationState>()(
       entityType: null,
       entityCategory: null,
       request_id: null,
+      leadReference: null,
+      emailToken: null,
       firstName: '',
       lastName: '',
       email: '',
@@ -81,7 +89,8 @@ export const useRegistrationStore = create<RegistrationState>()(
           // Business users are 'Buyer' by default
           const entityCategory = userType === 'individual' ? 'Seller' : 'Buyer';
           
-          const response = await startRegistration(entityType, entityCategory);
+          const { leadReference, emailToken } = get();
+          const response = await startRegistration(entityType, entityCategory, leadReference || undefined, emailToken || undefined);
           
           // Update state with response data
           set({
@@ -105,6 +114,39 @@ export const useRegistrationStore = create<RegistrationState>()(
         set({ entityCategory: category });
       },
       
+      // Set lead parameters
+      setLeadParameters: (leadReference: string | null, emailToken: string | null) => {
+        set({ leadReference, emailToken });
+      },
+      
+      // Initialize registration with lead parameters (skip user type selection)
+      initializeWithLead: async (userType: 'individual' | 'business', leadReference: string, emailToken: string) => {
+        set({ isLoading: true, error: null, leadReference, emailToken });
+        
+        try {
+          // Convert userType to the format expected by the API
+          const entityType = userType === 'individual' ? 'Individual' : 'Business';
+          const entityCategory = userType === 'individual' ? 'Seller' : 'Buyer';
+          
+          const response = await startRegistration(entityType, entityCategory, leadReference, emailToken);
+          
+          // Update state with response data
+          set({
+            userType,
+            entityType,
+            entityCategory,
+            request_id: response.message?.request_id || null,
+            isLoading: false
+          });
+        } catch (error: any) {
+          console.error('Lead registration error:', error);
+          set({
+            error: 'Failed to start lead registration. Please try again.',
+            isLoading: false
+          });
+        }
+      },
+      
       // Update personal details
       updatePersonalDetails: async (firstName: string, lastName: string, email: string, mobile: string, password: string) => {
         set({ isLoading: true, error: null });
@@ -119,13 +161,18 @@ export const useRegistrationStore = create<RegistrationState>()(
           // Combine first and last name for the API
           const fullName = `${firstName} ${lastName}`.trim();
           
+          // Get lead parameters
+          const { leadReference, emailToken } = get();
+          
           // Call the API to update personal details
           const response = await updatePersonalDetails(
             request_id,
             email,
             mobile,
             fullName,
-            password
+            password,
+            leadReference || undefined,
+            emailToken || undefined
           );
           
           // Update state with response data
@@ -160,11 +207,16 @@ export const useRegistrationStore = create<RegistrationState>()(
             throw new Error('Registration ID not found. Please start registration first.');
           }
           
+          // Get lead parameters
+          const { leadReference, emailToken } = get();
+          
           // Call the API to verify OTP codes
           const response = await verifyOtp(
             request_id,
             emailOtp,
-            phoneOtp
+            phoneOtp,
+            leadReference || undefined,
+            emailToken || undefined
           );
           
           // Update state with response data
@@ -201,11 +253,16 @@ export const useRegistrationStore = create<RegistrationState>()(
             throw new Error('Password not found. Please complete the personal details step first.');
           }
           
+          // Get lead parameters
+          const { leadReference, emailToken } = get();
+          
           // Call the API to complete registration
           const response = await completeRegistration(
             request_id,
             password,
-            agreed
+            agreed,
+            leadReference || undefined,
+            emailToken || undefined
           );
           
           // Update state with response data
@@ -234,6 +291,8 @@ export const useRegistrationStore = create<RegistrationState>()(
           entityType: null,
           entityCategory: null,
           request_id: null,
+          leadReference: null,
+          emailToken: null,
           firstName: '',
           lastName: '',
           email: '',
@@ -256,6 +315,8 @@ export const useRegistrationStore = create<RegistrationState>()(
         entityType: state.entityType,
         entityCategory: state.entityCategory,
         request_id: state.request_id,
+        leadReference: state.leadReference,
+        emailToken: state.emailToken,
         firstName: state.firstName,
         lastName: state.lastName,
         email: state.email,

@@ -5,11 +5,23 @@ import ModernLayoutWrapper from '@/components/layout/ModernLayoutWrapper';
 import StrategicProfileOptimizer from '@/components/dashboard/StrategicProfileOptimizer';
 import ProfileAnalytics from '@/components/dashboard/ProfileAnalytics';
 import ProfileForm, { ProfileEntry } from '@/components/profile/ProfileForm';
+import ResumeTemplateSelector, { ResumeTemplate } from '@/components/profile/ResumeTemplateSelector';
 import { mockProfileOptimizationHub, mockProfileAnalytics } from '@/lib/mockPhase3Data';
 import { useToast } from '@/hooks/use-toast';
 // Import useModals but use it inside useEffect to prevent infinite loop
 import { useModals } from '@/store/uiStore';
-import { Plus, User, Settings, Eye, Share2, Pencil, Trash2, AlertCircle } from 'lucide-react';
+import { Plus, User, Settings, Eye, Share2, Pencil, Trash2, AlertCircle, FileText, Download, X } from 'lucide-react';
+
+interface Profile {
+  id: string;
+  name: string;
+  type: string;
+  completeness: number;
+  views: number;
+  isActive: boolean;
+  template?: ResumeTemplate | null;
+  formData?: ProfileEntry | null;
+}
 
 export default function ProfilesPage() {
   const { toast } = useToast();
@@ -25,15 +37,21 @@ export default function ProfilesPage() {
   const [activeProfile, setActiveProfile] = useState('default');
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [profileToDelete, setProfileToDelete] = useState<string | null>(null);
+  const [showTemplateSelector, setShowTemplateSelector] = useState(false);
+  const [selectedTemplate, setSelectedTemplate] = useState<ResumeTemplate | null>(null);
+  const [showResumePreview, setShowResumePreview] = useState(false);
+  const [previewProfile, setPreviewProfile] = useState<Profile | null>(null);
 
-  const [profiles, setProfiles] = useState([
+  const [profiles, setProfiles] = useState<Profile[]>([
     {
       id: 'default',
       name: 'Main Profile',
       type: 'General',
       completeness: 85,
       views: 1247,
-      isActive: true
+      isActive: true,
+      template: null,
+      formData: null
     },
     {
       id: 'frontend',
@@ -41,7 +59,9 @@ export default function ProfilesPage() {
       type: 'Specialized',
       completeness: 92,
       views: 823,
-      isActive: false
+      isActive: false,
+      template: null,
+      formData: null
     },
     {
       id: 'fullstack',
@@ -49,7 +69,9 @@ export default function ProfilesPage() {
       type: 'Specialized',
       completeness: 78,
       views: 654,
-      isActive: false
+      isActive: false,
+      template: null,
+      formData: null
     }
   ]);
 
@@ -70,17 +92,58 @@ export default function ProfilesPage() {
   };
 
   const handleCreateProfile = () => {
-    // Create a new profile entry directly
+    setShowTemplateSelector(true);
+    setIsModalOpen(true);
+  };
+
+  const handleTemplateSelect = (template: ResumeTemplate) => {
+    setSelectedTemplate(template);
+    setShowTemplateSelector(false);
+    
+    // Open ProfileForm with selected template
     setModalContent({
       component: ProfileForm,
       props: {
-        onSave: handleProfileFormSave,
-        onCancel: () => setIsModalOpen(false),
-        initialData: [],
-        showFormDirectly: true  // Add this flag to show form directly
+        selectedTemplate: template,
+        showFormDirectly: true,
+        onCancel: () => {
+          setIsModalOpen(false);
+          setSelectedTemplate(null);
+          setShowTemplateSelector(false);
+        },
+        onSave: (entries: ProfileEntry[]) => {
+          if (entries.length > 0) {
+            const entry = entries[0];
+            const newProfile = {
+              id: entry.id || `profile-${Date.now()}`,
+              name: entry.role || template.name,
+              type: entry.profileType || 'Specialized',
+              completeness: 60,
+              views: 0,
+              isActive: false,
+              template: template,
+              formData: entry
+            };
+            
+            setProfiles(prevProfiles => [...prevProfiles, newProfile]);
+            
+            toast({
+              title: "Profile Created",
+              description: `Your new ${template.name} profile has been created successfully.`,
+            });
+          }
+          setIsModalOpen(false);
+          setSelectedTemplate(null);
+          setShowTemplateSelector(false);
+        }
       }
     });
-    setIsModalOpen(true);
+  };
+
+  const handleTemplateSelectorCancel = () => {
+    setIsModalOpen(false);
+    setShowTemplateSelector(false);
+    setSelectedTemplate(null);
   };
 
   const handleProfileFormSave = (profileData: ProfileEntry[]) => {
@@ -97,7 +160,9 @@ export default function ProfilesPage() {
       updatedProfiles[existingProfileIndex] = {
         ...updatedProfiles[existingProfileIndex],
         name: profileEntry.role || updatedProfiles[existingProfileIndex].name,
-        completeness: Math.min(updatedProfiles[existingProfileIndex].completeness + 5, 100) // Increase completeness slightly
+        completeness: Math.min(updatedProfiles[existingProfileIndex].completeness + 5, 100), // Increase completeness slightly
+        template: updatedProfiles[existingProfileIndex].template,
+        formData: profileEntry
       };
       
       setProfiles(updatedProfiles);
@@ -111,13 +176,15 @@ export default function ProfilesPage() {
       }, 100);
     } else {
       // Create a new profile based on the form data
-      const newProfile = {
+      const newProfile: Profile = {
         id: profileEntry.id || `profile-${Date.now()}`,
         name: profileEntry.role || 'New Profile',
         type: 'Specialized',
         completeness: 60,
         views: 0,
-        isActive: false
+        isActive: false,
+        template: null,
+        formData: profileEntry
       };
 
       // Add the new profile to the list using a callback to avoid stale state
@@ -151,11 +218,11 @@ export default function ProfilesPage() {
     const profileToEdit = profiles.find(p => p.id === profileId);
     
     if (profileToEdit) {
-      // Create a ProfileEntry object from the profile data
-      const profileEntry: ProfileEntry = {
+      // Use stored form data if available, otherwise use defaults
+      const profileEntry: ProfileEntry = profileToEdit.formData || {
         id: profileToEdit.id,
         role: profileToEdit.name,
-        employmentType: 'Permanent', // Default values since we don't store these in the profile object
+        employmentType: 'Permanent',
         natureOfWork: 'Full-time',
         workMode: 'No Preference',
         minimumEarnings: '',
@@ -210,17 +277,234 @@ export default function ProfilesPage() {
     }
   };
 
-  // Render the modal if it's open and has content
-  const renderModal = () => {
-    if (isModalOpen && modalContent) {
-      const ModalComponent = modalContent.component;
-      return (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-card rounded-xl p-6 shadow-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-            <ModalComponent {...modalContent.props} />
+  const handlePreviewResume = (profile: Profile) => {
+    if (profile.template && profile.formData) {
+      setPreviewProfile(profile);
+      setShowResumePreview(true);
+    }
+  };
+
+  const handleDownloadResume = (profile: Profile) => {
+    if (profile.template && profile.formData) {
+      downloadResumeAsPDF(profile);
+    }
+  };
+
+  const downloadResumeAsPDF = (profile: Profile) => {
+    const { template, formData } = profile;
+    if (!template || !formData) return;
+
+    // Create HTML content for the resume
+    const resumeHTML = generateResumeHTML(template, formData);
+    
+    // Create a temporary element to render the resume
+    const printWindow = window.open('', '_blank');
+    if (printWindow) {
+      printWindow.document.write(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <title>${formData.role || 'Resume'}</title>
+          <style>
+            body { font-family: Arial, sans-serif; margin: 0; padding: 20px; }
+            .resume-container { max-width: 800px; margin: 0 auto; }
+            .header { border-bottom: 2px solid #333; padding-bottom: 10px; margin-bottom: 20px; }
+            .section { margin-bottom: 20px; }
+            .section-title { font-weight: bold; font-size: 14px; margin-bottom: 10px; text-transform: uppercase; }
+            .skills { display: flex; flex-wrap: wrap; gap: 8px; }
+            .skill-tag { background: #f0f0f0; padding: 4px 8px; border-radius: 4px; font-size: 12px; }
+            @media print { body { margin: 0; } }
+          </style>
+        </head>
+        <body>
+          ${resumeHTML}
+        </body>
+        </html>
+      `);
+      printWindow.document.close();
+      
+      // Wait for content to load then trigger print
+      setTimeout(() => {
+        printWindow.print();
+        printWindow.close();
+      }, 500);
+      
+      toast({
+        title: "Download Started",
+        description: "Your resume is being downloaded...",
+      });
+    }
+  };
+
+  const generateResumeHTML = (template: ResumeTemplate, formData: ProfileEntry): string => {
+    const commonData = {
+      name: formData.role || 'Professional',
+      location: formData.preferredCity || 'Location',
+      totalExp: formData.totalExperience || 'N/A',
+      relevantExp: formData.relevantExperience || 'N/A',
+      primarySkills: formData.primarySkills || [],
+      secondarySkills: formData.secondarySkills || [],
+      employmentType: formData.employmentType || '',
+      workMode: formData.workMode || '',
+      earnings: formData.minimumEarnings || ''
+    };
+
+    switch (template.id) {
+      case 'classic':
+        return `
+          <div class="resume-container">
+            <div class="header">
+              <h1 style="margin: 0; font-size: 24px;">${commonData.name.toUpperCase()}</h1>
+              <p style="margin: 5px 0; color: #666;">${commonData.location}</p>
+            </div>
+            
+            <div class="section">
+              <div class="section-title">Experience</div>
+              <p>Total Experience: ${commonData.totalExp} years</p>
+              <p>Relevant Experience: ${commonData.relevantExp} years</p>
+              <p>Employment Type: ${commonData.employmentType}</p>
+              <p>Work Mode: ${commonData.workMode}</p>
+            </div>
+            
+            <div class="section">
+              <div class="section-title">Primary Skills</div>
+              <div class="skills">
+                ${commonData.primarySkills.map(skill => `<span class="skill-tag">${skill}</span>`).join('')}
+              </div>
+            </div>
+            
+            <div class="section">
+              <div class="section-title">Secondary Skills</div>
+              <div class="skills">
+                ${commonData.secondarySkills.map(skill => `<span class="skill-tag">${skill}</span>`).join('')}
+              </div>
+            </div>
+          </div>
+        `;
+      
+      case 'modern':
+        return `
+          <div class="resume-container" style="text-align: center;">
+            <div class="header">
+              <h1 style="margin: 0; font-size: 24px;">${commonData.name.toUpperCase()}</h1>
+              <p style="margin: 5px 0; color: #666;">${commonData.location}</p>
+            </div>
+            
+            <div class="section">
+              <div class="section-title">Professional Summary</div>
+              <p>${commonData.totalExp} years of professional experience in ${commonData.name.toLowerCase()}</p>
+            </div>
+            
+            <div class="section">
+              <div class="section-title">Key Skills</div>
+              <div class="skills" style="justify-content: center;">
+                ${commonData.primarySkills.map(skill => `<span class="skill-tag">${skill}</span>`).join('')}
+              </div>
+            </div>
+            
+            <div class="section">
+              <div class="section-title">Additional Skills</div>
+              <div class="skills" style="justify-content: center;">
+                ${commonData.secondarySkills.map(skill => `<span class="skill-tag">${skill}</span>`).join('')}
+              </div>
+            </div>
+          </div>
+        `;
+      
+      case 'creative':
+        return `
+          <div class="resume-container" style="display: flex; min-height: 600px;">
+            <div style="width: 65%; padding-right: 20px;">
+              <div class="header">
+                <h1 style="margin: 0; font-size: 24px;">${commonData.name.toUpperCase()}</h1>
+                <p style="margin: 5px 0; color: #666;">${commonData.location}</p>
+              </div>
+              
+              <div class="section">
+                <div class="section-title">Objective</div>
+                <p>Creative professional with ${commonData.totalExp} years of experience seeking opportunities in ${commonData.name.toLowerCase()}.</p>
+              </div>
+              
+              <div class="section">
+                <div class="section-title">Experience</div>
+                <p>Total Experience: ${commonData.totalExp} years</p>
+                <p>Relevant Experience: ${commonData.relevantExp} years</p>
+              </div>
+            </div>
+            
+            <div style="width: 35%; background: #1e3a8a; color: white; padding: 20px;">
+              <div class="section">
+                <div class="section-title" style="color: white;">Skills</div>
+                ${commonData.primarySkills.map(skill => `<p style="margin: 5px 0;">• ${skill}</p>`).join('')}
+              </div>
+              
+              <div class="section">
+                <div class="section-title" style="color: white;">Additional Skills</div>
+                ${commonData.secondarySkills.slice(0, 5).map(skill => `<p style="margin: 5px 0;">• ${skill}</p>`).join('')}
+              </div>
+            </div>
+          </div>
+        `;
+      
+      default:
+        return `<div class="resume-container"><h1>${commonData.name}</h1><p>${commonData.location}</p></div>`;
+    }
+  };
+
+  const renderResumePreview = (profile: Profile) => {
+    if (!profile.template || !profile.formData) return null;
+
+    const { template, formData } = profile;
+    
+    return (
+      <div className="mt-4 bg-gray-50 rounded-lg p-4">
+        <div className="flex items-center justify-between mb-3">
+          <h4 className="font-medium text-gray-900">Resume Preview - {template.name}</h4>
+          <div className="flex space-x-2">
+            <button
+              onClick={() => handlePreviewResume(profile)}
+              className="flex items-center px-3 py-1.5 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+            >
+              <Eye className="w-4 h-4 mr-1" />
+              Preview
+            </button>
+            <button
+              onClick={() => handleDownloadResume(profile)}
+              className="flex items-center px-3 py-1.5 text-sm bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
+            >
+              <Download className="w-4 h-4 mr-1" />
+              Download
+            </button>
           </div>
         </div>
-      );
+      </div>
+    );
+  };
+
+  // Render the modal if it's open and has content
+  const renderModal = () => {
+    if (isModalOpen) {
+      if (showTemplateSelector) {
+        return (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-xl p-6 shadow-lg max-w-5xl w-full max-h-[90vh] overflow-y-auto">
+              <ResumeTemplateSelector
+                onTemplateSelect={handleTemplateSelect}
+                onCancel={handleTemplateSelectorCancel}
+              />
+            </div>
+          </div>
+        );
+      } else if (modalContent) {
+        const ModalComponent = modalContent.component;
+        return (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+            <div className="bg-card rounded-xl p-6 shadow-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+              <ModalComponent {...modalContent.props} />
+            </div>
+          </div>
+        );
+      }
     }
     return null;
   };
@@ -262,10 +546,219 @@ export default function ProfilesPage() {
     );
   };
 
+  // Render full-size resume preview modal
+  const renderResumePreviewModal = () => {
+    if (!showResumePreview || !previewProfile) return null;
+
+    const { template, formData } = previewProfile;
+    if (!template || !formData) return null;
+
+    return (
+      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+        <div className="bg-white rounded-xl shadow-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+          <div className="flex items-center justify-between p-6 border-b">
+            <h3 className="text-xl font-semibold text-gray-900">
+              Resume Preview - {template.name}
+            </h3>
+            <div className="flex space-x-3">
+              <button
+                onClick={() => handleDownloadResume(previewProfile)}
+                className="flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+              >
+                <Download className="w-4 h-4 mr-2" />
+                Download PDF
+              </button>
+              <button
+                onClick={() => setShowResumePreview(false)}
+                className="p-2 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+          </div>
+          
+          <div className="p-6 font-nunito">
+            <div className="bg-white border rounded-lg p-8 min-h-[600px]" style={{ fontFamily: 'Arial, sans-serif' }}>
+              {template.id === 'classic' && (
+                <div>
+                  <div className="border-b-2 border-gray-800 pb-4 mb-6">
+                    <h1 className="text-3xl font-bold mb-2">{formData.role?.toUpperCase() || 'PROFESSIONAL'}</h1>
+                    <p className="text-gray-600 text-lg">{formData.preferredCity || 'Location'}</p>
+                  </div>
+                  
+                  <div className="mb-6">
+                    <h2 className="text-lg font-bold mb-3 uppercase">Experience</h2>
+                    <div className="space-y-2">
+                      <p><strong>Total Experience:</strong> {formData.totalExperience || 'N/A'} years</p>
+                      <p><strong>Relevant Experience:</strong> {formData.relevantExperience || 'N/A'} years</p>
+                      <p><strong>Employment Type:</strong> {formData.employmentType || 'Not specified'}</p>
+                      <p><strong>Work Mode:</strong> {formData.workMode || 'Not specified'}</p>
+                      {formData.minimumEarnings && (
+                        <p><strong>Expected Salary:</strong> {formData.minimumEarnings} {formData.currency || ''}</p>
+                      )}
+                    </div>
+                  </div>
+                  
+                  {formData.profileType && (
+                    <div className="mb-6">
+                      <h2 className="text-lg font-bold mb-3 uppercase">{formData.profileType} Specialization</h2>
+                      <div className="space-y-2">
+                        <p className="text-gray-700">Specialized in {formData.profileType} domain</p>
+                      </div>
+                    </div>
+                  )}
+                  
+                  <div className="mb-6">
+                    <h2 className="text-lg font-bold mb-3 uppercase">Primary Skills</h2>
+                    <div className="flex flex-wrap gap-2">
+                      {formData.primarySkills?.map(skill => (
+                        <span key={skill} className="bg-gray-200 px-3 py-1 rounded text-sm">{skill}</span>
+                      )) || <p className="text-gray-500">No primary skills added</p>}
+                    </div>
+                  </div>
+                  
+                  <div className="mb-6">
+                    <h2 className="text-lg font-bold mb-3 uppercase">Secondary Skills</h2>
+                    <div className="flex flex-wrap gap-2">
+                      {formData.secondarySkills?.map(skill => (
+                        <span key={skill} className="bg-gray-100 px-3 py-1 rounded text-sm">{skill}</span>
+                      )) || <p className="text-gray-500">No secondary skills added</p>}
+                    </div>
+                  </div>
+                </div>
+              )}
+              
+              {template.id === 'modern' && (
+                <div className="text-center">
+                  <div className="border-b-2 border-gray-800 pb-4 mb-6">
+                    <h1 className="text-3xl font-bold mb-2">{formData.role?.toUpperCase() || 'PROFESSIONAL'}</h1>
+                    <p className="text-gray-600 text-lg">{formData.preferredCity || 'Location'}</p>
+                  </div>
+                  
+                  <div className="mb-6">
+                    <h2 className="text-lg font-bold mb-3 uppercase">Professional Summary</h2>
+                    <p className="text-gray-700 max-w-2xl mx-auto">
+                      {formData.totalExperience || 'N/A'} years of professional experience in {formData.role?.toLowerCase() || 'the field'}
+                      {formData.profileType && `, specializing in ${formData.profileType}`}, 
+                      with expertise in {formData.primarySkills?.slice(0, 3).join(', ') || 'various technologies'}.
+                    </p>
+                  </div>
+                  
+                  {formData.profileType && (
+                    <div className="mb-6">
+                      <h2 className="text-lg font-bold mb-3 uppercase">{formData.profileType} Specialization</h2>
+                      <p className="text-gray-700 max-w-2xl mx-auto">
+                        Specialized expertise in {formData.profileType} domain with focus on industry best practices.
+                      </p>
+                    </div>
+                  )}
+                  
+                  <div className="mb-6">
+                    <h2 className="text-lg font-bold mb-3 uppercase">Key Skills</h2>
+                    <div className="flex flex-wrap gap-2 justify-center">
+                      {formData.primarySkills?.map(skill => (
+                        <span key={skill} className="bg-blue-100 text-blue-800 px-3 py-1 rounded text-sm">{skill}</span>
+                      )) || <p className="text-gray-500">No skills added</p>}
+                    </div>
+                  </div>
+                  
+                  <div className="mb-6">
+                    <h2 className="text-lg font-bold mb-3 uppercase">Additional Skills</h2>
+                    <div className="flex flex-wrap gap-2 justify-center">
+                      {formData.secondarySkills?.map(skill => (
+                        <span key={skill} className="bg-green-100 text-green-800 px-3 py-1 rounded text-sm">{skill}</span>
+                      )) || <p className="text-gray-500">No additional skills added</p>}
+                    </div>
+                  </div>
+                </div>
+              )}
+              
+              {template.id === 'creative' && (
+                <div className="flex min-h-[600px] font-nunito">
+                  <div className="w-2/3 pr-8">
+                    <div className="mb-6">
+                      <h1 className="text-3xl font-bold mb-2">{formData.role?.toUpperCase() || 'PROFESSIONAL'}</h1>
+                      <p className="text-gray-600 text-lg">{formData.preferredCity || 'Location'}</p>
+                    </div>
+                    
+                    <div className="mb-6">
+                      <h2 className="text-lg font-bold mb-3 uppercase">Objective</h2>
+                      <p className="text-gray-700">
+                        Creative professional with {formData.totalExperience || 'N/A'} years of experience seeking opportunities 
+                        in {formData.role?.toLowerCase() || 'the creative field'}. Passionate about delivering innovative solutions 
+                        and exceptional user experiences.
+                      </p>
+                    </div>
+                    
+                    <div className="mb-6">
+                      <h2 className="text-lg font-bold mb-3 uppercase">Experience</h2>
+                      <div className="space-y-2">
+                        <p><strong>Total Experience:</strong> {formData.totalExperience || 'N/A'} years</p>
+                        <p><strong>Relevant Experience:</strong> {formData.relevantExperience || 'N/A'} years</p>
+                        <p><strong>Work Preference:</strong> {formData.workMode || 'Not specified'}</p>
+                      </div>
+                    </div>
+                    
+                    {formData.profileType && (
+                      <div className="mb-6">
+                        <h2 className="text-lg font-bold mb-3 uppercase">{formData.profileType} Expertise</h2>
+                        <p className="text-gray-700">
+                          Specialized knowledge and experience in {formData.profileType} domain.
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                  
+                  <div className="w-1/3 bg-blue-900 text-white p-6">
+                    <div className="mb-6">
+                      {/* <div className="w-20 h-20 bg-white rounded-full mx-auto mb-4"></div> */}
+                      <div className="text-center text-sm">
+                        <p>{formData.preferredCity || 'Location'}</p>
+                        {formData.minimumEarnings && (
+                          <p>Expected: {formData.minimumEarnings} {formData.currency || ''}</p>
+                        )}
+                      </div>
+                    </div>
+                    
+                    <div className="mb-6">
+                      <h3 className="font-bold mb-3 uppercase">Skills</h3>
+                      <div className="space-y-2">
+                        {formData.primarySkills?.map(skill => (
+                          <p key={skill} className="text-sm">• {skill}</p>
+                        )) || <p className="text-sm">No skills added</p>}
+                      </div>
+                    </div>
+                    
+                    <div className="mb-6">
+                      <h3 className="font-bold mb-3 uppercase">Additional Skills</h3>
+                      <div className="space-y-2">
+                        {formData.secondarySkills?.slice(0, 5).map(skill => (
+                          <p key={skill} className="text-sm">• {skill}</p>
+                        )) || <p className="text-sm">No additional skills</p>}
+                      </div>
+                    </div>
+                    
+                    {formData.profileType && (
+                      <div className="mb-6">
+                        <p className="text-sm">Domain Specialization</p>
+                        <h3 className="font-bold mb-3 uppercase">{formData.profileType}</h3>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <ModernLayoutWrapper>
       {renderModal()}
       {renderDeleteModal()}
+      {renderResumePreviewModal()}
       <div className="space-y-8 font-rubik">
         {/* Header */}
         <div className="flex justify-between items-center">
@@ -341,6 +834,9 @@ export default function ProfilesPage() {
                     ></div>
                   </div>
                 </div>
+
+                {/* Resume Preview Section */}
+                {renderResumePreview(profile)}
 
                 {/* <div className="flex items-center justify-between pt-3 border-t border-gray-100">
                   <div className="flex items-center space-x-1 text-sm text-gray-600">

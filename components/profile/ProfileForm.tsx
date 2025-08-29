@@ -13,6 +13,7 @@ import {
   Upload
 } from 'lucide-react';
 import DomainFields from './DomainFields';
+import { ResumeTemplate } from './ResumeTemplateSelector';
 
 interface ProfileFormProps {
   onSave: (data: ProfileEntry[]) => void;
@@ -20,6 +21,7 @@ interface ProfileFormProps {
   initialData?: ProfileEntry[];
   showFormDirectly?: boolean;
   isEditing?: boolean;
+  selectedTemplate?: ResumeTemplate;
 }
 
 export interface ProfileEntry {
@@ -40,10 +42,35 @@ export interface ProfileEntry {
   resume?: File | null;
 }
 
-export default function ProfileForm({ onSave, onCancel, initialData = [], showFormDirectly = false, isEditing = false }: ProfileFormProps) {
+export default function ProfileForm({ onSave, onCancel, initialData = [], showFormDirectly = false, isEditing = false, selectedTemplate }: ProfileFormProps) {
   const [profileEntries, setProfileEntries] = useState<ProfileEntry[]>(
     initialData.length > 0 ? initialData : []
   );
+  
+  // Initialize form with template data if provided
+  useEffect(() => {
+    if (selectedTemplate && !initialData.length) {
+      const templateEntry: ProfileEntry = {
+        id: `profile-${Date.now()}`,
+        role: selectedTemplate.name + ' Profile',
+        profileType: selectedTemplate.name,
+        employmentType: 'Permanent',
+        natureOfWork: 'Full-time',
+        workMode: 'No Preference',
+        minimumEarnings: '',
+        currency: 'USD',
+        preferredCity: selectedTemplate.sampleData?.personalInfo?.location?.split(', ')[0] || '',
+        preferredCountry: selectedTemplate.sampleData?.personalInfo?.location?.split(', ')[1] || '',
+        totalExperience: '',
+        relevantExperience: '',
+        primarySkills: selectedTemplate.sampleData?.skills?.slice(0, 3) || [],
+        secondarySkills: selectedTemplate.sampleData?.skills?.slice(3) || [],
+        resume: null
+      };
+      setEditingEntry(templateEntry);
+      setShowEditForm(true);
+    }
+  }, [selectedTemplate, initialData.length]);
   
   const [editingEntry, setEditingEntry] = useState<ProfileEntry | null>(null);
   const [showEditForm, setShowEditForm] = useState(showFormDirectly || isEditing);
@@ -819,9 +846,9 @@ export default function ProfileForm({ onSave, onCancel, initialData = [], showFo
             <button
               type="button"
               onClick={handleSaveEntry}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+              className="px-4 py-2 bg-[#007BCA] text-white rounded-lg hover:bg-[#007BCA]/80"
             >
-              Save
+              Create
             </button>
           </div>
         </div>

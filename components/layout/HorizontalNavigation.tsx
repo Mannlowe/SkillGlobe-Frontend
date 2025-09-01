@@ -154,6 +154,16 @@ export default function HorizontalNavigation({
   const [userName, setUserName] = useState('User');
   const { user, isAuthenticated } = useAuthStore();
 
+  // Helper function to get user initials
+  const getUserInitials = (name: string) => {
+    if (!name) return 'U';
+    const names = name.trim().split(' ');
+    if (names.length === 1) {
+      return names[0].charAt(0).toUpperCase();
+    }
+    return (names[0].charAt(0) + names[names.length - 1].charAt(0)).toUpperCase();
+  };
+
   useEffect(() => {
     const checkAuth = setTimeout(() => {
       if (!isAuthenticated) {
@@ -164,11 +174,11 @@ export default function HorizontalNavigation({
     return () => clearTimeout(checkAuth);
   }, [isAuthenticated, router]);
 
-   useEffect(() => {
-      if (isAuthenticated && user && window.location.pathname.includes('individual-dashboard')) {
-        setUserName(user.full_name || user.name);
-      }
-    }, [isAuthenticated, user]);
+  useEffect(() => {
+    if (isAuthenticated && user && window.location.pathname.includes('individual-dashboard')) {
+      setUserName(user.full_name || user.name);
+    }
+  }, [isAuthenticated, user]);
 
   return (
     <header className="sticky top-0 z-40 w-full border-b border-gray-200 bg-white">
@@ -377,19 +387,9 @@ export default function HorizontalNavigation({
                 size="icon"
                 className="relative rounded-md"
               >
-                {userAvatar ? (
-                  <Image
-                    src={userAvatar}
-                    alt={userName}
-                    width={32}
-                    height={32}
-                    className="rounded-md"
-                  />
-                ) : (
-                  <div className="w-8 h-8 bg-gray-300 rounded-md flex items-center justify-center">
-                    <User className="w-4 h-4 text-gray-600" />
-                  </div>
-                )}
+                <div className="w-8 h-8 bg-gradient-to-br from-orange-500 to-blue-600 rounded-md flex items-center justify-center text-white font-semibold text-sm">
+                  {getUserInitials(userName)}
+                </div>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56 px-2 py-3">

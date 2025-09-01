@@ -222,6 +222,7 @@ export default function ProfilesPage() {
       const profileEntry: ProfileEntry = profileToEdit.formData || {
         id: profileToEdit.id,
         role: profileToEdit.name,
+        profileType: 'General',
         employmentType: 'Permanent',
         natureOfWork: 'Full-time',
         workMode: 'No Preference',
@@ -288,6 +289,245 @@ export default function ProfilesPage() {
     if (profile.template && profile.formData) {
       downloadResumeAsPDF(profile);
     }
+  };
+
+  // Unified function to render all subdomain fields
+  const renderSubdomainFields = (formData: ProfileEntry) => {
+    if (!formData.profileType || !formData.subDomain) return null;
+
+    const getSubdomainLabel = (profileType: string, subDomain: string) => {
+      const labels: Record<string, Record<string, string>> = {
+        'IT': {
+          'IT1': 'Software Development & Services',
+          'IT2': 'Data & Emerging Tech',
+          'IT3': 'Cybersecurity & Networks'
+        },
+        'Manufacturing': {
+          'MF1': 'Production & Operations',
+          'MF2': 'Automotive & Engineering', 
+          'MF3': 'Quality & Maintenance',
+          'MF4': 'Supply Chain & Materials'
+        },
+        'Banking': {
+          'BF1': 'Banking',
+          'BF2': 'Finance & Investments',
+          'BF3': 'Insurance',
+          'BF4': 'FinTech & Payments'
+        },
+        'Hospitality': {
+          'HS1': 'Hotels & Lodging',
+          'HS2': 'Food & Beverages',
+          'HS3': 'Travel & Tourism',
+          'HS4': 'Events & Recreation'
+        }
+      };
+      return labels[profileType]?.[subDomain] || subDomain;
+    };
+
+    const renderFieldArray = (fieldName: string, label: string) => {
+      const values = (formData as any)[fieldName];
+      if (!values || !Array.isArray(values) || values.length === 0) return null;
+      
+      return (
+        <div className="mb-3">
+          <p><strong>{label}:</strong></p>
+          <div className="flex flex-wrap gap-1 mt-1">
+            {values.map((value: string, index: number) => (
+              <span key={index} className="bg-blue-50 text-blue-700 px-2 py-1 rounded text-xs">
+                {value}
+              </span>
+            ))}
+          </div>
+        </div>
+      );
+    };
+
+    const renderSingleField = (fieldName: string, label: string) => {
+      const value = (formData as any)[fieldName];
+      if (!value) return null;
+      
+      return (
+        <div className="mb-2">
+          <p><strong>{label}:</strong> {value}</p>
+        </div>
+      );
+    };
+
+    const renderSubdomainContent = () => {
+      // IT Subdomain Fields
+      if (formData.profileType === 'IT') {
+        switch (formData.subDomain) {
+          case 'IT1': // Software Development & Services
+            return (
+              <div>
+                {renderSingleField('it_portfolio', 'Portfolio/GitHub')}
+                {renderSingleField('it_dev_method', 'Development Methodology')}
+                {renderFieldArray('it_domain_exp', 'Domain Expertise')}
+                {renderFieldArray('it_tools_used', 'Tools & Platforms')}
+              </div>
+            );
+          case 'IT2': // Data & Emerging Tech
+            return (
+              <div>
+                {renderFieldArray('it_tools', 'Tools Used')}
+                {renderFieldArray('it_data_domain_exp', 'Data Domain Focus')}
+                {renderSingleField('it_research', 'Research/Papers')}
+                {renderSingleField('it_data_projects', 'Major Projects')}
+              </div>
+            );
+          case 'IT3': // Cybersecurity & Networks
+            return (
+              <div>
+                {renderFieldArray('it_compliance', 'Compliance Standards')}
+                {renderFieldArray('it_security_tools', 'Security Tools')}
+                {renderFieldArray('it_incident_exp', 'Incident Handling')}
+                {renderSingleField('it_security_clearance', 'Security Clearance')}
+                {renderFieldArray('it_network_exp', 'Network Experience')}
+              </div>
+            );
+        }
+      }
+
+      // Manufacturing Subdomain Fields
+      if (formData.profileType === 'Manufacturing') {
+        switch (formData.subDomain) {
+          case 'MF1': // Production & Operations
+            return (
+              <div>
+                {renderFieldArray('mf_production_area', 'Production Areas')}
+                {renderFieldArray('mf_machine_handling', 'Machine Handling')}
+                {renderSingleField('mf_shift_preference', 'Shift Preference')}
+                {renderFieldArray('mf_safety_cert', 'Safety Certifications')}
+              </div>
+            );
+          case 'MF2': // Automotive & Engineering
+            return (
+              <div>
+                {renderFieldArray('mf_engineering_domain', 'Engineering Domain')}
+                {renderFieldArray('mf_design_tools', 'Design Tools')}
+                {renderFieldArray('mf_prototyping_exp', 'Prototyping Experience')}
+                {renderFieldArray('mf_regulatory_knowledge', 'Regulatory Knowledge')}
+              </div>
+            );
+          case 'MF3': // Quality & Maintenance
+            return (
+              <div>
+                {renderFieldArray('mf_quality_tools', 'Quality Tools')}
+                {renderFieldArray('mf_testing_methods', 'Testing Methods')}
+                {renderFieldArray('mf_certifications_qm', 'QM Certifications')}
+                {renderFieldArray('mf_maintenance_exp', 'Maintenance Experience')}
+              </div>
+            );
+          case 'MF4': // Supply Chain & Materials
+            return (
+              <div>
+                {renderFieldArray('mf_supply_area', 'Supply Chain Areas')}
+                {renderFieldArray('mf_material_expertise', 'Material Expertise')}
+                {renderFieldArray('mf_tools_used', 'Tools Used')}
+                {renderFieldArray('mf_regulatory_compliance', 'Regulatory Compliance')}
+              </div>
+            );
+        }
+      }
+
+      // Banking Subdomain Fields
+      if (formData.profileType === 'Banking') {
+        switch (formData.subDomain) {
+          case 'BF1': // Banking
+            return (
+              <div>
+                {renderFieldArray('bf_banking_domain', 'Banking Domain')}
+                {renderFieldArray('bf_core_banking_systems', 'Core Banking Systems')}
+                {renderFieldArray('bf_regulatory_exp', 'Regulatory Experience')}
+                {renderFieldArray('bf_compliance_knowledge', 'Compliance Knowledge')}
+              </div>
+            );
+          case 'BF2': // Finance & Investments
+            return (
+              <div>
+                {renderFieldArray('bf_finance_area', 'Finance Focus Areas')}
+                {renderFieldArray('bf_erp_tools', 'ERP Tools')}
+                {renderFieldArray('bf_reporting_standards', 'Reporting Standards')}
+                {renderFieldArray('bf_industry_experience', 'Industry Experience')}
+              </div>
+            );
+          case 'BF3': // Insurance
+            return (
+              <div>
+                {renderFieldArray('bf_insurance_domain', 'Insurance Domain')}
+                {renderFieldArray('bf_insurance_products', 'Insurance Products')}
+                {renderFieldArray('bf_licensing', 'Licensing')}
+                {renderFieldArray('bf_claims_exp', 'Claims Experience')}
+              </div>
+            );
+          case 'BF4': // FinTech & Payments
+            return (
+              <div>
+                {renderFieldArray('bf_payment_systems', 'Payment Systems')}
+                {renderFieldArray('bf_digital_platforms', 'Digital Platforms')}
+                {renderFieldArray('bf_regtech_knowledge', 'RegTech Knowledge')}
+                {renderFieldArray('bf_security_compliance', 'Security Compliance')}
+              </div>
+            );
+        }
+      }
+
+      // Hospitality Subdomain Fields
+      if (formData.profileType === 'Hospitality') {
+        switch (formData.subDomain) {
+          case 'HS1': // Hotels & Lodging
+            return (
+              <div>
+                {renderSingleField('hs_department', 'Department')}
+                {renderFieldArray('hs_property_type', 'Property Types')}
+                {renderFieldArray('hs_guest_mgmt_system', 'Guest Management Systems')}
+                {renderFieldArray('hs_languages_known', 'Languages Known')}
+              </div>
+            );
+          case 'HS2': // Food & Beverages
+            return (
+              <div>
+                {renderFieldArray('hs_fnb_specialization', 'F&B Specialization')}
+                {renderFieldArray('hs_service_type', 'Service Types')}
+                {renderFieldArray('hs_fnb_certifications', 'F&B Certifications')}
+                {renderFieldArray('hs_beverage_knowledge', 'Beverage Knowledge')}
+              </div>
+            );
+          case 'HS3': // Travel & Tourism
+            return (
+              <div>
+                {renderFieldArray('hs_travel_domain', 'Travel Domain')}
+                {renderFieldArray('hs_ticketing_systems', 'Ticketing Systems')}
+                {renderFieldArray('hs_destination_expertise', 'Destination Expertise')}
+                {renderFieldArray('hs_customer_type', 'Customer Types')}
+              </div>
+            );
+          case 'HS4': // Events & Recreation
+            return (
+              <div>
+                {renderFieldArray('hs_event_type', 'Event Types')}
+                {renderFieldArray('hs_event_skills', 'Event Skills')}
+                {renderFieldArray('hs_ticketing_platforms', 'Ticketing Platforms')}
+                {renderFieldArray('hs_property_type_event', 'Venue Types')}
+              </div>
+            );
+        }
+      }
+
+      return null;
+    };
+
+    const content = renderSubdomainContent();
+    if (!content) return null;
+
+    return (
+      <div className="mt-4 p-4 bg-gray-50 rounded-lg">
+        <h4 className="font-semibold text-gray-800 mb-3">
+          {getSubdomainLabel(formData.profileType, formData.subDomain)} Specialization
+        </h4>
+        {content}
+      </div>
+    );
   };
 
   const downloadResumeAsPDF = (profile: Profile) => {
@@ -604,6 +844,7 @@ export default function ProfilesPage() {
                       <h2 className="text-lg font-bold mb-3 uppercase">{formData.profileType} Specialization</h2>
                       <div className="space-y-2">
                         <p className="text-gray-700">Specialized in {formData.profileType} domain</p>
+                        {renderSubdomainFields(formData)}
                       </div>
                     </div>
                   )}
@@ -650,6 +891,7 @@ export default function ProfilesPage() {
                       <p className="text-gray-700 max-w-2xl mx-auto">
                         Specialized expertise in {formData.profileType} domain with focus on industry best practices.
                       </p>
+                      {renderSubdomainFields(formData)}
                     </div>
                   )}
                   
@@ -705,6 +947,7 @@ export default function ProfilesPage() {
                         <p className="text-gray-700">
                           Specialized knowledge and experience in {formData.profileType} domain.
                         </p>
+                        {renderSubdomainFields(formData)}
                       </div>
                     )}
                   </div>

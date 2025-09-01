@@ -12,7 +12,7 @@ import {
   FileText,
   Upload
 } from 'lucide-react';
-import DomainFields from './DomainFields';
+import DomainFields, { itSubDomains, manufacturingSubDomains, bankingSubDomains, hospitalitySubDomains } from './DomainFields';
 import { ResumeTemplate } from './ResumeTemplateSelector';
 
 interface ProfileFormProps {
@@ -27,7 +27,8 @@ interface ProfileFormProps {
 export interface ProfileEntry {
   id: string;
   role: string;
-  profileType?: string; // Added profile type field
+  profileType: string; // Changed to required (removed optional '?')
+  subDomain?: string; // Added subdomain field
   employmentType: string;
   natureOfWork: string;
   workMode: string;
@@ -40,6 +41,20 @@ export interface ProfileEntry {
   primarySkills: string[];
   secondarySkills: string[];
   resume?: File | null;
+  // IT-specific fields
+  it_portfolio?: string;
+  it_dev_method?: string;
+  it_domain_exp?: string[];
+  it_tools_used?: string[];
+  it_tools?: string[];
+  it_research?: string;
+  it_data_domain_exp?: string[];
+  it_data_projects?: string;
+  it_compliance?: string[];
+  it_security_tools?: string[];
+  it_incident_exp?: string[];
+  it_security_clearance?: string;
+  it_network_exp?: string[];
 }
 
 export default function ProfileForm({ onSave, onCancel, initialData = [], showFormDirectly = false, isEditing = false, selectedTemplate }: ProfileFormProps) {
@@ -174,6 +189,7 @@ export default function ProfileForm({ onSave, onCancel, initialData = [], showFo
       // Ensure skills arrays are properly initialized
       const entryWithSkills = {
         ...initialEntry,
+        profileType: initialEntry.profileType || '', // Ensure profileType is always initialized
         primarySkills: Array.isArray(initialEntry.primarySkills) ? [...initialEntry.primarySkills] : [],
         secondarySkills: Array.isArray(initialEntry.secondarySkills) ? [...initialEntry.secondarySkills] : []
       };
@@ -186,6 +202,7 @@ export default function ProfileForm({ onSave, onCancel, initialData = [], showFo
       setEditingEntry({
         id: crypto.randomUUID(),
         role: '',
+        profileType: '', // Added required profileType field
         employmentType: '',
         natureOfWork: '',
         workMode: '',
@@ -206,13 +223,35 @@ export default function ProfileForm({ onSave, onCancel, initialData = [], showFo
   const employmentTypes = ['Permanent', 'Contract', 'Internship'];
   const workNatures = ['Full-time', 'Part-time'];
   const workModes = ['WFO', 'WFH', 'Hybrid', 'No Preference'];
-  const profileTypes = ['IT', 'Manufacturing', 'Banking', 'Finance', 'Hospitality', 'Others'];
+  const profileTypes = ['IT', 'Manufacturing', 'Banking', 'Hospitality', 'Others'];
+
+  // IT Subdomain options
+  const itSubDomains = [
+    { value: 'IT1', label: 'Software Development & Services' },
+    { value: 'IT2', label: 'Data & Emerging Tech' },
+    { value: 'IT3', label: 'Cybersecurity & Networks' }
+  ];
+
+  // Field options for IT subdomains
+  const itFieldOptions = {
+    it_dev_method: ['Agile', 'Scrum', 'Waterfall', 'DevOps'],
+    it_domain_exp: ['FinTech', 'HealthTech', 'EdTech', 'eCommerce', 'SaaS'],
+    it_tools_used: ['Jira', 'Confluence', 'Docker', 'Kubernetes'],
+    it_tools: ['Tableau', 'PowerBI', 'Hadoop', 'Spark'],
+    it_data_domain_exp: ['Healthcare', 'Finance', 'Retail', 'IoT'],
+    it_compliance: ['ISO27001', 'GDPR', 'HIPAA', 'PCI-DSS'],
+    it_security_tools: ['SIEM', 'IDS', 'Firewalls', 'Splunk'],
+    it_incident_exp: ['SOC', 'Threat Hunting', 'Incident Response'],
+    it_security_clearance: ['None', 'Confidential', 'Secret', 'Top Secret'],
+    it_network_exp: ['Routing', 'Switching', 'VPNs', 'SD-WAN']
+  };
 
   const handleAddProfile = () => {
     setEditingEntry({
       id: crypto.randomUUID(),
       role: '',
-      profileType: '', // No default domain
+      profileType: '', // Empty string but required field
+      subDomain: '', // No default subdomain
       employmentType: '',
       natureOfWork: '',
       workMode: '',
@@ -235,6 +274,7 @@ export default function ProfileForm({ onSave, onCancel, initialData = [], showFo
     // Ensure skills arrays are initialized even for older entries that might not have them
     const entryToEdit = { 
       ...entry,
+      profileType: entry.profileType || '', // Ensure profileType is always initialized
       primarySkills: Array.isArray(entry.primarySkills) ? [...entry.primarySkills] : [],
       secondarySkills: Array.isArray(entry.secondarySkills) ? [...entry.secondarySkills] : []
     };
@@ -483,17 +523,87 @@ export default function ProfileForm({ onSave, onCancel, initialData = [], showFo
                   ? 'Edit Profile' 
                   : 'Add New Profile'}
               </h3>
-              <div className="relative">
-                <select
-                  value={editingEntry?.profileType || ''}
-                  onChange={(e) => setEditingEntry(prev => prev ? {...prev, profileType: e.target.value} : null)}
-                  className="block w-44 pl-3 pr-10 py-1.5 text-base border border-orange-500 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md"
-                >
-                  <option value="">Select Domain</option>
-                  {profileTypes.map((type) => (
-                    <option className='border rounded-lg' key={type} value={type}>{type}</option>
-                  ))}
-                </select>
+              <div className="flex items-center space-x-3">
+                <div className="relative">
+                  <select
+                    value={editingEntry?.profileType || ''}
+                    onChange={(e) => {
+                      const newProfileType = e.target.value;
+                      setEditingEntry(prev => prev ? {
+                        ...prev, 
+                        profileType: newProfileType,
+                        subDomain: (newProfileType === 'IT' || newProfileType === 'Manufacturing') ? prev.subDomain : '' // Reset subdomain if not IT or Manufacturing
+                      } : null);
+                    }}
+                    className="block w-44 pl-3 pr-10 py-1.5 text-base border border-orange-500 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md"
+                  >
+                    <option value="">Select Domain</option>
+                    {profileTypes.map((type) => (
+                      <option className='border rounded-lg' key={type} value={type}>{type}</option>
+                    ))}
+                  </select>
+                </div>
+                
+                {/* Subdomain dropdown - show when IT or Manufacturing is selected */}
+                {editingEntry?.profileType === 'IT' && (
+                  <div className="relative">
+                    <select
+                      value={editingEntry?.subDomain || ''}
+                      onChange={(e) => setEditingEntry(prev => prev ? {...prev, subDomain: e.target.value} : null)}
+                      className="block w-56 pl-3 pr-10 py-1.5 text-base border border-blue-500 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md"
+                    >
+                      <option value="">Select IT Subdomain</option>
+                      {itSubDomains.map((subdomain) => (
+                        <option key={subdomain.value} value={subdomain.value}>{subdomain.label}</option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+                
+                {editingEntry?.profileType === 'Manufacturing' && (
+                  <div className="relative">
+                    <select
+                      value={editingEntry?.subDomain || ''}
+                      onChange={(e) => setEditingEntry(prev => prev ? {...prev, subDomain: e.target.value} : null)}
+                      className="block w-56 pl-3 pr-10 py-1.5 text-base border border-orange-500 focus:outline-none focus:ring-orange-500 focus:border-orange-500 sm:text-sm rounded-md"
+                    >
+                      <option value="">Select Manufacturing Subdomain</option>
+                      {manufacturingSubDomains.map((subdomain) => (
+                        <option key={subdomain.value} value={subdomain.value}>{subdomain.label}</option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+                
+                {(editingEntry?.profileType === 'Finance' || editingEntry?.profileType === 'Banking') && (
+                  <div className="relative">
+                    <select
+                      value={editingEntry?.subDomain || ''}
+                      onChange={(e) => setEditingEntry(prev => prev ? {...prev, subDomain: e.target.value} : null)}
+                      className="block w-56 pl-3 pr-10 py-1.5 text-base border border-green-500 focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm rounded-md"
+                    >
+                      <option value="">Select Banking Subdomain</option>
+                      {bankingSubDomains.map((subdomain) => (
+                        <option key={subdomain.value} value={subdomain.value}>{subdomain.label}</option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+                
+                {editingEntry?.profileType === 'Hospitality' && (
+                  <div className="relative">
+                    <select
+                      value={editingEntry?.subDomain || ''}
+                      onChange={(e) => setEditingEntry(prev => prev ? {...prev, subDomain: e.target.value} : null)}
+                      className="block w-56 pl-3 pr-10 py-1.5 text-base border border-green-500 focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm rounded-md"
+                    >
+                      <option value="">Select Hospitality Subdomain</option>
+                      {hospitalitySubDomains.map((subdomain) => (
+                        <option key={subdomain.value} value={subdomain.value}>{subdomain.label}</option>
+                      ))}
+                    </select>
+                  </div>
+                )}
               </div>
             </div>
             <button
@@ -824,10 +934,12 @@ export default function ProfileForm({ onSave, onCancel, initialData = [], showFo
               </div>
             </div>
             
+            
             {/* Domain-Specific Fields */}
-            {editingEntry?.profileType && (
+            {editingEntry && (
               <DomainFields 
                 profileType={editingEntry.profileType}
+                subDomain={editingEntry.subDomain}
                 editingEntry={editingEntry}
                 setEditingEntry={setEditingEntry}
               />

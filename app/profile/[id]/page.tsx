@@ -21,7 +21,7 @@ export default function ProfilePage() {
   
   // In a real app, fetch profile data based on params.id
   const profileId = params.id as string;
-  const isOwnProfile = profileId === 'me' || (user && profileId === user.email);
+  const isOwnProfile = profileId === 'me' || (user && profileId === user.email) || false;
   
   // For demo purposes, determine which profile to show
   const [currentProfileId, setCurrentProfileId] = useState(

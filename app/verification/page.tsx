@@ -70,7 +70,6 @@ export default function VerificationPage() {
               onVerificationComplete={handleVerificationComplete}
               onSkip={handleSkip}
               className="mt-4"
-              initialStep={currentStep}
             />
           </div>
         </div>

@@ -50,19 +50,9 @@ export default function MobileGesturesWrapper({
     disabled: !enableNavigationSwipes
   });
 
-  // Combine refs
-  const combinedRef = (element: HTMLDivElement | null) => {
-    if (pullRef.current !== element) {
-      pullRef.current = element;
-    }
-    if (navigationRef.current !== element) {
-      navigationRef.current = element;
-    }
-  };
-
   return (
     <div
-      ref={combinedRef}
+      ref={pullRef as any}
       className={cn(
         "relative min-h-screen overflow-auto",
         className

@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { InteractiveCard, FloatingActionButton } from '@/components/animations/MicroInteractions';
-import { AnimatedCounter } from '@/components/animations/AnimatedCounter';
+import AnimatedCounter from '@/components/animations/AnimatedCounter';
 import { GradientText } from '@/components/animations/VisualEffects';
 import { MapPin, Clock, DollarSign, Users, Bookmark, Send, Eye } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -181,10 +181,7 @@ export default function EnhancedOpportunityCard({
             <>
               <FloatingActionButton
                 icon={<Bookmark className="w-4 h-4" />}
-                onClick={(e) => {
-                  e?.stopPropagation();
-                  onSave?.();
-                }}
+                onClick={() => onSave?.()}
                 size="sm"
                 color={saved ? "bg-blue-500" : "bg-gray-400"}
                 tooltip={saved ? "Saved" : "Save"}
@@ -192,10 +189,7 @@ export default function EnhancedOpportunityCard({
               
               <FloatingActionButton
                 icon={<Send className="w-4 h-4" />}
-                onClick={(e) => {
-                  e?.stopPropagation();
-                  onApply?.();
-                }}
+                onClick={() => onApply?.()}
                 size="sm"
                 color={applied ? "bg-green-500" : "bg-orange-500"}
                 tooltip={applied ? "Applied" : "Apply"}
@@ -205,10 +199,7 @@ export default function EnhancedOpportunityCard({
 
           <FloatingActionButton
             icon={<Eye className="w-4 h-4" />}
-            onClick={(e) => {
-              e?.stopPropagation();
-              onView?.();
-            }}
+            onClick={() => onView?.()}
             size="sm"
             color="bg-gray-600"
             tooltip="View Details"

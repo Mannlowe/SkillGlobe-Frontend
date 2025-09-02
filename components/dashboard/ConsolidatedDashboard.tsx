@@ -137,9 +137,9 @@ export default function ConsolidatedDashboard() {
         <div className="text-right">
           <div className="flex items-center gap-2 mb-2">
             <Badge variant="secondary">{mockUser.profiles.length} Profiles</Badge>
-            <Badge variant="outline">Health: {mockPerformanceMetrics.overallScore}%</Badge>
+            <Badge variant="outline">Health: {Array.from(mockPerformanceMetrics.values())[0]?.responseRate || 85}%</Badge>
           </div>
-          <Progress value={mockPerformanceMetrics.overallScore} className="w-32 h-2" />
+          <Progress value={Array.from(mockPerformanceMetrics.values())[0]?.responseRate || 85} className="w-32 h-2" />
         </div>
       </div>
     </div>

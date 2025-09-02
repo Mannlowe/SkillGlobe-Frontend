@@ -49,10 +49,6 @@ export default function PortfolioPage() {
 
   return (
     <ModernLayoutWrapper>
-      <div className="max-w-7xl mx-auto">
-        <div className="flex justify-center">
-          <div className="w-full md:w-11/12">
-      
       {/* Portfolio Sidebar */}
       {portfolioSidebarOpen && (
         <PortfolioSidebar
@@ -66,35 +62,20 @@ export default function PortfolioPage() {
         />
       )}
       
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <DashboardHeader 
-          title="Portfolio" 
-          onMenuClick={() => {
-            if (portfolioSidebarOpen) {
-              setPortfolioSidebarOpen(false);
-              setMainSidebarOpen(true);
-            } else {
-              setMainSidebarOpen(!mainSidebarOpen);
-            }
-          }} 
+      <div className="max-w-7xl mx-auto p-4">
+        <Portfolio 
+          activeSection={activeSection}
+          setActiveSection={setActiveSection}
+          sections={sections}
+          setResumeUploaded={setResumeUploaded}
+          setPersonalInfoCompleted={setPersonalInfoCompleted}
+          setEducationCompleted={setEducationCompleted}
+          setExperienceCompleted={setExperienceCompleted}
+          setCertificatesCompleted={setCertificatesCompleted}
+          onPortfolioComplete={handlePortfolioComplete}
+          onSkip={handleSkip}
+          className="mt-4"
         />
-        <main className="flex-1 overflow-y-auto p-4">
-          <div className="max-w-full mx-auto">
-            <Portfolio 
-              activeSection={activeSection}
-              setActiveSection={setActiveSection}
-              sections={sections}
-              setResumeUploaded={setResumeUploaded}
-              setPersonalInfoCompleted={setPersonalInfoCompleted}
-              setEducationCompleted={setEducationCompleted}
-              setExperienceCompleted={setExperienceCompleted}
-              setCertificatesCompleted={setCertificatesCompleted}
-              onPortfolioComplete={handlePortfolioComplete}
-              onSkip={handleSkip}
-              className="mt-4"
-            />
-          </div>
-        </div>
       </div>
     </ModernLayoutWrapper>
   );

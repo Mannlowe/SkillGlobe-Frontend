@@ -72,8 +72,7 @@ export default function SwipeableCard({
     },
     threshold: 500,
     cancelOnMovement: true,
-    movementThreshold: 10,
-    disabled: disabled || !onLongPress
+    movementThreshold: 10
   });
 
   // Custom touch handling for reveal actions
@@ -126,16 +125,6 @@ export default function SwipeableCard({
     isDragging.current = false;
   };
 
-  // Combine refs
-  const combinedRef = (element: HTMLDivElement | null) => {
-    if (swipeRef.current !== element) {
-      swipeRef.current = element;
-    }
-    if (longPressRef.current !== element) {
-      longPressRef.current = element;
-    }
-  };
-
   return (
     <div className="relative overflow-hidden rounded-lg">
       {/* Left action background */}
@@ -176,7 +165,7 @@ export default function SwipeableCard({
       
       {/* Main card content */}
       <div
-        ref={combinedRef}
+        ref={swipeRef as any}
         className={cn(
           "relative bg-white transition-transform duration-200 ease-out",
           isLongPressing && "scale-95",

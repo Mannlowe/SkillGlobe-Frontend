@@ -619,11 +619,11 @@ export default function ProfileCreationWizard({
           <Label className="text-base font-medium">Expected Salary Range</Label>
           <div className="mt-3">
             <div className="flex items-center justify-between text-sm text-gray-600 mb-2">
-              <span>${(profileData.preferences.salaryRange[0] / 1000).toFixed(0)}k</span>
-              <span>${(profileData.preferences.salaryRange[1] / 1000).toFixed(0)}k</span>
+              <span>${((profileData.preferences.salaryRange?.[0] || 50000) / 1000).toFixed(0)}k</span>
+              <span>${((profileData.preferences.salaryRange?.[1] || 150000) / 1000).toFixed(0)}k</span>
             </div>
             <Slider
-              value={profileData.preferences.salaryRange}
+              value={profileData.preferences.salaryRange || [50000, 150000]}
               onValueChange={(value) => setProfileData(prev => ({
                 ...prev,
                 preferences: { ...prev.preferences, salaryRange: value as [number, number] }
@@ -648,14 +648,14 @@ export default function ProfileCreationWizard({
             {['remote', 'hybrid', 'onsite'].map(type => (
               <label key={type} className="flex items-center space-x-2 cursor-pointer p-3 border rounded-lg hover:bg-gray-50">
                 <Checkbox
-                  checked={profileData.preferences.workType.includes(type as any)}
+                  checked={profileData.preferences.workType?.includes(type as any) || false}
                   onCheckedChange={(checked) => {
                     if (checked) {
                       setProfileData(prev => ({
                         ...prev,
                         preferences: {
                           ...prev.preferences,
-                          workType: [...prev.preferences.workType, type as any]
+                          workType: [...(prev.preferences.workType || []), type as any]
                         }
                       }));
                     } else {
@@ -663,7 +663,7 @@ export default function ProfileCreationWizard({
                         ...prev,
                         preferences: {
                           ...prev.preferences,
-                          workType: prev.preferences.workType.filter(t => t !== type)
+                          workType: (prev.preferences.workType || []).filter(t => t !== type)
                         }
                       }));
                     }
@@ -682,14 +682,14 @@ export default function ProfileCreationWizard({
             {['full_time', 'part_time', 'contract'].map(type => (
               <label key={type} className="flex items-center space-x-2 cursor-pointer p-3 border rounded-lg hover:bg-gray-50">
                 <Checkbox
-                  checked={profileData.preferences.jobTypes.includes(type as any)}
+                  checked={profileData.preferences.jobTypes?.includes(type as any) || false}
                   onCheckedChange={(checked) => {
                     if (checked) {
                       setProfileData(prev => ({
                         ...prev,
                         preferences: {
                           ...prev.preferences,
-                          jobTypes: [...prev.preferences.jobTypes, type as any]
+                          jobTypes: [...(prev.preferences.jobTypes || []), type as any]
                         }
                       }));
                     } else {
@@ -697,7 +697,7 @@ export default function ProfileCreationWizard({
                         ...prev,
                         preferences: {
                           ...prev.preferences,
-                          jobTypes: prev.preferences.jobTypes.filter(t => t !== type)
+                          jobTypes: (prev.preferences.jobTypes || []).filter(t => t !== type)
                         }
                       }));
                     }
@@ -791,14 +791,14 @@ export default function ProfileCreationWizard({
             <div>
               <p className="text-sm font-medium text-gray-600">Salary Range</p>
               <p className="font-medium">
-                ${(profileData.preferences.salaryRange[0] / 1000).toFixed(0)}k - 
-                ${(profileData.preferences.salaryRange[1] / 1000).toFixed(0)}k
+                ${((profileData.preferences.salaryRange?.[0] || 50000) / 1000).toFixed(0)}k - 
+                ${((profileData.preferences.salaryRange?.[1] || 150000) / 1000).toFixed(0)}k
               </p>
             </div>
             <div>
               <p className="text-sm font-medium text-gray-600">Work Type</p>
               <div className="flex flex-wrap gap-1">
-                {profileData.preferences.workType.map(type => (
+                {(profileData.preferences.workType || []).map(type => (
                   <Badge key={type} variant="outline" className="text-xs capitalize">
                     {type}
                   </Badge>

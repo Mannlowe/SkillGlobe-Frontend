@@ -540,7 +540,7 @@ export default function CompactDashboardPage() {
       <SlideInDetailPane
         isOpen={isDetailPaneOpen}
         onClose={handleCloseDetailPane}
-        opportunity={selectedOpportunity}
+        opportunity={selectedOpportunity as any}
         onApply={handleApplyFromDetail}
         onSave={handleSaveFromDetail}
         onAskAI={handleAskAI}

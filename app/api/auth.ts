@@ -57,7 +57,8 @@ const MOCK_USERS = [
       email: 'individual@skillglobe.com',
       user_type: 'Individual',
       roles: ['Individual Seller'],
-      user_image: null
+      user_image: null,
+      mobile_no: null
     }
   },
   {
@@ -69,7 +70,8 @@ const MOCK_USERS = [
       email: 'business@skillglobe.com',
       user_type: 'Business',
       roles: ['Business Buyer'],
-      user_image: null
+      user_image: null,
+      mobile_no: null
     }
   }
 ];

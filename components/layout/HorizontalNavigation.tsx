@@ -175,8 +175,8 @@ export default function HorizontalNavigation({
   }, [isAuthenticated, router]);
 
   useEffect(() => {
-    if (isAuthenticated && user && window.location.pathname.includes('individual-dashboard')) {
-      setUserName(user.full_name || user.name);
+    if (isAuthenticated && user) {
+      setUserName(user.full_name || user.name || 'User');
     }
   }, [isAuthenticated, user]);
 
@@ -385,9 +385,9 @@ export default function HorizontalNavigation({
               <Button
                 variant="ghost"
                 size="icon"
-                className="relative rounded-md"
+                className="relative rounded-full"
               >
-                <div className="w-8 h-8 bg-gradient-to-br from-orange-500 to-blue-600 rounded-md flex items-center justify-center text-white font-semibold text-sm">
+                <div className="w-8 h-8 bg-gradient-to-br from-orange-500 to-blue-600 rounded-full flex items-center justify-center text-white font-semibold text-sm">
                   {getUserInitials(userName)}
                 </div>
               </Button>
@@ -397,7 +397,7 @@ export default function HorizontalNavigation({
                 <div className="flex flex-col space-y-1">
                   <p className="text-sm font-medium leading-none">{userName}</p>
                   <p className="text-sm leading-none text-muted-foreground">
-                    {user?.email || 'user@example.com'}
+                    {user?.email}
                   </p>
                 </div>
               </DropdownMenuLabel>

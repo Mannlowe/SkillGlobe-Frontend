@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Search, Filter, Bookmark, Bell, MapPin, DollarSign, Clock, Briefcase, Building, Target, Zap, Star } from 'lucide-react';
 import type { JobOpportunity } from '@/types/dashboard';
 import type { OpportunitySearchFilters, SavedSearch } from '@/types/opportunities';
@@ -30,6 +30,8 @@ export default function OpportunityDiscoveryHub({
   const [selectedFilters, setSelectedFilters] = useState<Partial<OpportunitySearchFilters>>({});
   const [sortBy, setSortBy] = useState<'relevance' | 'date' | 'salary' | 'match_score'>('relevance');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [visibleCount, setVisibleCount] = useState<number>(3);
+  const [isExpanded, setIsExpanded] = useState<boolean>(false);
 
   const filterOptions = {
     jobTypes: [
@@ -70,6 +72,16 @@ export default function OpportunityDiscoveryHub({
     if (score >= 75) return 'text-blue-600 bg-blue-50';
     if (score >= 60) return 'text-yellow-600 bg-yellow-50';
     return 'text-gray-600 bg-gray-50';
+  };
+
+  const handleLoadMore = () => {
+    setVisibleCount(prev => Math.min(prev + 3, sortedOpportunities.length));
+    setIsExpanded(true);
+  };
+
+  const handleShowLess = () => {
+    setVisibleCount(3);
+    setIsExpanded(false);
   };
 
   const sortedOpportunities = [...opportunities].sort((a, b) => {
@@ -313,7 +325,7 @@ export default function OpportunityDiscoveryHub({
           : 'space-y-4'
         }
       `}>
-        {sortedOpportunities.map((job) => (
+        {sortedOpportunities.slice(0, visibleCount).map((job) => (
           <div key={job.id} className={viewMode === 'list' ? 'max-w-none' : ''}>
             <CompactOpportunityCard 
               opportunity={job}
@@ -325,11 +337,23 @@ export default function OpportunityDiscoveryHub({
         ))}
       </div>
 
-      {/* Load More */}
+      {/* Load More or Show Less */}
       <div className="text-center">
-        <button className="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
-          Load more opportunities
-        </button>
+        {visibleCount < sortedOpportunities.length ? (
+          <button 
+            onClick={handleLoadMore}
+            className="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+          >
+            Load more opportunities
+          </button>
+        ) : isExpanded && (
+          <button 
+            onClick={handleShowLess}
+            className="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+          >
+            Show less Opportunities
+          </button>
+        )}
       </div>
     </div>
   );

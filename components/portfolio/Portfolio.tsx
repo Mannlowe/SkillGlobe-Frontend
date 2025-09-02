@@ -102,69 +102,230 @@ export default function Portfolio({
   const [certificateList, setCertificateList] = useState<any[]>([]);
 
   
-  // Load saved data from localStorage on component mount
+  // Load saved data from localStorage and API on component mount
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      // Load active section
-      const savedSection = localStorage.getItem('portfolioActiveSection');
-      if (savedSection) {
-        setLocalActiveSection(savedSection);
-        // Also update the parent's active section if available
-        if (propSetActiveSection) propSetActiveSection(savedSection);
-      }
-      
-      // Load completion status
-      const savedResumeUploaded = localStorage.getItem('portfolioResumeUploaded') === 'true';
-      const savedPersonalInfoCompleted = localStorage.getItem('portfolioPersonalInfoCompleted') === 'true';
-      const savedEducationCompleted = localStorage.getItem('portfolioEducationCompleted') === 'true';
-      const savedExperienceCompleted = localStorage.getItem('portfolioExperienceCompleted') === 'true';
-      const savedCertificatesCompleted = localStorage.getItem('portfolioCertificatesCompleted') === 'true';
-      
-      // Update local state
-      setLocalResumeUploaded(savedResumeUploaded);
-      setLocalPersonalInfoCompleted(savedPersonalInfoCompleted);
-      setLocalEducationCompleted(savedEducationCompleted);
-      setLocalExperienceCompleted(savedExperienceCompleted);
-      setLocalCertificatesCompleted(savedCertificatesCompleted);
-      
-      // Also update parent state if available
-      if (propSetResumeUploaded) propSetResumeUploaded(savedResumeUploaded);
-      if (propSetPersonalInfoCompleted) propSetPersonalInfoCompleted(savedPersonalInfoCompleted);
-      if (propSetEducationCompleted) propSetEducationCompleted(savedEducationCompleted);
-      if (propSetExperienceCompleted) propSetExperienceCompleted(savedExperienceCompleted);
-      if (propSetCertificatesCompleted) propSetCertificatesCompleted(savedCertificatesCompleted);
-      
-      // Load form data
-      const savedPersonalInfo = localStorage.getItem('portfolioPersonalInfo');
-      const savedEducation = localStorage.getItem('portfolioEducation');
-      const savedExperience = localStorage.getItem('portfolioExperience');
-      const savedCertificates = localStorage.getItem('portfolioCertificates');
-      
-      if (savedPersonalInfo) setPersonalInfo(JSON.parse(savedPersonalInfo));
-      if (savedEducation) setEducation(JSON.parse(savedEducation));
-      if (savedExperience) setExperience(JSON.parse(savedExperience));
-      if (savedCertificates) setCertificates(JSON.parse(savedCertificates));
-      
-      // Check if we need to show the reminder modal
-      const allCompleted = savedResumeUploaded && 
-                          savedPersonalInfoCompleted && 
-                          savedEducationCompleted && 
-                          savedExperienceCompleted && 
+    const loadPortfolioData = async () => {
+      if (typeof window !== 'undefined') {
+        try {
+          // First, try to fetch data from API
+          const authData = getAuthData();
+          console.log('Auth data:', authData);
+          
+          if (authData) {
+            console.log('Calling getPortfolio API...');
+            const response = await getPortfolio(
+              authData.entityId,
+              authData.apiKey,
+              authData.apiSecret
+            );
+            
+            console.log('Full API response:', response);
+            
+            // Check both possible response structures
+            let portfolioData = null;
+            if (response && response.message && response.message.data && response.message.data.portfolio) {
+              portfolioData = response.message.data.portfolio;
+              console.log('Found portfolio in response.message.data.portfolio');
+            } else if (response && response.data && response.data.portfolio) {
+              portfolioData = response.data.portfolio;
+              console.log('Found portfolio in response.data.portfolio');
+            }
+            
+            if (portfolioData) {
+              console.log('Portfolio data:', portfolioData);
+              console.log('Resume field:', portfolioData.resume);
+              console.log('Resume exists check:', !!portfolioData.resume);
+              console.log('Resume type:', typeof portfolioData.resume);
+              
+              // Check if resume exists in API response (check for both null and empty string)
+              if (portfolioData.resume && portfolioData.resume.toString().trim() !== '') {
+                console.log('✅ Resume found in API:', portfolioData.resume);
+                setLocalResumeUploaded(true);
+                if (propSetResumeUploaded) propSetResumeUploaded(true);
+                localStorage.setItem('portfolioResumeUploaded', 'true');
+                console.log('✅ Resume upload status set to true');
+              } else {
+                console.log('❌ No resume found in API response');
+              }
+              
+              // Check if personal info is complete
+              const hasPersonalInfo = portfolioData.first_name || portfolioData.last_name || 
+                                    portfolioData.email || portfolioData.date_of_birth || 
+                                    portfolioData.gender || portfolioData.nationality;
+              if (hasPersonalInfo) {
+                console.log('✅ Personal info found in API');
+                setLocalPersonalInfoCompleted(true);
+                if (propSetPersonalInfoCompleted) propSetPersonalInfoCompleted(true);
+                localStorage.setItem('portfolioPersonalInfoCompleted', 'true');
+              }
+              
+              // Check and load education data
+              if (portfolioData.education && portfolioData.education.length > 0) {
+                console.log('✅ Education data found:', portfolioData.education.length, 'entries');
+                const mappedEducation = portfolioData.education.map((edu: any) => ({
+                  id: edu.name || Date.now() + Math.random(),
+                  educationLevel: edu.education_level || '',
+                  yearOfCompletion: edu.year_of_completion || '',
+                  stream: edu.stream || '',
+                  score: edu.score || '',
+                  universityBoard: edu.university_board || '',
+                  certificate: edu.certificate || null
+                }));
+                setEducation(mappedEducation);
+                localStorage.setItem('portfolioEducation', JSON.stringify(mappedEducation));
+                setLocalEducationCompleted(true);
+                if (propSetEducationCompleted) propSetEducationCompleted(true);
+                localStorage.setItem('portfolioEducationCompleted', 'true');
+              }
+              
+              // Check and load work experience data
+              if (portfolioData.work_experience && portfolioData.work_experience.length > 0) {
+                console.log('✅ Work experience data found:', portfolioData.work_experience.length, 'entries');
+                const mappedExperience = portfolioData.work_experience.map((exp: any) => ({
+                  id: exp.name || Date.now() + Math.random(),
+                  space: exp.space || '',
+                  designation: exp.designation || '',
+                  company: exp.company || '',
+                  relevantExperience: exp.relevant_experience || 0
+                }));
+                setExperience(mappedExperience);
+                localStorage.setItem('portfolioExperience', JSON.stringify(mappedExperience));
+                setLocalExperienceCompleted(true);
+                if (propSetExperienceCompleted) propSetExperienceCompleted(true);
+                localStorage.setItem('portfolioExperienceCompleted', 'true');
+              }
+              
+              // Check and load certificates data
+              if (portfolioData.certificates && portfolioData.certificates.length > 0) {
+                console.log('✅ Certificates data found:', portfolioData.certificates.length, 'entries');
+                const mappedCertificates = portfolioData.certificates.map((cert: any) => ({
+                  id: cert.name || Date.now() + Math.random(),
+                  documentName: cert.document_name || '',
+                  certificateType: cert.certificate_type || '',
+                  documentUpload: cert.document_upload || null,
+                  issuingOrganisation: cert.issuing_organisation || ''
+                }));
+                setCertificates(mappedCertificates);
+                localStorage.setItem('portfolioCertificates', JSON.stringify(mappedCertificates));
+                setLocalCertificatesCompleted(true);
+                if (propSetCertificatesCompleted) propSetCertificatesCompleted(true);
+                localStorage.setItem('portfolioCertificatesCompleted', 'true');
+              }
+              
+              // Map the portfolio data to the personalInfo format
+              const mappedPersonalInfo = {
+                fullName: `${portfolioData.first_name || ''} ${portfolioData.last_name || ''}`.trim(),
+                email: portfolioData.email || '',
+                phone: portfolioData.phone || '',
+                gender: portfolioData.gender || '',
+                dateOfBirth: portfolioData.date_of_birth || '',
+                nationality: portfolioData.nationality || '',
+                country: portfolioData.country || '',
+                city: portfolioData.city || '',
+                landmark: portfolioData.landmark || '',
+                pincode: portfolioData.pincode || '',
+                currentAddress: portfolioData.current_address || '',
+                permanentAddress: portfolioData.permanent_address || '',
+                twitterHandle: portfolioData.twitter_handle || '',
+                linkedinHandle: portfolioData.linkedin_profile || '',
+                instagramHandle: portfolioData.instagram_handle || '',
+                facebookHandle: portfolioData.facebook_profile || '',
+                employmentStatus: portfolioData.employment_status || '',
+                website: portfolioData.website || '',
+                totalExperience: portfolioData.total_experience || '',
+                noticePeriod: portfolioData.notice_period || '',
+                professionalSummary: portfolioData.professional_summary || ''
+              };
+              
+              // Update the personalInfo state with API data
+              setPersonalInfo(mappedPersonalInfo);
+              localStorage.setItem('portfolioPersonalInfo', JSON.stringify(mappedPersonalInfo));
+              
+              console.log('Portfolio data loaded from API:', mappedPersonalInfo);
+            } else {
+              console.log('❌ No portfolio data found in API response');
+            }
+          }
+        } catch (error) {
+          console.error('❌ Error fetching portfolio data from API:', error);
+          console.log('Falling back to localStorage data...');
+        }
+        
+        // Load active section
+        const savedSection = localStorage.getItem('portfolioActiveSection');
+        if (savedSection) {
+          setLocalActiveSection(savedSection);
+          // Also update the parent's active section if available
+          if (propSetActiveSection) propSetActiveSection(savedSection);
+        }
+        
+        // Load completion status from localStorage (fallback if API doesn't have this info)
+        const savedResumeUploaded = localStorage.getItem('portfolioResumeUploaded') === 'true';
+        const savedPersonalInfoCompleted = localStorage.getItem('portfolioPersonalInfoCompleted') === 'true';
+        const savedEducationCompleted = localStorage.getItem('portfolioEducationCompleted') === 'true';
+        const savedExperienceCompleted = localStorage.getItem('portfolioExperienceCompleted') === 'true';
+        const savedCertificatesCompleted = localStorage.getItem('portfolioCertificatesCompleted') === 'true';
+        
+        // Update local state (only if not already set by API)
+        if (!localResumeUploaded) {
+          setLocalResumeUploaded(savedResumeUploaded);
+          if (propSetResumeUploaded) propSetResumeUploaded(savedResumeUploaded);
+        }
+        if (!localPersonalInfoCompleted) {
+          setLocalPersonalInfoCompleted(savedPersonalInfoCompleted);
+          if (propSetPersonalInfoCompleted) propSetPersonalInfoCompleted(savedPersonalInfoCompleted);
+        }
+        if (!localEducationCompleted) {
+          setLocalEducationCompleted(savedEducationCompleted);
+          if (propSetEducationCompleted) propSetEducationCompleted(savedEducationCompleted);
+        }
+        if (!localExperienceCompleted) {
+          setLocalExperienceCompleted(savedExperienceCompleted);
+          if (propSetExperienceCompleted) propSetExperienceCompleted(savedExperienceCompleted);
+        }
+        if (!localCertificatesCompleted) {
+          setLocalCertificatesCompleted(savedCertificatesCompleted);
+          if (propSetCertificatesCompleted) propSetCertificatesCompleted(savedCertificatesCompleted);
+        }
+        
+        // Load other form data from localStorage (only if not already loaded from API)
+        if (education.length === 0) {
+          const savedEducation = localStorage.getItem('portfolioEducation');
+          if (savedEducation) setEducation(JSON.parse(savedEducation));
+        }
+        if (experience.length === 0) {
+          const savedExperience = localStorage.getItem('portfolioExperience');
+          if (savedExperience) setExperience(JSON.parse(savedExperience));
+        }
+        if (certificates.length === 0) {
+          const savedCertificates = localStorage.getItem('portfolioCertificates');
+          if (savedCertificates) setCertificates(JSON.parse(savedCertificates));
+        }
+        
+        // Check if we need to show the reminder modal
+        const currentResumeUploaded = localResumeUploaded || savedResumeUploaded;
+        const allCompleted = currentResumeUploaded && 
+                            savedPersonalInfoCompleted && 
+                            savedEducationCompleted && 
+                            savedExperienceCompleted && 
+                            savedCertificatesCompleted;
+        
+        const hasStarted = currentResumeUploaded || 
+                          savedPersonalInfoCompleted || 
+                          savedEducationCompleted || 
+                          savedExperienceCompleted || 
                           savedCertificatesCompleted;
-      
-      const hasStarted = savedResumeUploaded || 
-                        savedPersonalInfoCompleted || 
-                        savedEducationCompleted || 
-                        savedExperienceCompleted || 
-                        savedCertificatesCompleted;
-      
-      // Only show reminder if user has started but not completed all steps
-      if (hasStarted && !allCompleted) {
-        setShowReminderModal(true);
+        
+        // Only show reminder if user has started but not completed all steps
+        if (hasStarted && !allCompleted) {
+          setShowReminderModal(true);
+        }
       }
-    }
+    };
+    
+    loadPortfolioData();
   }, [propSetActiveSection, propSetResumeUploaded, propSetPersonalInfoCompleted, 
-      propSetEducationCompleted, propSetExperienceCompleted, propSetCertificatesCompleted]);
+      propSetEducationCompleted, propSetExperienceCompleted, propSetCertificatesCompleted, localResumeUploaded]);
 
   // Use provided sections or create local ones
   const sections = propSections || [
@@ -354,7 +515,7 @@ export default function Portfolio({
   };
 
   return (
-    <div className={`bg-white rounded-xl max-w-full shadow-sm p-3 space-y-6 font-rubik ${className}`}>
+    <div className={`bg-white rounded-xl w-full shadow-sm p-3 space-y-6 font-rubik ${className}`} style={{ width: '100%' }}>
 
       {/* Active Section Content */}
       <div className="bg-white p-4 rounded-xl shadow-lg">
@@ -409,7 +570,7 @@ export default function Portfolio({
                   </div>
                   <div>
                     <p className="font-medium text-gray-900">Resume uploaded successfully!</p>
-                    <p className="text-sm text-gray-600">We&apos;re parsing your information...</p>
+                    <p className="text-sm text-gray-600">Your resume data has been loaded from your portfolio.</p>
                   </div>
                 </div>
               </div>

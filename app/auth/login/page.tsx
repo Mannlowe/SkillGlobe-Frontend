@@ -32,12 +32,15 @@ export default function AuthLoginPage() {
       
       if (result.success) {
         console.log('Login successful, user role:', result.userRole);
-        // Redirect based on user role with fromLogin parameter to trigger toast
+        // Redirect based on user role
         if (result.userRole === 'Individual Seller') {
-          router.push('/individual-dashboard?fromLogin=true');
+          router.push('/individual-dashboard');
+        } else if (result.userRole === 'Business User') {
+          // Business Users go directly to job postings
+          router.push('/business-dashboard/job-postings');
         } else {
-          // For other roles, redirect to business dashboard or other appropriate page
-          router.push('/business-dashboard?fromLogin=true');
+          // Business Admin and other roles go to main dashboard
+          router.push('/business-dashboard');
         }
       } else {
         setError('Login failed. Please check your credentials and try again.');
@@ -164,7 +167,7 @@ export default function AuthLoginPage() {
               <button
                 type="submit"
                 disabled={isLoading}
-                className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-blue-500 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300"
+                className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-[#007BCA] hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300"
               >
                 {isLoading ? (
                   <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>

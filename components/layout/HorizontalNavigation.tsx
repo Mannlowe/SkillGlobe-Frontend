@@ -1,11 +1,12 @@
+/* eslint-disable @next/next/no-img-element */
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
-import { 
-  Home, 
-  Target, 
-  User, 
+import {
+  Home,
+  Target,
+  User,
   TrendingUp,
   ChevronDown,
   Brain,
@@ -29,6 +30,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { cn } from '@/lib/utils';
 import Image from 'next/image';
+import { useAuthStore } from '@/store';
 
 interface NavigationItem {
   id: string;
@@ -70,7 +72,7 @@ export default function HorizontalNavigation({
   onSettingsClick,
   onProfileClick,
   userAvatar,
-  userName = 'User'
+
 }: HorizontalNavigationProps) {
   const pathname = usePathname();
   const router = useRouter();
@@ -103,8 +105,8 @@ export default function HorizontalNavigation({
       icon: <User className="w-4 h-4" />,
       children: [
         {
-          id: 'verification',
-          label: 'Verification',
+          id: 'curation',
+          label: 'Curation',
           icon: <Shield className="w-4 h-4" />,
           href: '/verification',
           description: 'Verify your identity for premium opportunities'
@@ -160,6 +162,35 @@ export default function HorizontalNavigation({
     router.push(href);
   };
 
+  const [userName, setUserName] = useState('User');
+  const { user, isAuthenticated } = useAuthStore();
+
+  // Helper function to get user initials
+  const getUserInitials = (name: string) => {
+    if (!name) return 'U';
+    const names = name.trim().split(' ');
+    if (names.length === 1) {
+      return names[0].charAt(0).toUpperCase();
+    }
+    return (names[0].charAt(0) + names[names.length - 1].charAt(0)).toUpperCase();
+  };
+
+  useEffect(() => {
+    const checkAuth = setTimeout(() => {
+      if (!isAuthenticated) {
+        router.push('/auth/login');
+      }
+    }, 100);
+    
+    return () => clearTimeout(checkAuth);
+  }, [isAuthenticated, router]);
+
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      setUserName(user.full_name || user.name || 'User');
+    }
+  }, [isAuthenticated, user]);
+
   return (
     <header className="sticky top-0 z-40 w-full border-b border-gray-200 bg-white">
       <div className="flex h-16 items-center px-4 sm:px-6 lg:px-8">
@@ -185,17 +216,17 @@ export default function HorizontalNavigation({
           >
             <Menu className={`w-5 h-5 transition-colors ${isSidebarOpen ? 'text-blue-600' : 'text-gray-600'}`} />
           </Button>
-          
+
           {/* Logo */}
-          <button 
-            className="flex items-center ml-2 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 rounded-md p-1" 
+          <button
+            className="flex items-center ml-2 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 rounded-md p-1"
             onClick={() => router.push('/')}
             aria-label="Go to homepage"
           >
-            <img 
-              src="/Images/logo_image.png" 
-              alt="SkillGlobe" 
-              className="h-12 w-auto object-contain max-w-[200px]"
+            <img
+              src="/Images/logo_image.jpg"
+              alt="SkillGlobe"
+              className="h-12 w-auto object-contain max-w-[180px]"
             />
           </button>
         </div>
@@ -211,8 +242,8 @@ export default function HorizontalNavigation({
                       variant="ghost"
                       className={cn(
                         "flex items-center space-x-2 px-3 py-2 text-sm font-medium transition-colors",
-                        isActive(item) 
-                          ? "text-[#FF6B35] bg-[#FF6B35]/10" 
+                        isActive(item)
+                          ? "text-[#FF6B35] bg-[#FF6B35]/10"
                           : "text-gray-700 hover:text-gray-900 hover:bg-gray-100"
                       )}
                     >
@@ -224,8 +255,8 @@ export default function HorizontalNavigation({
                       )} />
                     </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent 
-                    align="start" 
+                  <DropdownMenuContent
+                    align="start"
                     className="w-64"
                     sideOffset={5}
                   >
@@ -239,8 +270,8 @@ export default function HorizontalNavigation({
                         onClick={() => handleNavigation(child.href)}
                         className={cn(
                           "cursor-pointer",
-                          child.id === 'verification' 
-                            ? "border border-orange-200 bg-gradient-to-r from-orange-50 to-red-50 hover:from-orange-100 hover:to-red-100" 
+                          child.id === 'curation'
+                            ? "border border-orange-200 bg-gradient-to-r from-orange-50 to-red-50 hover:from-orange-100 hover:to-red-100"
                             : "",
                           isChildActive(child.href) && "bg-[#FF6B35]/10"
                         )}
@@ -248,10 +279,10 @@ export default function HorizontalNavigation({
                         <div className="flex items-start space-x-3 py-1">
                           <div className={cn(
                             "mt-0.5",
-                            child.id === 'verification' 
-                              ? "text-orange-600" 
-                              : isChildActive(child.href) 
-                                ? "text-[#FF6B35]" 
+                            child.id === 'curation'
+                              ? "text-orange-600"
+                              : isChildActive(child.href)
+                                ? "text-[#FF6B35]"
                                 : "text-gray-500"
                           )}>
                             {child.icon}
@@ -259,14 +290,14 @@ export default function HorizontalNavigation({
                           <div className="flex-1">
                             <div className={cn(
                               "font-medium text-sm flex items-center gap-2",
-                              child.id === 'verification' 
-                                ? "text-orange-700" 
-                                : isChildActive(child.href) 
-                                  ? "text-[#FF6B35]" 
+                              child.id === 'curation'
+                                ? "text-orange-700"
+                                : isChildActive(child.href)
+                                  ? "text-[#FF6B35]"
                                   : "text-gray-900"
                             )}>
                               {child.label}
-                              {child.id === 'verification' && (
+                              {child.id === 'curation' && (
                                 <span className="px-1.5 py-0.5 text-xs bg-orange-200 text-orange-800 rounded-full font-medium">
                                   Important
                                 </span>
@@ -293,16 +324,16 @@ export default function HorizontalNavigation({
                 onClick={() => item.href && handleNavigation(item.href)}
                 className={cn(
                   "flex items-center space-x-2 px-3 py-2 text-sm font-medium transition-colors relative",
-                  isActive(item) 
-                    ? "text-[#FF6B35] bg-[#FF6B35]/10" 
+                  isActive(item)
+                    ? "text-[#FF6B35] bg-[#FF6B35]/10"
                     : "text-gray-700 hover:text-gray-900 hover:bg-gray-100"
                 )}
               >
                 {item.icon}
                 <span>{item.label}</span>
                 {item.badge && item.badge > 0 && (
-                  <Badge 
-                    variant="secondary" 
+                  <Badge
+                    variant="secondary"
                     className="ml-1 h-5 px-1.5 text-xs bg-[#FF6B35] text-white"
                   >
                     {item.badge}
@@ -324,7 +355,7 @@ export default function HorizontalNavigation({
           >
             <Bell className="w-5 h-5" />
             {notifications > 0 && (
-              <Badge 
+              <Badge
                 className="absolute -top-1 -right-1 h-5 w-5 p-0 flex items-center justify-center text-xs bg-red-500 text-white"
               >
                 {notifications > 9 ? '9+' : notifications}
@@ -341,7 +372,7 @@ export default function HorizontalNavigation({
           >
             <MessageSquare className="w-5 h-5" />
             {messages > 0 && (
-              <Badge 
+              <Badge
                 className="absolute -top-1 -right-1 h-5 w-5 p-0 flex items-center justify-center text-xs bg-blue-500 text-white"
               >
                 {messages > 9 ? '9+' : messages}
@@ -350,63 +381,54 @@ export default function HorizontalNavigation({
           </Button>
 
           {/* Settings */}
-          <Button
+          {/* <Button
             variant="ghost"
             size="icon"
             onClick={onSettingsClick}
             className="hidden sm:flex"
           >
             <Settings className="w-5 h-5" />
-          </Button>
+          </Button> */}
 
           {/* User Profile */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
                 variant="ghost"
-                className="flex items-center space-x-2 px-3 py-2 h-auto rounded-full hover:bg-gray-100 transition-colors"
+                size="icon"
+                className="relative rounded-full font-rubik"
               >
-                {userAvatar ? (
-                  <Image
-                    src={userAvatar}
-                    alt={userName}
-                    width={32}
-                    height={32}
-                    className="rounded-full"
-                  />
-                ) : (
-                  <div className="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center">
-                    <User className="w-4 h-4 text-gray-600" />
-                  </div>
-                )}
-                <span className="hidden sm:block text-sm font-medium text-gray-700 max-w-[120px] truncate">
-                  {userName}
-                </span>
+                <div className="w-8 h-8 bg-gradient-to-br from-orange-500 to-blue-600 rounded-full flex items-center justify-center text-white font-semibold">
+                  {getUserInitials(userName)}
+                </div>
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56">
-              <DropdownMenuLabel className="font-normal">
-                <div className="flex flex-col space-y-1">
-                  <p className="text-sm font-medium leading-none">{userName}</p>
-                  <p className="text-xs leading-none text-muted-foreground">
-                    View your profile
+            <DropdownMenuContent align="end" className="w-56 px-2 py-3">
+              <DropdownMenuLabel>
+                <div className="flex flex-col space-y-1 font-rubik">
+                  <p className="font-semibold text-gray-900 text-md">{userName}</p>
+                  <p className="text-sm text-gray-600 font-normal">
+                    {user?.email}
                   </p>
                 </div>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem 
-                onClick={() => console.log('Profile clicked')} 
-                className="cursor-pointer"
-              >
-                <User className="mr-2 h-4 w-4" />
-                My Profile
+              <DropdownMenuItem onClick={onProfileClick} className="cursor-pointer">
+                {/* <User className="mr-2 h-4 w-4" /> */}
+                Help & Support
               </DropdownMenuItem>
               <DropdownMenuItem onClick={onSettingsClick} className="cursor-pointer sm:hidden">
                 <Settings className="mr-2 h-4 w-4" />
                 Settings
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem className="cursor-pointer text-red-600">
+              <DropdownMenuItem 
+                onClick={() => {
+                  localStorage.clear();
+                  router.push('/auth/login');
+                }} 
+                className="cursor-pointer text-red-600"
+              >
                 Log out
               </DropdownMenuItem>
             </DropdownMenuContent>
@@ -425,15 +447,15 @@ export default function HorizontalNavigation({
               onClick={() => item.href && handleNavigation(item.href)}
               className={cn(
                 "flex flex-col items-center space-y-1 h-full rounded-none relative",
-                isActive(item) 
-                  ? "text-[#FF6B35]" 
+                isActive(item)
+                  ? "text-[#FF6B35]"
                   : "text-gray-600"
               )}
             >
               {item.icon}
               <span className="text-xs">{item.label}</span>
               {item.badge && item.badge > 0 && (
-                <Badge 
+                <Badge
                   className="absolute top-1 right-1 h-4 px-1 text-xs bg-[#FF6B35] text-white"
                 >
                   {item.badge}
@@ -441,7 +463,7 @@ export default function HorizontalNavigation({
               )}
             </Button>
           ))}
-          
+
           {/* My Identity for mobile */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -451,7 +473,7 @@ export default function HorizontalNavigation({
                 className={cn(
                   "flex flex-col items-center space-y-1 h-full rounded-none",
                   navigationItems.find(item => item.id === 'identity' && isActive(item))
-                    ? "text-[#FF6B35]" 
+                    ? "text-[#FF6B35]"
                     : "text-gray-600"
                 )}
               >

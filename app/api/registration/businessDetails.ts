@@ -14,6 +14,8 @@ export interface BusinessDetailsRequest {
   contact_person_email: string;
   contact_person_phone: string;
   password: string;
+  lead_reference?: string; // Optional
+  email_token?: string; // Optional
 }
 
 // Interface for business details response
@@ -43,7 +45,11 @@ export const updateBusinessDetails = async (
     
     const response = await axios.post<BusinessDetailsResponse>(
       `${API_BASE_URL}/api/method/skillglobe_be.api.register.register.update_business_details`,
-      businessDetails,
+      {
+        ...businessDetails,
+        ...(businessDetails.lead_reference && { lead_reference: businessDetails.lead_reference }),
+        ...(businessDetails.email_token && { email_token: businessDetails.email_token })
+      },
       {
         headers: {
           'Content-Type': 'application/json',

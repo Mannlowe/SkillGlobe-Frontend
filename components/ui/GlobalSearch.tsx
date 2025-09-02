@@ -6,6 +6,34 @@ import { useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { dataService } from '@/lib/dataService';
 
+// Define types for the search API response
+interface Opportunity {
+  id: string;
+  title: string;
+  company: string;
+  location: string;
+  description?: string;
+  salary?: string;
+  match_percentage?: number;
+}
+
+interface Skill {
+  name: string;
+  level: string;
+}
+
+interface Page {
+  name: string;
+  path: string;
+}
+
+interface GlobalSearchResponse {
+  opportunities: Opportunity[];
+  skills: Skill[];
+  pages: Page[];
+  people?: any[];
+}
+
 interface SearchResult {
   id: string;
   type: 'opportunity' | 'skill' | 'profile' | 'message' | 'page';
@@ -45,11 +73,11 @@ export default function GlobalSearch({ isOpen, onClose }: GlobalSearchProps) {
     if (!searchQuery.trim()) return [];
 
     try {
-      const searchResults = await dataService.globalSearch(searchQuery);
+      const searchResults: GlobalSearchResponse = await dataService.globalSearch(searchQuery);
       const results: SearchResult[] = [];
 
       // Convert opportunities to search results
-      searchResults.opportunities.forEach(opp => {
+      searchResults.opportunities.forEach((opp: Opportunity) => {
         results.push({
           id: opp.id,
           type: 'opportunity',
@@ -67,7 +95,7 @@ export default function GlobalSearch({ isOpen, onClose }: GlobalSearchProps) {
       });
 
       // Convert skills to search results
-      searchResults.skills.forEach(skill => {
+      searchResults.skills.forEach((skill: Skill) => {
         results.push({
           id: skill.name,
           type: 'skill',
@@ -79,7 +107,7 @@ export default function GlobalSearch({ isOpen, onClose }: GlobalSearchProps) {
       });
 
       // Convert pages to search results
-      searchResults.pages.forEach(page => {
+      searchResults.pages.forEach((page: Page) => {
         results.push({
           id: page.path,
           type: 'page',
@@ -122,6 +150,18 @@ export default function GlobalSearch({ isOpen, onClose }: GlobalSearchProps) {
     }
   }, [isOpen]);
 
+  const handleResultClick = useCallback((result: SearchResult): void => {
+    // Add to recent searches
+    setRecentSearches(prev => {
+      const newSearches = [query, ...prev.filter(s => s !== query)].slice(0, 5);
+      return newSearches;
+    });
+
+    router.push(result.url);
+    onClose();
+    setQuery('');
+  }, [query, router, onClose, setQuery]);
+
   // Handle keyboard navigation
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -138,7 +178,7 @@ export default function GlobalSearch({ isOpen, onClose }: GlobalSearchProps) {
           break;
         case 'Enter':
           e.preventDefault();
-          if (results[selectedIndex]) {
+          if (results.length > 0 && selectedIndex < results.length) {
             handleResultClick(results[selectedIndex]);
           }
           break;
@@ -151,19 +191,7 @@ export default function GlobalSearch({ isOpen, onClose }: GlobalSearchProps) {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, results, selectedIndex, onClose]);
-
-  const handleResultClick = (result: SearchResult) => {
-    // Add to recent searches
-    setRecentSearches(prev => {
-      const newSearches = [query, ...prev.filter(s => s !== query)].slice(0, 5);
-      return newSearches;
-    });
-
-    router.push(result.url);
-    onClose();
-    setQuery('');
-  };
+  }, [isOpen, results, selectedIndex, onClose, router, handleResultClick, query]);
 
   const handleRecentSearchClick = (recentQuery: string) => {
     setQuery(recentQuery);
@@ -220,7 +248,7 @@ export default function GlobalSearch({ isOpen, onClose }: GlobalSearchProps) {
             </div>
           ) : query.trim() && results.length === 0 ? (
             <div className="p-4 text-center text-gray-500">
-              <p>No results found for "{query}"</p>
+              <p>No results found for &quot;{query}&quot;</p>
             </div>
           ) : results.length > 0 ? (
             <div className="py-2">

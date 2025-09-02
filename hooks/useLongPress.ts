@@ -11,6 +11,7 @@ interface LongPressOptions {
   detect?: 'touch' | 'mouse' | 'both';
   cancelOnMovement?: boolean;
   movementThreshold?: number; // Pixels
+  disabled?: boolean; // Whether the long press functionality is disabled
 }
 
 interface Position {
@@ -27,7 +28,8 @@ export function useLongPress(options: LongPressOptions) {
     captureEvent = true,
     detect = 'both',
     cancelOnMovement = true,
-    movementThreshold = 10
+    movementThreshold = 10,
+    disabled = false
   } = options;
 
   const timeout = useRef<NodeJS.Timeout>();
@@ -36,6 +38,8 @@ export function useLongPress(options: LongPressOptions) {
   const elementRef = useRef<HTMLElement>(null);
 
   const start = useCallback((event: TouchEvent | MouseEvent) => {
+    if (disabled) return;
+    
     if (captureEvent) {
       event.preventDefault();
     }
@@ -52,7 +56,7 @@ export function useLongPress(options: LongPressOptions) {
       isLongPressing.current = true;
       onLongPress(event);
     }, threshold);
-  }, [onLongPress, onLongPressStart, threshold, captureEvent]);
+  }, [onLongPress, onLongPressStart, threshold, captureEvent, disabled]);
 
   const clear = useCallback((shouldTriggerEnd = true) => {
     if (timeout.current) {

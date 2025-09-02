@@ -11,6 +11,8 @@ export interface PersonalDetailsRequest {
   phone: string;
   full_name: string;
   password: string;
+  lead_reference?: string; // Optional
+  email_token?: string; // Optional
 }
 
 // Interface for personal details response
@@ -34,6 +36,8 @@ export interface PersonalDetailsResponse {
  * @param phone User phone number
  * @param fullName User full name
  * @param password User password
+ * @param leadReference Optional lead reference for lead tracking
+ * @param emailToken Optional email token for lead verification
  * @returns Promise with update response
  */
 export const updatePersonalDetails = async (
@@ -41,7 +45,9 @@ export const updatePersonalDetails = async (
   email: string,
   phone: string,
   fullName: string,
-  password: string
+  password: string,
+  leadReference?: string,
+  emailToken?: string
 ): Promise<PersonalDetailsResponse> => {
   try {
     console.log('Updating personal details:', { requestId, email, phone, fullName });
@@ -53,7 +59,9 @@ export const updatePersonalDetails = async (
         email: email,
         phone: phone,
         full_name: fullName,
-        password: password
+        password: password,
+        ...(leadReference && { lead_reference: leadReference }),
+        ...(emailToken && { email_token: emailToken })
       },
       {
         headers: {

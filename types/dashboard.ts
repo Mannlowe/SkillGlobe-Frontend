@@ -123,6 +123,7 @@ export interface JobOpportunity {
   application_competition: 'Low' | 'Medium' | 'High';
   hiring_urgency: 'Urgent' | 'Normal' | 'Flexible';
   recruiter_activity: string; // "Actively hiring", "Recently posted"
+  buyer_interested?: boolean; // Indicates if buyer has shown special interest
 }
 
 export interface MarketMetricCard {

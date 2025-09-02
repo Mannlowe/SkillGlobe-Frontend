@@ -18,17 +18,20 @@ interface IdentityVerificationProps {
   onVerificationComplete?: () => void;
   onSkip?: () => void;
   className?: string;
+  initialStep?: string;
 }
 
 export default function IdentityVerification({ 
   onVerificationComplete, 
   onSkip,
-  className = '' 
+  className = '',
+  initialStep
 }: IdentityVerificationProps) {
   const router = useRouter();
   const { isIdentityVerified, verifiedDocType, setIdentityVerified } = useVerificationStore();
   
-  const [selectedDoc, setSelectedDoc] = useState(verifiedDocType || '');
+  // Use initialStep if provided, otherwise fallback to verifiedDocType or empty string
+  const [selectedDoc, setSelectedDoc] = useState(initialStep || verifiedDocType || '');
   const [isUploading, setIsUploading] = useState(false);
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [showVerifiedUI, setShowVerifiedUI] = useState(isIdentityVerified);
@@ -136,13 +139,23 @@ export default function IdentityVerification({
                     onClick={() => setSelectedDoc(doc.id)}
                     className={`p-4 rounded-xl border-2 transition-all flex flex-col items-center justify-center h-full ${
                       isIdentityVerified && verifiedDocType === doc.id
-                        ? 'border-green-500 bg-green-50'
+                        ? doc.id === 'aadhaar' 
+                          ? 'border-green-500 bg-green-50'
+                          : 'border-yellow-500 bg-yellow-50'
                         : selectedDoc === doc.id
                           ? 'border-blue-500 bg-blue-50'
                           : 'border-gray-200 bg-white hover:border-blue-300'
                     }`}
                   >
-                    <Icon className={`${isIdentityVerified && verifiedDocType === doc.id ? 'text-green-600' : selectedDoc === doc.id ? 'text-blue-600' : 'text-gray-600'} mb-3`} size={30} />
+                    <Icon className={`${
+                      isIdentityVerified && verifiedDocType === doc.id 
+                        ? doc.id === 'aadhaar' 
+                          ? 'text-green-600' 
+                          : 'text-yellow-600'
+                        : selectedDoc === doc.id 
+                          ? 'text-blue-600' 
+                          : 'text-gray-600'
+                    } mb-3`} size={30} />
                     <p className="text-sm font-medium text-gray-900">{doc.name}</p>
                     <p className="text-xs text-gray-500 text-center">{doc.description}</p>
                   </button>
@@ -268,17 +281,16 @@ export default function IdentityVerification({
       )}
 
 {!showVerifiedUI && (
-  <div className="flex space-x-3 pt-4">
+  <div className="flex justify-center items-center pt-4">
     <button
       onClick={handleVerify}
       disabled={!uploadedFile || isUploading}
-      className="max-w-xs mx-auto flex-1 bg-blue-500 text-white font-semibold py-3 px-6 rounded-xl hover:shadow-lg transition-all duration-300 disabled:cursor-not-allowed"
+      className="w-44 bg-[#007BCA] text-white font-semibold py-3 px-6 rounded-xl hover:shadow-lg transition-all duration-300 disabled:cursor-not-allowed"
     >
       Verify Identity
     </button>
   </div>
 )}
-
     </div>
     
  

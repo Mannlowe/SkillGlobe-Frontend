@@ -1,5 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=Rubik:ital,wght@0,300..900;1,300..900&display=swap');
-
+@import url('https://fonts.googleapis.com/css2?family=Nunito+Sans:ital,opsz,wght@0,6..12,200..1000;1,6..12,200..1000&display=swap');
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -15,6 +15,48 @@
 
 .animate-shimmer {
   animation: shimmer 2s infinite;
+}
+
+@keyframes rotate {
+  from {
+    transform: rotate(0);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.buyer-interested-border {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.buyer-interested-border .inner {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  margin: 3px;
+}
+
+.buyer-interested-border::before {
+  content: "";
+  display: block;
+  background: linear-gradient(
+    90deg,
+    #FFD700 0%,
+    #FFA500 25%,
+    #FF8C00 50%,
+    #FFD700 75%,
+    #FFA500 100%
+  );
+  height: 500px;
+  width: 1024px;
+  position: absolute;
+  animation: rotate 3s linear infinite;
+  z-index: 0;
 }
 
 @layer components {
@@ -43,7 +85,7 @@
     position: absolute;
     inset: 0;
     padding: 2px;
-    border-radius: 0.75rem;
+    border-radius: 1.25rem;
     background: linear-gradient(to right, var(--skillglobe-orange), var(--skillglobe-blue));
     -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
     mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);

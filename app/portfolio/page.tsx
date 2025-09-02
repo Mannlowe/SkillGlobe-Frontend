@@ -49,33 +49,49 @@ export default function PortfolioPage() {
 
   return (
     <ModernLayoutWrapper>
-      {/* Portfolio Sidebar */}
-      {portfolioSidebarOpen && (
-        <PortfolioSidebar
-          activeSection={activeSection}
-          setActiveSection={setActiveSection}
-          sections={sections}
-          onClose={() => {
-            setPortfolioSidebarOpen(false);
-            setMainSidebarOpen(true);
-          }}
-        />
-      )}
-      
-      <div className="max-w-7xl mx-auto p-4">
-        <Portfolio 
-          activeSection={activeSection}
-          setActiveSection={setActiveSection}
-          sections={sections}
-          setResumeUploaded={setResumeUploaded}
-          setPersonalInfoCompleted={setPersonalInfoCompleted}
-          setEducationCompleted={setEducationCompleted}
-          setExperienceCompleted={setExperienceCompleted}
-          setCertificatesCompleted={setCertificatesCompleted}
-          onPortfolioComplete={handlePortfolioComplete}
-          onSkip={handleSkip}
-          className="mt-4"
-        />
+      <div className="max-w-full mx-auto">
+        <div className="flex justify-center">
+          <div className="w-full md:w-full">
+            {/* Main content container with flex layout */}
+            <div className="flex">
+              {/* Portfolio Sidebar */}
+              {portfolioSidebarOpen && (
+                <div className="flex-shrink-0">
+                  <PortfolioSidebar
+                    activeSection={activeSection}
+                    setActiveSection={setActiveSection}
+                    sections={sections}
+                    onClose={() => {
+                      setPortfolioSidebarOpen(false);
+                      setMainSidebarOpen(true);
+                    }}
+                  />
+                </div>
+              )}
+              
+              {/* Main Content Area */}
+              <div className="flex-1 flex flex-col overflow-hidden w-full">
+                <main className="flex-1 overflow-y-auto p-4 w-full">
+                  <div className="w-full ">
+                    <Portfolio 
+                      activeSection={activeSection}
+                      setActiveSection={setActiveSection}
+                      sections={sections}
+                      setResumeUploaded={setResumeUploaded}
+                      setPersonalInfoCompleted={setPersonalInfoCompleted}
+                      setEducationCompleted={setEducationCompleted}
+                      setExperienceCompleted={setExperienceCompleted}
+                      setCertificatesCompleted={setCertificatesCompleted}
+                      onPortfolioComplete={handlePortfolioComplete}
+                      onSkip={handleSkip}
+                      className='-mt-4'
+                    />
+                  </div>
+                </main>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </ModernLayoutWrapper>
   );

@@ -4,6 +4,8 @@ import { MapPin, DollarSign, Target, Clock, Zap, Bookmark, Send, Eye, ThumbsUp, 
 import type { JobOpportunity } from '@/types/dashboard';
 import { StandardizedButton } from '@/components/ui/StandardizedButton';
 import { useState } from 'react';
+import OpportunityDetails from '@/components/modal/OpportunityDetails';
+import SkillsSuccessModal from '@/components/modal/SkillsSuccessModal';
 
 interface CompactOpportunityCardProps {
   opportunity: JobOpportunity;
@@ -28,6 +30,8 @@ export default function CompactOpportunityCard({
 }: CompactOpportunityCardProps) {
   const [showTooltip, setShowTooltip] = useState(false);
   const [isBookmarked, setIsBookmarked] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isApplicationModalOpen, setIsApplicationModalOpen] = useState(false);
 
   const getMatchScoreColor = (score: number) => {
     if (score >= 90) return 'text-green-600 bg-green-50 border-green-200';
@@ -55,19 +59,39 @@ export default function CompactOpportunityCard({
 
   const handleApply = (e: React.MouseEvent) => {
     e.stopPropagation();
+    setIsApplicationModalOpen(true);
     onApply?.(opportunity.id);
   };
 
   const handleCardClick = () => {
-    console.log('Card clicked for job:', opportunity.id);
+    setIsModalOpen(true);
     onViewDetails?.(opportunity.id);
+  };
+
+  const handleViewClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsModalOpen(true);
+    onViewDetails?.(opportunity.id);
+  };
+
+  const handleModalClose = () => {
+    setIsModalOpen(false);
+  };
+
+  const handleApplicationModalClose = () => {
+    setIsApplicationModalOpen(false);
   };
 
   return (
     <div 
-      onClick={handleCardClick}
-      className="bg-white rounded-lg border border-gray-200 hover:shadow-md hover:border-orange-200 transition-all duration-200 p-4 cursor-pointer group relative"
+      className={`${
+        opportunity.buyer_interested ? 'buyer-interested-border' : ''
+      } rounded-lg`}
     >
+      <div 
+        onClick={handleCardClick}
+        className="inner bg-white rounded-lg border border-gray-200 hover:shadow-md hover:border-orange-200 transition-all duration-200 p-4 cursor-pointer group relative"
+      >
       {/* Bookmark Button - Top Right Corner */}
       <button
         onClick={handleBookmark}
@@ -81,13 +105,29 @@ export default function CompactOpportunityCard({
         <Bookmark size={16} fill={isBookmarked ? 'currentColor' : 'none'} />
       </button>
 
-      {/* Header Row - Conditionally rendered */}
-      {!hideHeader && (
-        <div className="flex items-start justify-between mb-3 pr-10">
-          <div className="flex-1 min-w-0">
-            <h3 className="font-semibold text-gray-900 truncate group-hover:text-orange-600 transition-colors" title={opportunity.title}>
-              {opportunity.title}
-            </h3>
+      {/* Header Row */}
+      <div className="flex items-start justify-between mb-3 pr-10">
+        <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2">
+  <h3
+    className="font-semibold text-gray-900 truncate group-hover:text-orange-600 transition-colors"
+    title={opportunity.title}
+  >
+    {opportunity.title}
+  </h3>
+
+  {opportunity.buyer_interested && (
+    <span className="px-2 py-0.5 rounded-full text-xs bg-gradient-to-r from-yellow-400 to-yellow-600 text-white font-medium">
+      ⭐ Buyer Interested
+    </span>
+  )}
+</div>
+
+          
+          {/* Company and Match Score on same line */}
+          <div className="flex items-center gap-2 mt-1">
+            <p className="text-sm text-gray-600">{opportunity.company}</p>
+            <span className="text-gray-400">•</span>
             
             {/* Company and Match Score on same line */}
             <div className="flex items-center gap-2 mt-1">
@@ -133,6 +173,7 @@ export default function CompactOpportunityCard({
             Urgent
           </span>
         )}
+        
       </div>
 
       {/* Top Match Reasons - Compact with subtle styling */}
@@ -143,105 +184,54 @@ export default function CompactOpportunityCard({
         </div>
       </div>
 
-      {/* Actions Row - Conditional based on showInterestButtons */}
-      <div className="pt-2 border-t border-gray-100">
-        {showInterestButtons ? (
-          userInterest ? (
-            <div className="flex items-center justify-center py-2 px-3 bg-gray-50 rounded-lg">
-              <span className="text-sm text-gray-600">
-                You {userInterest === 'yes' ? 'expressed interest' : userInterest === 'maybe' ? 'marked as maybe' : 'declined'} - waiting for employer response
-              </span>
-            </div>
-          ) : (
-            <div className="space-y-2">
-              <div className="flex items-center gap-2">
-                <StandardizedButton
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onExpressInterest?.(opportunity.id, 'yes');
-                  }}
-                  variant="primary"
-                  size="sm"
-                  leftIcon={<ThumbsUp size={14} />}
-                  className="flex-1"
-                >
-                  Interested
-                </StandardizedButton>
-                <StandardizedButton
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onExpressInterest?.(opportunity.id, 'maybe');
-                  }}
-                  variant="secondary"
-                  size="sm"
-                  leftIcon={<Clock size={14} />}
-                  className="flex-1"
-                >
-                  Maybe
-                </StandardizedButton>
-                <StandardizedButton
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onExpressInterest?.(opportunity.id, 'no');
-                  }}
-                  variant="ghost"
-                  size="sm"
-                  leftIcon={<ThumbsDown size={14} />}
-                  className="px-3"
-                >
-                </StandardizedButton>
-              </div>
-              <div className="flex justify-center">
-                <StandardizedButton
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onViewDetails?.(opportunity.id);
-                  }}
-                  variant="ghost"
-                  size="sm"
-                  leftIcon={<Eye size={14} />}
-                  className="text-gray-600 hover:text-orange-600"
-                >
-                  View Details
-                </StandardizedButton>
-              </div>
-            </div>
-          )
-        ) : (
-          <div className="flex items-center justify-between">
-            {/* Primary Action */}
-            <StandardizedButton
-              onClick={handleApply}
-              variant="primary"
-              size="sm"
-              leftIcon={<Send size={14} />}
-              className="flex-1 mr-3"
-            >
-              Quick Apply
-            </StandardizedButton>
-            
-            {/* Secondary Actions */}
-            <div className="flex items-center gap-2">
-              <StandardizedButton
-                onClick={(e) => {
-                  e.stopPropagation();
-                  console.log('View button clicked for job:', opportunity.id);
-                  onViewDetails?.(opportunity.id);
-                }}
-                variant="ghost"
-                size="sm"
-                leftIcon={<Eye size={14} />}
-                className="text-gray-600 hover:text-orange-600"
-              >
-                View
-              </StandardizedButton>
-            </div>
-          </div>
-        )}
+      {/* Actions Row - Grouped Primary & Secondary */}
+      <div className="flex items-center justify-between pt-2 border-t border-gray-100">
+        {/* Primary Action */}
+        <StandardizedButton
+          onClick={handleApply}
+          variant="primary"
+          size="sm"
+          leftIcon={<Send size={14} />}
+          className="flex-1 mr-3"
+        >
+          Quick Apply
+        </StandardizedButton>
+        
+        {/* Secondary Actions */}
+        <div className="flex items-center gap-2">
+          <StandardizedButton
+            onClick={handleViewClick}
+            variant="ghost"
+            size="sm"
+            leftIcon={<Eye size={14} />}
+            className="text-gray-600 hover:text-orange-600"
+          >
+            View
+          </StandardizedButton>
+        </div>
       </div>
       
       {/* Subtle indication this card is clickable */}
       <div className="absolute inset-0 rounded-lg border-2 border-transparent group-hover:border-orange-200 pointer-events-none transition-colors duration-200"></div>
+      </div>
+
+      {/* Opportunity Details Modal */}
+      <OpportunityDetails
+        opportunity={opportunity}
+        isOpen={isModalOpen}
+        onClose={handleModalClose}
+        onApply={onApply}
+        onSave={onSave}
+      />
+
+      {/* Application Success Modal */}
+      <SkillsSuccessModal
+        isOpen={isApplicationModalOpen}
+        onClose={handleApplicationModalClose}
+        type="application"
+        jobTitle={opportunity.title}
+        companyName={opportunity.company}
+      />
     </div>
   );
 }

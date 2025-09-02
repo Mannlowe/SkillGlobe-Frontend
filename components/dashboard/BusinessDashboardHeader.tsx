@@ -30,6 +30,16 @@ export default function BusinessDashboardHeader({ title, onMenuClick }: Business
 
   // Get user data from auth store
   const { user: authUser, isAuthenticated } = useAuthStore();
+  
+  // Helper function to get user initials
+  const getUserInitials = (name: string) => {
+    if (!name) return 'B';
+    const names = name.trim().split(' ');
+    if (names.length === 1) {
+      return names[0].charAt(0).toUpperCase();
+    }
+    return (names[0].charAt(0) + names[names.length - 1].charAt(0)).toUpperCase();
+  };
 
   const profileRef = useRef<HTMLDivElement>(null);
   const notificationsRef = useRef<HTMLDivElement>(null);
@@ -153,16 +163,15 @@ export default function BusinessDashboardHeader({ title, onMenuClick }: Business
               onClick={() => setShowProfile(!showProfile)}
               className="flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-100 transition-colors"
             >
-              <div className="relative w-8 h-8 rounded-full overflow-hidden">
-                <Image
-                  src="https://images.pexels.com/photos/1222271/pexels-photo-1222271.jpeg?auto=compress&cs=tinysrgb&w=40&h=40&fit=crop"
-                  alt="Profile"
-                  fill
-                  sizes="32px"
-                  className="object-cover"
-                />
-              </div>
-              <ChevronDown size={16} className="text-gray-500" />
+              {authUser?.user_image ? (
+                <div className="relative w-8 h-8 rounded-full overflow-hidden">
+                </div>
+              ) : (
+                <div className="w-8 h-8 bg-gradient-to-br from-orange-500 to-blue-600 rounded-full flex items-center justify-center text-white font-semibold text-sm">
+                  {getUserInitials(authUser?.full_name || authUser?.name || 'Business User')}
+                </div>
+              )}
+              {/* <ChevronDown size={16} className="text-gray-500" /> */}
             </button>
 
             {/* Profile Dropdown Menu */}
@@ -170,7 +179,7 @@ export default function BusinessDashboardHeader({ title, onMenuClick }: Business
               <div className="absolute right-0 mt-2 w-64 bg-white rounded-lg shadow-lg border border-gray-200 z-50">
                 <div className="p-4 border-b border-gray-200">
                   <p className="font-semibold text-gray-900">{authUser?.full_name || authUser?.name || 'Business User'}</p>
-                  <p className="text-sm text-gray-600">{authUser?.email || 'business@example.com'}</p>
+                  <p className="text-sm text-gray-600">{authUser?.email}</p>
                   {/* {authUser?.user_type && (
                     <div className="flex items-center mt-1 text-xs text-gray-500">
                       <Building2 size={12} className="mr-1" />

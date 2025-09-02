@@ -1,10 +1,11 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { ArrowLeft, ArrowRight, User, Building, CheckCircle } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { useRegistrationStore } from '@/store/registration';
 
 // Individual Components
 import UserTypeSelection from '@/components/onboarding/UserTypeSelection';
@@ -69,25 +70,14 @@ const businessSteps = [
   // { id: 'dashboardSetup', title: 'Dashboard', component: BusinessDashboardSetup },
 ];
 
-// Function to fetch lead data from backend
-async function fetchLeadData(leadId: string) {
-  try {
-    // Replace with your actual API endpoint that connects to Frappe
-    const response = await fetch(`/api/leads/${leadId}`);
-    if (!response.ok) {
-      throw new Error('Failed to fetch lead data');
-    }
-    return response.json();
-  } catch (error) {
-    console.error('Error fetching lead data:', error);
-    return {}; // Return empty object if fetch fails
-  }
-}
-
 export default function OnboardingPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { initializeWithLead, request_id } = useRegistrationStore();
   const [currentStep, setCurrentStep] = useState(0);
+  const [isInitializingLead, setIsInitializingLead] = useState(false);
+  const leadInitializedRef = useRef(false);
+  const initializingRef = useRef(false);
   const [onboardingData, setOnboardingData] = useState<OnboardingData>({
     userType: '',
     firstName: '',
@@ -127,40 +117,47 @@ export default function OnboardingPage() {
 
   // Handle lead registration links
   useEffect(() => {
-    const leadId = searchParams.get('leadId');
-    const skipFirstStep = searchParams.get('skipFirstStep');
-    const userType = searchParams.get('userType');
+    const leadId = searchParams.get('lead_id');
+    const leadType = searchParams.get('lead_type');
+    const token = searchParams.get('token');
     
-    if (leadId && skipFirstStep === 'true' && (userType === 'individual' || userType === 'business')) {
-      // Set the user type
-      updateData({
-        userType: userType as 'individual' | 'business',
-      });
-      
-      // Fetch lead data from backend
-      fetchLeadData(leadId).then(leadData => {
-        if (leadData) {
-          // Pre-fill the form with lead data
+    // Check if this is a lead URL with required parameters and not already initialized
+    if (leadId && leadType && token && !leadInitializedRef.current && !initializingRef.current && !request_id) {
+      const handleLeadInitialization = async () => {
+        // Prevent multiple simultaneous calls
+        if (initializingRef.current) return;
+        initializingRef.current = true;
+        setIsInitializingLead(true);
+        
+        try {
+          // Determine user type based on lead_type
+          const userType = leadType.toLowerCase() === 'individual' ? 'individual' : 'business';
+          
+          // Set the user type in local state for UI
           updateData({
-            email: leadData.email || '',
-            // For individual leads
-            ...(userType === 'individual' && {
-              firstName: leadData.firstName || '',
-              lastName: leadData.lastName || '',
-              mobile: leadData.mobile || '',
-            }),
-            // For business leads
-            ...(userType === 'business' && {
-              businessName: leadData.businessName || '',
-              contactPersonName: leadData.contactPersonName || '',
-              businessAddress: leadData.businessAddress || '',
-            }),
+            userType: userType as 'individual' | 'business',
           });
+          
+          // Initialize registration with lead parameters and wait for completion
+          await initializeWithLead(userType as 'individual' | 'business', leadId, token);
+          
+          // Mark as initialized to prevent future calls
+          leadInitializedRef.current = true;
+          
+          // Only skip to the second step after API call completes
+          setCurrentStep(1);
+        } catch (error) {
+          console.error('Failed to initialize lead registration:', error);
+          // On error, reset flags to allow retry
+          leadInitializedRef.current = false;
+          initializingRef.current = false;
+        } finally {
+          setIsInitializingLead(false);
+          initializingRef.current = false;
         }
-      });
+      };
       
-      // Skip to the second step (Basic Info)
-      setCurrentStep(1);
+      handleLeadInitialization();
     }
   }, [searchParams]);
 
@@ -238,14 +235,22 @@ export default function OnboardingPage() {
       {/* Step Content */}
       <div className="flex-1 p-4">
         <div className="max-w-md mx-auto">
-          <CurrentStepComponent
-            data={onboardingData}
-            updateData={updateData}
-            nextStep={nextStep}
-            // prevStep={prevStep}
-            // isFirstStep={currentStep === 0}
-            // isLastStep={currentStep === steps.length - 1}
-          />
+          {isInitializingLead ? (
+            <div className="text-center space-y-4">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto"></div>
+              <h2 className="text-xl font-semibold text-gray-900">Initializing Registration...</h2>
+              <p className="text-gray-600">Setting up your account with lead information</p>
+            </div>
+          ) : (
+            <CurrentStepComponent
+              data={onboardingData}
+              updateData={updateData}
+              nextStep={nextStep}
+              // prevStep={prevStep}
+              // isFirstStep={currentStep === 0}
+              // isLastStep={currentStep === steps.length - 1}
+            />
+          )}
         </div>
       </div>
     </div>

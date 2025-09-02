@@ -11,6 +11,7 @@ const config: Config = {
     extend: {
       fontFamily: {
         rubik: ['Rubik', 'sans-serif'],
+        nunito: ['Nunito Sans', 'sans-serif'],
       },
       backgroundImage: {
         'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',

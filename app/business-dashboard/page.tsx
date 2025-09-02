@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import BusinessSidebar from '@/components/dashboard/BusinessSidebar';
 import BusinessDashboardHeader from '@/components/dashboard/BusinessDashboardHeader';
 import { 
@@ -18,6 +19,8 @@ import {
 } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
 import { useToast } from '@/hooks/use-toast';
+import JobPostingModal, { JobFormState } from './job-postings/jobPostingModal';
+import { getJobPostingList, JobPosting as ApiJobPosting } from '@/app/api/job postings/jobpostingList';
 
 const stats = [
   {
@@ -54,35 +57,6 @@ const stats = [
   },
 ];
 
-const recentOpportunities = [
-  {
-    id: 1,
-    title: 'Senior React Developer',
-    type: 'Full-time',
-    applications: 23,
-    status: 'active',
-    posted: '3 days ago',
-    deadline: '2024-02-15',
-  },
-  {
-    id: 2,
-    title: 'UX Designer',
-    type: 'Contract',
-    applications: 45,
-    status: 'active',
-    posted: '1 week ago',
-    deadline: '2024-02-20',
-  },
-  {
-    id: 3,
-    title: 'Marketing Specialist',
-    type: 'Part-time',
-    applications: 12,
-    status: 'draft',
-    posted: '2 days ago',
-    deadline: '2024-02-18',
-  },
-];
 
 const recentApplications = [
   {
@@ -118,13 +92,87 @@ export default function BusinessDashboardPage() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { user, entity, isAuthenticated } = useAuthStore();
   const { toast } = useToast();
-  
+  const router = useRouter();
+  const [opportunities, setOpportunities] = useState([]);
+  const [showJobModal, setShowJobModal] = useState(false);
+  const [apiJobPostings, setApiJobPostings] = useState<ApiJobPosting[]>([]);
+
   // Get business name from entity details or fall back to user name
   const businessName = entity?.details?.name || 'Your Business';
+
+  // Fetch job postings from API
+  useEffect(() => {
+    const fetchJobPostings = async () => {
+      try {
+        if (entity?.details?.entity_id) {
+          const response = await getJobPostingList(entity.details.entity_id);
+          setApiJobPostings(response.message.data.opportunity_posting || []);
+        }
+      } catch (error) {
+        console.error('Error fetching job postings:', error);
+      }
+    };
+
+    fetchJobPostings();
+  }, [entity?.details?.entity_id]);
+
+  // Handle job creation
+  const handleCreateJob = (jobData: JobFormState) => {
+    console.log('Creating job:', jobData);
+    // Here you would typically call an API to create the job
+    // For now, we'll just close the modal
+    setShowJobModal(false);
+    
+    // Optionally refresh the job postings list
+    if (entity?.details?.entity_id) {
+      getJobPostingList(entity.details.entity_id)
+        .then(response => {
+          setApiJobPostings(response.message.data.opportunity_posting || []);
+        })
+        .catch(error => {
+          console.error('Error refreshing job postings:', error);
+        });
+    }
+  };
   // const userName = user?.full_name || user?.name || 'User';
   // const userEmail = user?.email || 'business@example.com';
-  
+
+  // Helper function to get user role from localStorage
+  const getUserRole = (): string | null => {
+    if (typeof window !== 'undefined') {
+      try {
+        const entityDataStr = localStorage.getItem('entity_data');
+        const userDataStr = localStorage.getItem('user_data');
+
+        if (entityDataStr && userDataStr) {
+          const entityData = JSON.parse(entityDataStr);
+          const userData = JSON.parse(userDataStr);
+
+          // Get current user's email
+          const currentUserEmail = userData.email;
+
+          // Find user's role in business_users array
+          const businessUsers = entityData.details?.business_users;
+          if (businessUsers && Array.isArray(businessUsers)) {
+            const currentUser = businessUsers.find(user => user.email === currentUserEmail);
+            return currentUser?.role || null;
+          }
+        }
+      } catch (error) {
+        console.error('Error getting user role:', error);
+      }
+    }
+    return null;
+  };
+
   useEffect(() => {
+    // Check user role and redirect Business Users to opportunity postings
+    const userRole = getUserRole();
+    if (userRole === 'Business User' && window.location.pathname === '/business-dashboard') {
+      router.push('/business-dashboard/job-postings');
+      return;
+    }
+
     if (isAuthenticated && user && window.location.pathname.includes('business-dashboard')) {      
       // Show toast notification for Business Buyer
       const roles = user.roles;
@@ -160,7 +208,7 @@ export default function BusinessDashboardPage() {
         window.history.replaceState({}, document.title, window.location.pathname);
       }
     }
-  }, [isAuthenticated, user, toast]);
+  }, [isAuthenticated, user, toast, router]);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -192,7 +240,7 @@ export default function BusinessDashboardPage() {
         />
         
         <main className="flex-1 overflow-x-hidden overflow-y-auto bg-gray-50">
-          <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          <div className="mx-auto px-4 sm:px-6 lg:px-8 py-6">
             {/* Welcome Section */}
             <div className="mb-8">
               <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">
@@ -240,27 +288,36 @@ export default function BusinessDashboardPage() {
                   </div>
                   <div className="p-6">
                     <div className="space-y-4">
-                      {recentOpportunities.map((opportunity) => (
-                        <div key={opportunity.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                          <div className="flex-1">
-                            <div className="flex items-center space-x-3 mb-2">
-                              <h3 className="font-semibold text-gray-900">{opportunity.title}</h3>
-                              <span className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(opportunity.status)}`}>
-                                {opportunity.status}
-                              </span>
+                      {apiJobPostings.length > 0 ? (
+                        apiJobPostings.slice(0, 5).map((opportunity: ApiJobPosting) => (
+                          <div key={opportunity.name} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                            <div className="flex-1">
+                              <div className="flex items-center space-x-3 mb-2">
+                                <h3 className="font-semibold text-gray-900">{opportunity.opportunity_title}</h3>
+                                <span className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusColor('active')}`}>
+                                  active
+                                </span>
+                              </div>
+                              <div className="flex items-center space-x-4 text-sm text-gray-600">
+                                <span>{opportunity.employment_type}</span>
+                                <span>4 applications</span>
+                                <span>Posted 2 days ago</span>
+                              </div>
                             </div>
-                            <div className="flex items-center space-x-4 text-sm text-gray-600">
-                              <span>{opportunity.type}</span>
-                              <span>{opportunity.applications} applications</span>
-                              <span>Posted {opportunity.posted}</span>
+                            <div className="text-right">
+                              <p className="text-sm text-gray-500">Deadline</p>
+                              <p className="font-medium text-gray-900">2024-02-15</p>
                             </div>
                           </div>
-                          <div className="text-right">
-                            <p className="text-sm text-gray-500">Deadline</p>
-                            <p className="font-medium text-gray-900">{opportunity.deadline}</p>
+                        ))
+                      ) : (
+                        <div className="text-center py-8">
+                          <div className="text-gray-500 mb-2">No opportunities found</div>
+                          <div className="text-sm text-gray-400">
+                            Create your first job posting to get started
                           </div>
                         </div>
-                      ))}
+                      )}
                     </div>
                   </div>
                 </div>
@@ -275,18 +332,24 @@ export default function BusinessDashboardPage() {
                   </div>
                   <div className="p-6">
                     <div className="space-y-3">
-                      <button className="w-full bg-gradient-to-r from-orange-500 to-blue-500 text-white font-semibold py-3 px-4 rounded-lg hover:shadow-lg transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2">
+                      <button 
+                        onClick={() => setShowJobModal(true)}
+                        className="w-full bg-gradient-to-r from-orange-500 to-blue-500 text-white font-semibold py-3 px-4 rounded-lg hover:shadow-lg transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2"
+                      >
                         Post New Opportunity
                       </button>
-                      <button className="w-full border-2 border-orange-500 text-orange-600 font-semibold py-3 px-4 rounded-lg hover:bg-orange-50 transition-all duration-300">
+                      {/* <button className="w-full border-2 border-orange-500 text-orange-600 font-semibold py-3 px-4 rounded-lg hover:bg-orange-50 transition-all duration-300">
                         Review Profiles
-                      </button>
-                      <button className="w-full border-2 border-blue-500 text-blue-600 font-semibold py-3 px-4 rounded-lg hover:bg-blue-50 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                      </button> */}
+                      <button 
+                        onClick={() => router.push('/business-dashboard/business-team-member')}
+                        className="w-full border-2 border-blue-500 text-blue-600 font-semibold py-3 px-4 rounded-lg hover:bg-blue-50 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                      >
                         Manage Team
                       </button>
-                      <button className="w-full border-2 border-purple-500 text-purple-600 font-semibold py-3 px-4 rounded-lg hover:bg-purple-50 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2">
+                      {/* <button className="w-full border-2 border-purple-500 text-purple-600 font-semibold py-3 px-4 rounded-lg hover:bg-purple-50 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2">
                         View Analytics
-                      </button>
+                      </button> */}
                     </div>
                   </div>
                 </div>
@@ -335,6 +398,13 @@ export default function BusinessDashboardPage() {
           </div>
         </main>
       </div>
+      
+      {/* Job Posting Modal */}
+      <JobPostingModal 
+        showModal={showJobModal}
+        setShowModal={setShowJobModal}
+        onSubmit={handleCreateJob}
+      />
     </div>
   );
 }

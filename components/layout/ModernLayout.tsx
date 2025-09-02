@@ -82,11 +82,11 @@ export default function ModernLayout({ children, className }: ModernLayoutProps)
         postedDate: new Date(Date.now() - 1000 * 60 * 60 * 24 * 2), // 2 days ago
         matchScore: 92,
         requirements: [
-          { skill: 'React', level: 'required' as const, userHas: true, userLevel: 'expert' as const },
-          { skill: 'TypeScript', level: 'required' as const, userHas: true, userLevel: 'advanced' as const },
-          { skill: 'GraphQL', level: 'preferred' as const, userHas: false },
-          { skill: 'Next.js', level: 'preferred' as const, userHas: true, userLevel: 'advanced' as const },
-          { skill: 'Python', level: 'nice-to-have' as const, userHas: false },
+          { skill: 'React', level: 'Required' as const, userHas: true, userLevel: 'expert' as const },
+          { skill: 'TypeScript', level: 'Required' as const, userHas: true, userLevel: 'advanced' as const },
+          { skill: 'GraphQL', level: 'Preferred' as const, userHas: false },
+          { skill: 'Next.js', level: 'Preferred' as const, userHas: true, userLevel: 'advanced' as const },
+          { skill: 'Python', level: 'Nice-to-have' as const, userHas: false },
         ],
         description: 'We are looking for a passionate Senior Frontend Developer to join our growing team.',
         highlights: [
@@ -186,7 +186,7 @@ export default function ModernLayout({ children, className }: ModernLayoutProps)
   };
 
   return (
-    <div className={cn("min-h-screen bg-gray-50", className)}>
+    <div className={cn("min-h-screen bg-gray-50 font-rubik", className)}>
       {/* Horizontal Navigation */}
       <HorizontalNavigation
         onMenuClick={isMobile ? toggleSidebar : undefined}
@@ -218,18 +218,18 @@ export default function ModernLayout({ children, className }: ModernLayoutProps)
           isMobile ? "pb-16" : "", // Space for mobile bottom nav
           isDetailPaneOpen && !isMobile ? "mr-[600px] lg:mr-[700px]" : ""
         )}>
-          <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          <div className=" mx-auto px-4 sm:px-6 lg:px-8 py-6">
             {/* Demo Content for opportunities page */}
             {pathname === '/opportunities' && (
               <div className="space-y-6">
                 <div className="flex items-center justify-between">
                   <h1 className="text-2xl font-bold text-gray-900">Opportunities</h1>
-                  <button 
+                  {/* <button 
                     onClick={addSampleNotification}
                     className="px-4 py-2 bg-blue-500 text-white rounded-lg text-sm hover:bg-blue-600"
                   >
                     Add Sample Notification
-                  </button>
+                  </button> */}
                 </div>
                 
                 {/* Mock opportunity cards */}

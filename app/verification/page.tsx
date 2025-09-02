@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import ModernLayoutWrapper from '@/components/layout/ModernLayoutWrapper';
-import IdentityVerification from '@/components/verification/IdentityVerification';
+import IdentityVerification from '@/components/curation/IdentityVerification';
 
 export default function VerificationPage() {
   const router = useRouter();
@@ -34,7 +34,7 @@ export default function VerificationPage() {
       case 'phone':
         return 'Phone Verification';
       case 'identity':
-        return 'Identity Verification';
+        return 'Identity Curation';
       default:
         return 'Verification';
     }
@@ -47,7 +47,7 @@ export default function VerificationPage() {
       case 'phone':
         return 'Verify your phone number to add an extra layer of trust to your profile.';
       case 'identity':
-        return 'Upload your government ID to complete identity verification and unlock premium features.';
+        return 'Upload your government ID to complete identity curation and unlock premium features.';
       default:
         return 'Complete verification to unlock premium opportunities and improve your profile.';
     }

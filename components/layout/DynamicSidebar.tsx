@@ -111,7 +111,7 @@ export default function DynamicSidebar({ isOpen, onClose, isMobile = false }: Dy
       return {
         profileHealth: 85,
         todos: [
-          { id: '1', title: 'Complete email verification', icon: '📧', priority: 'high' as const, actionUrl: '/verification?step=email' },
+          // { id: '1', title: 'Complete email verification', icon: '📧', priority: 'high' as const, actionUrl: '/verification?step=email' },
           { id: '2', title: 'Add 3 more skills', icon: '🧠', priority: 'medium' as const, actionUrl: '/skills' },
           { id: '3', title: 'Update portfolio', icon: '💼', priority: 'medium' as const, actionUrl: '/portfolio' }
         ],

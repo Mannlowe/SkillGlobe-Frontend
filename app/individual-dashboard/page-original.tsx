@@ -185,7 +185,7 @@ export default function DashboardPage() {
                 </div>
 
                 {/* Recent Activity */}
-                <div className="bg-white rounded-xl shadow-sm border border-gray-100">
+                {/* <div className="bg-white rounded-xl shadow-sm border border-gray-100">
                   <div className="p-6 border-b border-gray-100">
                     <h2 className="text-lg font-semibold text-gray-900">Recent Activity</h2>
                   </div>
@@ -223,7 +223,7 @@ export default function DashboardPage() {
                       ))}
                     </div>
                   </div>
-                </div>
+                </div> */}
               </div>
 
               {/* Upcoming Events */}

@@ -1,14 +1,26 @@
 import React from 'react';
-import { X, CheckCircle } from 'lucide-react';
+import { X, CheckCircle, Send } from 'lucide-react';
 
 interface SkillsSuccessModalProps {
   isOpen: boolean;
   onClose: () => void;
-  skillCount: number;
+  skillCount?: number;
+  type?: 'skills' | 'application';
+  jobTitle?: string;
+  companyName?: string;
 }
 
-export default function SkillsSuccessModal({ isOpen, onClose, skillCount }: SkillsSuccessModalProps) {
+export default function SkillsSuccessModal({ 
+  isOpen, 
+  onClose, 
+  skillCount = 0, 
+  type = 'skills',
+  jobTitle,
+  companyName 
+}: SkillsSuccessModalProps) {
   if (!isOpen) return null;
+
+  const isApplicationSuccess = type === 'application';
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -22,16 +34,28 @@ export default function SkillsSuccessModal({ isOpen, onClose, skillCount }: Skil
         </button>
         
         <div className="flex flex-col items-center text-center">
-          <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4">
-            <CheckCircle className="text-green-500" size={32} />
+          <div className={`w-16 h-16 ${isApplicationSuccess ? 'bg-blue-100' : 'bg-green-100'} rounded-full flex items-center justify-center mb-4`}>
+            {isApplicationSuccess ? (
+              <Send className="text-blue-500" size={32} />
+            ) : (
+              <CheckCircle className="text-green-500" size={32} />
+            )}
           </div>
           
           <h3 className="text-xl font-bold text-gray-900 mb-2">
-            Skills Added Successfully!
+            {isApplicationSuccess ? 'Application Submitted Successfully!' : 'Skills Added Successfully!'}
           </h3>
           
           <p className="text-gray-600 mb-6">
-            You have successfully added {skillCount} skill{skillCount !== 1 ? 's' : ''} to your profile.
+            {isApplicationSuccess ? (
+              <>
+                You have successfully applied for the <span className="font-medium">{jobTitle}</span> position at <span className="font-medium">{companyName}</span>. 
+                <br />
+                <span className="text-sm text-gray-500 mt-2 block">We'll notify you when the employer responds.</span>
+              </>
+            ) : (
+              `You have successfully added ${skillCount} skill${skillCount !== 1 ? 's' : ''} to your profile.`
+            )}
           </p>
           
           <button
@@ -39,9 +63,9 @@ export default function SkillsSuccessModal({ isOpen, onClose, skillCount }: Skil
               e.preventDefault(); // Prevent default behavior
               onClose(); // Just close the modal without redirection
             }}
-            className="bg-blue-500 text-white font-medium py-2 px-6 rounded-lg hover:bg-blue-600 transition-colors"
+            className={`${isApplicationSuccess ? 'bg-[#007BCA]' : 'bg-green-500 hover:bg-green-600'} text-white font-medium py-2 px-6 rounded-lg transition-colors`}
           >
-            Close
+            {isApplicationSuccess ? 'Got it!' : 'Close'}
           </button>
         </div>
       </div>

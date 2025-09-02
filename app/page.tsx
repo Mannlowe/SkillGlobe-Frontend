@@ -13,9 +13,9 @@ export default function Home() {
       <Header />
       <HeroSection />
       <FeaturesSection />
-      <CategoriesSection />
-      <TestimonialsSection />
-      <CTASection />
+      {/* <CategoriesSection /> */}
+      {/* <TestimonialsSection /> */}
+      {/* <CTASection /> */}
       <Footer />
       <MobileNavigation />
       

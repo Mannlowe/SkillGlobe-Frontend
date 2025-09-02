@@ -12,15 +12,12 @@ export default function Footer() {
           {/* Brand Section */}
           <div className="lg:col-span-1">
             <div className="flex items-center space-x-2 mb-4">
-              <div className="w-10 h-10 bg-gradient-to-r from-orange-500 to-blue-500 rounded-xl flex items-center justify-center">
-                <span className="text-white font-bold text-lg">SG</span>
-              </div>
               <span className="text-2xl font-bold">
                 <span className="text-orange-500">Skill</span>
                 <span className="text-blue-500">Globe</span>
               </span>
             </div>
-            <p className="text-gray-400 mb-6">
+            <p className="text-gray-400 mb-6 font-nunito">
               Empowering professionals worldwide with AI-driven talent solutions and personalized career growth.
             </p>
             <div className="flex space-x-4">
@@ -56,7 +53,7 @@ export default function Footer() {
           </div> */}
 
           {/* For Professionals */}
-          <div>
+          {/* <div>
             <h3 className="text-lg font-semibold mb-4">For Professionals</h3>
             <ul className="space-y-2">
               {['Find Opportunities', 'Skill Assessment', 'Career Coaching', 'Freelance Services', 'Learning Paths', 'Success Stories'].map((link) => (
@@ -67,34 +64,38 @@ export default function Footer() {
                 </li>
               ))}
             </ul>
-          </div>
+          </div> */}
 
           {/* Contact Info */}
-          <div>
-            <h3 className="text-lg font-semibold mb-4">Get in Touch</h3>
+          <div className="font-nunito mt-2">
+          <h3 className="text-lg font-semibold mb-4 bg-gradient-to-r from-orange-600 via-[#007BCA] to-[#007BCA] bg-clip-text text-transparent">
+  Get in Touch
+</h3>
+
+
             <div className="space-y-3">
               <div className="flex items-center space-x-3">
                 <Mail size={16} className="text-orange-500" />
                 <span className="text-gray-400">hello@skillglobe.com</span>
               </div>
-              <div className="flex items-center space-x-3">
+              {/* <div className="flex items-center space-x-3">
                 <Phone size={16} className="text-orange-500" />
                 <span className="text-gray-400">+1 (555) 123-4567</span>
-              </div>
+              </div> */}
               <div className="flex items-center space-x-3">
                 <MapPin size={16} className="text-orange-500" />
-                <span className="text-gray-400">San Francisco, CA</span>
+                <span className="text-gray-400">Pune, Maharashtra, India</span>
               </div>
             </div>
           </div>
         </div>
 
         <div className="border-t border-gray-800 mt-12 pt-8">
-          <div className="flex flex-col md:flex-row justify-between items-center">
+          <div className="flex flex-col md:flex-row justify-end items-end">
             <p className="text-gray-400 text-sm">
-              © 2024 SkillGlobe. All rights reserved.
+              © 2025 SkillGlobe. All rights reserved.
             </p>
-            <div className="flex space-x-6 mt-4 md:mt-0">
+            {/* <div className="flex space-x-6 mt-4 md:mt-0">
               <Link href="/privacy" className="text-gray-400 hover:text-orange-500 text-sm transition-colors">
                 Privacy Policy
               </Link>
@@ -104,7 +105,7 @@ export default function Footer() {
               <Link href="/cookies" className="text-gray-400 hover:text-orange-500 text-sm transition-colors">
                 Cookie Policy
               </Link>
-            </div>
+            </div> */}
           </div>
         </div>
       </div>

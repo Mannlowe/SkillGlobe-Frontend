@@ -208,8 +208,8 @@ export default function HorizontalNavigation({
 
           {/* Logo */}
           <button
-            className="flex items-center ml-2 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 rounded-md p-1"
-            onClick={() => router.push('/')}
+            className="flex items-center ml-2 focus:outline-none p-1"
+            onClick={() => router.push('/individual-dashboard')}
             aria-label="Go to homepage"
           >
             <img

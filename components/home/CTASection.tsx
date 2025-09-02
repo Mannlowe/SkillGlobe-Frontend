@@ -41,7 +41,7 @@ export default function CTASection() {
             },
             {
               icon: Zap,
-              title: 'Instant Results',
+              title: 'Curated Results',
               description: 'Get matched with opportunities in real-time',
             },
           ].map((feature, index) => {

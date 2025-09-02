@@ -3,15 +3,18 @@
 import { Search, MapPin, Filter } from 'lucide-react';
 import { useState } from 'react';
 import { StandardizedButton } from '@/components/ui/StandardizedButton';
+import { ArrowRight, Smartphone, Users, Zap } from 'lucide-react';
+import { useRouter } from "next/navigation";
 
 export default function HeroSection() {
   const [searchQuery, setSearchQuery] = useState('');
   const [location, setLocation] = useState('');
+  const router = useRouter();
 
   return (
     <section className="relative overflow-hidden bg-gradient-to-br from-blue-500 via-blue-600 to-orange-500 text-white">
       <div className="absolute inset-0 bg-black bg-opacity-20"></div>
-      
+
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-20">
         <div className="text-center mb-8 md:mb-12">
           <h1 className="text-3xl md:text-5xl lg:text-6xl font-bold mb-4 md:mb-6">
@@ -77,7 +80,7 @@ export default function HeroSection() {
         </div> */}
 
         {/* Quick Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8 mt-8 md:mt-12">
+        {/* <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8 mt-8 md:mt-12">
           {[
             { number: '5K+', label: 'Active Users' },
             { number: '1K+', label: 'Job Opportunities' },
@@ -89,7 +92,52 @@ export default function HeroSection() {
               <div className="text-sm md:text-base text-blue-100">{stat.label}</div>
             </div>
           ))}
+        </div> */}
+
+        <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+          <button
+            onClick={() => router.push("/onboarding")}
+            className="bg-white text-orange-600 font-semibold py-4 px-8 rounded-xl hover:shadow-2xl transition-all duration-500 ease-in-out transform hover:scale-105 relative overflow-hidden group flex items-center">
+            <span className="relative z-10 group-hover:text-white transition-colors duration-500 ease-in-out">Get Started Free</span>
+            <ArrowRight className="ml-2 relative z-10 group-hover:translate-x-2 transition-all duration-500 ease-in-out group-hover:text-white" size={20} />
+            <span className="absolute inset-0 bg-gradient-to-r from-orange-500 via-orange-400 to-yellow-500 opacity-0 group-hover:opacity-100 transform -translate-x-full group-hover:translate-x-0 transition-all duration-700 ease-in-out"></span>
+          </button>
+          {/* <button className="border-2 border-white text-white font-semibold py-4 px-8 rounded-xl hover:bg-white hover:text-orange-600 transition-all duration-300">
+              Watch Demo
+            </button> */}
         </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8 mt-12">
+          {[
+            {
+              icon: Smartphone,
+              title: 'Mobile-First',
+              description: 'Access opportunities anywhere with our PWA app',
+            },
+            {
+              icon: Users,
+              title: 'Community Driven',
+              description: 'Connect with like-minded professionals globally',
+            },
+            {
+              icon: Zap,
+              title: 'Curated Results',
+              description: 'Get matched with opportunities in real-time',
+            },
+          ].map((feature, index) => {
+            const Icon = feature.icon;
+            return (
+              <div key={index} className="text-center">
+                <div className="w-16 h-16 bg-white bg-opacity-20 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                  <Icon size={32} />
+                </div>
+                <h3 className="text-xl font-semibold mb-2">{feature.title}</h3>
+                <p className="text-orange-100">{feature.description}</p>
+              </div>
+            );
+          })}
+        </div>
+
       </div>
     </section>
   );

@@ -1,6 +1,8 @@
 'use client';
 
 import { ArrowRight, Smartphone, Users, Zap } from 'lucide-react';
+import Link from 'next/link';
+import { StandardizedButton } from '@/components/ui/StandardizedButton';
 
 export default function CTASection() {
   return (
@@ -13,26 +15,38 @@ export default function CTASection() {
             Ready to Transform Your Career?
           </h2>
           <p className="text-lg md:text-xl text-orange-100 max-w-3xl mx-auto mb-8 md:mb-12">
-            Join thousands of professionals who are already building their future with SkillGlobe
+            Join thousands of professionals already building their future with SkillGlobe
           </p>
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-            <button className="bg-white text-orange-600 font-semibold py-4 px-8 rounded-xl hover:shadow-lg transition-all duration-300 transform hover:scale-105 flex items-center">
-              Get Started Free
-              <ArrowRight className="ml-2" size={20} />
-            </button>
-            <button className="border-2 border-white text-white font-semibold py-4 px-8 rounded-xl hover:bg-white hover:text-orange-600 transition-all duration-300">
-              Watch Demo
-            </button>
+            <Link href="/onboarding">
+              <StandardizedButton
+                variant="secondary"
+                size="lg"
+                className="bg-white text-orange-600 hover:bg-gray-50 hover:scale-105 transition-all duration-300 px-8 py-4"
+              >
+                Get Started for Free
+                <ArrowRight className="ml-2" size={20} />
+              </StandardizedButton>
+            </Link>
+            <Link href="#">
+              <StandardizedButton
+                variant="outline"
+                size="lg"
+                className="border-2 border-white text-white hover:bg-white hover:text-orange-600 transition-all duration-300 px-8 py-4"
+              >
+                Watch Demo
+              </StandardizedButton>
+            </Link>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
           {[
             {
               icon: Smartphone,
               title: 'Mobile-First',
-              description: 'Access opportunities anywhere with our PWA app',
+              description: 'Access opportunities anywhere with the mobile app',
             },
             {
               icon: Users,

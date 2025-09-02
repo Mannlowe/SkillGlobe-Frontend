@@ -6,13 +6,13 @@ const features = [
   {
     icon: Brain,
     title: 'AI-Powered Matching',
-    description: 'Our intelligent algorithms connect you with the perfect opportunities based on your skills and preferences.',
+    description: 'Intelligent algorithms connect you with perfect opportunities based on your skills and preferences.',
     color: 'from-purple-500 to-pink-500',
   },
   {
     icon: Users,
     title: 'Global Network',
-    description: 'Connect with professionals, businesses, and trainers from around the world in our thriving ecosystem.',
+    description: 'Connect with professionals, businesses, and trainers from around the world in a thriving ecosystem.',
     color: 'from-blue-500 to-cyan-500',
   },
   {
@@ -24,7 +24,7 @@ const features = [
   {
     icon: Shield,
     title: 'Secure Platform',
-    description: 'Your data and transactions are protected with enterprise-grade security and privacy measures.',
+    description: 'Data and transactions are protected with enterprise-grade security and privacy measures.',
     color: 'from-orange-500 to-red-500',
   },
   {
@@ -50,7 +50,7 @@ export default function FeaturesSection() {
             Why Choose <span className="text-orange-500">Skill</span><span className="text-blue-500">Globe</span>?
           </h2>
           <p className="text-lg md:text-xl text-gray-600 max-w-3xl mx-auto">
-            Experience the future of talent management with our comprehensive platform designed for the modern workforce
+            Experience the future of talent management with a comprehensive platform designed for the modern workforce
           </p>
         </div>
 

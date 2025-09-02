@@ -18,9 +18,6 @@ export default function Home() {
       {/* <CTASection /> */}
       <Footer />
       <MobileNavigation />
-      
-      {/* Bottom padding for mobile navigation */}
-      <div className="h-20 md:h-0"></div>
     </main>
   );
 }

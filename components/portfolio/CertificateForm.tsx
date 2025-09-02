@@ -71,7 +71,7 @@ export default function CertificateForm({ onSave, onCancel, initialData = [], se
   };
 
   const filteredCertificateEntries = certificateEntries.filter(
-    (entry) => entry.certificateName.trim() !== '' || entry.certificateFile !== null
+    (entry) => (entry.certificateName ? entry.certificateName.trim() !== '' : false) || entry.certificateFile !== null
   );
 
   // Fetch certificate list on component mount

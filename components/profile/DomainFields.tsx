@@ -55,6 +55,14 @@ export const hospitalitySubDomains = [
   { value: 'HS4', label: 'Events & Recreation' }
 ];
 
+// Pharma & Healthcare Subdomain options
+export const pharmaSubDomains = [
+  { value: 'PH1', label: 'Pharma Manufacturing & Quality' },
+  { value: 'PH2', label: 'Distribution & Supply Chain' },
+  { value: 'PH3', label: 'Research & Clinical' },
+  { value: 'PH4', label: 'Healthcare Services' }
+];
+
 const DomainFields: React.FC<DomainFieldsProps> = ({ profileType, subDomain, editingEntry, setEditingEntry }) => {
   // Type-safe setter function that ensures compatibility between ProfileEntry types
   const updateEditingEntry = (updater: (prev: ProfileEntry | null) => ProfileEntry | null) => {
@@ -62,7 +70,7 @@ const DomainFields: React.FC<DomainFieldsProps> = ({ profileType, subDomain, edi
   };
   // State for managing dropdown visibility
   const [openDropdowns, setOpenDropdowns] = useState<Record<string, boolean>>({});
-  
+
   // Field options for IT subdomains
   const itFieldOptions = {
     it_dev_method: ['Agile', 'Scrum', 'Waterfall', 'DevOps'],
@@ -104,19 +112,19 @@ const DomainFields: React.FC<DomainFieldsProps> = ({ profileType, subDomain, edi
     bf_core_banking_systems: ['Finacle', 'T24', 'Flexcube', 'Finastra'],
     bf_regulatory_exp: ['RBI', 'SEBI', 'FED', 'ECB'],
     bf_compliance_knowledge: ['KYC', 'AML', 'Basel III', 'FATCA'],
-    
+
     // Finance & Investments (BF2) fields
     bf_finance_area: ['Equity', 'Debt', 'Treasury', 'Risk', 'FP&A'],
     bf_erp_tools: ['SAP FICO', 'Oracle', 'Tally', 'Zoho', 'QuickBooks'],
     bf_reporting_standards: ['IFRS', 'GAAP', 'Ind-AS', 'SOX'],
     bf_industry_experience: ['Banking', 'Insurance', 'FMCG', 'Manufacturing'],
-    
+
     // Insurance (BF3) fields
     bf_insurance_domain: ['Life', 'Health', 'General', 'Reinsurance'],
     bf_insurance_products: ['ULIP', 'Term Plan', 'Motor', 'Travel'],
     bf_licensing: ['IRDA', 'NISM', 'CPCU'],
     bf_claims_exp: ['Claims Processing', 'Risk Assessment', 'Policy Underwriting'],
-    
+
     // FinTech & Payments (BF4) fields
     bf_payment_systems: ['UPI', 'SWIFT', 'NEFT/RTGS', 'SEPA', 'ACH'],
     bf_digital_platforms: ['Paytm', 'Razorpay', 'Stripe', 'PayPal'],
@@ -131,24 +139,48 @@ const DomainFields: React.FC<DomainFieldsProps> = ({ profileType, subDomain, edi
     hs_property_type: ['Hotel', 'Resort', 'Hostel', 'Cruise', 'Boutique'],
     hs_guest_mgmt_system: ['Opera PMS', 'IDS', 'Protel', 'eZee FrontDesk'],
     hs_languages_known: ['English', 'Hindi', 'French', 'Spanish', 'Arabic'],
-    
+
     // Food & Beverages (HS2) fields
     hs_fnb_specialization: ['Culinary', 'Bartending', 'Baking', 'Catering'],
     hs_service_type: ['Casual Dining', 'Fine Dining', 'Quick Service', 'Cloud Kitchen'],
     hs_fnb_certifications: ['HACCP', 'Food Safety', 'Culinary Arts Diploma'],
     hs_beverage_knowledge: ['Wines', 'Cocktails', 'Coffee', 'Tea'],
-    
+
     // Travel & Tourism (HS3) fields
     hs_travel_domain: ['Airline', 'Cruise', 'Agency', 'Tour Operator'],
     hs_ticketing_systems: ['Amadeus', 'Galileo', 'Sabre', 'Abacus'],
     hs_destination_expertise: ['Europe', 'SE Asia', 'Africa', 'Middle East'],
     hs_customer_type: ['Leisure', 'Corporate', 'MICE', 'Luxury'],
-    
+
     // Events & Recreation (HS4) fields
     hs_event_type: ['Weddings', 'Conferences', 'Exhibitions', 'Concerts'],
     hs_event_skills: ['Stage Mgmt', 'AV', 'Vendor Coordination', 'Budgeting'],
     hs_ticketing_platforms: ['BookMyShow', 'Eventbrite', 'Ticketmaster'],
     hs_property_type_event: ['Convention Center', 'Banquet Hall', 'Stadium', 'Resort']
+  };
+
+  // Field options for Pharma & Healthcare subdomains
+  const pharmaFieldOptions = {
+    // Pharma Manufacturing & Quality (PH1) fields
+    ph_compliance: ['GMP', 'GLP', 'FDA', 'EMA', 'MHRA'],
+    ph_equipment_handling: ['Bioreactors', 'HPLC', 'Chromatography'],
+    ph_quality_tools: ['Six Sigma', 'CAPA', 'Lean', 'Kaizen'],
+    ph_shift_preference: ['Day', 'Night', 'Rotational'],
+
+    // Distribution & Supply Chain (PH2) fields
+    ph_supply_chain_area: ['Cold Chain', 'Inventory', 'Logistics', 'Procurement'],
+    ph_regulatory_knowledge: ['GDP (Good Distribution Practice)', 'WHO', 'CDSCO'],
+    ph_tools_used: ['SAP', 'Oracle', 'JD Edwards', 'TrackWise'],
+
+    // Research & Clinical (PH3) fields
+    ph_trial_phase_exp: ['Phase I', 'Phase II', 'Phase III', 'Phase IV'],
+    ph_regulatory_docs: ['IND', 'NDA', 'ANDA', 'CTA'],
+    ph_lab_tools: ['LIMS', 'SAS', 'R', 'Python', 'CRO tools'],
+
+    // Healthcare Services (PH4) fields
+    ph_department: ['Nursing', 'Surgery', 'Radiology', 'Pharmacy', 'Admin'],
+    ph_licenses: ['MBBS', 'MD', 'RN', 'Pharmacist', 'DNB'],
+    ph_languages: ['English', 'Hindi', 'French', 'Arabic']
   };
 
   // Field options for different domains
@@ -190,12 +222,12 @@ const DomainFields: React.FC<DomainFieldsProps> = ({ profileType, subDomain, edi
 
   const handleMultiSelectChange = (fieldName: string, option: string) => {
     if (!editingEntry) return;
-    
+
     const currentValues = (editingEntry as any)[fieldName] || [];
     const updatedValues = currentValues.includes(option)
       ? currentValues.filter((item: string) => item !== option)
       : [...currentValues, option];
-    
+
     handleFieldChange(fieldName, updatedValues);
   };
 
@@ -209,7 +241,7 @@ const DomainFields: React.FC<DomainFieldsProps> = ({ profileType, subDomain, edi
   const renderMultiSelect = (fieldName: string, options: string[], label: string, mandatory: boolean = false) => {
     const selectedValues = (editingEntry as any)?.[fieldName] || [];
     const isOpen = openDropdowns[fieldName] || false;
-    
+
     return (
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -217,7 +249,7 @@ const DomainFields: React.FC<DomainFieldsProps> = ({ profileType, subDomain, edi
         </label>
         <div className="flex space-x-4">
           <div className="w-1/2 relative">
-            <div 
+            <div
               className="w-full px-4 py-2 bg-gray-50 rounded-lg border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all flex justify-between items-center cursor-pointer"
               onClick={() => toggleDropdown(fieldName)}
             >
@@ -228,7 +260,7 @@ const DomainFields: React.FC<DomainFieldsProps> = ({ profileType, subDomain, edi
                 <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
               </svg>
             </div>
-            
+
             {isOpen && (
               <div className="absolute z-10 mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-auto">
                 {options.map((option) => (
@@ -253,7 +285,7 @@ const DomainFields: React.FC<DomainFieldsProps> = ({ profileType, subDomain, edi
               selectedValues.map((value: string) => (
                 <div key={value} className="inline-flex items-center bg-blue-100 text-blue-800 rounded-full px-3 py-1 text-sm mr-2 mb-2">
                   {value}
-                  <button 
+                  <button
                     type="button"
                     className="ml-1 text-blue-600 hover:text-blue-800"
                     onClick={() => handleMultiSelectChange(fieldName, value)}
@@ -310,7 +342,7 @@ const DomainFields: React.FC<DomainFieldsProps> = ({ profileType, subDomain, edi
 
   const renderITSubdomainFields = () => {
     if (!subDomain || !editingEntry) return null;
-    
+
     switch (subDomain) {
       // Software Development & Services (IT1) Fields
       case 'IT1':
@@ -324,19 +356,19 @@ const DomainFields: React.FC<DomainFieldsProps> = ({ profileType, subDomain, edi
                 <input
                   type="url"
                   value={editingEntry?.it_portfolio || ''}
-                  onChange={(e) => updateEditingEntry(prev => prev ? {...prev, it_portfolio: e.target.value} : null)}
+                  onChange={(e) => updateEditingEntry(prev => prev ? { ...prev, it_portfolio: e.target.value } : null)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   placeholder="https://github.com/username or portfolio URL"
                 />
               </div>
-              
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Development Methodology
                 </label>
                 <select
                   value={editingEntry?.it_dev_method || ''}
-                  onChange={(e) => updateEditingEntry(prev => prev ? {...prev, it_dev_method: e.target.value} : null)}
+                  onChange={(e) => updateEditingEntry(prev => prev ? { ...prev, it_dev_method: e.target.value } : null)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="">Select Methodology</option>
@@ -346,7 +378,7 @@ const DomainFields: React.FC<DomainFieldsProps> = ({ profileType, subDomain, edi
                 </select>
               </div>
             </div>
-            
+
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Domain Expertise
@@ -358,7 +390,7 @@ const DomainFields: React.FC<DomainFieldsProps> = ({ profileType, subDomain, edi
                     onChange={(e) => {
                       if (e.target.value && !(editingEntry?.it_domain_exp || []).includes(e.target.value)) {
                         const updated = [...(editingEntry?.it_domain_exp || []), e.target.value];
-                        updateEditingEntry(prev => prev ? {...prev, it_domain_exp: updated} : null);
+                        updateEditingEntry(prev => prev ? { ...prev, it_domain_exp: updated } : null);
                       }
                     }}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -379,7 +411,7 @@ const DomainFields: React.FC<DomainFieldsProps> = ({ profileType, subDomain, edi
                         type="button"
                         onClick={() => {
                           const updated = (editingEntry?.it_domain_exp || []).filter(d => d !== domain);
-                          updateEditingEntry(prev => prev ? {...prev, it_domain_exp: updated} : null);
+                          updateEditingEntry(prev => prev ? { ...prev, it_domain_exp: updated } : null);
                         }}
                         className="ml-2 text-blue-600 hover:text-blue-800"
                       >
@@ -390,7 +422,7 @@ const DomainFields: React.FC<DomainFieldsProps> = ({ profileType, subDomain, edi
                 </div>
               </div>
             </div>
-            
+
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Tools & Platforms
@@ -402,7 +434,7 @@ const DomainFields: React.FC<DomainFieldsProps> = ({ profileType, subDomain, edi
                     onChange={(e) => {
                       if (e.target.value && !(editingEntry?.it_tools_used || []).includes(e.target.value)) {
                         const updated = [...(editingEntry?.it_tools_used || []), e.target.value];
-                        updateEditingEntry(prev => prev ? {...prev, it_tools_used: updated} : null);
+                        updateEditingEntry(prev => prev ? { ...prev, it_tools_used: updated } : null);
                       }
                     }}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -423,7 +455,7 @@ const DomainFields: React.FC<DomainFieldsProps> = ({ profileType, subDomain, edi
                         type="button"
                         onClick={() => {
                           const updated = (editingEntry?.it_tools_used || []).filter(t => t !== tool);
-                          updateEditingEntry(prev => prev ? {...prev, it_tools_used: updated} : null);
+                          updateEditingEntry(prev => prev ? { ...prev, it_tools_used: updated } : null);
                         }}
                         className="ml-2 text-green-600 hover:text-green-800"
                       >
@@ -452,7 +484,7 @@ const DomainFields: React.FC<DomainFieldsProps> = ({ profileType, subDomain, edi
                     onChange={(e) => {
                       if (e.target.value && !(editingEntry?.it_tools || []).includes(e.target.value)) {
                         const updated = [...(editingEntry?.it_tools || []), e.target.value];
-                        updateEditingEntry(prev => prev ? {...prev, it_tools: updated} : null);
+                        updateEditingEntry(prev => prev ? { ...prev, it_tools: updated } : null);
                       }
                     }}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -473,7 +505,7 @@ const DomainFields: React.FC<DomainFieldsProps> = ({ profileType, subDomain, edi
                         type="button"
                         onClick={() => {
                           const updated = (editingEntry?.it_tools || []).filter(t => t !== tool);
-                          updateEditingEntry(prev => prev ? {...prev, it_tools: updated} : null);
+                          updateEditingEntry(prev => prev ? { ...prev, it_tools: updated } : null);
                         }}
                         className="ml-2 text-purple-600 hover:text-purple-800"
                       >
@@ -496,7 +528,7 @@ const DomainFields: React.FC<DomainFieldsProps> = ({ profileType, subDomain, edi
                     onChange={(e) => {
                       if (e.target.value && !(editingEntry?.it_data_domain_exp || []).includes(e.target.value)) {
                         const updated = [...(editingEntry?.it_data_domain_exp || []), e.target.value];
-                        updateEditingEntry(prev => prev ? {...prev, it_data_domain_exp: updated} : null);
+                        updateEditingEntry(prev => prev ? { ...prev, it_data_domain_exp: updated } : null);
                       }
                     }}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -517,7 +549,7 @@ const DomainFields: React.FC<DomainFieldsProps> = ({ profileType, subDomain, edi
                         type="button"
                         onClick={() => {
                           const updated = (editingEntry?.it_data_domain_exp || []).filter(d => d !== domain);
-                          updateEditingEntry(prev => prev ? {...prev, it_data_domain_exp: updated} : null);
+                          updateEditingEntry(prev => prev ? { ...prev, it_data_domain_exp: updated } : null);
                         }}
                         className="ml-2 text-indigo-600 hover:text-indigo-800"
                       >
@@ -528,7 +560,7 @@ const DomainFields: React.FC<DomainFieldsProps> = ({ profileType, subDomain, edi
                 </div>
               </div>
             </div>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -537,27 +569,27 @@ const DomainFields: React.FC<DomainFieldsProps> = ({ profileType, subDomain, edi
                 <input
                   type="url"
                   value={editingEntry?.it_research || ''}
-                  onChange={(e) => updateEditingEntry(prev => prev ? {...prev, it_research: e.target.value} : null)}
+                  onChange={(e) => updateEditingEntry(prev => prev ? { ...prev, it_research: e.target.value } : null)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   placeholder="Link to research papers or publications"
                 />
               </div>
-              
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Major Projects
                 </label>
                 <textarea
                   value={editingEntry?.it_data_projects || ''}
-                  onChange={(e) => updateEditingEntry(prev => prev ? {...prev, it_data_projects: e.target.value} : null)}
+                  onChange={(e) => updateEditingEntry(prev => prev ? { ...prev, it_data_projects: e.target.value } : null)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   rows={3}
                   placeholder="Describe your major data projects or provide links"
                 />
               </div>
             </div>
-            
-          
+
+
           </div>
         );
 
@@ -576,7 +608,7 @@ const DomainFields: React.FC<DomainFieldsProps> = ({ profileType, subDomain, edi
                     onChange={(e) => {
                       if (e.target.value && !(editingEntry?.it_compliance || []).includes(e.target.value)) {
                         const updated = [...(editingEntry?.it_compliance || []), e.target.value];
-                        updateEditingEntry(prev => prev ? {...prev, it_compliance: updated} : null);
+                        updateEditingEntry(prev => prev ? { ...prev, it_compliance: updated } : null);
                       }
                     }}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -597,7 +629,7 @@ const DomainFields: React.FC<DomainFieldsProps> = ({ profileType, subDomain, edi
                         type="button"
                         onClick={() => {
                           const updated = (editingEntry?.it_compliance || []).filter(c => c !== compliance);
-                          updateEditingEntry(prev => prev ? {...prev, it_compliance: updated} : null);
+                          updateEditingEntry(prev => prev ? { ...prev, it_compliance: updated } : null);
                         }}
                         className="ml-2 text-red-600 hover:text-red-800"
                       >
@@ -608,7 +640,7 @@ const DomainFields: React.FC<DomainFieldsProps> = ({ profileType, subDomain, edi
                 </div>
               </div>
             </div>
-            
+
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Security Tools Used
@@ -620,7 +652,7 @@ const DomainFields: React.FC<DomainFieldsProps> = ({ profileType, subDomain, edi
                     onChange={(e) => {
                       if (e.target.value && !(editingEntry?.it_security_tools || []).includes(e.target.value)) {
                         const updated = [...(editingEntry?.it_security_tools || []), e.target.value];
-                        updateEditingEntry(prev => prev ? {...prev, it_security_tools: updated} : null);
+                        updateEditingEntry(prev => prev ? { ...prev, it_security_tools: updated } : null);
                       }
                     }}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -641,7 +673,7 @@ const DomainFields: React.FC<DomainFieldsProps> = ({ profileType, subDomain, edi
                         type="button"
                         onClick={() => {
                           const updated = (editingEntry?.it_security_tools || []).filter(t => t !== tool);
-                          updateEditingEntry(prev => prev ? {...prev, it_security_tools: updated} : null);
+                          updateEditingEntry(prev => prev ? { ...prev, it_security_tools: updated } : null);
                         }}
                         className="ml-2 text-orange-600 hover:text-orange-800"
                       >
@@ -652,7 +684,7 @@ const DomainFields: React.FC<DomainFieldsProps> = ({ profileType, subDomain, edi
                 </div>
               </div>
             </div>
-            
+
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Incident Handling
@@ -664,7 +696,7 @@ const DomainFields: React.FC<DomainFieldsProps> = ({ profileType, subDomain, edi
                     onChange={(e) => {
                       if (e.target.value && !(editingEntry?.it_incident_exp || []).includes(e.target.value)) {
                         const updated = [...(editingEntry?.it_incident_exp || []), e.target.value];
-                        updateEditingEntry(prev => prev ? {...prev, it_incident_exp: updated} : null);
+                        updateEditingEntry(prev => prev ? { ...prev, it_incident_exp: updated } : null);
                       }
                     }}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -685,7 +717,7 @@ const DomainFields: React.FC<DomainFieldsProps> = ({ profileType, subDomain, edi
                         type="button"
                         onClick={() => {
                           const updated = (editingEntry?.it_incident_exp || []).filter(e => e !== exp);
-                          setEditingEntry((prev: ProfileEntry | null) => prev ? {...prev, it_incident_exp: updated} : null);
+                          setEditingEntry((prev: ProfileEntry | null) => prev ? { ...prev, it_incident_exp: updated } : null);
                         }}
                         className="ml-2 text-yellow-600 hover:text-yellow-800"
                       >
@@ -696,14 +728,14 @@ const DomainFields: React.FC<DomainFieldsProps> = ({ profileType, subDomain, edi
                 </div>
               </div>
             </div>
-            
+
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Security Clearance
               </label>
               <select
                 value={editingEntry?.it_security_clearance || ''}
-                onChange={(e) => setEditingEntry((prev: ProfileEntry | null) => prev ? {...prev, it_security_clearance: e.target.value} : null)}
+                onChange={(e) => setEditingEntry((prev: ProfileEntry | null) => prev ? { ...prev, it_security_clearance: e.target.value } : null)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="">Select Clearance Level</option>
@@ -712,7 +744,7 @@ const DomainFields: React.FC<DomainFieldsProps> = ({ profileType, subDomain, edi
                 ))}
               </select>
             </div>
-            
+
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Network Expertise
@@ -724,7 +756,7 @@ const DomainFields: React.FC<DomainFieldsProps> = ({ profileType, subDomain, edi
                     onChange={(e) => {
                       if (e.target.value && !(editingEntry?.it_network_exp || []).includes(e.target.value)) {
                         const updated = [...(editingEntry?.it_network_exp || []), e.target.value];
-                        setEditingEntry((prev: ProfileEntry | null) => prev ? {...prev, it_network_exp: updated} : null);
+                        setEditingEntry((prev: ProfileEntry | null) => prev ? { ...prev, it_network_exp: updated } : null);
                       }
                     }}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -745,7 +777,7 @@ const DomainFields: React.FC<DomainFieldsProps> = ({ profileType, subDomain, edi
                         type="button"
                         onClick={() => {
                           const updated = (editingEntry?.it_network_exp || []).filter(e => e !== exp);
-                          setEditingEntry((prev: ProfileEntry | null) => prev ? {...prev, it_network_exp: updated} : null);
+                          setEditingEntry((prev: ProfileEntry | null) => prev ? { ...prev, it_network_exp: updated } : null);
                         }}
                         className="ml-2 text-teal-600 hover:text-teal-800"
                       >
@@ -760,37 +792,37 @@ const DomainFields: React.FC<DomainFieldsProps> = ({ profileType, subDomain, edi
         );
 
       case 'Banking':
-      return (
-        <div className="space-y-4">
-          {renderMultiSelect('bankingDomain', bankingDomains, 'Banking Domain', true)}
-          {renderMultiSelect('bankingCertifications', bankingCertifications, 'Certifications')}
-          {renderMultiSelect('complianceKnowledge', complianceKnowledge, 'Compliance Knowledge')}
-          {renderMultiSelect('coreBankingSoftware', coreBankingSoftware, 'Core Banking Software')}
-          {renderMultiSelect('regulatoryExperience', regulatoryExperience, 'Regulatory Experience')}
-        </div>
-      );
+        return (
+          <div className="space-y-4">
+            {renderMultiSelect('bankingDomain', bankingDomains, 'Banking Domain', true)}
+            {renderMultiSelect('bankingCertifications', bankingCertifications, 'Certifications')}
+            {renderMultiSelect('complianceKnowledge', complianceKnowledge, 'Compliance Knowledge')}
+            {renderMultiSelect('coreBankingSoftware', coreBankingSoftware, 'Core Banking Software')}
+            {renderMultiSelect('regulatoryExperience', regulatoryExperience, 'Regulatory Experience')}
+          </div>
+        );
 
-    case 'Hospitality':
-      return (
-        <div className="space-y-4">
-          {renderSelect('hospitalityDepartment', hospitalityDepartments, 'Department', true)}
-          {renderMultiSelect('hospitalitySkills', hospitalitySkills, 'Skills')}
-          {renderMultiSelect('languagesKnown', languages, 'Languages Known')}
-          {renderMultiSelect('hospitalityCertifications', hospitalityCertifications, 'Certifications')}
-          {renderMultiSelect('propertyType', propertyTypes, 'Property Type')}
-          {renderSelect('willingToRelocate', ['Yes', 'No'], 'Willing to Relocate')}
-        </div>
-      );
+      case 'Hospitality':
+        return (
+          <div className="space-y-4">
+            {renderSelect('hospitalityDepartment', hospitalityDepartments, 'Department', true)}
+            {renderMultiSelect('hospitalitySkills', hospitalitySkills, 'Skills')}
+            {renderMultiSelect('languagesKnown', languages, 'Languages Known')}
+            {renderMultiSelect('hospitalityCertifications', hospitalityCertifications, 'Certifications')}
+            {renderMultiSelect('propertyType', propertyTypes, 'Property Type')}
+            {renderSelect('willingToRelocate', ['Yes', 'No'], 'Willing to Relocate')}
+          </div>
+        );
 
-    default:
-      return null;
-  }
-};  // Close the renderITSubdomainFields function
+      default:
+        return null;
+    }
+  };  // Close the renderITSubdomainFields function
 
   // Manufacturing subdomain fields renderer
   const renderManufacturingSubdomainFields = () => {
     if (!subDomain || !editingEntry) return null;
-    
+
     switch (subDomain) {
       // Production & Operations (MF1) Fields
       case 'MF1':
@@ -844,7 +876,7 @@ const DomainFields: React.FC<DomainFieldsProps> = ({ profileType, subDomain, edi
   // Banking subdomain fields renderer
   const renderBankingSubdomainFields = () => {
     if (!subDomain || !editingEntry) return null;
-    
+
     switch (subDomain) {
       // Banking (BF1) Fields
       case 'BF1':
@@ -898,7 +930,7 @@ const DomainFields: React.FC<DomainFieldsProps> = ({ profileType, subDomain, edi
   // Hospitality subdomain fields renderer
   const renderHospitalitySubdomainFields = () => {
     if (!subDomain || !editingEntry) return null;
-    
+
     switch (subDomain) {
       // Hotels & Lodging (HS1) Fields
       case 'HS1':
@@ -949,6 +981,69 @@ const DomainFields: React.FC<DomainFieldsProps> = ({ profileType, subDomain, edi
     }
   };
 
+  // Pharma & Healthcare subdomain fields renderer
+  const renderPharmaSubdomainFields = () => {
+    if (!subDomain || !editingEntry) return null;
+
+    switch (subDomain) {
+      // Pharma Manufacturing & Quality (PH1) Fields
+      case 'PH1':
+        return (
+          <div className="space-y-4">
+            {renderMultiSelect('ph_compliance', pharmaFieldOptions.ph_compliance, 'Compliance Standards')}
+            {renderMultiSelect('ph_equipment_handling', pharmaFieldOptions.ph_equipment_handling, 'Equipment Handling')}
+            {renderMultiSelect('ph_quality_tools', pharmaFieldOptions.ph_quality_tools, 'Quality Tools Used')}
+            <div className="w-1/2">
+              {renderSelect('ph_shift_preference', pharmaFieldOptions.ph_shift_preference, 'Shift Preference')}
+            </div>
+          </div>
+        );
+
+      // Distribution & Supply Chain (PH2) Fields
+      case 'PH2':
+        return (
+          <div className="space-y-4">
+            {renderMultiSelect('ph_supply_chain_area', pharmaFieldOptions.ph_supply_chain_area, 'Supply Chain Focus')}
+            {renderMultiSelect('ph_regulatory_knowledge', pharmaFieldOptions.ph_regulatory_knowledge, 'Regulatory Knowledge')}
+            {renderMultiSelect('ph_tools_used', pharmaFieldOptions.ph_tools_used, 'SCM Tools Used')}
+          </div>
+        );
+
+      // Research & Clinical (PH3) Fields
+      case 'PH3':
+        return (
+          <div className="space-y-4">
+            {renderMultiSelect('ph_trial_phase_exp', pharmaFieldOptions.ph_trial_phase_exp, 'Clinical Trial Phases')}
+            {renderMultiSelect('ph_regulatory_docs', pharmaFieldOptions.ph_regulatory_docs, 'Regulatory Documents')}
+            {renderMultiSelect('ph_lab_tools', pharmaFieldOptions.ph_lab_tools, 'Lab Tools / Platforms')}
+            {renderTextInput('ph_publications', 'Publications / Papers', 'url')}
+          </div>
+        );
+
+      // Healthcare Services (PH4) Fields
+      case 'PH4':
+        return (
+          <div className="space-y-4">
+            <div className="flex space-x-4">
+              <div className="w-1/2">
+                {renderSelect('ph_department', pharmaFieldOptions.ph_department, 'Department', true)}
+              </div>
+              <div className="w-1/2">
+                {renderSelect('ph_shift_preference', pharmaFieldOptions.ph_shift_preference, 'Shift Preference')}
+              </div>
+            </div>
+
+            {renderMultiSelect('ph_licenses', pharmaFieldOptions.ph_licenses, 'Medical Licenses')}
+            {renderMultiSelect('ph_languages', pharmaFieldOptions.ph_languages, 'Languages Known')}
+          </div>
+
+        );
+
+      default:
+        return null;
+    }
+  };
+
   // Define renderDomainFields function
   const renderDomainFields = () => {
     switch (profileType) {
@@ -969,9 +1064,9 @@ const DomainFields: React.FC<DomainFieldsProps> = ({ profileType, subDomain, edi
               </div> */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Notice Period</label>
-                <select 
-                  value={editingEntry?.noticePeriod || ''} 
-                  onChange={(e) => setEditingEntry((prev: ProfileEntry | null) => prev ? {...prev, noticePeriod: e.target.value} : null)}
+                <select
+                  value={editingEntry?.noticePeriod || ''}
+                  onChange={(e) => setEditingEntry((prev: ProfileEntry | null) => prev ? { ...prev, noticePeriod: e.target.value } : null)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="">Select notice period</option>
@@ -1045,6 +1140,20 @@ const DomainFields: React.FC<DomainFieldsProps> = ({ profileType, subDomain, edi
           </div>
         );
 
+      case 'Pharma & Healthcare':
+        return (
+          <div className="space-y-4">
+            {subDomain && (
+              <div>
+                <h5 className="text-md font-medium text-gray-900 mb-4">
+                  {pharmaSubDomains.find(sub => sub.value === subDomain)?.label} Fields
+                </h5>
+                {renderPharmaSubdomainFields()}
+              </div>
+            )}
+          </div>
+        );
+
       default:
         return null;
     }
@@ -1054,12 +1163,12 @@ const DomainFields: React.FC<DomainFieldsProps> = ({ profileType, subDomain, edi
     <div className="mt-6">
       {/* Divider */}
       <div className="border-t border-gray-200 my-6"></div>
-      
+
       {/* Domain-Specific Fields Header */}
       <h4 className="text-lg font-medium text-gray-900 mb-4">
         Domain-Specific Fields ({profileType})
       </h4>
-      
+
       {/* Domain Fields */}
       {renderDomainFields()}
     </div>

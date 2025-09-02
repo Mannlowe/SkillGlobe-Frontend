@@ -12,7 +12,7 @@ import {
   FileText,
   Upload
 } from 'lucide-react';
-import DomainFields, { itSubDomains, manufacturingSubDomains, bankingSubDomains, hospitalitySubDomains } from './DomainFields';
+import DomainFields, { itSubDomains, manufacturingSubDomains, bankingSubDomains, hospitalitySubDomains, pharmaSubDomains } from './DomainFields';
 import { ResumeTemplate } from './ResumeTemplateSelector';
 
 interface ProfileFormProps {
@@ -55,6 +55,21 @@ export interface ProfileEntry {
   it_incident_exp?: string[];
   it_security_clearance?: string;
   it_network_exp?: string[];
+  // Pharma & Healthcare-specific fields
+  ph_compliance?: string[];
+  ph_equipment_handling?: string[];
+  ph_shift_preference?: string;
+  ph_quality_tools?: string[];
+  ph_supply_chain_area?: string[];
+  ph_regulatory_knowledge?: string[];
+  ph_tools_used?: string[];
+  ph_trial_phase_exp?: string[];
+  ph_regulatory_docs?: string[];
+  ph_publications?: string;
+  ph_lab_tools?: string[];
+  ph_department?: string;
+  ph_licenses?: string[];
+  ph_languages?: string[];
 }
 
 export default function ProfileForm({ onSave, onCancel, initialData = [], showFormDirectly = false, isEditing = false, selectedTemplate }: ProfileFormProps) {
@@ -223,7 +238,7 @@ export default function ProfileForm({ onSave, onCancel, initialData = [], showFo
   const employmentTypes = ['Permanent', 'Contract', 'Internship'];
   const workNatures = ['Full-time', 'Part-time'];
   const workModes = ['WFO', 'WFH', 'Hybrid', 'No Preference'];
-  const profileTypes = ['IT', 'Manufacturing', 'Banking', 'Hospitality', 'Others'];
+  const profileTypes = ['IT', 'Manufacturing', 'Banking', 'Hospitality', 'Pharma & Healthcare', 'Others'];
 
   // IT Subdomain options
   const itSubDomains = [
@@ -532,7 +547,7 @@ export default function ProfileForm({ onSave, onCancel, initialData = [], showFo
                       setEditingEntry(prev => prev ? {
                         ...prev, 
                         profileType: newProfileType,
-                        subDomain: (newProfileType === 'IT' || newProfileType === 'Manufacturing') ? prev.subDomain : '' // Reset subdomain if not IT or Manufacturing
+                        subDomain: (newProfileType === 'IT' || newProfileType === 'Manufacturing' || newProfileType === 'Banking' || newProfileType === 'Hospitality' || newProfileType === 'Pharma & Healthcare') ? prev.subDomain : '' // Reset subdomain if not supported domain
                       } : null);
                     }}
                     className="block w-44 pl-3 pr-10 py-1.5 text-base border border-orange-500 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md"
@@ -599,6 +614,21 @@ export default function ProfileForm({ onSave, onCancel, initialData = [], showFo
                     >
                       <option value="">Select Hospitality Subdomain</option>
                       {hospitalitySubDomains.map((subdomain) => (
+                        <option key={subdomain.value} value={subdomain.value}>{subdomain.label}</option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+                
+                {editingEntry?.profileType === 'Pharma & Healthcare' && (
+                  <div className="relative">
+                    <select
+                      value={editingEntry?.subDomain || ''}
+                      onChange={(e) => setEditingEntry(prev => prev ? {...prev, subDomain: e.target.value} : null)}
+                      className="block w-56 pl-3 pr-10 py-1.5 text-base border border-purple-500 focus:outline-none focus:ring-purple-500 focus:border-purple-500 sm:text-sm rounded-md"
+                    >
+                      <option value="">Select Pharma Subdomain</option>
+                      {pharmaSubDomains.map((subdomain) => (
                         <option key={subdomain.value} value={subdomain.value}>{subdomain.label}</option>
                       ))}
                     </select>

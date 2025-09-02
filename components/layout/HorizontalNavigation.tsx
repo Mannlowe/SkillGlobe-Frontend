@@ -385,18 +385,18 @@ export default function HorizontalNavigation({
               <Button
                 variant="ghost"
                 size="icon"
-                className="relative rounded-full"
+                className="relative rounded-full font-rubik"
               >
-                <div className="w-8 h-8 bg-gradient-to-br from-orange-500 to-blue-600 rounded-full flex items-center justify-center text-white font-semibold text-sm">
+                <div className="w-8 h-8 bg-gradient-to-br from-orange-500 to-blue-600 rounded-full flex items-center justify-center text-white font-semibold">
                   {getUserInitials(userName)}
                 </div>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56 px-2 py-3">
-              <DropdownMenuLabel className="font-normal">
-                <div className="flex flex-col space-y-1">
-                  <p className="text-sm font-medium leading-none">{userName}</p>
-                  <p className="text-sm leading-none text-muted-foreground">
+              <DropdownMenuLabel>
+                <div className="flex flex-col space-y-1 font-rubik">
+                  <p className="font-semibold text-gray-900 text-md">{userName}</p>
+                  <p className="text-sm text-gray-600 font-normal">
                     {user?.email}
                   </p>
                 </div>

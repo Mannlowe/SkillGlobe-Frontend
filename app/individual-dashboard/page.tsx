@@ -424,7 +424,7 @@ export default function CompactDashboardPage() {
 
   // Tab content components
   const overviewContent = (
-    <div className="w-full py-6 space-y-6 font-rubik">
+    <div className="w-full py-2 space-y-6 font-rubik">
       {/* Compact Market Metrics */}
       <CompactMarketMetrics 
         metrics={mockHeaderMetrics}
@@ -526,7 +526,7 @@ export default function CompactDashboardPage() {
             `}</style>
 
             {/* Welcome Section - Minimal */}
-            <div className="bg-white border-b border-gray-200 max-w-full rounded-lg">
+            {/* <div className="bg-white border-b border-gray-200 max-w-full rounded-lg">
               <div className="w-full mx-auto px-4 sm:px-6 lg:px-8 py-4">
                 <div className="flex items-center justify-between">
                   <div>
@@ -537,17 +537,17 @@ export default function CompactDashboardPage() {
                       Your career marketplace overview
                     </p>
                   </div>
-                  {/* <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2">
                     <button className="px-4 py-2 bg-gradient-to-r from-orange-500 to-blue-500 text-white font-medium rounded-lg hover:shadow-lg transition-all duration-300 text-sm">
                       Quick Apply
                     </button>
                     <button className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg">
                       <Bell size={20} />
                     </button>
-                  </div> */}
+                  </div>
                 </div>
               </div>
-            </div>
+            </div> */}
 
             {overviewContent}
           </main>

@@ -32,6 +32,7 @@ import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
 import { useVerification } from '@/contexts/VerificationContext';
+import { useAuthStore } from '@/store';
 
 interface DynamicSidebarProps {
   isOpen: boolean;
@@ -57,6 +58,9 @@ export default function DynamicSidebar({ isOpen, onClose, isMobile = false }: Dy
   const pathname = usePathname();
   const router = useRouter();
   const { verificationStatus, getVerificationScore, getNextVerificationStep } = useVerification();
+
+  const [userName, setUserName] = useState('User');
+  const { user, isAuthenticated } = useAuthStore();
   
   const [contextualData, setContextualData] = useState<{
     profileHealth: number;
@@ -71,7 +75,7 @@ export default function DynamicSidebar({ isOpen, onClose, isMobile = false }: Dy
     interviewPipeline: ContextualAction[];
     loading: boolean;
   }>({
-    profileHealth: 85,
+    profileHealth: 99,
     todos: [],
     stats: [],
     smartActions: [],
@@ -106,10 +110,16 @@ export default function DynamicSidebar({ isOpen, onClose, isMobile = false }: Dy
     }
   };
 
+  useEffect(() => {
+    if (isAuthenticated && user && window.location.pathname.includes('individual-dashboard')) {
+      setUserName(user.full_name || user.name);
+    }
+  }, [isAuthenticated, user]);
+
   const getContextualContent = (path: string) => {
     if (path.includes('dashboard')) {
       return {
-        profileHealth: 85,
+        profileHealth: 55,
         todos: [
           // { id: '1', title: 'Complete email verification', icon: '📧', priority: 'high' as const, actionUrl: '/verification?step=email' },
           { id: '2', title: 'Add 3 more skills', icon: '🧠', priority: 'medium' as const, actionUrl: '/skills' },
@@ -297,9 +307,17 @@ export default function DynamicSidebar({ isOpen, onClose, isMobile = false }: Dy
           <div className="px-4 py-3 border-b border-gray-200">
             <div className="flex items-center justify-between">
               <div>
-                <h2 className="text-lg font-semibold text-gray-900">Profile Health</h2>
+                <p className="text-md text-gray-800 font-semibold">Welcome back, {userName}</p>
+                <div className="flex items-center gap-2">
+                  <h2 className="text-lg font-semibold text-gray-900">Profile Health</h2>
+                  <span className="text-xl">
+                    {contextualData.profileHealth <= 30 ? '😞' : 
+                     contextualData.profileHealth <= 60 ? '🙂' : 
+                     contextualData.profileHealth <= 95 ? '😊' : '🤩'}
+                  </span>
+                </div>
                 <div className="flex items-center space-x-2 mt-1">
-                  <Progress value={contextualData.profileHealth} className="h-2 w-24" />
+                  <Progress value={contextualData.profileHealth} className="h-2 w-28" />
                   <span className="text-sm font-medium text-gray-700">
                     {contextualData.profileHealth}%
                   </span>

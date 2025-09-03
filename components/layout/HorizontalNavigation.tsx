@@ -127,12 +127,12 @@ export default function HorizontalNavigation({
         }
       ]
     },
-    {
-      id: 'insights',
-      label: 'Insights',
-      icon: <TrendingUp className="w-4 h-4" />,
-      href: '/insights'
-    }
+    // {
+    //   id: 'insights',
+    //   label: 'Insights',
+    //   icon: <TrendingUp className="w-4 h-4" />,
+    //   href: '/insights'
+    // }
   ];
 
   const isActive = (item: NavigationItem) => {
@@ -249,7 +249,7 @@ export default function HorizontalNavigation({
                     className="w-64"
                     sideOffset={5}
                   >
-                    <DropdownMenuLabel className="text-xs text-gray-500 uppercase">
+                    <DropdownMenuLabel className="text-xs text-gray-800 font-semibold uppercase">
                       Professional Identity
                     </DropdownMenuLabel>
                     <DropdownMenuSeparator />
@@ -336,7 +336,7 @@ export default function HorizontalNavigation({
         {/* Quick Tools */}
         <div className="flex items-center space-x-2 ml-auto">
           {/* Notifications */}
-          <Button
+          {/* <Button
             variant="ghost"
             size="icon"
             onClick={onNotificationClick}
@@ -350,10 +350,10 @@ export default function HorizontalNavigation({
                 {notifications > 9 ? '9+' : notifications}
               </Badge>
             )}
-          </Button>
+          </Button> */}
 
           {/* Messages */}
-          <Button
+          {/* <Button
             variant="ghost"
             size="icon"
             onClick={onMessageClick}
@@ -367,7 +367,7 @@ export default function HorizontalNavigation({
                 {messages > 9 ? '9+' : messages}
               </Badge>
             )}
-          </Button>
+          </Button> */}
 
           {/* Settings */}
           {/* <Button
@@ -385,7 +385,7 @@ export default function HorizontalNavigation({
               <Button
                 variant="ghost"
                 size="icon"
-                className="relative rounded-full font-rubik"
+                className="relative rounded-full font-nunito mr-5"
               >
                 <div className="w-8 h-8 bg-gradient-to-br from-orange-500 to-blue-600 rounded-full flex items-center justify-center text-white font-semibold">
                   {getUserInitials(userName)}
@@ -394,29 +394,29 @@ export default function HorizontalNavigation({
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56 px-2 py-3">
               <DropdownMenuLabel>
-                <div className="flex flex-col space-y-1 font-rubik">
-                  <p className="font-semibold text-gray-900 text-md">{userName}</p>
-                  <p className="text-sm text-gray-600 font-normal">
+                <div className="flex flex-col space-y-1 font-nunito">
+                  <p className="font-bold text-gray-900 text-lg -mb-2">{userName}</p>
+                  <p className="text-md text-gray-600 font-normal">
                     {user?.email}
                   </p>
                 </div>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={onProfileClick} className="cursor-pointer">
+              <DropdownMenuItem onClick={onProfileClick} className="cursor-pointer font-nunito text-md">
                 {/* <User className="mr-2 h-4 w-4" /> */}
                 Help & Support
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={onSettingsClick} className="cursor-pointer sm:hidden">
+              {/* <DropdownMenuItem onClick={onSettingsClick} className="cursor-pointer sm:hidden font-nunito text-md">
                 <Settings className="mr-2 h-4 w-4" />
                 Settings
-              </DropdownMenuItem>
+              </DropdownMenuItem> */}
               <DropdownMenuSeparator />
               <DropdownMenuItem 
                 onClick={() => {
                   localStorage.clear();
                   router.push('/auth/login');
                 }} 
-                className="cursor-pointer text-red-600"
+                className="cursor-pointer text-red-600 font-nunito text-md"
               >
                 Log out
               </DropdownMenuItem>

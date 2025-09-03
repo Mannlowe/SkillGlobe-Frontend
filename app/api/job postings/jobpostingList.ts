@@ -22,6 +22,10 @@ export interface JobPosting {
   work_mode: string;
   experience_required: string;
   location: string | null;
+  created_date?: string;
+  application_deadline?: string;
+  application_count?: number;
+  status?: string;
 }
 
 // Interface for job posting list response
@@ -46,7 +50,7 @@ export const getJobPostingList = async (entityId: string): Promise<JobPostingLis
     const authHeader = `token ${apiKey}:${apiSecret}`;
     
     const response = await axios.get<JobPostingListResponse>(
-      `${API_BASE_URL}/api/method/skillglobe_be.api.opportunity_posting.job_posting_list.get_job_posting_list?entity_id=${entityId}`,
+      `${API_BASE_URL}/api/method/skillglobe_be.api.opportunity_posting.list.get_job_posting_list?entity_id=${entityId}`,
       {
         headers: {
           'Accept': 'application/json',

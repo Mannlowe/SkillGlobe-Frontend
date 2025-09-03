@@ -2,14 +2,14 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { 
-  ArrowLeft, 
-  Search, 
-  Filter, 
-  User, 
-  Mail, 
-  Phone, 
-  MapPin, 
+import {
+  ArrowLeft,
+  Search,
+  Filter,
+  User,
+  Mail,
+  Phone,
+  MapPin,
   Calendar,
   FileText,
   Download,
@@ -30,7 +30,7 @@ interface Applicant {
   phone: string;
   location: string;
   appliedDate: string;
-  status: 'pending' | 'shortlisted' | 'rejected' | 'hired';
+  status: 'pending' | 'shortlisted' | 'rejected' | 'hired' | 'interested';
   experience: string;
   skills: string[];
   resumeUrl?: string;
@@ -56,7 +56,7 @@ export default function JobAppliedListPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const jobId = searchParams.get('jobId');
-  
+
   const [applicants, setApplicants] = useState<Applicant[]>([]);
   const [jobDetails, setJobDetails] = useState<JobDetails | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
@@ -140,14 +140,15 @@ export default function JobAppliedListPage() {
   }, [jobId]);
 
   const handleStatusChange = (applicantId: string, newStatus: Applicant['status']) => {
-    setApplicants(prev => 
-      prev.map(applicant => 
-        applicant.id === applicantId 
+    setApplicants(prev =>
+      prev.map(applicant =>
+        applicant.id === applicantId
           ? { ...applicant, status: newStatus }
           : applicant
       )
     );
   };
+
 
   const handleViewProfile = (applicant: Applicant) => {
     setSelectedApplicant(applicant);
@@ -160,6 +161,7 @@ export default function JobAppliedListPage() {
       case 'shortlisted': return 'bg-blue-100 text-blue-800';
       case 'rejected': return 'bg-red-100 text-red-800';
       case 'hired': return 'bg-green-100 text-green-800';
+      case 'interested': return 'bg-purple-100 text-purple-800';
       default: return 'bg-gray-100 text-gray-800';
     }
   };
@@ -170,23 +172,27 @@ export default function JobAppliedListPage() {
       case 'shortlisted': return <Star size={14} />;
       case 'rejected': return <XCircle size={14} />;
       case 'hired': return <CheckCircle size={14} />;
+      case 'interested': return <Star size={14} />;
       default: return <Clock size={14} />;
     }
   };
 
   const filteredApplicants = applicants.filter(applicant => {
     const matchesSearch = applicant.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         applicant.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         applicant.skills.some(skill => skill.toLowerCase().includes(searchTerm.toLowerCase()));
-    
-    const matchesStatus = statusFilter === 'all' || applicant.status === statusFilter;
-    
+      applicant.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      applicant.skills.some(skill => skill.toLowerCase().includes(searchTerm.toLowerCase()));
+
+    const matchesStatus = 
+      statusFilter === 'all' || 
+      applicant.status === statusFilter || 
+      (statusFilter === 'pending' && applicant.status === 'interested');
+
     return matchesSearch && matchesStatus;
   });
 
   const statusCounts = {
     all: applicants.length,
-    pending: applicants.filter(a => a.status === 'pending').length,
+    pending: applicants.filter(a => a.status === 'pending' || a.status === 'interested').length,
     shortlisted: applicants.filter(a => a.status === 'shortlisted').length,
     rejected: applicants.filter(a => a.status === 'rejected').length,
     hired: applicants.filter(a => a.status === 'hired').length,
@@ -195,10 +201,10 @@ export default function JobAppliedListPage() {
   return (
     <div className="bg-gray-100 font-rubik">
       <BusinessSidebar />
-      
+
       <div className="pl-64">
         <BusinessDashboardHeader title="Job Applicants" />
-        
+
         <div className="bg-gray-50 p-8">
           {/* Header Section */}
           <div className="mb-6">
@@ -208,7 +214,7 @@ export default function JobAppliedListPage() {
             >
               <ArrowLeft size={20} className="mr-1" /> Back
             </button>
-            
+
             {jobDetails && (
               <div className="bg-white rounded-xl shadow-sm p-6 mb-6">
                 <div className="flex justify-between items-start">
@@ -257,11 +263,10 @@ export default function JobAppliedListPage() {
                     <button
                       key={status}
                       onClick={() => setStatusFilter(status)}
-                      className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${
-                        statusFilter === status
+                      className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${statusFilter === status
                           ? 'bg-blue-500 text-white'
                           : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                      }`}
+                        }`}
                     >
                       {status.charAt(0).toUpperCase() + status.slice(1)} ({count})
                     </button>
@@ -324,14 +329,28 @@ export default function JobAppliedListPage() {
                             </div>
                           </div>
                         </div>
-                        
+
                         <div className="flex items-center gap-3">
-                          <span className={`px-2 py-1 rounded-full text-xs font-medium flex items-center gap-1 ${getStatusColor(applicant.status)}`}>
-                            {getStatusIcon(applicant.status)}
-                            {applicant.status.charAt(0).toUpperCase() + applicant.status.slice(1)}
-                          </span>
-                          
-                          <div className="flex gap-2">
+                          {applicant.status === 'interested' && (
+                            <>
+                              <span className={`px-2 py-1 rounded-full text-xs font-medium flex items-center gap-1 ${getStatusColor('pending')}`}>
+                                {getStatusIcon('pending')}
+                                Pending
+                              </span>
+                              <span className={`px-2 py-1 rounded-full text-xs font-medium flex items-center gap-1 ${getStatusColor('interested')}`}>
+                                {getStatusIcon('interested')}
+                                Interested
+                              </span>
+                            </>
+                          )}
+                          {applicant.status !== 'interested' && (
+                            <span className={`px-2 py-1 rounded-full text-xs font-medium flex items-center gap-1 ${getStatusColor(applicant.status)}`}>
+                              {getStatusIcon(applicant.status)}
+                              {applicant.status.charAt(0).toUpperCase() + applicant.status.slice(1)}
+                            </span>
+                          )}
+
+                          <div className="flex gap-2 items-center">
                             <button
                               onClick={() => handleViewProfile(applicant)}
                               className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
@@ -339,7 +358,7 @@ export default function JobAppliedListPage() {
                             >
                               <Eye size={16} />
                             </button>
-                            
+
                             {applicant.status === 'pending' && (
                               <>
                                 <button
@@ -358,7 +377,17 @@ export default function JobAppliedListPage() {
                                 </button>
                               </>
                             )}
-                            
+
+                            {applicant.status === 'pending' && (
+                              <button
+                                onClick={() => handleStatusChange(applicant.id, 'interested')}
+                                className="px-3 py-1 bg-blue-500 text-white text-sm rounded-lg hover:bg-blue-600 transition-colors"
+                              >
+                                Show Interest
+                              </button>
+                            )}
+
+
                             {applicant.status === 'shortlisted' && (
                               <button
                                 onClick={() => handleStatusChange(applicant.id, 'hired')}
@@ -370,7 +399,7 @@ export default function JobAppliedListPage() {
                           </div>
                         </div>
                       </div>
-                      
+
                       <div className="mt-3 text-sm text-gray-600">
                         Applied on {new Date(applicant.appliedDate).toLocaleDateString()}
                       </div>
@@ -396,7 +425,7 @@ export default function JobAppliedListPage() {
                 <XCircle size={24} />
               </button>
             </div>
-            
+
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
@@ -416,7 +445,7 @@ export default function JobAppliedListPage() {
                   <p className="text-gray-900">{selectedApplicant.experience}</p>
                 </div>
               </div>
-              
+
               <div>
                 <label className="text-sm font-medium text-gray-700">Skills</label>
                 <div className="flex flex-wrap gap-2 mt-1">
@@ -427,7 +456,7 @@ export default function JobAppliedListPage() {
                   ))}
                 </div>
               </div>
-              
+
               {selectedApplicant.coverLetter && (
                 <div>
                   <label className="text-sm font-medium text-gray-700">Cover Letter</label>
@@ -436,7 +465,7 @@ export default function JobAppliedListPage() {
                   </p>
                 </div>
               )}
-              
+
               <div className="flex justify-end gap-3 pt-4 border-t">
                 <button
                   onClick={() => setShowProfileModal(false)}

@@ -166,20 +166,20 @@ export default function CompactOpportunityCard({ opportunity, onApply, onSave, o
       </div>
 
       {/* Actions Row - Grouped Primary & Secondary */}
-      <div className="flex items-center justify-between pt-2 border-t border-gray-100">
+      <div className="flex items-center justify-end pt-2 border-t border-gray-100">
         {/* Primary Action */}
         <StandardizedButton
           onClick={handleApply}
           variant="primary"
           size="sm"
           leftIcon={<Send size={14} />}
-          className="flex-1 mr-3"
+          className="w-56 mr-3"
         >
-          Quick Apply
+          I'm Interested
         </StandardizedButton>
         
         {/* Secondary Actions */}
-        <div className="flex items-center gap-2">
+        {/* <div className="flex items-center gap-2">
           <StandardizedButton
             onClick={handleViewClick}
             variant="ghost"
@@ -189,7 +189,7 @@ export default function CompactOpportunityCard({ opportunity, onApply, onSave, o
           >
             View
           </StandardizedButton>
-        </div>
+        </div> */}
       </div>
       
       {/* Subtle indication this card is clickable */}

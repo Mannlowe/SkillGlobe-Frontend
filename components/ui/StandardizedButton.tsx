@@ -97,7 +97,6 @@ export const StandardizedButton = React.forwardRef<HTMLButtonElement, Standardiz
     className, 
     variant, 
     size, 
-    fullWidth,
     loading = false,
     leftIcon,
     rightIcon,
@@ -109,7 +108,7 @@ export const StandardizedButton = React.forwardRef<HTMLButtonElement, Standardiz
     
     return (
       <button
-        className={cn(buttonVariants({ variant, size, fullWidth }), className)}
+        className={cn(buttonVariants({ variant, size }), className)}
         ref={ref}
         disabled={isDisabled}
         aria-disabled={isDisabled}

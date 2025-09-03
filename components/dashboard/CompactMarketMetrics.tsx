@@ -22,18 +22,18 @@ export default function CompactMarketMetrics({ metrics, onViewDetails }: Compact
       {/* Compact Header with Key Metric */}
       <div className="flex items-center justify-between mb-4">
         <div>
-          <h3 className="text-lg font-semibold text-gray-900">Market Performance</h3>
-          <p className="text-sm text-gray-600">
+          <h3 className="text-xl font-semibold text-gray-900">Profile Insights</h3>
+          {/* <p className="text-sm text-gray-600">
             You&apos;re in the {formatPercentile(metrics.market_visibility.search_rank_percentile)} of profiles
-          </p>
+          </p> */}
         </div>
-        <button 
+        {/* <button 
           onClick={onViewDetails}
           className="text-sm font-medium text-blue-600 hover:text-blue-700 flex items-center gap-1"
         >
           View details
           <ArrowRight size={14} />
-        </button>
+        </button> */}
       </div>
 
       {/* Horizontal Metrics Grid - 6 Cards */}

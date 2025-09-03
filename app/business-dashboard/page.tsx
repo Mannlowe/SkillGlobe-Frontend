@@ -220,6 +220,35 @@ export default function BusinessDashboardPage() {
       default: return 'bg-gray-100 text-gray-800';
     }
   };
+  
+  // Function to format date difference as "X days/hours/minutes ago"
+  const formatDateDifference = (dateString: string): string => {
+    try {
+      const postDate = new Date(dateString);
+      const currentDate = new Date();
+      const diffInMs = currentDate.getTime() - postDate.getTime();
+      const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24));
+      
+      if (diffInDays > 0) {
+        return `${diffInDays} ${diffInDays === 1 ? 'day' : 'days'} ago`;
+      }
+      
+      const diffInHours = Math.floor(diffInMs / (1000 * 60 * 60));
+      if (diffInHours > 0) {
+        return `${diffInHours} ${diffInHours === 1 ? 'hour' : 'hours'} ago`;
+      }
+      
+      const diffInMinutes = Math.floor(diffInMs / (1000 * 60));
+      if (diffInMinutes > 0) {
+        return `${diffInMinutes} ${diffInMinutes === 1 ? 'minute' : 'minutes'} ago`;
+      }
+      
+      return 'just now';
+    } catch (error) {
+      console.error('Error formatting date:', error);
+      return 'recently';
+    }
+  };
 
   // State for mobile sidebar toggle
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -300,13 +329,13 @@ export default function BusinessDashboardPage() {
                               </div>
                               <div className="flex items-center space-x-4 text-sm text-gray-600">
                                 <span>{opportunity.employment_type}</span>
-                                <span>4 applications</span>
-                                <span>Posted 2 days ago</span>
+                                <span>{opportunity.application_count || 0} applications</span>
+                                <span>Posted {opportunity.created_date ? formatDateDifference(opportunity.created_date) : 'recently'}</span>
                               </div>
                             </div>
                             <div className="text-right">
                               <p className="text-sm text-gray-500">Deadline</p>
-                              <p className="font-medium text-gray-900">2024-02-15</p>
+                              <p className="font-medium text-gray-900">{opportunity.application_deadline || 'No deadline'}</p>
                             </div>
                           </div>
                         ))

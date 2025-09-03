@@ -30,7 +30,7 @@ interface Applicant {
   phone: string;
   location: string;
   appliedDate: string;
-  status: 'pending' | 'shortlisted' | 'rejected' | 'hired';
+  status: 'pending' | 'shortlisted' | 'rejected' | 'hired' | 'interested';
   experience: string;
   skills: string[];
   resumeUrl?: string;
@@ -160,6 +160,7 @@ export default function JobAppliedUsersPage() {
       case 'shortlisted': return 'bg-blue-100 text-blue-800';
       case 'rejected': return 'bg-red-100 text-red-800';
       case 'hired': return 'bg-green-100 text-green-800';
+      case 'interested': return 'bg-purple-100 text-purple-800';
       default: return 'bg-gray-100 text-gray-800';
     }
   };
@@ -170,6 +171,7 @@ export default function JobAppliedUsersPage() {
       case 'shortlisted': return <Star size={14} />;
       case 'rejected': return <XCircle size={14} />;
       case 'hired': return <CheckCircle size={14} />;
+      case 'interested': return <Star size={14} />;
       default: return <Clock size={14} />;
     }
   };
@@ -179,14 +181,17 @@ export default function JobAppliedUsersPage() {
                          applicant.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          applicant.skills.some(skill => skill.toLowerCase().includes(searchTerm.toLowerCase()));
     
-    const matchesStatus = statusFilter === 'all' || applicant.status === statusFilter;
+    const matchesStatus = 
+      statusFilter === 'all' || 
+      applicant.status === statusFilter || 
+      (statusFilter === 'pending' && applicant.status === 'interested');
     
     return matchesSearch && matchesStatus;
   });
 
   const statusCounts = {
     all: applicants.length,
-    pending: applicants.filter(a => a.status === 'pending').length,
+    pending: applicants.filter(a => a.status === 'pending' || a.status === 'interested').length,
     shortlisted: applicants.filter(a => a.status === 'shortlisted').length,
     rejected: applicants.filter(a => a.status === 'rejected').length,
     hired: applicants.filter(a => a.status === 'hired').length,
@@ -326,10 +331,24 @@ export default function JobAppliedUsersPage() {
                         </div>
                         
                         <div className="flex items-center gap-3">
-                          <span className={`px-2 py-1 rounded-full text-xs font-medium flex items-center gap-1 ${getStatusColor(applicant.status)}`}>
-                            {getStatusIcon(applicant.status)}
-                            {applicant.status.charAt(0).toUpperCase() + applicant.status.slice(1)}
-                          </span>
+                          {applicant.status === 'interested' && (
+                            <>
+                              <span className={`px-2 py-1 rounded-full text-xs font-medium flex items-center gap-1 ${getStatusColor('pending')}`}>
+                                {getStatusIcon('pending')}
+                                Pending
+                              </span>
+                              <span className={`px-2 py-1 rounded-full text-xs font-medium flex items-center gap-1 ${getStatusColor('interested')}`}>
+                                {getStatusIcon('interested')}
+                                Interested
+                              </span>
+                            </>
+                          )}
+                          {applicant.status !== 'interested' && (
+                            <span className={`px-2 py-1 rounded-full text-xs font-medium flex items-center gap-1 ${getStatusColor(applicant.status)}`}>
+                              {getStatusIcon(applicant.status)}
+                              {applicant.status.charAt(0).toUpperCase() + applicant.status.slice(1)}
+                            </span>
+                          )}
                           
                           <div className="flex gap-2">
                             <button
@@ -342,6 +361,13 @@ export default function JobAppliedUsersPage() {
                             
                             {applicant.status === 'pending' && (
                               <>
+                                <button
+                                  onClick={() => handleStatusChange(applicant.id, 'interested')}
+                                  className="p-2 text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
+                                  title="Show Interest"
+                                >
+                                  <Star size={16} />
+                                </button>
                                 <button
                                   onClick={() => handleStatusChange(applicant.id, 'shortlisted')}
                                   className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors"

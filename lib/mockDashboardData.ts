@@ -2,15 +2,15 @@ import type { DashboardHeaderMetrics, EnhancedMarketplaceStats, JobOpportunity }
 
 export const mockHeaderMetrics: DashboardHeaderMetrics = {
   market_visibility: {
-    profile_views_30d: 1247,
+    profile_views_30d: 5,
     search_rank_percentile: 15, // Top 15%
     industry_comparison: 'Above Average',
     trending_direction: 'up',
   },
   opportunity_pipeline: {
     active_applications: 12,
-    response_rate: 32, // Above industry average
-    interview_conversion: 12, // Above industry average
+    response_rate: 3, // Above industry average
+    interview_conversion: 4, // Above industry average
     avg_application_to_offer: '21 days',
   },
   earning_metrics: {
@@ -20,9 +20,9 @@ export const mockHeaderMetrics: DashboardHeaderMetrics = {
     next_rate_target: 95,
   },
   career_momentum: {
-    skill_demand_score: 78,
+    skill_demand_score: 10,
     network_growth_rate: 15,
-    learning_activity_score: 85,
+    learning_activity_score: 70,
     industry_engagement: 72,
   },
 };

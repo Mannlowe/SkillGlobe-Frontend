@@ -376,15 +376,15 @@ export default function CertificateForm({ onSave, onCancel, initialData = [], se
             <h4 className="font-medium text-gray-900">{cert.document_name || 'Untitled Certificate'}</h4>
             <p className="text-sm text-gray-600">{cert.document_upload || 'No file information'}</p>
           </div>
-          <div className="flex space-x-3 ml-2 flex-shrink-0">
-            <button
+          <div className="flex space-x-3 ml-2 flex-shrink-0 mr-5">
+            {/* <button
               type="button"
               onClick={() => editApiCertificate(cert)}
               className="text-blue-600 hover:text-blue-800"
               aria-label="Edit certificate"
             >
               <Pencil size={18} />
-            </button>
+            </button> */}
             <button
               type="button"
               onClick={() => deleteApiCertificate(cert)}

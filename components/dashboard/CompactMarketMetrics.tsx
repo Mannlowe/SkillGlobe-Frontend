@@ -37,10 +37,10 @@ export default function CompactMarketMetrics({ metrics, onViewDetails }: Compact
       </div>
 
       {/* Horizontal Metrics Grid - 6 Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 h-[120px]">
         {/* Profile Views */}
-        <div className="bg-blue-50 rounded-lg p-3">
-          <div className="flex items-center justify-between mb-1">
+        <div className="bg-blue-50 rounded-lg p-3 ">
+          <div className="flex items-center justify-between mb-1 mt-1">
             <Eye className="text-blue-500" size={16} />
             <span className={`text-xs font-medium ${
               metrics.market_visibility.trending_direction === 'up' ? 'text-green-600' : 'text-gray-600'
@@ -48,16 +48,16 @@ export default function CompactMarketMetrics({ metrics, onViewDetails }: Compact
               {metrics.market_visibility.trending_direction === 'up' ? '↑' : '→'}
             </span>
           </div>
-          <p className="text-2xl font-bold text-blue-600">
+          <p className="text-4xl font-bold text-blue-600">
             {metrics.market_visibility.profile_views_30d.toLocaleString()}
           </p>
-          <p className="text-xs text-gray-700 font-medium">Profile Views</p>
-          <p className="text-xs text-gray-600">{formatPercentile(metrics.market_visibility.search_rank_percentile)}</p>
+          <p className="text-sm text-gray-700 font-medium mt-1">Matched Opportunities</p>
+          {/* <p className="text-xs text-gray-600">{formatPercentile(metrics.market_visibility.search_rank_percentile)}</p> */}
         </div>
 
         {/* Response Rate */}
         <div className="bg-green-50 rounded-lg p-3">
-          <div className="flex items-center justify-between mb-1">
+          <div className="flex items-center justify-between mb-1 mt-1">
             <Target className="text-green-500" size={16} />
             <span className={`text-xs font-medium ${
               metrics.opportunity_pipeline.response_rate > 20 ? 'text-green-600' : 'text-red-600'
@@ -65,11 +65,11 @@ export default function CompactMarketMetrics({ metrics, onViewDetails }: Compact
               {metrics.opportunity_pipeline.response_rate > 20 ? '↑' : '↓'}
             </span>
           </div>
-          <p className="text-2xl font-bold text-green-600">
-            {metrics.opportunity_pipeline.response_rate}%
+          <p className="text-4xl font-bold text-green-600">
+            {metrics.opportunity_pipeline.response_rate}
           </p>
-          <p className="text-xs text-gray-700 font-medium">Response Rate</p>
-          <p className="text-xs text-gray-600">Industry avg: 15-25%</p>
+          <p className="text-sm text-gray-700 font-medium mt-1">Great Matches</p>
+          {/* <p className="text-xs text-gray-600">Industry avg: 15-25%</p> */}
         </div>
 
         {/* Current Rate */}
@@ -91,63 +91,47 @@ export default function CompactMarketMetrics({ metrics, onViewDetails }: Compact
 
         {/* Career Score */}
         <div className="bg-purple-50 rounded-lg p-3">
-          <div className="flex items-center justify-between mb-1">
+          <div className="flex items-center justify-between mb-1 mt-1">
             <Brain className="text-purple-500" size={16} />
             <span className="text-xs font-medium text-gray-600">
               /100
             </span>
           </div>
-          <p className="text-2xl font-bold text-purple-600">
+          <p className="text-4xl font-bold text-purple-600">
             {metrics.career_momentum.skill_demand_score}
           </p>
-          <p className="text-xs text-gray-700 font-medium">Career Score</p>
-          <p className="text-xs text-gray-600">Skill demand</p>
+          <p className="text-sm text-gray-700 font-medium mt-1">Total Applications</p>
+          {/* <p className="text-xs text-gray-600">Skill demand</p> */}
         </div>
 
         {/* Active Applications */}
         <div className="bg-yellow-50 rounded-lg p-3">
-          <div className="flex items-center justify-between mb-1">
+          <div className="flex items-center justify-between mb-1 mt-1">
             <TrendingUp className="text-yellow-600" size={16} />
             <span className="text-xs font-medium text-blue-600">
-              {metrics.opportunity_pipeline.interview_conversion}%
+              {metrics.opportunity_pipeline.interview_conversion}
             </span>
           </div>
-          <p className="text-2xl font-bold text-yellow-600">
+          <p className="text-4xl font-bold text-yellow-600">
             {metrics.opportunity_pipeline.active_applications}
           </p>
-          <p className="text-xs text-gray-700 font-medium">Applications</p>
-          <p className="text-xs text-gray-600">Interview rate</p>
+          <p className="text-sm text-gray-700 font-medium mt-1">New This Week</p>
+          {/* <p className="text-xs text-gray-600">Interview rate</p> */}
         </div>
 
         {/* Network Growth */}
         <div className="bg-indigo-50 rounded-lg p-3">
-          <div className="flex items-center justify-between mb-1">
+          <div className="flex items-center justify-between mb-1 mt-1">
             <Brain className="text-indigo-500" size={16} />
             <span className="text-xs font-medium text-green-600">
               +{metrics.career_momentum.network_growth_rate}
             </span>
           </div>
-          <p className="text-2xl font-bold text-indigo-600">
-            {metrics.career_momentum.learning_activity_score}
+          <p className="text-4xl font-bold text-indigo-600">
+            {metrics.career_momentum.learning_activity_score}%
           </p>
-          <p className="text-xs text-gray-700 font-medium">Learning Score</p>
-          <p className="text-xs text-gray-600">Connections/mo</p>
-        </div>
-      </div>
-
-      {/* Compact Insight Bar */}
-      <div className="mt-4 p-3 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-            <p className="text-xs text-gray-700">
-              <span className="font-semibold">Active applications:</span> {metrics.opportunity_pipeline.active_applications} 
-              <span className="mx-2">•</span>
-              <span className="font-semibold">Interview rate:</span> {metrics.opportunity_pipeline.interview_conversion}%
-              <span className="mx-2">•</span>
-              <span className="font-semibold">Market position:</span> {metrics.earning_metrics.market_rate_position}
-            </p>
-          </div>
+          <p className="text-sm text-gray-700 font-medium mt-1">Response Rate</p>
+          {/* <p className="text-xs text-gray-600">Connections/mo</p> */}
         </div>
       </div>
     </div>

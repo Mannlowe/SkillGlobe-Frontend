@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { X } from 'lucide-react';
+import { useJobPostingStore } from '@/store/job-postings/addjobpostingStore';
 
 // Define document type interface
 export interface DocumentFile {
@@ -262,7 +263,7 @@ export default function JobPostingModal({ showModal, setShowModal, onSubmit, edi
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, []);
-  
+
   const removePrimarySkill = (skillToRemove: string) => {
     setNewJob(prev => ({
       ...prev,
@@ -337,11 +338,46 @@ export default function JobPostingModal({ showModal, setShowModal, onSubmit, edi
       documents: prev.documents.filter(doc => doc.name !== fileName)
     }));
   };
-  
-  const handleCreateJob = (e: React.FormEvent) => {
+
+  const { submitJobPosting, isSubmitting, submitSuccess, submitError, resetSubmitState } = useJobPostingStore();
+
+  const handleCreateJob = async (e: React.FormEvent) => {
     e.preventDefault();
-    onSubmit(newJob);
-    setShowModal(false);
+    
+    try {
+      const response = await submitJobPosting(newJob);
+      
+      if (response) {
+        // Success - call the original onSubmit for any additional handling
+        onSubmit(newJob);
+        setShowModal(false);
+        // Reset form
+        setNewJob({
+          title: '',
+          skillCategory: '',
+          opportunityType: 'Permanent',
+          employmentType: 'Full-Time',
+          workMode: 'WFO',
+          experienceRequired: '0-2',
+          minRemuneration: '',
+          applicationDeadline: '',
+          opportunityClosed: false,
+          numberOfOpenings: '1',
+          description: '',
+          primarySkills: [],
+          secondarySkills: [],
+          preferredQualifications: '',
+          location: '',
+          gender: [],
+          language: [],
+          visibilitySettings: 'all',
+          anticipatedApplications: '10',
+          documents: []
+        });
+      }
+    } catch (error) {
+      console.error('Error submitting job posting:', error);
+    }
   };
 
   if (!showModal) return null;
@@ -925,10 +961,26 @@ export default function JobPostingModal({ showModal, setShowModal, onSubmit, edi
     <div className="flex justify-center pt-4">
       <button
         type="submit"
-        className="bg-[#007BCA] border text-white font-semibold py-2 px-8 rounded-lg hover:bg-white hover:text-[#007BCA] hover:border-[#007BCA] hover:shadow-2xl transition-colors"
+        disabled={isSubmitting}
+        className="bg-[#007BCA] border text-white font-semibold py-2 px-8 rounded-lg hover:bg-white hover:text-[#007BCA] hover:border-[#007BCA] hover:shadow-2xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
       >
-        Job Post
+        {isSubmitting ? 'Posting...' : 'Job Post'}
       </button>
+      
+      {/* Error message */}
+      {submitError && (
+        <div className="mt-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded-lg">
+          <p className="text-sm font-medium">Error:</p>
+          <p className="text-sm">{submitError}</p>
+        </div>
+      )}
+      
+      {/* Success message */}
+      {submitSuccess && (
+        <div className="mt-4 p-3 bg-green-100 border border-green-400 text-green-700 rounded-lg">
+          <p className="text-sm">Job posting submitted successfully!</p>
+        </div>
+      )}
     </div>
   </form>
       </div>

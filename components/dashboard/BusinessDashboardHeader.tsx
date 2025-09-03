@@ -115,15 +115,15 @@ export default function BusinessDashboardHeader({ title, onMenuClick }: Business
           </button>
 
           {/* Messages */}
-          <button className="p-2 rounded-lg hover:bg-gray-100 transition-colors relative">
+          {/* <button className="p-2 rounded-lg hover:bg-gray-100 transition-colors relative">
             <MessageCircle size={20} />
             <span className="absolute -top-1 -right-1 w-5 h-5 bg-blue-500 text-white text-xs rounded-full flex items-center justify-center">
               2
             </span>
-          </button>
+          </button> */}
 
           {/* Notifications */}
-          <div className="relative" ref={notificationsRef}>
+          {/* <div className="relative" ref={notificationsRef}>
             <button
               onClick={() => setShowNotifications(!showNotifications)}
               className="p-2 rounded-lg hover:bg-gray-100 transition-colors relative"
@@ -134,7 +134,6 @@ export default function BusinessDashboardHeader({ title, onMenuClick }: Business
               </span>
             </button>
 
-            {/* Notifications Dropdown */}
             {showNotifications && (
               <div className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-lg border border-gray-200 z-50">
                 <div className="p-4 border-b border-gray-200">
@@ -155,19 +154,19 @@ export default function BusinessDashboardHeader({ title, onMenuClick }: Business
                 </div>
               </div>
             )}
-          </div>
+          </div> */}
 
           {/* Profile Dropdown */}
           <div className="relative" ref={profileRef}>
             <button
               onClick={() => setShowProfile(!showProfile)}
-              className="flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-100 transition-colors"
+              className="flex mr-5 items-center space-x-2 p-2 rounded-lg hover:bg-gray-100 transition-colors"
             >
               {authUser?.user_image ? (
-                <div className="relative w-8 h-8 rounded-full overflow-hidden">
+                <div className="relative w-9 h-9 rounded-full overflow-hidden">
                 </div>
               ) : (
-                <div className="w-8 h-8 bg-gradient-to-br from-orange-500 to-blue-600 rounded-full flex items-center justify-center text-white font-semibold text-sm">
+                <div className="w-9 h-9 bg-gradient-to-br from-orange-500 to-blue-600 rounded-full flex items-center justify-center text-white font-semibold text-sm">
                   {getUserInitials(authUser?.full_name || authUser?.name || 'Business User')}
                 </div>
               )}

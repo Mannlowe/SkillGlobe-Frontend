@@ -351,18 +351,23 @@ export default function JobPostingsPage() {
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm text-gray-900">{job.location}</div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        <button 
+                      <td className="px-6 py-4 ml-5 whitespace-nowrap text-sm font-medium">
+                        {/* <button 
                           onClick={() => handleEditJob(job)} 
                           className="text-blue-600 hover:text-blue-900 mr-3"
                         >
                           Edit
-                        </button>
+                        </button> */}
                         <button 
                           onClick={() => handleDeleteClick(job)} 
-                          className="text-red-600 hover:text-red-900"
+                          className="text-red-600 hover:text-red-900 p-2 rounded hover:bg-red-50 transition-colors"
+                          title="Close Opportunity"
                         >
-                          Close
+                          <img 
+                            src="/Images/Opportunity Posting/closed-opportunity.png" 
+                            alt="Close Opportunity" 
+                            className="w-7 h-7"
+                          />
                         </button>
                       </td>
                     </tr>

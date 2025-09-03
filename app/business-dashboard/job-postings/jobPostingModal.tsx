@@ -1,8 +1,9 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { X } from 'lucide-react';
 import { useJobPostingStore } from '@/store/job-postings/addjobpostingStore';
+import { getSkills, getApplyOpportunities, getAuthData, type Skill } from '@/app/api/job postings/addjobPosting';
 
 // Define document type interface
 export interface DocumentFile {
@@ -74,13 +75,25 @@ export default function JobPostingModal({ showModal, setShowModal, onSubmit, edi
   const genderDropdownRef = useRef<HTMLDivElement>(null);
   const languageDropdownRef = useRef<HTMLDivElement>(null);
   
+  // Skills API state
+  const [availableSkills, setAvailableSkills] = useState<Skill[]>([]);
+  const [primarySkillsSearch, setPrimarySkillsSearch] = useState('');
+  const [secondarySkillsSearch, setSecondarySkillsSearch] = useState('');
+  const [skillsLoading, setSkillsLoading] = useState(false);
+  const [filteredPrimarySkills, setFilteredPrimarySkills] = useState<Skill[]>([]);
+  const [filteredSecondarySkills, setFilteredSecondarySkills] = useState<Skill[]>([]);
+  
+  // Apply opportunities API state
+  const [applyOpportunities, setApplyOpportunities] = useState<string[]>([]);
+  const [applyOpportunitiesLoading, setApplyOpportunitiesLoading] = useState(false);
+  
   const [newJob, setNewJob] = useState<JobFormState>({
     title: '',
     skillCategory: '',
     opportunityType: 'Permanent',
     employmentType: 'Full-Time',
     workMode: 'WFO',
-    experienceRequired: '0-2',
+    experienceRequired: '0-2 years',
     minRemuneration: '',
     applicationDeadline: '',
     opportunityClosed: false,
@@ -96,6 +109,88 @@ export default function JobPostingModal({ showModal, setShowModal, onSubmit, edi
     anticipatedApplications: '10',
     documents: []
   });
+
+  // Function to fetch skills from API
+  const fetchSkills = useCallback(async (searchTerm: string = '') => {
+    const authData = getAuthData();
+    if (!authData) {
+      console.error('No auth data available for skills API');
+      return [];
+    }
+
+    setSkillsLoading(true);
+    try {
+      const skills = await getSkills(searchTerm, authData.apiKey, authData.apiSecret);
+      return skills;
+    } catch (error) {
+      console.error('Error fetching skills:', error);
+      return [];
+    } finally {
+      setSkillsLoading(false);
+    }
+  }, []);
+
+  // Function to fetch apply opportunities from API
+  const fetchApplyOpportunities = useCallback(async () => {
+    const authData = getAuthData();
+    if (!authData) {
+      console.error('No auth data available for apply opportunities API');
+      return [];
+    }
+
+    setApplyOpportunitiesLoading(true);
+    try {
+      const opportunities = await getApplyOpportunities(authData.apiKey, authData.apiSecret);
+      return opportunities;
+    } catch (error) {
+      console.error('Error fetching apply opportunities:', error);
+      return [];
+    } finally {
+      setApplyOpportunitiesLoading(false);
+    }
+  }, []);
+
+  // Load initial data on component mount
+  useEffect(() => {
+    const loadInitialData = async () => {
+      const [skills, opportunities] = await Promise.all([
+        fetchSkills(),
+        fetchApplyOpportunities()
+      ]);
+      
+      setAvailableSkills(skills);
+      setFilteredPrimarySkills(skills);
+      setFilteredSecondarySkills(skills);
+      setApplyOpportunities(opportunities);
+    };
+    
+    if (showModal) {
+      loadInitialData();
+    }
+  }, [showModal, fetchSkills, fetchApplyOpportunities]);
+
+  // Filter skills based on search terms
+  useEffect(() => {
+    if (primarySkillsSearch.trim()) {
+      const filtered = availableSkills.filter(skill => 
+        skill.canonical_name.toLowerCase().includes(primarySkillsSearch.toLowerCase())
+      );
+      setFilteredPrimarySkills(filtered);
+    } else {
+      setFilteredPrimarySkills(availableSkills);
+    }
+  }, [primarySkillsSearch, availableSkills]);
+
+  useEffect(() => {
+    if (secondarySkillsSearch.trim()) {
+      const filtered = availableSkills.filter(skill => 
+        skill.canonical_name.toLowerCase().includes(secondarySkillsSearch.toLowerCase())
+      );
+      setFilteredSecondarySkills(filtered);
+    } else {
+      setFilteredSecondarySkills(availableSkills);
+    }
+  }, [secondarySkillsSearch, availableSkills]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -124,33 +219,38 @@ export default function JobPostingModal({ showModal, setShowModal, onSubmit, edi
     }));
   };
   
-  const togglePrimarySkill = (skill: string) => {
+  const togglePrimarySkill = (skillId: string) => {
+    console.log('Toggling primary skill ID:', skillId);
     setNewJob(prev => {
-      if (prev.primarySkills.includes(skill)) {
+      if (prev.primarySkills.includes(skillId)) {
+        const newSkills = prev.primarySkills.filter(s => s !== skillId);
+        console.log('Removed skill, new primary skills:', newSkills);
         return {
           ...prev,
-          primarySkills: prev.primarySkills.filter(s => s !== skill)
+          primarySkills: newSkills
         };
       } else {
+        const newSkills = [...prev.primarySkills, skillId];
+        console.log('Added skill, new primary skills:', newSkills);
         return {
           ...prev,
-          primarySkills: [...prev.primarySkills, skill]
+          primarySkills: newSkills
         };
       }
     });
   };
   
-  const toggleSecondarySkill = (skill: string) => {
+  const toggleSecondarySkill = (skillId: string) => {
     setNewJob(prev => {
-      if (prev.secondarySkills.includes(skill)) {
+      if (prev.secondarySkills.includes(skillId)) {
         return {
           ...prev,
-          secondarySkills: prev.secondarySkills.filter(s => s !== skill)
+          secondarySkills: prev.secondarySkills.filter(s => s !== skillId)
         };
       } else {
         return {
           ...prev,
-          secondarySkills: [...prev.secondarySkills, skill]
+          secondarySkills: [...prev.secondarySkills, skillId]
         };
       }
     });
@@ -223,7 +323,7 @@ export default function JobPostingModal({ showModal, setShowModal, onSubmit, edi
         opportunityType: 'Permanent', // Default value if not in editData
         employmentType: editData.employmentType || 'Full-Time',
         workMode: editData.workMode || 'WFO',
-        experienceRequired: editData.experienceRequired || '0-2',
+        experienceRequired: editData.experienceRequired || '0-2 years',
         minRemuneration: editData.salary || '',
         applicationDeadline: formattedDeadline,
         opportunityClosed: false,
@@ -264,17 +364,17 @@ export default function JobPostingModal({ showModal, setShowModal, onSubmit, edi
     };
   }, []);
 
-  const removePrimarySkill = (skillToRemove: string) => {
+  const removePrimarySkill = (skillIdToRemove: string) => {
     setNewJob(prev => ({
       ...prev,
-      primarySkills: prev.primarySkills.filter(skill => skill !== skillToRemove)
+      primarySkills: prev.primarySkills.filter(skillId => skillId !== skillIdToRemove)
     }));
   };
   
-  const removeSecondarySkill = (skillToRemove: string) => {
+  const removeSecondarySkill = (skillIdToRemove: string) => {
     setNewJob(prev => ({
       ...prev,
-      secondarySkills: prev.secondarySkills.filter(skill => skill !== skillToRemove)
+      secondarySkills: prev.secondarySkills.filter(skillId => skillId !== skillIdToRemove)
     }));
   };
   
@@ -358,7 +458,7 @@ export default function JobPostingModal({ showModal, setShowModal, onSubmit, edi
           opportunityType: 'Permanent',
           employmentType: 'Full-Time',
           workMode: 'WFO',
-          experienceRequired: '0-2',
+          experienceRequired: '0-2 years',
           minRemuneration: '',
           applicationDeadline: '',
           opportunityClosed: false,
@@ -597,10 +697,10 @@ export default function JobPostingModal({ showModal, setShowModal, onSubmit, edi
           onChange={handleInputChange}
           className="w-full px-4 py-2 bg-gray-50 rounded-lg border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all"
         >
-          <option value="0-2">0-2 years</option>
-          <option value="2-5">2-5 years</option>
-          <option value="5-8">5-8 years</option>
-          <option value="8+">8+ years</option>
+          <option value="0-2 years">0-2 years</option>
+          <option value="2-5 years">2-5 years</option>
+          <option value="5-10 years">5-10 years</option>
+          <option value="10+ years">10+ years</option>
         </select>
       </div>
       
@@ -701,40 +801,60 @@ export default function JobPostingModal({ showModal, setShowModal, onSubmit, edi
           
           {primarySkillsDropdownOpen && (
             <div className="absolute z-10 mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-auto">
-              {[
-                "React", "Angular", "Vue", "Node.js", "Python", "Java", ".NET", 
-                "AWS", "Azure", "Docker", "Kubernetes"
-              ].map((skill) => (
-                <div 
-                  key={skill} 
-                  className="px-4 py-2 hover:bg-blue-50 cursor-pointer flex items-center justify-between"
-                  onClick={() => togglePrimarySkill(skill)}
-                >
-                  <span>{skill}</span>
-                  {newJob.primarySkills.includes(skill) && (
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-blue-600" viewBox="0 0 20 20" fill="currentColor">
-                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                    </svg>
-                  )}
+              <div className="p-2 border-b border-gray-200">
+                <input
+                  type="text"
+                  placeholder="Search skills..."
+                  value={primarySkillsSearch}
+                  onChange={(e) => setPrimarySkillsSearch(e.target.value)}
+                  className="w-full px-3 py-2 text-sm border border-gray-200 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  onClick={(e) => e.stopPropagation()}
+                />
+              </div>
+              {skillsLoading ? (
+                <div className="px-4 py-2 text-center text-gray-500">
+                  Loading skills...
                 </div>
-              ))}
+              ) : filteredPrimarySkills.length > 0 ? (
+                filteredPrimarySkills.map((skill) => (
+                  <div 
+                    key={skill.name} 
+                    className="px-4 py-2 hover:bg-blue-50 cursor-pointer flex items-center justify-between"
+                    onClick={() => togglePrimarySkill(skill.name)}
+                  >
+                    <span>{skill.canonical_name}</span>
+                    {newJob.primarySkills.includes(skill.name) && (
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-blue-600" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                      </svg>
+                    )}
+                  </div>
+                ))
+              ) : (
+                <div className="px-4 py-2 text-center text-gray-500">
+                  No skills found
+                </div>
+              )}
             </div>
           )}
         </div>
         <div className="w-1/2 bg-gray-50 border border-gray-200 rounded-lg p-2 min-h-[42px] max-h-[150px] overflow-y-auto">
           {newJob.primarySkills.length > 0 ? (
-            newJob.primarySkills.map((skill) => (
-              <div key={skill} className="inline-flex items-center bg-blue-100 text-blue-800 rounded-full px-3 py-1 text-sm mr-2 mb-2">
-                {skill}
-                <button 
-                  type="button"
-                  className="ml-1 text-blue-600 hover:text-blue-800"
-                  onClick={() => removePrimarySkill(skill)}
-                >
-                  ×
-                </button>
-              </div>
-            ))
+            newJob.primarySkills.map((skillId) => {
+              const skill = availableSkills.find(s => s.name === skillId);
+              return (
+                <div key={skillId} className="inline-flex items-center bg-blue-100 text-blue-800 rounded-full px-3 py-1 text-sm mr-2 mb-2">
+                  {skill?.canonical_name || skillId}
+                  <button 
+                    type="button"
+                    className="ml-1 text-blue-600 hover:text-blue-800"
+                    onClick={() => removePrimarySkill(skillId)}
+                  >
+                    ×
+                  </button>
+                </div>
+              );
+            })
           ) : (
             <p className="text-sm text-gray-500 italic">No primary skills selected</p>
           )}
@@ -763,40 +883,60 @@ export default function JobPostingModal({ showModal, setShowModal, onSubmit, edi
           
           {secondarySkillsDropdownOpen && (
             <div className="absolute z-10 mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-auto">
-              {[
-                "React", "Angular", "Vue", "Node.js", "Python", "Java", ".NET", 
-                "AWS", "Azure", "Docker", "Kubernetes"
-              ].map((skill) => (
-                <div 
-                  key={skill} 
-                  className="px-4 py-2 hover:bg-blue-50 cursor-pointer flex items-center justify-between"
-                  onClick={() => toggleSecondarySkill(skill)}
-                >
-                  <span>{skill}</span>
-                  {newJob.secondarySkills.includes(skill) && (
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-blue-600" viewBox="0 0 20 20" fill="currentColor">
-                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                    </svg>
-                  )}
+              <div className="p-2 border-b border-gray-200">
+                <input
+                  type="text"
+                  placeholder="Search skills..."
+                  value={secondarySkillsSearch}
+                  onChange={(e) => setSecondarySkillsSearch(e.target.value)}
+                  className="w-full px-3 py-2 text-sm border border-gray-200 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  onClick={(e) => e.stopPropagation()}
+                />
+              </div>
+              {skillsLoading ? (
+                <div className="px-4 py-2 text-center text-gray-500">
+                  Loading skills...
                 </div>
-              ))}
+              ) : filteredSecondarySkills.length > 0 ? (
+                filteredSecondarySkills.map((skill) => (
+                  <div 
+                    key={skill.name} 
+                    className="px-4 py-2 hover:bg-blue-50 cursor-pointer flex items-center justify-between"
+                    onClick={() => toggleSecondarySkill(skill.name)}
+                  >
+                    <span>{skill.canonical_name}</span>
+                    {newJob.secondarySkills.includes(skill.name) && (
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-blue-600" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                      </svg>
+                    )}
+                  </div>
+                ))
+              ) : (
+                <div className="px-4 py-2 text-center text-gray-500">
+                  No skills found
+                </div>
+              )}
             </div>
           )}
         </div>
         <div className="w-1/2 bg-gray-50 border border-gray-200 rounded-lg p-2 min-h-[42px] max-h-[150px] overflow-y-auto">
           {newJob.secondarySkills.length > 0 ? (
-            newJob.secondarySkills.map((skill) => (
-              <div key={skill} className="inline-flex items-center bg-blue-100 text-blue-800 rounded-full px-3 py-1 text-sm mr-2 mb-2">
-                {skill}
-                <button 
-                  type="button"
-                  className="ml-1 text-blue-600 hover:text-blue-800"
-                  onClick={() => removeSecondarySkill(skill)}
-                >
-                  ×
-                </button>
-              </div>
-            ))
+            newJob.secondarySkills.map((skillId) => {
+              const skill = availableSkills.find(s => s.name === skillId);
+              return (
+                <div key={skillId} className="inline-flex items-center bg-blue-100 text-blue-800 rounded-full px-3 py-1 text-sm mr-2 mb-2">
+                  {skill?.canonical_name || skillId}
+                  <button 
+                    type="button"
+                    className="ml-1 text-blue-600 hover:text-blue-800"
+                    onClick={() => removeSecondarySkill(skillId)}
+                  >
+                    ×
+                  </button>
+                </div>
+              );
+            })
           ) : (
             <p className="text-sm text-gray-500 italic">No secondary skills selected</p>
           )}
@@ -929,13 +1069,19 @@ export default function JobPostingModal({ showModal, setShowModal, onSubmit, edi
         value={newJob.visibilitySettings}
         onChange={handleInputChange}
         className="w-full px-4 py-2 bg-gray-50 rounded-lg border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all"
+        disabled={applyOpportunitiesLoading}
       >
-        <option value="all">All verified users</option>
-        <option value="skill-matched">Skill-matched profiles only (AI-recommended)</option>
-        <option value="location-matched">Location-matched only</option>
-        <option value="private">Private (shared via link or invite only)</option>
-        <option value="remuneration-matched">Remuneration match only</option>
-        <option value="availability-matched">Availability match only</option>
+        {applyOpportunitiesLoading ? (
+          <option value="">Loading options...</option>
+        ) : applyOpportunities.length > 0 ? (
+          applyOpportunities.map((opportunity, index) => (
+            <option key={index} value={opportunity.toLowerCase().replace(/[^a-z0-9]/g, '-')}>
+              {opportunity}
+            </option>
+          ))
+        ) : (
+          <option value="all">All verified users</option>
+        )}
       </select>
     </div>
     

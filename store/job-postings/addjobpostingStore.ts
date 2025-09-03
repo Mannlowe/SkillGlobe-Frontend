@@ -86,25 +86,51 @@ export const useJobPostingStore = create<JobPostingState>((set, get) => ({
         return categoryMap[category] || 'Service';
       };
 
+      // Convert visibility settings to proper apply_opportunity value
+      const getApplyOpportunityValue = (visibilitySettings: string) => {
+        const visibilityMap: { [key: string]: string } = {
+          'all': 'All verified users',
+          'skill-matched': 'Skill-matched profiles only (AI-recommended)',
+          'location-matched': 'Location-matched only',
+          'private': 'Private (shared via link or invite only)',
+          'remuneration-matched': 'Remuneration match only',
+          'availability-matched': 'Availability match only'
+        };
+        return visibilityMap[visibilitySettings] || 'All verified users';
+      };
+
+      // Format skills arrays as JSON strings for form-data
+      const formatSkillsForAPI = (skills: string[]) => {
+        if (skills.length === 0) return '';
+        console.log('Formatting skills for API:', skills);
+        return JSON.stringify(skills.map(skill => ({ skill })));
+      };
+
+      // Get the first document file if available
+      const jobDescriptionFile = formData.documents.length > 0 ? formData.documents[0] : undefined;
+
       // Map form data to API format - matching exact payload structure from requirements
       const jobData: JobPostingData = {
         entity_id: authData.entityId,
+        name: `OP${Date.now().toString().slice(-6)}`, // Generate opportunity name
         opportunity_title: formData.title,
-        role_skill_category: getSkillCategoryValue(formData.skillCategory),
+        role_skill_category: formData.skillCategory,
         opportunity_type: formData.opportunityType,
         employment_type: formData.employmentType,
         work_mode: formData.workMode,
         experience_required: formData.experienceRequired,
-        apply_opportunity: formData.visibilitySettings === 'remuneration-matched' ? 'Remuneration match only' : 'All verified users',
+        apply_opportunity: getApplyOpportunityValue(formData.visibilitySettings),
         country: 'India',
         location: formData.location,
-        min_remuneration: formData.minRemuneration || '',
+        min_remuneration: formData.minRemuneration || '0',
         application_deadline: formData.applicationDeadline,
-        opportunity_closed: 0,
-        number_of_openings: parseInt(formData.numberOfOpenings) || 100,
+        opportunity_closed: formData.opportunityClosed ? 1 : 0,
+        number_of_openings: parseInt(formData.numberOfOpenings) || 1,
         description: formData.description,
-        skills_required: allSkills.length > 0 ? allSkills.map(skill => ({ skill })) : [{ skill: 'DBMS' }],
-        preferred_qualifications: formData.preferredQualifications || ''
+        primary_skills: formatSkillsForAPI(formData.primarySkills),
+        secondary_skills: formatSkillsForAPI(formData.secondarySkills),
+        preferred_qualifications: formData.preferredQualifications || '',
+        job_description: jobDescriptionFile
       };
 
       console.log('Submitting job data:', jobData);

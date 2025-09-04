@@ -103,8 +103,16 @@ export const useIndividualDashboardStore = create<IndividualDashboardState>((set
 
       // Check if the response is successful
       if (response.message.status === 'success') {
+        // If no data is returned, set default values instead of treating as error
+        const data = response.message.data || {
+          total_matches: 0,
+          great_matches: 0,
+          interest_shown: 0,
+          current_week_matches: 0
+        };
+        
         set({
-          profileInsights: response.message.data,
+          profileInsights: data,
           isLoading: false,
           error: null,
         });
@@ -113,11 +121,29 @@ export const useIndividualDashboardStore = create<IndividualDashboardState>((set
       }
     } catch (error: any) {
       console.error('Error fetching profile insights:', error);
-      set({
-        isLoading: false,
-        error: error.message || 'Failed to fetch profile insights',
-        profileInsights: null,
-      });
+      
+      // For authentication errors or API failures, show default values instead of error
+      if (error.message?.includes('Authentication data not found') || 
+          error.message?.includes('API credentials not found') ||
+          error.message?.includes('Entity ID not found')) {
+        console.log('Setting default profile insights due to auth issues');
+        set({
+          profileInsights: {
+            total_matches: 0,
+            great_matches: 0,
+            interest_shown: 0,
+            current_week_matches: 0
+          },
+          isLoading: false,
+          error: null,
+        });
+      } else {
+        set({
+          isLoading: false,
+          error: error.message || 'Failed to fetch profile insights',
+          profileInsights: null,
+        });
+      }
     }
   },
 

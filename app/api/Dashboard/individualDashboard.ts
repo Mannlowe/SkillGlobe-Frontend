@@ -126,14 +126,17 @@ export const getAuthData = () => {
           
           // Try to get API credentials from state
           if (state && state.token) {
-            // Use fallback entity ID if not found in localStorage or state
-            const fallbackEntityId = 'SG-ENT-07-25-00081';
             const retrievedEntityId = entityData.entity_id || state.entityId || '';
             
-            console.log('Using entity ID from auth-storage:', retrievedEntityId || fallbackEntityId);
+            if (!retrievedEntityId) {
+              console.error('Entity ID not found in auth storage');
+              return null;
+            }
+            
+            console.log('Using entity ID from auth-storage:', retrievedEntityId);
             
             return {
-              entityId: retrievedEntityId || fallbackEntityId,
+              entityId: retrievedEntityId,
               apiKey: state.apiKey || '',
               apiSecret: state.apiSecret || ''
             };
@@ -143,15 +146,18 @@ export const getAuthData = () => {
         return null;
       }
       
-      // Use fallback entity ID if not found in localStorage
-      const fallbackEntityId = 'SG-ENT-07-25-00081';
       const retrievedEntityId = entityData.entity_id || '';
       
+      if (!retrievedEntityId) {
+        console.error('Entity ID not found in localStorage');
+        return null;
+      }
+      
       // Log the entity ID being used
-      console.log('Using entity ID:', retrievedEntityId || fallbackEntityId);
+      console.log('Using entity ID:', retrievedEntityId);
       
       return {
-        entityId: retrievedEntityId || fallbackEntityId,
+        entityId: retrievedEntityId,
         apiKey,
         apiSecret
       };

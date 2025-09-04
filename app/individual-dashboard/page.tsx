@@ -101,13 +101,19 @@ export default function CompactDashboardPage() {
                 <span className="ml-2 text-gray-600">Loading opportunities...</span>
               </div>
             ) : opportunityError ? (
-              <div className="col-span-full text-center py-8">
-                <p className="text-red-600 mb-2">Failed to load opportunities</p>
+              <div className="col-span-full flex flex-col items-center justify-center py-12">
+                <div className="bg-red-50 rounded-full p-4 mb-4">
+                  <Briefcase className="h-8 w-8 text-red-400" />
+                </div>
+                <h3 className="text-lg font-medium text-gray-900 mb-2">No Opportunities Found</h3>
+                <p className="text-gray-500 text-center max-w-sm mb-4">
+                  We couldn't load your opportunities right now.
+                </p>
                 <button 
                   onClick={() => fetchOpportunityMatches()}
-                  className="text-blue-600 hover:text-blue-700 underline"
+                  className="px-4 py-2 bg-gradient-to-r from-orange-500 to-blue-500 text-white font-medium rounded-lg hover:shadow-lg transition-all duration-300 text-sm"
                 >
-                  Try again
+                  Refresh
                 </button>
               </div>
             ) : opportunities && opportunities.length > 0 ? (
@@ -123,11 +129,23 @@ export default function CompactDashboardPage() {
                     onViewDetails={(id) => console.log('Details:', id)}
                   />
                 ))
-            ) : (
-              <div className="col-span-full text-center py-8 text-gray-500">
-                No opportunities available at the moment
+            ) : !isLoadingOpportunities && !opportunityError ? (
+              <div className="col-span-full flex flex-col items-center justify-center py-12">
+                <div className="bg-gray-50 rounded-full p-4 mb-4">
+                  <Briefcase className="h-8 w-8 text-gray-400" />
+                </div>
+                <h3 className="text-lg font-medium text-gray-900 mb-2">No opportunities Found</h3>
+                <p className="text-gray-500 text-center max-w-sm">
+                  We're working to find the perfect matches for your skills. Check back soon or update your profile to improve matches.
+                </p>
+                <button 
+                  onClick={() => router.push('/profile')}
+                  className="mt-4 px-4 py-2 bg-gradient-to-r from-orange-500 to-blue-500 text-white font-medium rounded-lg hover:shadow-lg transition-all duration-300 text-sm"
+                >
+                  Update Profile
+                </button>
               </div>
-            )}
+            ) : null}
           </div>
         </div>
 

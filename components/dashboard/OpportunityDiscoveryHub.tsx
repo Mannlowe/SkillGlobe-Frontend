@@ -363,13 +363,19 @@ export default function OpportunityDiscoveryHub({
             <span className="ml-3 text-gray-600">Loading opportunities...</span>
           </div>
         ) : opportunityError ? (
-          <div className="col-span-full text-center py-12">
-            <p className="text-red-600 mb-4">Failed to load opportunities</p>
+          <div className="col-span-full flex flex-col items-center justify-center py-12">
+            <div className="bg-red-50 rounded-full p-4 mb-4">
+              <Briefcase className="h-8 w-8 text-red-400" />
+            </div>
+            <h3 className="text-lg font-medium text-gray-900 mb-2">No Opportunities Found</h3>
+            <p className="text-gray-500 text-center max-w-sm mb-4">
+              We couldn't load your opportunities right now.
+            </p>
             <button 
               onClick={() => fetchOpportunityMatches()}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              className="px-4 py-2 bg-gradient-to-r from-orange-500 to-blue-500 text-white font-medium rounded-lg hover:shadow-lg transition-all duration-300 text-sm"
             >
-              Try again
+              Refresh
             </button>
           </div>
         ) : sortedOpportunities.length === 0 ? (

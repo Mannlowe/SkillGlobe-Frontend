@@ -103,8 +103,8 @@ export const useIndividualDashboardStore = create<IndividualDashboardState>((set
 
       // Check if the response is successful
       if (response.message.status === 'success') {
-        // If no data is returned, set default values instead of treating as error
-        const data = response.message.data || {
+        // Use the actual API data, only fallback to zeros if data is null/undefined
+        const data = response.message.data ? response.message.data : {
           total_matches: 0,
           great_matches: 0,
           interest_shown: 0,
@@ -189,12 +189,29 @@ export const useIndividualDashboardStore = create<IndividualDashboardState>((set
       }
     } catch (error: any) {
       console.error('Error fetching opportunity matches:', error);
-      set({
-        isLoadingOpportunities: false,
-        opportunityError: error.message || 'Failed to fetch opportunity matches',
-        opportunityMatches: null,
-        opportunities: null,
-      });
+      
+      // For authentication errors or API failures, show empty opportunities instead of error
+      if (error.message?.includes('Authentication data not found') || 
+          error.message?.includes('API credentials not found') ||
+          error.message?.includes('Entity ID not found') ||
+          error.message?.includes('Entity ID is required')) {
+        console.log('Setting empty opportunities due to auth issues');
+        set({
+          opportunityMatches: [],
+          opportunities: [],
+          totalOpportunities: 0,
+          totalPages: 0,
+          isLoadingOpportunities: false,
+          opportunityError: null,
+        });
+      } else {
+        set({
+          isLoadingOpportunities: false,
+          opportunityError: error.message || 'Failed to fetch opportunity matches',
+          opportunityMatches: null,
+          opportunities: null,
+        });
+      }
     }
   },
 

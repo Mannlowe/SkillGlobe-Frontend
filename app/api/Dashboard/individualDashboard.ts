@@ -115,6 +115,8 @@ export const getAuthData = () => {
       const apiKey = localStorage.getItem('auth_api_key');
       const apiSecret = localStorage.getItem('auth_api_secret');
       
+      console.log('Direct localStorage API credentials:', { apiKey: !!apiKey, apiSecret: !!apiSecret });
+      
       // If we don't have the API credentials in localStorage, try to get them from auth-storage
       if (!apiKey || !apiSecret) {
         console.log('API credentials not found in direct localStorage, checking auth-storage...');
@@ -124,9 +126,15 @@ export const getAuthData = () => {
           const authStorage = JSON.parse(authString);
           const state = authStorage.state;
           
+          console.log('Auth storage state:', { 
+            hasToken: !!state?.token, 
+            hasApiKey: !!state?.apiKey, 
+            hasApiSecret: !!state?.apiSecret 
+          });
+          
           // Try to get API credentials from state
           if (state && state.token) {
-            const retrievedEntityId = entityData.entity_id || state.entityId || '';
+            const retrievedEntityId = entityData.details?.entity_id || entityData.entity_id || state.entityId || '';
             
             if (!retrievedEntityId) {
               console.error('Entity ID not found in auth storage');
@@ -143,13 +151,20 @@ export const getAuthData = () => {
           }
         }
         
+        console.log('No valid auth-storage found, returning null');
         return null;
       }
       
-      const retrievedEntityId = entityData.entity_id || '';
+      const retrievedEntityId = entityData.details?.entity_id || entityData.entity_id || '';
       
       if (!retrievedEntityId) {
         console.error('Entity ID not found in localStorage');
+        return null;
+      }
+      
+      // Check if we have valid API credentials
+      if (!apiKey || !apiSecret) {
+        console.error('API credentials not found in localStorage');
         return null;
       }
       

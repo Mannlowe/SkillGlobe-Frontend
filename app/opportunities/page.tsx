@@ -46,14 +46,10 @@ export default function OpportunitiesPage() {
         {/* Opportunity Discovery Hub - Progressive Loading */}
         <ProgressiveCard
           loadingFunction={async () => {
-            // Use dataService which handles API/mock data switching
-            const [opportunities, savedSearches] = await Promise.all([
-              dataService.getOpportunities(searchFilters),
-              Promise.resolve(mockSavedSearches) // Keep saved searches as mock for now
-            ]);
+            // Only load saved searches since opportunities come from store
+            const savedSearches = await Promise.resolve(mockSavedSearches);
             
             return {
-              opportunities,
               savedSearches
             };
           }}
@@ -71,7 +67,6 @@ export default function OpportunitiesPage() {
         >
           {(data) => (
             <OpportunityDiscoveryHub
-              opportunities={data.opportunities}
               savedSearches={data.savedSearches}
               onSearch={handleSearch}
               onSaveSearch={handleSaveSearch}

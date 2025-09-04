@@ -4,10 +4,10 @@ import { useState, useEffect } from 'react';
 import { Search, Filter, Bookmark, Bell, MapPin, DollarSign, Clock, Briefcase, Building, Target, Zap, Star } from 'lucide-react';
 import type { JobOpportunity } from '@/types/dashboard';
 import type { OpportunitySearchFilters, SavedSearch } from '@/types/opportunities';
+import { useIndividualDashboardStore } from '@/store/dashboard/individualdashboardStore';
 import CompactOpportunityCard from './CompactOpportunityCard';
 
 interface OpportunityDiscoveryHubProps {
-  opportunities: JobOpportunity[];
   savedSearches: SavedSearch[];
   onSearch: (filters: OpportunitySearchFilters) => void;
   onSaveSearch: (search: SavedSearch) => void;
@@ -17,7 +17,6 @@ interface OpportunityDiscoveryHubProps {
 }
 
 export default function OpportunityDiscoveryHub({ 
-  opportunities, 
   savedSearches,
   onSearch, 
   onSaveSearch,
@@ -25,6 +24,13 @@ export default function OpportunityDiscoveryHub({
   onSave, 
   onViewDetails 
 }: OpportunityDiscoveryHubProps) {
+  // Get opportunities from store instead of props
+  const { 
+    opportunities, 
+    isLoadingOpportunities, 
+    opportunityError,
+    fetchOpportunityMatches 
+  } = useIndividualDashboardStore();
   const [searchQuery, setSearchQuery] = useState('');
   const [showFilters, setShowFilters] = useState(false);
   const [selectedFilters, setSelectedFilters] = useState<Partial<OpportunitySearchFilters>>({});
@@ -32,6 +38,13 @@ export default function OpportunityDiscoveryHub({
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [visibleCount, setVisibleCount] = useState<number>(3);
   const [isExpanded, setIsExpanded] = useState<boolean>(false);
+
+  // Fetch opportunities on component mount
+  useEffect(() => {
+    if (!opportunities || opportunities.length === 0) {
+      fetchOpportunityMatches();
+    }
+  }, [opportunities, fetchOpportunityMatches]);
 
   const filterOptions = {
     jobTypes: [
@@ -84,7 +97,26 @@ export default function OpportunityDiscoveryHub({
     setIsExpanded(false);
   };
 
-  const sortedOpportunities = [...opportunities].sort((a, b) => {
+  // Apply client-side filtering - show all opportunities by default
+  const filteredOpportunities = opportunities ? opportunities.filter(job => {
+    // Search query filter - only apply if there's a search query
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      const matchesSearch = 
+        job.title.toLowerCase().includes(query) ||
+        job.company.toLowerCase().includes(query) ||
+        job.match_reasons.some((reason: string) => reason.toLowerCase().includes(query)) ||
+        job.skill_gaps.some((skill: string) => skill.toLowerCase().includes(query));
+      
+      if (!matchesSearch) return false;
+    }
+
+    // For now, show all opportunities since filters aren't fully implemented
+    // Future: Add proper filter logic when filter state management is implemented
+    return true;
+  }) : [];
+
+  const sortedOpportunities = filteredOpportunities.sort((a, b) => {
     switch (sortBy) {
       case 'match_score':
         return b.match_score - a.match_score;
@@ -111,23 +143,23 @@ export default function OpportunityDiscoveryHub({
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-              className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+              className="w-2/5 pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
             />
           </div>
 
           {/* Action Buttons */}
-          <div className="flex gap-2">
-            <button
-              onClick={() => setShowFilters(!showFilters)}
-              className={`flex items-center gap-2 px-4 py-3 rounded-lg border transition-colors ${
-                showFilters 
-                  ? 'bg-orange-50 border-orange-200 text-orange-600' 
-                  : 'bg-gray-50 border-gray-300 text-gray-700 hover:bg-gray-100'
-              }`}
-            >
-              <Filter size={18} />
-              Filters
-            </button>
+          <div className=" gap-2">
+              {/* <button
+                onClick={() => setShowFilters(!showFilters)}
+                className={`flex items-center gap-2 px-4 py-3 rounded-lg border transition-colors ${
+                  showFilters 
+                    ? 'bg-orange-50 border-orange-200 text-orange-600' 
+                    : 'bg-gray-50 border-gray-300 text-gray-700 hover:bg-gray-100'
+                }`}
+              >
+                <Filter size={18} />
+                Filters
+              </button> */}
             <button
               onClick={handleSearch}
               className="px-6 py-3 bg-gradient-to-r from-orange-500 to-blue-500 text-white font-medium rounded-lg hover:shadow-lg transition-all duration-300"
@@ -241,11 +273,11 @@ export default function OpportunityDiscoveryHub({
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <h2 className="text-xl font-bold text-gray-900">
-            {opportunities.length} opportunities found
+            {opportunities?.length || 0} opportunities found
           </h2>
           <div className="flex items-center gap-2 text-sm text-gray-600">
             <Target size={16} />
-            <span>Avg match: {Math.round(opportunities.reduce((acc, job) => acc + job.match_score, 0) / opportunities.length)}%</span>
+            <span>Avg match: {opportunities && opportunities.length > 0 ? Math.round(opportunities.reduce((acc, job) => acc + job.match_score, 0) / opportunities.length) : 0}%</span>
           </div>
         </div>
 
@@ -286,7 +318,7 @@ export default function OpportunityDiscoveryHub({
             <span className="text-sm text-gray-600">High Match</span>
           </div>
           <p className="text-2xl font-bold text-gray-900">
-            {opportunities.filter(job => job.match_score >= 90).length}
+            {opportunities?.filter(job => job.match_score >= 90).length || 0}
           </p>
         </div>
         <div className="bg-white rounded-lg border border-gray-200 p-4">
@@ -295,7 +327,7 @@ export default function OpportunityDiscoveryHub({
             <span className="text-sm text-gray-600">Remote</span>
           </div>
           <p className="text-2xl font-bold text-gray-900">
-            {opportunities.filter(job => job.remote_option).length}
+            {opportunities?.filter(job => job.remote_option).length || 0}
           </p>
         </div>
         <div className="bg-white rounded-lg border border-gray-200 p-4">
@@ -304,7 +336,7 @@ export default function OpportunityDiscoveryHub({
             <span className="text-sm text-gray-600">Urgent</span>
           </div>
           <p className="text-2xl font-bold text-gray-900">
-            {opportunities.filter(job => job.hiring_urgency === 'Urgent').length}
+            {opportunities?.filter(job => job.hiring_urgency === 'Urgent').length || 0}
           </p>
         </div>
         <div className="bg-white rounded-lg border border-gray-200 p-4">
@@ -313,7 +345,7 @@ export default function OpportunityDiscoveryHub({
             <span className="text-sm text-gray-600">High Salary</span>
           </div>
           <p className="text-2xl font-bold text-gray-900">
-            {opportunities.filter(job => job.salary_range[1] >= 100000).length}
+            {opportunities?.filter(job => job.salary_range[1] >= 100000).length || 0}
           </p>
         </div>
       </div>
@@ -325,36 +357,59 @@ export default function OpportunityDiscoveryHub({
           : 'space-y-4'
         }
       `}>
-        {sortedOpportunities.slice(0, visibleCount).map((job) => (
-          <div key={job.id} className={viewMode === 'list' ? 'max-w-none' : ''}>
-            <CompactOpportunityCard 
-              opportunity={job}
-              onApply={onApply}
-              onSave={onSave}
-              onViewDetails={onViewDetails}
-            />
+        {isLoadingOpportunities ? (
+          <div className="col-span-full flex items-center justify-center py-12">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+            <span className="ml-3 text-gray-600">Loading opportunities...</span>
           </div>
-        ))}
+        ) : opportunityError ? (
+          <div className="col-span-full text-center py-12">
+            <p className="text-red-600 mb-4">Failed to load opportunities</p>
+            <button 
+              onClick={() => fetchOpportunityMatches()}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              Try again
+            </button>
+          </div>
+        ) : sortedOpportunities.length === 0 ? (
+          <div className="col-span-full text-center py-12 text-gray-500">
+            No opportunities match your current filters
+          </div>
+        ) : (
+          sortedOpportunities.slice(0, visibleCount).map((job) => (
+            <div key={job.id} className={viewMode === 'list' ? 'max-w-none' : ''}>
+              <CompactOpportunityCard 
+                opportunity={job}
+                onApply={onApply}
+                onSave={onSave}
+                onViewDetails={onViewDetails}
+              />
+            </div>
+          ))
+        )}
       </div>
 
       {/* Load More or Show Less */}
-      <div className="text-center">
-        {visibleCount < sortedOpportunities.length ? (
-          <button 
-            onClick={handleLoadMore}
-            className="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
-          >
-            Load more opportunities
-          </button>
-        ) : isExpanded && (
-          <button 
-            onClick={handleShowLess}
-            className="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
-          >
-            Show less Opportunities
-          </button>
-        )}
-      </div>
+      {!isLoadingOpportunities && !opportunityError && sortedOpportunities.length > 0 && (
+        <div className="text-center">
+          {visibleCount < sortedOpportunities.length ? (
+            <button 
+              onClick={handleLoadMore}
+              className="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+            >
+              Load more opportunities
+            </button>
+          ) : isExpanded && (
+            <button 
+              onClick={handleShowLess}
+              className="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+            >
+              Show less Opportunities
+            </button>
+          )}
+        </div>
+      )}
     </div>
   );
 }

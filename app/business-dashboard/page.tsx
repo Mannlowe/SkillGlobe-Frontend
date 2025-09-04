@@ -264,7 +264,7 @@ export default function BusinessDashboardPage() {
       
       <div className="lg:pl-64 pt-1">
         <BusinessDashboardHeader 
-          title="Business Dashboard" 
+          title="Organization Insights" 
           onMenuClick={toggleMobileMenu}
         />
         

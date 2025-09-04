@@ -70,15 +70,36 @@ export default function CompactOpportunityCard({ opportunity, onApply, onSave, o
   };
 
   return (
-    <div 
-      className={`${
-        opportunity.buyer_interested ? 'buyer-interested-border' : ''
-      } rounded-lg`}
-    >
+    <>
+      <style jsx>{`
+        .buyer-interested-border {
+          background: linear-gradient(45deg, #ffd700, #ffed4e, #ffd700);
+          background-size: 400% 400%;
+          animation: gradient 3s ease infinite;
+          padding: 0px;
+          border-radius: 6px;
+        }
+        
+        @keyframes gradient {
+          0% { background-position: 0% 50%; }
+          50% { background-position: 100% 50%; }
+          100% { background-position: 0% 50%; }
+        }
+        
+        .buyer-interested-border .inner {
+          border: none !important;
+        }
+      `}</style>
+      
       <div 
-        onClick={handleCardClick}
-        className="inner bg-white rounded-lg border border-gray-200 hover:shadow-md hover:border-orange-200 transition-all duration-200 p-4 cursor-pointer group relative"
+        className={`${
+          opportunity.buyer_interested ? 'buyer-interested-border' : ''
+        } rounded-lg`}
       >
+        <div 
+          onClick={handleCardClick}
+          className="inner bg-white rounded-lg border border-gray-200 hover:shadow-md hover:border-orange-200 transition-all duration-200 p-4 cursor-pointer group relative"
+        >
       {/* Bookmark Button - Top Right Corner */}
       <button
         onClick={handleBookmark}
@@ -145,8 +166,8 @@ export default function CompactOpportunityCard({ opportunity, onApply, onSave, o
           {opportunity.remote_option && <span className="text-green-600">(Remote)</span>}
         </div>
         <div className="flex items-center gap-1">
-          <DollarSign size={12} />
-          <span>${Math.floor(opportunity.salary_range[0]/1000)}k-${Math.floor(opportunity.salary_range[1]/1000)}k</span>
+          {/* <DollarSign size={12} /> */}
+          <span>Rs.{opportunity.salary_range[0].toLocaleString()}</span>
         </div>
         {opportunity.hiring_urgency === 'Urgent' && (
           <span className={`px-2 py-0.5 rounded-full text-xs ${getUrgencyColor(opportunity.hiring_urgency)}`}>
@@ -214,5 +235,6 @@ export default function CompactOpportunityCard({ opportunity, onApply, onSave, o
         companyName={opportunity.company}
       />
     </div>
+    </>
   );
 }

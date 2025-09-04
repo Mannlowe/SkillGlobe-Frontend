@@ -6,30 +6,12 @@ import { useRouter } from 'next/navigation';
 import BusinessSidebar from '@/components/dashboard/BusinessSidebar';
 import BusinessDashboardHeader from '@/components/dashboard/BusinessDashboardHeader';
 import JobPostingModal, { JobFormState, DocumentFile } from './jobPostingModal';
+import JobPreviewModal, { JobPosting } from './jobPreviewModal';
 import { useJobPostingListStore } from '@/store/job-postings/jobpostinglistStore';
 import { JobPosting as ApiJobPosting } from '@/app/api/job postings/jobpostingList';
 import { useAuthStore } from '@/store/authStore';
 
-// Job posting interface to match the form fields
-interface JobPosting {
-  id: string;
-  title: string;
-  skillCategory?: string;
-  employmentType: string;
-  workMode?: string;
-  experienceRequired?: string;
-  location: string;
-  salary?: string;
-  skillsRequired?: string[];
-  genderPreference?: string[];
-  languageRequirement?: string[];
-  description?: string;
-  documents?: DocumentFile[];
-  applicationDeadline?: string;
-  postedDate: string;
-  status: string;
-  applicantCount?: number;
-}
+// Using JobPosting interface imported from jobPreviewModal.tsx
 
 // Sample job postings data with applicant counts
 const sampleJobPostings: JobPosting[] = [
@@ -75,6 +57,7 @@ export default function JobPostingsPage() {
   const router = useRouter();
   const [showModal, setShowModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showPreviewModal, setShowPreviewModal] = useState(false);
   const [jobPostings, setJobPostings] = useState<JobPosting[]>([]);
   const [closedJobs, setClosedJobs] = useState<JobPosting[]>([]);
   const [currentJob, setCurrentJob] = useState<JobPosting | null>(null);
@@ -153,7 +136,8 @@ export default function JobPostingsPage() {
         location: job.location || 'Not specified',
         // Additional fields stored but not displayed in table
         salary: job.minRemuneration,
-        skillsRequired: [...job.primarySkills, ...job.secondarySkills], // Combine both primary and secondary skills for backward compatibility
+        primarySkills: job.primarySkills,
+        secondarySkills: job.secondarySkills,
         genderPreference: job.gender,
         languageRequirement: job.language,
         description: job.description,
@@ -178,7 +162,8 @@ export default function JobPostingsPage() {
         location: job.location || 'Not specified',
         // Additional fields stored but not displayed in table
         salary: job.minRemuneration,
-        skillsRequired: [...job.primarySkills, ...job.secondarySkills], // Combine both primary and secondary skills for backward compatibility
+        primarySkills: job.primarySkills,
+        secondarySkills: job.secondarySkills,
         genderPreference: job.gender,
         languageRequirement: job.language,
         description: job.description,
@@ -207,6 +192,11 @@ export default function JobPostingsPage() {
   const handleDeleteClick = (job: JobPosting) => {
     setCurrentJob(job);
     setShowDeleteModal(true);
+  };
+
+  const handlePreviewJob = (job: JobPosting) => {
+    setCurrentJob(job);
+    setShowPreviewModal(true);
   };
   
   const handleCloseJob = () => {
@@ -294,7 +284,7 @@ export default function JobPostingsPage() {
                 <input
                   type="text"
                   placeholder="Search job postings..."
-                  className="w-full pl-10 pr-4 py-2 bg-gray-50 rounded-lg border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all"
+                  className="w-1/3 pl-10 pr-4 py-2 bg-gray-50 rounded-lg border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all"
                 />
               </div>
             </div>
@@ -309,7 +299,7 @@ export default function JobPostingsPage() {
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Work Mode</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Experience</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Location</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                    <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
@@ -351,7 +341,7 @@ export default function JobPostingsPage() {
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm text-gray-900">{job.location}</div>
                       </td>
-                      <td className="px-6 py-4 ml-5 whitespace-nowrap text-sm font-medium">
+                      <td className="px-6 py-4 ml-5 whitespace-nowrap text-sm font-medium flex items-center space-x-2">
                         {/* <button 
                           onClick={() => handleEditJob(job)} 
                           className="text-blue-600 hover:text-blue-900 mr-3"
@@ -359,14 +349,25 @@ export default function JobPostingsPage() {
                           Edit
                         </button> */}
                         <button 
+                          onClick={() => handlePreviewJob(job)} 
+                          className="text-blue-600 hover:text-blue-900 p-2 rounded hover:bg-blue-50 transition-colors"
+                          title="Preview Opportunity"
+                        >
+                          <img 
+                            src="/Images/Opportunity Posting/preview.gif" 
+                            alt="Preview Opportunity" 
+                            className="w-12 h-12"
+                          />
+                        </button>
+                        <button 
                           onClick={() => handleDeleteClick(job)} 
                           className="text-red-600 hover:text-red-900 p-2 rounded hover:bg-red-50 transition-colors"
                           title="Close Opportunity"
                         >
                           <img 
-                            src="/Images/Opportunity Posting/closed-opportunity.png" 
+                            src="/Images/Opportunity Posting/rejection (1).gif" 
                             alt="Close Opportunity" 
-                            className="w-7 h-7"
+                            className="w-12 h-12"
                           />
                         </button>
                       </td>
@@ -412,6 +413,13 @@ export default function JobPostingsPage() {
           </div>
         </div>
       )}
+      
+      {/* Job Preview Modal */}
+      <JobPreviewModal
+        showModal={showPreviewModal}
+        setShowModal={setShowPreviewModal}
+        jobData={currentJob}
+      />
     </div>
   );
 }

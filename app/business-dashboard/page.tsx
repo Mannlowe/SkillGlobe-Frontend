@@ -22,29 +22,25 @@ import { useAuthStore } from '@/store/authStore';
 import { useToast } from '@/hooks/use-toast';
 import JobPostingModal, { JobFormState } from './job-postings/jobPostingModal';
 import { getJobPostingList, JobPosting as ApiJobPosting } from '@/app/api/job postings/jobpostingList';
+import { useBusinessDashboardStore } from '@/store/dashboard/businessdashboardStore';
 
-const stats = [
+// Static configuration for stats display
+const statsConfig = [
   {
-    title: 'Active Opportunities',
-    value: '8',
-    change: '+2 this week',
-    trend: 'up',
+    key: 'total_postings',
+    title: 'Total Opportunities',
     icon: Briefcase,
     color: 'bg-blue-500',
   },
   {
-    title: 'Total Profiles',
-    value: '156',
-    change: '+23 this week',
-    trend: 'up',
+    key: 'active_postings',
+    title: 'Active Opportunities',
     icon: Users,
     color: 'bg-green-500',
   },
   {
+    key: 'shortlisted',
     title: 'Shortlisted',
-    value: '10',
-    change: '+5% improvement',
-    trend: 'up',
     icon: ScrollText,
     color: 'bg-orange-500',
   },
@@ -89,25 +85,38 @@ export default function BusinessDashboardPage() {
   const [opportunities, setOpportunities] = useState([]);
   const [showJobModal, setShowJobModal] = useState(false);
   const [apiJobPostings, setApiJobPostings] = useState<ApiJobPosting[]>([]);
+  
+  // Business dashboard store
+  const { 
+    insights, 
+    isLoadingInsights, 
+    insightsError, 
+    fetchOrganizationInsights, 
+    clearInsightsError 
+  } = useBusinessDashboardStore();
 
   // Get business name from entity details or fall back to user name
   const businessName = entity?.details?.name || 'Your Business';
 
-  // Fetch job postings from API
+  // Fetch job postings and organization insights from API
   useEffect(() => {
-    const fetchJobPostings = async () => {
+    const fetchData = async () => {
       try {
         if (entity?.details?.entity_id) {
+          // Fetch job postings
           const response = await getJobPostingList(entity.details.entity_id);
           setApiJobPostings(response.message.data.opportunity_posting || []);
+          
+          // Fetch organization insights
+          await fetchOrganizationInsights();
         }
       } catch (error) {
-        console.error('Error fetching job postings:', error);
+        console.error('Error fetching data:', error);
       }
     };
 
-    fetchJobPostings();
-  }, [entity?.details?.entity_id]);
+    fetchData();
+  }, [entity?.details?.entity_id, fetchOrganizationInsights]);
 
   // Handle job creation
   const handleCreateJob = (jobData: JobFormState) => {
@@ -276,23 +285,65 @@ export default function BusinessDashboardPage() {
 
             {/* Stats Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-              {stats.map((stat, index) => {
-                const Icon = stat.icon;
-                return (
+              {isLoadingInsights ? (
+                // Loading state
+                statsConfig.map((stat, index) => (
                   <div key={index} className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
                     <div className="flex items-center justify-between">
-                      <div>
+                      <div className="flex-1">
                         <p className="text-md font-medium text-gray-600 mb-1">{stat.title}</p>
-                        <p className="text-3xl font-bold text-gray-900">{stat.value}</p>
-                        <p className="text-sm text-green-600 font-medium mt-1">{stat.change}</p>
+                        <div className="h-8 bg-gray-200 rounded animate-pulse mb-2"></div>
+                        <div className="h-4 bg-gray-100 rounded animate-pulse w-24"></div>
                       </div>
                       <div className={`w-14 h-14 ${stat.color} rounded-xl flex items-center justify-center`}>
-                        <Icon className="text-white" size={24} />
+                        <stat.icon className="text-white" size={24} />
                       </div>
                     </div>
                   </div>
-                );
-              })}
+                ))
+              ) : insightsError ? (
+                // Error state
+                <div className="col-span-full bg-red-50 border border-red-200 rounded-xl p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="text-red-800 font-medium">Failed to load organization insights</h3>
+                      <p className="text-red-600 text-sm mt-1">{insightsError}</p>
+                    </div>
+                    <button
+                      onClick={() => {
+                        clearInsightsError();
+                        fetchOrganizationInsights();
+                      }}
+                      className="bg-red-100 hover:bg-red-200 text-red-800 px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                    >
+                      Retry
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                // Data loaded successfully
+                statsConfig.map((stat, index) => {
+                  const Icon = stat.icon;
+                  const value = insights?.[stat.key as keyof typeof insights] || 0;
+                  const changeKey = `${stat.key}_change` as keyof typeof insights;
+                  const change = insights?.[changeKey] || 'No change';
+                  
+                  return (
+                    <div key={index} className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-md font-medium text-gray-600 mb-1">{stat.title}</p>
+                          <p className="text-3xl font-bold text-gray-900">{value.toLocaleString()}</p>
+                          <p className="text-sm text-green-600 font-medium mt-1">{change}</p>
+                        </div>
+                        <div className={`w-14 h-14 ${stat.color} rounded-xl flex items-center justify-center`}>
+                          <Icon className="text-white" size={24} />
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })
+              )}
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -379,7 +430,7 @@ export default function BusinessDashboardPage() {
                 {/* Recent Applications */}
                 <div className="bg-white rounded-xl shadow-sm border border-gray-100">
                   <div className="p-6 border-b border-gray-100">
-                    <h2 className="text-lg font-semibold text-gray-900">Recent Applications</h2>
+                    <h2 className="text-lg font-semibold text-gray-900">Recent Profiles</h2>
                   </div>
                   <div className="p-6">
                     <div className="space-y-4">

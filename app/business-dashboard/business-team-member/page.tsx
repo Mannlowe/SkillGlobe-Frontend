@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Users, UserPlus, Edit, Trash2, X } from 'lucide-react';
+import { Users, UserPlus, Edit, Trash2, X, Eye, EyeOff } from 'lucide-react';
 import BusinessSidebar from '@/components/dashboard/BusinessSidebar';
 import BusinessDashboardHeader from '@/components/dashboard/BusinessDashboardHeader';
 import Image from 'next/image';
@@ -26,61 +26,51 @@ export default function AdminAccessPage() {
   // Form state
   const [name, setName] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState('');
   const [sendWelcomeEmail, setSendWelcomeEmail] = useState(false);
 
   // Store state
-  const { addMemberToTeam, isLoading, error, success, resetState } = useAddMemberStore();
+  const { 
+    addMemberToTeam, 
+    isLoading, 
+    error, 
+    success, 
+    resetState,
+    members,
+    isLoadingMembers,
+    membersError,
+    fetchBusinessMembers,
+    deactivateMember,
+    isDeactivating,
+    deactivateError,
+    deactivateSuccess
+  } = useAddMemberStore();
+
+  // Fetch members on component mount
+  useEffect(() => {
+    fetchBusinessMembers();
+  }, [fetchBusinessMembers]);
 
   // Handle success state
   useEffect(() => {
     if (success) {
-      const newMember: TeamMember = {
-        id: Date.now().toString(),
-        name,
-        role: 'Team Member',
-        email,
-        avatar: `https://randomuser.me/api/portraits/${Math.random() > 0.5 ? 'men' : 'women'}/${Math.floor(Math.random() * 100)}.jpg`
-      };
-      
-      setTeamMembers(prev => [...prev, newMember]);
+      // Refresh the members list after successful addition
+      fetchBusinessMembers();
       setTimeout(() => {
         closeModal();
       }, 1500); // Close modal after showing success message
     }
-  }, [success, name, email]);
+  }, [success, fetchBusinessMembers]);
 
-  // Team members state
-  const [teamMembers, setTeamMembers] = useState<TeamMember[]>([
-    {
-      id: '1',
-      name: 'John Doe',
-      role: 'CEO',
-      email: 'john@skillglobe.com',
-      avatar: 'https://randomuser.me/api/portraits/men/32.jpg'
-    },
-    {
-      id: '2',
-      name: 'Jane Smith',
-      role: 'CTO',
-      email: 'jane@skillglobe.com',
-      avatar: 'https://randomuser.me/api/portraits/women/44.jpg'
-    },
-    {
-      id: '3',
-      name: 'Mike Johnson',
-      role: 'HR Director',
-      email: 'mike@skillglobe.com',
-      avatar: 'https://randomuser.me/api/portraits/men/45.jpg'
-    },
-    {
-      id: '4',
-      name: 'Sarah Williams',
-      role: 'Marketing Manager',
-      email: 'sarah@skillglobe.com',
-      avatar: 'https://randomuser.me/api/portraits/women/68.jpg'
-    }
-  ]);
+  // Convert API members to TeamMember format for UI compatibility
+  const teamMembers: TeamMember[] = members.map((member, index) => ({
+    id: member.name, // Using the BTM ID as unique identifier
+    name: member.full_name,
+    role: member.role,
+    email: member.email,
+    avatar: `https://randomuser.me/api/portraits/${Math.random() > 0.5 ? 'men' : 'women'}/${Math.floor(Math.random() * 100)}.jpg`
+  }));
 
   const openAddModal = () => {
     setIsEditMode(false);
@@ -117,15 +107,10 @@ export default function AdminAccessPage() {
     }
 
     if (isEditMode && currentMember) {
-      // Update existing member (local state only for now)
-      setTeamMembers(teamMembers.map(member => 
-        member.id === currentMember.id ? {
-          ...member,
-          name,
-          email
-        } : member
-      ));
+      // TODO: Implement edit member API call
+      // For now, just close the modal and refresh the list
       closeModal();
+      fetchBusinessMembers();
     } else {
       // Add new member via API
       await addMemberToTeam({
@@ -147,9 +132,18 @@ export default function AdminAccessPage() {
     setMemberToDelete('');
   };
 
-  const handleRemove = () => {
-    setTeamMembers(teamMembers.filter(member => member.id !== memberToDelete));
-    closeDeleteModal();
+  const handleRemove = async () => {
+    try {
+      // Call the deactivateMember function from the store
+      await deactivateMember(memberToDelete);
+      
+      // Close the modal after successful deactivation
+      closeDeleteModal();
+      fetchBusinessMembers();
+    } catch (error) {
+      console.error('Error deactivating member:', error);
+      // Keep the modal open if there's an error
+    }
   };
 
   return (
@@ -175,59 +169,89 @@ export default function AdminAccessPage() {
               </button>
             </div>
             
+            {/* Loading State */}
+            {isLoadingMembers && (
+              <div className="flex justify-center items-center py-12">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+                <span className="ml-3 text-gray-600">Loading team members...</span>
+              </div>
+            )}
+
+            {/* Error State */}
+            {membersError && !isLoadingMembers && (
+              <div className="text-center py-12">
+                <div className="text-red-500 mb-4">
+                  <Users size={48} className="mx-auto mb-2" />
+                  <p className="text-lg font-medium">Failed to load team members</p>
+                  <p className="text-sm text-gray-600 mt-1">{membersError}</p>
+                </div>
+                <button
+                  onClick={fetchBusinessMembers}
+                  className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg"
+                >
+                  Retry
+                </button>
+              </div>
+            )}
+
+            {/* Empty State */}
+            {!isLoadingMembers && !membersError && teamMembers.length === 0 && (
+              <div className="text-center py-12">
+                <Users size={48} className="mx-auto mb-4 text-gray-400" />
+                <p className="text-lg font-medium text-gray-600">No team members found</p>
+                <p className="text-sm text-gray-500 mt-1">Add your first team member to get started</p>
+              </div>
+            )}
+
             {/* Team Members Table */}
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b border-gray-200">
-                    <th className="text-left py-3 px-8 font-medium text-gray-600">NAME</th>
-                    <th className="text-left py-3 px-8 font-medium text-gray-600">ROLE</th>
-                    <th className="text-left py-3 px-8 font-medium text-gray-600">EMAIL</th>
-                    <th className="text-right py-3 px-8 font-medium text-gray-600">ACTIONS</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {teamMembers.map((member) => (
-                    <tr key={member.id} className="border-b border-gray-100 hover:bg-gray-50">
-                      <td className="py-4 px-4">
-                        <div className="flex items-center">
-                          <div className="h-10 w-10 rounded-full overflow-hidden mr-3">
-                            <Image 
-                              src={member.avatar} 
-                              alt={member.name} 
-                              width={40} 
-                              height={40} 
-                              className="object-cover"
-                            />
-                          </div>
-                          <span className="font-medium text-gray-900">{member.name}</span>
-                        </div>
-                      </td>
-                      <td className="py-4 px-8 text-gray-700">{member.role}</td>
-                      <td className="py-4 px-8 text-gray-700">{member.email}</td>
-                      <td className="py-4 px-8 text-right">
-                        <div className="flex justify-end space-x-6">
-                          <button 
-                            onClick={() => openEditModal(member)}
-                            className="p-1.5 bg-blue-50 text-blue-500 hover:text-blue-700 hover:bg-blue-100 rounded-md transition-colors"
-                            title="Edit member"
-                          >
-                            <Edit size={16} />
-                          </button>
-                          <button 
-                            onClick={() => openDeleteModal(member.id, member.name)}
-                            className="p-1.5 bg-red-50 text-red-500 hover:text-red-700 hover:bg-red-100 rounded-md transition-colors"
-                            title="Remove member"
-                          >
-                            <Trash2 size={16} />
-                          </button>
-                        </div>
-                      </td>
+            {!isLoadingMembers && !membersError && teamMembers.length > 0 && (
+              <div className="overflow-x-auto">
+                <table className="w-[95%] justify-center mx-auto">
+                  <thead>
+                    <tr className="border-b border-gray-200">
+                      <th className="text-left py-3 px-8 font-medium text-gray-600">NAME</th>
+                      <th className="text-left py-3 px-8 font-medium text-gray-600">ROLE</th>
+                      <th className="text-left py-3 px-8 font-medium text-gray-600">EMAIL</th>
+                      <th className="text-left py-3 px-8 font-medium text-gray-600">STATUS</th>
+                      <th className="text-left py-3 px-8 font-medium text-gray-600">ACTIONS</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody>
+                    {teamMembers.map((member) => (
+                      <tr key={member.id} className="border-b border-gray-100 hover:bg-gray-50">
+                        <td className="py-4 px-4">
+                          <div className="flex items-center">
+                            <span className="font-medium text-gray-900">{member.name}</span>
+                          </div>
+                        </td>
+                        <td className="py-4 px-8 text-gray-700">{member.role}</td>
+                        <td className="py-4 px-8 text-gray-700">{member.email}</td>
+                        <td className="py-4 px-8">
+                          <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${
+                            members.find(m => m.name === member.id)?.status === 'Active' 
+                              ? 'bg-green-100 text-green-800' 
+                              : 'bg-red-100 text-red-800'
+                          }`}>
+                            {members.find(m => m.name === member.id)?.status || 'Unknown'}
+                          </span>
+                        </td>
+                        <td className="py-4 px-8 text-right">
+                          <div className="flex justify-start space-x-3">
+                            <button 
+                              onClick={() => openDeleteModal(member.id, member.name)}
+                              className="p-1.5 bg-red-50 text-red-500 hover:text-red-700 hover:bg-red-100 rounded-md transition-colors"
+                              title="Deactivate member"
+                            >
+                              Inactive
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
         </main>
       </div>
@@ -241,25 +265,39 @@ export default function AdminAccessPage() {
                 <Trash2 className="text-red-500" size={28} />
               </div>
               <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                Confirm Removal
+                Confirm inactivate
               </h3>
               <p className="text-gray-600">
-                Are you sure you want to remove this team member?
+                Are you sure you want to inactivate this team member?
               </p>
+              
+              {deactivateError && (
+                <div className="mt-4 p-3 bg-red-50 text-red-700 rounded-lg">
+                  {deactivateError}
+                </div>
+              )}
             </div>
             
             <div className="flex justify-center space-x-4">
               <button
                 onClick={closeDeleteModal}
-                className="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50 transition-colors"
+                disabled={isDeactivating}
+                className="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Cancel
               </button>
               <button
                 onClick={handleRemove}
-                className="px-6 py-2 bg-red-500 rounded-lg text-white font-medium hover:bg-red-600 transition-colors"
+                disabled={isDeactivating}
+                className="px-6 py-2 bg-red-500 rounded-lg text-white font-medium hover:bg-red-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center min-w-[100px]"
               >
-                Remove
+                {isDeactivating ? (
+                  <>
+                    Processing...
+                  </>
+                ) : (
+                  'Inactivate'
+                )}
               </button>
             </div>
           </div>
@@ -316,14 +354,28 @@ export default function AdminAccessPage() {
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Password <span className="text-red-500">*</span>
                 </label>
-                <input
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="Enter password"
-                  required
-                />
+                <div className="relative">
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="Enter password"
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 hover:text-gray-700 focus:outline-none"
+                    tabIndex={-1}
+                  >
+                    {showPassword ? (
+                      <Eye className="h-5 w-5" />
+                    ) : (
+                      <EyeOff className="h-5 w-5" />
+                    )}
+                  </button>
+                </div>
               </div>
               
               <div className="mt-4">

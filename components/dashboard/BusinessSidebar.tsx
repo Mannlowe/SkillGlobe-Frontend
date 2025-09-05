@@ -123,10 +123,10 @@ export default function BusinessSidebar({ mobileOpen }: BusinessSidebarProps) {
         className={`
           fixed top-0 bottom-0 left-0 z-50 bg-white border-r border-gray-200 transition-all duration-300
           ${isMobile ? (isOpen ? 'translate-x-0' : '-translate-x-full') : 'translate-x-0'}
-          ${isCollapsed && !isMobile ? 'w-20' : 'w-64'}
+          ${isCollapsed && !isMobile ? 'w-24' : 'w-[270px]'}
         `}
       >
-        <div className="flex flex-col h-full font-rubik">
+        <div className="flex flex-col h-full font-rubik overflow-hidden">
           {/* Header */}
           <div className={`flex items-center h-[85px] justify-between border-b border-gray-200 ${isCollapsed && !isMobile ? 'p-3' : 'p-4'}`}>
             {(!isCollapsed || isMobile) && (
@@ -134,7 +134,7 @@ export default function BusinessSidebar({ mobileOpen }: BusinessSidebarProps) {
                 href={userRole === 'Business User' ? '/business-dashboard/job-postings' : '/business-dashboard'} 
                 className="flex items-center space-x-2"
               >
-                <div className="relative w-40 h-40">
+                <div className="relative w-32 h-12">
                   <Image 
                     src="/Images/logo_image.jpg" 
                     alt="SkillGlobe Logo" 
@@ -176,7 +176,7 @@ export default function BusinessSidebar({ mobileOpen }: BusinessSidebarProps) {
           </div>
           
           {/* Navigation */}
-          <nav className={`flex-1 w-72 overflow-y-auto ${isCollapsed && !isMobile ? 'p-2' : 'p-4'} space-y-2`}>
+          <nav className={`flex-1 overflow-y-auto ${isCollapsed && !isMobile ? 'px-1 py-2' : 'p-4'} space-y-2`}>
             {menuItems.map((item) => {
               const Icon = item.icon;
               const isActive = pathname === item.href;
@@ -187,8 +187,8 @@ export default function BusinessSidebar({ mobileOpen }: BusinessSidebarProps) {
                   href={item.href}
                   onClick={handleNavigate}
                   className={`
-                    flex items-center rounded-lg transition-colors w-60
-                    ${isCollapsed && !isMobile ? 'justify-center p-3' : 'space-x-3 px-4 py-3'}
+                    flex items-center rounded-lg transition-colors w-full
+                    ${isCollapsed && !isMobile ? 'justify-center p-2' : 'space-x-3 px-4 py-3'}
                     ${isActive 
                       ? 'bg-blue-50 text-blue-600' 
                       : 'text-gray-700 hover:bg-gray-100'

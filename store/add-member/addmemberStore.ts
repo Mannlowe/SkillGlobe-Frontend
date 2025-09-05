@@ -1,11 +1,19 @@
 import { create } from 'zustand';
-import { addMember, getAuthData, AddMemberData, AddMemberResponse } from '@/app/api/Add Member/addMember';
+import { addMember, getAuthData, getBusinessMembers, deactivateMember, AddMemberData, AddMemberResponse, BusinessMember, GetMembersResponse, DeactivateMemberResponse } from '@/app/api/Add Member/addMember';
 
 interface AddMemberState {
   isLoading: boolean;
   error: string | null;
   success: boolean;
+  members: BusinessMember[];
+  isLoadingMembers: boolean;
+  membersError: string | null;
+  isDeactivating: boolean;
+  deactivateError: string | null;
+  deactivateSuccess: boolean;
   addMemberToTeam: (memberData: Omit<AddMemberData, 'entity_id'>) => Promise<void>;
+  fetchBusinessMembers: () => Promise<void>;
+  deactivateMember: (businessUserId: string) => Promise<void>;
   resetState: () => void;
 }
 
@@ -13,6 +21,12 @@ export const useAddMemberStore = create<AddMemberState>((set, get) => ({
   isLoading: false,
   error: null,
   success: false,
+  members: [],
+  isLoadingMembers: false,
+  membersError: null,
+  isDeactivating: false,
+  deactivateError: null,
+  deactivateSuccess: false,
 
   addMemberToTeam: async (memberData: Omit<AddMemberData, 'entity_id'>) => {
     set({ isLoading: true, error: null, success: false });
@@ -52,7 +66,90 @@ export const useAddMemberStore = create<AddMemberState>((set, get) => ({
     }
   },
 
+  fetchBusinessMembers: async () => {
+    set({ isLoadingMembers: true, membersError: null });
+
+    try {
+      // Get authentication data
+      const authData = getAuthData();
+      
+      if (!authData) {
+        throw new Error('Authentication data not found. Please login again.');
+      }
+
+      console.log('Fetching business members for entity:', authData.entityId);
+
+      // Call the API
+      const response = await getBusinessMembers(authData.entityId, authData.apiKey, authData.apiSecret);
+
+      if (response.message.status === 'success') {
+        set({ 
+          isLoadingMembers: false, 
+          members: response.message.data.members, 
+          membersError: null 
+        });
+        console.log('Business members fetched successfully:', response.message.data.members);
+      } else {
+        throw new Error(response.message.message || 'Failed to fetch business members');
+      }
+    } catch (error: any) {
+      console.error('Error fetching business members:', error);
+      const errorMessage = error.response?.data?.message?.message || 
+                          error.response?.data?.message || 
+                          error.message || 
+                          'Failed to fetch business members';
+      set({ isLoadingMembers: false, membersError: errorMessage, members: [] });
+    }
+  },
+
+  deactivateMember: async (businessUserId: string) => {
+    set({ isDeactivating: true, deactivateError: null, deactivateSuccess: false });
+
+    try {
+      // Get authentication data
+      const authData = getAuthData();
+      
+      if (!authData) {
+        throw new Error('Authentication data not found. Please login again.');
+      }
+
+      console.log('Deactivating business member with ID:', businessUserId);
+
+      // Call the API
+      const response = await deactivateMember(
+        authData.entityId, 
+        businessUserId, 
+        authData.apiKey, 
+        authData.apiSecret
+      );
+
+      if (response.message.status === 'success') {
+        set({ isDeactivating: false, deactivateSuccess: true, deactivateError: null });
+        console.log('Member deactivated successfully:', response);
+        
+        // Refresh the members list after successful deactivation
+        await get().fetchBusinessMembers();
+      } else {
+        throw new Error(response.message.message || 'Failed to deactivate member');
+      }
+    } catch (error: any) {
+      console.error('Error deactivating member:', error);
+      const errorMessage = error.response?.data?.message?.message || 
+                          error.response?.data?.message || 
+                          error.message || 
+                          'Failed to deactivate member';
+      set({ isDeactivating: false, deactivateError: errorMessage, deactivateSuccess: false });
+    }
+  },
+
   resetState: () => {
-    set({ isLoading: false, error: null, success: false });
+    set({ 
+      isLoading: false, 
+      error: null, 
+      success: false,
+      isDeactivating: false,
+      deactivateError: null,
+      deactivateSuccess: false
+    });
   }
 }));

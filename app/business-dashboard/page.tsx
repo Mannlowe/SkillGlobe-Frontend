@@ -15,7 +15,8 @@ import {
   Clock,
   AlertCircle,
   BarChart3,
-  Check as CheckIcon
+  Check as CheckIcon,
+  ScrollText
 } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
 import { useToast } from '@/hooks/use-toast';
@@ -40,19 +41,11 @@ const stats = [
     color: 'bg-green-500',
   },
   {
-    title: 'Profile Views',
-    value: '2,340',
-    change: '+12% this month',
-    trend: 'up',
-    icon: Eye,
-    color: 'bg-purple-500',
-  },
-  {
-    title: 'Hiring Success Rate',
-    value: '78%',
+    title: 'Shortlisted',
+    value: '10',
     change: '+5% improvement',
     trend: 'up',
-    icon: TrendingUp,
+    icon: ScrollText,
     color: 'bg-orange-500',
   },
 ];
@@ -282,18 +275,18 @@ export default function BusinessDashboardPage() {
             </div>
 
             {/* Stats Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
               {stats.map((stat, index) => {
                 const Icon = stat.icon;
                 return (
                   <div key={index} className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-sm font-medium text-gray-600 mb-1">{stat.title}</p>
-                        <p className="text-2xl font-bold text-gray-900">{stat.value}</p>
+                        <p className="text-md font-medium text-gray-600 mb-1">{stat.title}</p>
+                        <p className="text-3xl font-bold text-gray-900">{stat.value}</p>
                         <p className="text-sm text-green-600 font-medium mt-1">{stat.change}</p>
                       </div>
-                      <div className={`w-12 h-12 ${stat.color} rounded-xl flex items-center justify-center`}>
+                      <div className={`w-14 h-14 ${stat.color} rounded-xl flex items-center justify-center`}>
                         <Icon className="text-white" size={24} />
                       </div>
                     </div>

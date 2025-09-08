@@ -10,6 +10,7 @@ import JobPreviewModal, { JobPosting } from './jobPreviewModal';
 import { useJobPostingListStore } from '@/store/job-postings/jobpostinglistStore';
 import { JobPosting as ApiJobPosting } from '@/app/api/job postings/jobpostingList';
 import { useAuthStore } from '@/store/authStore';
+import { useClosedOpportunitiesStore } from '@/store/job-postings/closedOpportunitiesStore';
 
 // Using JobPosting interface imported from jobPreviewModal.tsx
 
@@ -70,6 +71,12 @@ export default function JobPostingsPage() {
     error, 
     getJobPostings 
   } = useJobPostingListStore();
+  
+  // Use the closed opportunities store
+  const { 
+    closeJobOpportunity, 
+    isClosing 
+  } = useClosedOpportunitiesStore();
   
   // Get entity ID from auth store
   const { entity } = useAuthStore();
@@ -199,25 +206,31 @@ export default function JobPostingsPage() {
     setShowPreviewModal(true);
   };
   
-  const handleCloseJob = () => {
+  const handleCloseJob = async () => {
     if (currentJob) {
-      // Move job to closed opportunities with closed date
-      const closedJob = { 
-        ...currentJob, 
-        status: 'Closed',
-        closedDate: new Date().toLocaleDateString()
-      };
-      
-      // Update closed jobs state and localStorage
-      const updatedClosedJobs = [...closedJobs, closedJob];
-      setClosedJobs(updatedClosedJobs);
-      localStorage.setItem('closedJobs', JSON.stringify(updatedClosedJobs));
-      
-      // Remove from active job postings
-      const updatedJobPostings = jobPostings.filter(jp => jp.id !== currentJob.id);
-      setJobPostings(updatedJobPostings);
-      setShowDeleteModal(false);
-      setCurrentJob(null);
+      try {
+        // Call API to close the opportunity
+        const success = await closeJobOpportunity(currentJob.id);
+        
+        if (success) {
+          // Remove from active job postings locally
+          const updatedJobPostings = jobPostings.filter(jp => jp.id !== currentJob.id);
+          setJobPostings(updatedJobPostings);
+          
+          // Refresh the job postings list from API
+          if (entityId) {
+            await getJobPostings(entityId);
+          }
+          
+          setShowDeleteModal(false);
+          setCurrentJob(null);
+        } else {
+          // Handle error - maybe show a toast or error message
+          console.error('Failed to close opportunity');
+        }
+      } catch (error) {
+        console.error('Error closing opportunity:', error);
+      }
     }
   };
   
@@ -400,14 +413,23 @@ export default function JobPostingsPage() {
               <button
                 onClick={handleDeleteCancel}
                 className="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors"
+                disabled={isClosing}
               >
                 Cancel
               </button>
               <button
                 onClick={handleCloseJob}
-                className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
+                className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
+                disabled={isClosing}
               >
-                Close Job
+                {isClosing ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+                    Closing...
+                  </>
+                ) : (
+                  'Close Job'
+                )}
               </button>
             </div>
           </div>

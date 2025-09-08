@@ -188,7 +188,8 @@ export const getAuthData = () => {
 export const getOpportunityMatches = async (
   entityId: string,
   apiKey: string,
-  apiSecret: string
+  apiSecret: string,
+  searchQuery?: string
 ): Promise<OpportunityMatchesResponse> => {
   try {
     // Validate entity_id to ensure it's not empty
@@ -202,8 +203,11 @@ export const getOpportunityMatches = async (
     // Authorization header
     const authHeader = `token ${apiKey}:${apiSecret}`;
 
-    // API endpoint with entity_id as query parameter
-    const url = `${API_BASE_URL}/api/method/skillglobe_be.api.opportunity_match.list.opportunity_matches?entity_id=${entityId}`;
+    // API endpoint with entity_id and optional search_query as query parameters
+    let url = `${API_BASE_URL}/api/method/skillglobe_be.api.opportunity_match.list.opportunity_matches?entity_id=${entityId}`;
+    if (searchQuery && searchQuery.trim()) {
+      url += `&search_query=${encodeURIComponent(searchQuery.trim())}`;
+    }
 
     const response = await axios.get<OpportunityMatchesResponse>(url, {
       headers: {

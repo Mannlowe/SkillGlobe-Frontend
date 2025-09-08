@@ -23,6 +23,7 @@ import { useToast } from '@/hooks/use-toast';
 import JobPostingModal, { JobFormState } from './job-postings/jobPostingModal';
 import { getJobPostingList, JobPosting as ApiJobPosting } from '@/app/api/job postings/jobpostingList';
 import { useBusinessDashboardStore } from '@/store/dashboard/businessdashboardStore';
+import { getRecentProfiles, getProfileStatus, RecentProfile } from '@/app/api/Business Profile/recentProfiles';
 
 // Static configuration for stats display
 const statsConfig = [
@@ -47,35 +48,7 @@ const statsConfig = [
 ];
 
 
-const recentApplications = [
-  {
-    id: 1,
-    candidateName: 'Sarah Johnson',
-    position: 'Senior React Developer',
-    appliedDate: '2024-01-10',
-    status: 'shortlisted',
-    experience: '5 years',
-    skills: ['React', 'TypeScript', 'Node.js'],
-  },
-  {
-    id: 2,
-    candidateName: 'Michael Chen',
-    position: 'UX Designer',
-    appliedDate: '2024-01-09',
-    status: 'under-review',
-    experience: '3 years',
-    skills: ['Figma', 'User Research', 'Prototyping'],
-  },
-  {
-    id: 3,
-    candidateName: 'Emily Rodriguez',
-    position: 'Marketing Specialist',
-    appliedDate: '2024-01-08',
-    status: 'new',
-    experience: '4 years',
-    skills: ['Digital Marketing', 'SEO', 'Analytics'],
-  },
-];
+// Static data removed - will be replaced with API data
 
 export default function BusinessDashboardPage() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -85,6 +58,17 @@ export default function BusinessDashboardPage() {
   const [opportunities, setOpportunities] = useState([]);
   const [showJobModal, setShowJobModal] = useState(false);
   const [apiJobPostings, setApiJobPostings] = useState<ApiJobPosting[]>([]);
+  const [recentProfiles, setRecentProfiles] = useState<RecentProfile[]>([]);
+  const [isLoadingProfiles, setIsLoadingProfiles] = useState(false);
+  const [profilesError, setProfilesError] = useState<string | null>(null);
+
+  const appliedDate = new Date(); // or your actual date value
+
+const formattedDate = appliedDate.toLocaleDateString("en-GB", {
+  day: "numeric",
+  month: "long",
+  year: "numeric",
+});
   
   // Business dashboard store
   const { 
@@ -98,7 +82,7 @@ export default function BusinessDashboardPage() {
   // Get business name from entity details or fall back to user name
   const businessName = entity?.details?.name || 'Your Business';
 
-  // Fetch job postings and organization insights from API
+  // Fetch job postings, organization insights, and recent profiles from API
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -109,6 +93,20 @@ export default function BusinessDashboardPage() {
           
           // Fetch organization insights
           await fetchOrganizationInsights();
+          
+          // Fetch recent profiles
+          setIsLoadingProfiles(true);
+          setProfilesError(null);
+          try {
+            // Call getRecentProfiles with the entity ID, API key and secret are retrieved internally
+            const profiles = await getRecentProfiles(entity.details.entity_id);
+            setRecentProfiles(profiles);
+          } catch (profileError: any) {
+            console.error('Error fetching recent profiles:', profileError);
+            setProfilesError(profileError.message || 'Failed to fetch recent profiles');
+          } finally {
+            setIsLoadingProfiles(false);
+          }
         }
       } catch (error) {
         console.error('Error fetching data:', error);
@@ -213,16 +211,18 @@ export default function BusinessDashboardPage() {
   }, [isAuthenticated, user, toast, router]);
 
   const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'active': return 'bg-green-100 text-green-800';
-      case 'draft': return 'bg-yellow-100 text-yellow-800';
-      case 'shortlisted': return 'bg-blue-100 text-blue-800';
-      case 'under-review': return 'bg-orange-100 text-orange-800';
-      case 'new': return 'bg-purple-100 text-purple-800';
-      default: return 'bg-gray-100 text-gray-800';
+    switch (status.toLowerCase()) {
+      case 'shortlisted':
+        return 'bg-green-100 text-green-800';
+      case 'pending':
+        return 'bg-yellow-100 text-yellow-800';
+      case 'active':
+        return 'bg-green-100 text-green-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
     }
   };
-  
+
   // Function to format date difference as "X days/hours/minutes ago"
   const formatDateDifference = (dateString: string): string => {
     try {
@@ -374,7 +374,7 @@ export default function BusinessDashboardPage() {
                               <div className="flex items-center space-x-4 text-sm text-gray-600">
                                 <span>{opportunity.employment_type}</span>
                                 <span>{opportunity.application_count || 0} applications</span>
-                                <span>Posted {opportunity.created_date ? formatDateDifference(opportunity.created_date) : 'recently'}</span>
+                                {/* <span>Posted {opportunity.created_date ? formatDateDifference(opportunity.created_date) : 'recently'}</span> */}
                               </div>
                             </div>
                             <div className="text-right">
@@ -434,35 +434,64 @@ export default function BusinessDashboardPage() {
                   </div>
                   <div className="p-6">
                     <div className="space-y-4">
-                      {recentApplications.map((application) => (
-                        <div key={application.id} className="border border-gray-200 rounded-lg p-4">
-                          <div className="flex items-start justify-between mb-2">
-                            <div>
-                              <h4 className="font-semibold text-gray-900">{application.candidateName}</h4>
-                              <p className="text-sm text-gray-600">{application.position}</p>
-                            </div>
-                            <span className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(application.status)}`}>
-                              {application.status}
-                            </span>
-                          </div>
-                          <div className="text-sm text-gray-600 mb-2">
-                            <p>{application.experience} experience</p>
-                            <p>Applied {application.appliedDate}</p>
-                          </div>
-                          <div className="flex flex-wrap gap-1">
-                            {application.skills.slice(0, 2).map((skill, index) => (
-                              <span key={index} className="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded">
-                                {skill}
-                              </span>
-                            ))}
-                            {application.skills.length > 2 && (
-                              <span className="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded">
-                                +{application.skills.length - 2} more
-                              </span>
-                            )}
-                          </div>
+                      {/* Loading state */}
+                      {isLoadingProfiles && (
+                        <div className="flex justify-center items-center p-8">
+                          <div className="w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+                          <span className="ml-2 text-gray-600">Loading recent profiles...</span>
                         </div>
-                      ))}
+                      )}
+                      
+                      {/* Error state */}
+                      {profilesError && (
+                        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+                          {profilesError}
+                        </div>
+                      )}
+                      
+                      {/* No profiles state */}
+                      {!isLoadingProfiles && !profilesError && recentProfiles.length === 0 && (
+                        <div className="text-center py-8 text-gray-500">
+                          <p>No recent profiles found</p>
+                          <p className="text-sm text-gray-400 mt-1">Recent profile applications will appear here</p>
+                        </div>
+                      )}
+                      
+                      {/* Profiles list */}
+                      {!isLoadingProfiles && !profilesError && recentProfiles.map((profile) => {
+                        const status = getProfileStatus(profile);
+                        const appliedDate = new Date(profile.creation).toLocaleDateString();
+                        
+                        return (
+                          <div key={profile.name} className="border border-gray-200 rounded-lg p-4">
+                            <div className="flex items-start justify-between mb-2">
+                              <div>
+                                <h4 className="font-semibold text-gray-900">{profile.name}</h4>
+                                <p className="text-sm text-gray-600">{profile.opportunity_title}</p>
+                              </div>
+                              <span className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(status.toLowerCase())}`}>
+                                {status}
+                              </span>
+                            </div>
+                            <div className="text-sm text-gray-600 mb-2">
+                              <p>{profile.relevant_experience} years experience</p>
+                              <p>Applied On: {formattedDate}</p>
+                              <p>Match Score: {profile.match_score}%</p>
+                            </div>
+                            <div className="flex flex-wrap gap-1">
+                              <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded">
+                                {profile.desired_job_role}
+                              </span>
+                              <span className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded">
+                                {profile.work_mode}
+                              </span>
+                              <span className="px-2 py-1 bg-purple-100 text-purple-800 text-xs rounded">
+                                {profile.opportunity_type}
+                              </span>
+                            </div>
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
                 </div>

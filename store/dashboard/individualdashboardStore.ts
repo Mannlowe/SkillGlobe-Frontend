@@ -54,7 +54,7 @@ interface IndividualDashboardState {
   
   // Actions
   fetchProfileInsights: () => Promise<void>;
-  fetchOpportunityMatches: () => Promise<void>;
+  fetchOpportunityMatches: (searchQuery?: string) => Promise<void>;
   clearError: () => void;
   clearOpportunityError: () => void;
   resetStore: () => void;
@@ -148,7 +148,7 @@ export const useIndividualDashboardStore = create<IndividualDashboardState>((set
   },
 
   // Fetch opportunity matches data
-  fetchOpportunityMatches: async () => {
+  fetchOpportunityMatches: async (searchQuery?: string) => {
     try {
       set({ isLoadingOpportunities: true, opportunityError: null });
 
@@ -164,11 +164,14 @@ export const useIndividualDashboardStore = create<IndividualDashboardState>((set
         throw new Error('API credentials not found. Please login again.');
       }
 
-      // Call the API
+      console.log('Fetching opportunities with search query:', searchQuery);
+
+      // Call the API with optional search query
       const response: OpportunityMatchesResponse = await getOpportunityMatches(
         entityId,
         apiKey,
-        apiSecret
+        apiSecret,
+        searchQuery
       );
 
       // Check if the response is successful

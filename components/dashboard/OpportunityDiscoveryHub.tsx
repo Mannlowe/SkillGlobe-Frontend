@@ -16,20 +16,20 @@ interface OpportunityDiscoveryHubProps {
   onViewDetails: (jobId: string) => void;
 }
 
-export default function OpportunityDiscoveryHub({ 
+export default function OpportunityDiscoveryHub({
   savedSearches,
-  onSearch, 
+  onSearch,
   onSaveSearch,
-  onApply, 
-  onSave, 
-  onViewDetails 
+  onApply,
+  onSave,
+  onViewDetails
 }: OpportunityDiscoveryHubProps) {
   // Get opportunities from store instead of props
-  const { 
-    opportunities, 
-    isLoadingOpportunities, 
+  const {
+    opportunities,
+    isLoadingOpportunities,
     opportunityError,
-    fetchOpportunityMatches 
+    fetchOpportunityMatches
   } = useIndividualDashboardStore();
   const [searchQuery, setSearchQuery] = useState('');
   const [showFilters, setShowFilters] = useState(false);
@@ -72,12 +72,22 @@ export default function OpportunityDiscoveryHub({
     ]
   };
 
-  const handleSearch = () => {
+  const handleSearch = async () => {
+    // Use the store to fetch opportunities with search query
+    await fetchOpportunityMatches(searchQuery.trim() || undefined);
+
+    // Also call the onSearch prop for any additional handling
     const filters: Partial<OpportunitySearchFilters> = {
       keywords: searchQuery.split(' ').filter(k => k.length > 0),
       ...selectedFilters
     };
     onSearch(filters as OpportunitySearchFilters);
+  };
+
+  const handleClearSearch = async () => {
+    setSearchQuery('');
+    // Fetch all opportunities without search filter
+    await fetchOpportunityMatches();
   };
 
   const getMatchScoreColor = (score: number) => {
@@ -97,20 +107,9 @@ export default function OpportunityDiscoveryHub({
     setIsExpanded(false);
   };
 
-  // Apply client-side filtering - show all opportunities by default
+  // Apply client-side filtering - show all opportunities (API handles search filtering)
   const filteredOpportunities = opportunities ? opportunities.filter(job => {
-    // Search query filter - only apply if there's a search query
-    if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase();
-      const matchesSearch = 
-        job.title.toLowerCase().includes(query) ||
-        job.company.toLowerCase().includes(query) ||
-        job.match_reasons.some((reason: string) => reason.toLowerCase().includes(query)) ||
-        job.skill_gaps.some((skill: string) => skill.toLowerCase().includes(query));
-      
-      if (!matchesSearch) return false;
-    }
-
+    // Since API handles search filtering, we only apply additional client-side filters here
     // For now, show all opportunities since filters aren't fully implemented
     // Future: Add proper filter logic when filter state management is implemented
     return true;
@@ -133,41 +132,39 @@ export default function OpportunityDiscoveryHub({
     <div className="space-y-6">
       {/* Search Header */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-        <div className="flex flex-col lg:flex-row gap-4">
-          {/* Main Search Bar */}
-          <div className="flex-1 relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
-            <input
-              type="text"
-              placeholder="Search jobs, companies, or skills..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-              className="w-2/5 pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-            />
-          </div>
+        <div className="flex w-2/5 items-center border border-gray-300 rounded-lg focus-within:ring-2 focus-within:ring-orange-500">
+          {/* Search Icon */}
+          <Search className="ml-3 text-gray-400" size={20} />
 
-          {/* Action Buttons */}
-          <div className=" gap-2">
-              {/* <button
-                onClick={() => setShowFilters(!showFilters)}
-                className={`flex items-center gap-2 px-4 py-3 rounded-lg border transition-colors ${
-                  showFilters 
-                    ? 'bg-orange-50 border-orange-200 text-orange-600' 
-                    : 'bg-gray-50 border-gray-300 text-gray-700 hover:bg-gray-100'
-                }`}
-              >
-                <Filter size={18} />
-                Filters
-              </button> */}
-            <button
-              onClick={handleSearch}
-              className="px-6 py-3 bg-gradient-to-r from-orange-500 to-blue-500 text-white font-medium rounded-lg hover:shadow-lg transition-all duration-300"
-            >
-              Search
-            </button>
-          </div>
+          {/* Input */}
+          <input
+            type="text"
+            placeholder="Search jobs, companies, or skills..."
+            value={searchQuery}
+            onChange={(e) => {
+              setSearchQuery(e.target.value);
+              if (e.target.value === '') {
+                handleClearSearch();
+              }
+            }}
+            onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+            onBlur={() => {
+              if (searchQuery.trim()) {
+                handleSearch();
+              }
+            }}
+            className="flex-1 pl-2 pr-4 py-3 focus:outline-none"
+          />
+
+          {/* Search Button */}
+          <button
+            onClick={handleSearch}
+            className="px-6 py-3 bg-gradient-to-r from-orange-500 to-blue-500 text-white font-medium rounded-r-lg hover:shadow-lg transition-all duration-300"
+          >
+            Search
+          </button>
         </div>
+
 
         {/* Advanced Filters */}
         {showFilters && (
@@ -352,8 +349,8 @@ export default function OpportunityDiscoveryHub({
 
       {/* Opportunities Grid */}
       <div className={`
-        ${viewMode === 'grid' 
-          ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4' 
+        ${viewMode === 'grid'
+          ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4'
           : 'space-y-4'
         }
       `}>
@@ -371,7 +368,7 @@ export default function OpportunityDiscoveryHub({
             <p className="text-gray-500 text-center max-w-sm mb-4">
               We couldn't load your opportunities right now.
             </p>
-            <button 
+            <button
               onClick={() => fetchOpportunityMatches()}
               className="px-4 py-2 bg-gradient-to-r from-orange-500 to-blue-500 text-white font-medium rounded-lg hover:shadow-lg transition-all duration-300 text-sm"
             >
@@ -385,7 +382,7 @@ export default function OpportunityDiscoveryHub({
         ) : (
           sortedOpportunities.slice(0, visibleCount).map((job) => (
             <div key={job.id} className={viewMode === 'list' ? 'max-w-none' : ''}>
-              <CompactOpportunityCard 
+              <CompactOpportunityCard
                 opportunity={job}
                 onApply={onApply}
                 onSave={onSave}
@@ -400,14 +397,14 @@ export default function OpportunityDiscoveryHub({
       {!isLoadingOpportunities && !opportunityError && sortedOpportunities.length > 0 && (
         <div className="text-center">
           {visibleCount < sortedOpportunities.length ? (
-            <button 
+            <button
               onClick={handleLoadMore}
               className="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
             >
               Load more opportunities
             </button>
           ) : isExpanded && (
-            <button 
+            <button
               onClick={handleShowLess}
               className="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
             >

@@ -119,9 +119,9 @@ export default function JobPostingsPage() {
         workMode: job.work_mode,
         experienceRequired: job.experience_required,
         location: job.location || 'Not specified',
-        postedDate: '2 days ago', // This would ideally come from the API
-        status: 'Active', // This would ideally come from the API
-        applicantCount: 4 // Fixed count to match sample data
+        postedDate: '2 days ago',
+        status: 'Active', 
+        applicantCount: job.profiles_match_count || 0
       }));
       
       setJobPostings(mappedJobPostings);

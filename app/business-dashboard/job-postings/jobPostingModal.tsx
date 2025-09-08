@@ -108,6 +108,7 @@ export default function JobPostingModal({ showModal, setShowModal, onSubmit, edi
     visibilitySettings: 'all',
     anticipatedApplications: '10',
     documents: []
+
   });
 
   // Function to fetch skills from API

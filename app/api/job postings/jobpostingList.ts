@@ -26,6 +26,7 @@ export interface JobPosting {
   application_deadline?: string;
   application_count?: number;
   status?: string;
+  profiles_match_count?: number;
 }
 
 // Interface for job posting list response

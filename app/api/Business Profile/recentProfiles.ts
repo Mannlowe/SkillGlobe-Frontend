@@ -80,7 +80,7 @@ export interface RecentProfilesRequest {
 
 // Interface for recent profile item
 export interface RecentProfile {
-  name: string;
+  full_name: string;
   profile_owner: string;
   buyer_entity: string;
   opportunity_posting: string;

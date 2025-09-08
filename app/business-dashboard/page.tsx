@@ -373,7 +373,7 @@ const formattedDate = appliedDate.toLocaleDateString("en-GB", {
                               </div>
                               <div className="flex items-center space-x-4 text-sm text-gray-600">
                                 <span>{opportunity.employment_type}</span>
-                                <span>{opportunity.application_count || 0} applications</span>
+                                <span>{opportunity.profiles_match_count || 0} applications</span>
                                 {/* <span>Posted {opportunity.created_date ? formatDateDifference(opportunity.created_date) : 'recently'}</span> */}
                               </div>
                             </div>
@@ -449,8 +449,15 @@ const formattedDate = appliedDate.toLocaleDateString("en-GB", {
                         </div>
                       )}
                       
+                      {/* Not an array state */}
+                      {!isLoadingProfiles && !profilesError && !Array.isArray(recentProfiles) && (
+                        <div className="bg-yellow-50 border border-yellow-200 text-yellow-700 px-4 py-3 rounded-lg">
+                          Invalid profile data format. Please try refreshing the page.
+                        </div>
+                      )}
+                      
                       {/* No profiles state */}
-                      {!isLoadingProfiles && !profilesError && recentProfiles.length === 0 && (
+                      {!isLoadingProfiles && !profilesError && Array.isArray(recentProfiles) && recentProfiles.length === 0 && (
                         <div className="text-center py-8 text-gray-500">
                           <p>No recent profiles found</p>
                           <p className="text-sm text-gray-400 mt-1">Recent profile applications will appear here</p>
@@ -458,15 +465,15 @@ const formattedDate = appliedDate.toLocaleDateString("en-GB", {
                       )}
                       
                       {/* Profiles list */}
-                      {!isLoadingProfiles && !profilesError && recentProfiles.map((profile) => {
+                      {!isLoadingProfiles && !profilesError && Array.isArray(recentProfiles) && recentProfiles.map((profile) => {
                         const status = getProfileStatus(profile);
                         const appliedDate = new Date(profile.creation).toLocaleDateString();
                         
                         return (
-                          <div key={profile.name} className="border border-gray-200 rounded-lg p-4">
+                          <div key={profile.full_name} className="border border-gray-200 rounded-lg p-4">
                             <div className="flex items-start justify-between mb-2">
                               <div>
-                                <h4 className="font-semibold text-gray-900">{profile.name}</h4>
+                                <h4 className="font-semibold text-gray-900">{profile.full_name}</h4>
                                 <p className="text-sm text-gray-600">{profile.opportunity_title}</p>
                               </div>
                               <span className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(status.toLowerCase())}`}>

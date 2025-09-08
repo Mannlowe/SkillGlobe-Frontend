@@ -4,12 +4,12 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import BusinessSidebar from '@/components/dashboard/BusinessSidebar';
 import BusinessDashboardHeader from '@/components/dashboard/BusinessDashboardHeader';
-import { 
-  Users, 
-  Briefcase, 
-  TrendingUp, 
-  Eye, 
-  Plus, 
+import {
+  Users,
+  Briefcase,
+  TrendingUp,
+  Eye,
+  Plus,
   Calendar,
   CheckCircle,
   Clock,
@@ -64,19 +64,19 @@ export default function BusinessDashboardPage() {
 
   const appliedDate = new Date(); // or your actual date value
 
-const formattedDate = appliedDate.toLocaleDateString("en-GB", {
-  day: "numeric",
-  month: "long",
-  year: "numeric",
-});
-  
+  const formattedDate = appliedDate.toLocaleDateString("en-GB", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
+
   // Business dashboard store
-  const { 
-    insights, 
-    isLoadingInsights, 
-    insightsError, 
-    fetchOrganizationInsights, 
-    clearInsightsError 
+  const {
+    insights,
+    isLoadingInsights,
+    insightsError,
+    fetchOrganizationInsights,
+    clearInsightsError
   } = useBusinessDashboardStore();
 
   // Get business name from entity details or fall back to user name
@@ -90,10 +90,10 @@ const formattedDate = appliedDate.toLocaleDateString("en-GB", {
           // Fetch job postings
           const response = await getJobPostingList(entity.details.entity_id);
           setApiJobPostings(response.message.data.opportunity_posting || []);
-          
+
           // Fetch organization insights
           await fetchOrganizationInsights();
-          
+
           // Fetch recent profiles
           setIsLoadingProfiles(true);
           setProfilesError(null);
@@ -122,7 +122,7 @@ const formattedDate = appliedDate.toLocaleDateString("en-GB", {
     // Here you would typically call an API to create the job
     // For now, we'll just close the modal
     setShowJobModal(false);
-    
+
     // Optionally refresh the job postings list
     if (entity?.details?.entity_id) {
       getJobPostingList(entity.details.entity_id)
@@ -173,22 +173,22 @@ const formattedDate = appliedDate.toLocaleDateString("en-GB", {
       return;
     }
 
-    if (isAuthenticated && user && window.location.pathname.includes('business-dashboard')) {      
+    if (isAuthenticated && user && window.location.pathname.includes('business-dashboard')) {
       // Show toast notification for Business Buyer
       const roles = user.roles;
       let isBusinessBuyer = false;
-      
+
       // Check roles in different formats
       if (Array.isArray(roles)) {
         isBusinessBuyer = roles.includes('Business Buyer');
       } else if (typeof roles === 'string') {
         isBusinessBuyer = (roles as string).indexOf('Business Buyer') >= 0;
       }
-      
+
       // Use URL parameter to detect fresh login vs refresh
       const urlParams = new URLSearchParams(window.location.search);
       const fromLogin = urlParams.get('fromLogin') === 'true';
-      
+
       // Show toast on fresh login or if fromLogin parameter is present
       if (isBusinessBuyer && fromLogin) {
         // Create toast with custom timeout
@@ -198,12 +198,12 @@ const formattedDate = appliedDate.toLocaleDateString("en-GB", {
           variant: "default",
           action: <div className="h-6 w-6 rounded-full bg-green-100 flex items-center justify-center"><CheckIcon className="h-4 w-4 text-green-600" /></div>,
         });
-        
+
         // Set custom timeout (e.g., 3000ms = 3 seconds)
         setTimeout(() => {
           dismiss();
         }, 20000);
-        
+
         // Remove the fromLogin parameter from URL without refreshing
         window.history.replaceState({}, document.title, window.location.pathname);
       }
@@ -230,21 +230,21 @@ const formattedDate = appliedDate.toLocaleDateString("en-GB", {
       const currentDate = new Date();
       const diffInMs = currentDate.getTime() - postDate.getTime();
       const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24));
-      
+
       if (diffInDays > 0) {
         return `${diffInDays} ${diffInDays === 1 ? 'day' : 'days'} ago`;
       }
-      
+
       const diffInHours = Math.floor(diffInMs / (1000 * 60 * 60));
       if (diffInHours > 0) {
         return `${diffInHours} ${diffInHours === 1 ? 'hour' : 'hours'} ago`;
       }
-      
+
       const diffInMinutes = Math.floor(diffInMs / (1000 * 60));
       if (diffInMinutes > 0) {
         return `${diffInMinutes} ${diffInMinutes === 1 ? 'minute' : 'minutes'} ago`;
       }
-      
+
       return 'just now';
     } catch (error) {
       console.error('Error formatting date:', error);
@@ -263,13 +263,13 @@ const formattedDate = appliedDate.toLocaleDateString("en-GB", {
   return (
     <div className="min-h-screen bg-gray-50 font-rubik">
       <BusinessSidebar mobileOpen={mobileMenuOpen} />
-      
+
       <div className="lg:pl-64 pt-1">
-        <BusinessDashboardHeader 
-          title="Organization Insights" 
+        <BusinessDashboardHeader
+          title="Organization Insights"
           onMenuClick={toggleMobileMenu}
         />
-        
+
         <main className="flex-1 overflow-x-hidden overflow-y-auto bg-gray-50">
           <div className="mx-auto px-4 sm:px-6 lg:px-8 py-6">
             {/* Welcome Section */}
@@ -327,7 +327,7 @@ const formattedDate = appliedDate.toLocaleDateString("en-GB", {
                   const value = insights?.[stat.key as keyof typeof insights] || 0;
                   const changeKey = `${stat.key}_change` as keyof typeof insights;
                   const change = insights?.[changeKey] || 'No change';
-                  
+
                   return (
                     <div key={index} className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
                       <div className="flex items-center justify-between">
@@ -405,7 +405,7 @@ const formattedDate = appliedDate.toLocaleDateString("en-GB", {
                   </div>
                   <div className="p-6">
                     <div className="space-y-3">
-                      <button 
+                      <button
                         onClick={() => setShowJobModal(true)}
                         className="w-full bg-gradient-to-r from-orange-500 to-blue-500 text-white font-semibold py-3 px-4 rounded-lg hover:shadow-lg transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2"
                       >
@@ -414,7 +414,7 @@ const formattedDate = appliedDate.toLocaleDateString("en-GB", {
                       {/* <button className="w-full border-2 border-orange-500 text-orange-600 font-semibold py-3 px-4 rounded-lg hover:bg-orange-50 transition-all duration-300">
                         Review Profiles
                       </button> */}
-                      <button 
+                      <button
                         onClick={() => router.push('/business-dashboard/business-team-member')}
                         className="w-full border-2 border-blue-500 text-blue-600 font-semibold py-3 px-4 rounded-lg hover:bg-blue-50 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
                       >
@@ -441,21 +441,27 @@ const formattedDate = appliedDate.toLocaleDateString("en-GB", {
                           <span className="ml-2 text-gray-600">Loading recent profiles...</span>
                         </div>
                       )}
-                      
+
                       {/* Error state */}
                       {profilesError && (
                         <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
                           {profilesError}
                         </div>
                       )}
-                      
+
                       {/* Not an array state */}
                       {!isLoadingProfiles && !profilesError && !Array.isArray(recentProfiles) && (
-                        <div className="bg-yellow-50 border border-yellow-200 text-yellow-700 px-4 py-3 rounded-lg">
-                          Invalid profile data format. Please try refreshing the page.
+                        <div className="flex flex-col items-center justify-center p-6 text-center text-gray-500 border border-dashed border-gray-300 rounded-lg">
+                          <img
+                            src="/Images/Profile_not_found.gif"
+                            alt="No profiles found"
+                            className="w-28 h-28 mb-1 object-contain"
+                          />
+                          <p className="text-lg font-medium">No recent profiles found</p>
                         </div>
                       )}
-                      
+
+
                       {/* No profiles state */}
                       {!isLoadingProfiles && !profilesError && Array.isArray(recentProfiles) && recentProfiles.length === 0 && (
                         <div className="text-center py-8 text-gray-500">
@@ -463,12 +469,12 @@ const formattedDate = appliedDate.toLocaleDateString("en-GB", {
                           <p className="text-sm text-gray-400 mt-1">Recent profile applications will appear here</p>
                         </div>
                       )}
-                      
+
                       {/* Profiles list */}
                       {!isLoadingProfiles && !profilesError && Array.isArray(recentProfiles) && recentProfiles.map((profile) => {
                         const status = getProfileStatus(profile);
                         const appliedDate = new Date(profile.creation).toLocaleDateString();
-                        
+
                         return (
                           <div key={profile.full_name} className="border border-gray-200 rounded-lg p-4">
                             <div className="flex items-start justify-between mb-2">
@@ -507,9 +513,9 @@ const formattedDate = appliedDate.toLocaleDateString("en-GB", {
           </div>
         </main>
       </div>
-      
+
       {/* Job Posting Modal */}
-      <JobPostingModal 
+      <JobPostingModal
         showModal={showJobModal}
         setShowModal={setShowJobModal}
         onSubmit={handleCreateJob}

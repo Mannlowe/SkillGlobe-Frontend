@@ -124,6 +124,7 @@ export interface JobOpportunity {
   hiring_urgency: 'Urgent' | 'Normal' | 'Flexible';
   recruiter_activity: string; // "Actively hiring", "Recently posted"
   buyer_interested?: boolean; // Indicates if buyer has shown special interest
+  seller_interested?: boolean; // Indicates if seller has shown interest
 }
 
 export interface MarketMetricCard {

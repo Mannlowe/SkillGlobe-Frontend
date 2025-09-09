@@ -59,6 +59,21 @@ export interface OpportunityMatchesResponse {
   };
 }
 
+// Interface for mark as interested request
+export interface MarkAsInterestedRequest {
+  entity_id: string;
+  opportunity_match_id: string;
+}
+
+// Interface for mark as interested response
+export interface MarkAsInterestedResponse {
+  message: {
+    status: string;
+    message: string;
+    timestamp: string;
+  };
+}
+
 export const getProfileInsights = async (
   entityId: string,
   apiKey: string,
@@ -220,6 +235,52 @@ export const getOpportunityMatches = async (
     return response.data;
   } catch (error: any) {
     console.error('Opportunity matches error:', error.response?.data || error.message || error);
+    throw error;
+  }
+};
+
+export const markAsInterested = async (
+  entityId: string,
+  opportunityMatchId: string,
+  apiKey: string,
+  apiSecret: string
+): Promise<MarkAsInterestedResponse> => {
+  try {
+    // Validate inputs
+    if (!entityId) {
+      throw new Error('Entity ID is required but was not provided');
+    }
+    if (!opportunityMatchId) {
+      throw new Error('Opportunity Match ID is required but was not provided');
+    }
+    
+    console.log('Marking interest for opportunity match ID:', opportunityMatchId);
+
+    // Authorization header
+    const authHeader = `token ${apiKey}:${apiSecret}`;
+
+    // API endpoint
+    const url = `${API_BASE_URL}/api/method/skillglobe_be.api.opportunity_match.form.mark_as_interested`;
+
+    const response = await axios.post<MarkAsInterestedResponse>(
+      url,
+      {
+        entity_id: entityId,
+        opportunity_match_id: opportunityMatchId
+      },
+      {
+        headers: {
+          'Authorization': authHeader,
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        }
+      }
+    );
+
+    console.log('Mark as interested response:', response.data);
+    return response.data;
+  } catch (error: any) {
+    console.error('Mark as interested error:', error.response?.data || error.message || error);
     throw error;
   }
 };

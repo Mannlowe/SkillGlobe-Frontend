@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { getProfileInsights, getOpportunityMatches, getAuthData, ProfileInsightsResponse, OpportunityMatchesResponse, OpportunityMatch } from '@/app/api/Dashboard/individualDashboard';
+import { getProfileInsights, getOpportunityMatches, getAuthData, markAsInterested, ProfileInsightsResponse, OpportunityMatchesResponse, OpportunityMatch, MarkAsInterestedResponse } from '@/app/api/Dashboard/individualDashboard';
 import type { JobOpportunity } from '@/types/dashboard';
 
 // Utility function to convert API opportunity match to JobOpportunity format
@@ -26,6 +26,7 @@ const mapOpportunityMatchToJobOpportunity = (match: OpportunityMatch): JobOpport
     hiring_urgency: 'Normal' as const,
     recruiter_activity: 'Recently posted',
     buyer_interested: match.buyer_interested === 1,
+    seller_interested: match.seller_interested === 1,
   };
 };
 
@@ -52,9 +53,14 @@ interface IndividualDashboardState {
   totalOpportunities: number;
   totalPages: number;
   
+  // Interest marking
+  isMarkingInterest: boolean;
+  markInterestError: string | null;
+  
   // Actions
   fetchProfileInsights: () => Promise<void>;
   fetchOpportunityMatches: (searchQuery?: string) => Promise<void>;
+  markOpportunityInterest: (opportunityMatchId: string) => Promise<boolean>;
   clearError: () => void;
   clearOpportunityError: () => void;
   resetStore: () => void;
@@ -71,6 +77,8 @@ const initialState = {
   opportunityError: null,
   totalOpportunities: 0,
   totalPages: 0,
+  isMarkingInterest: false,
+  markInterestError: null,
 };
 
 // Create the store
@@ -218,6 +226,76 @@ export const useIndividualDashboardStore = create<IndividualDashboardState>((set
     }
   },
 
+  // Mark opportunity as interested
+  markOpportunityInterest: async (opportunityMatchId: string) => {
+    try {
+      set({ isMarkingInterest: true, markInterestError: null });
+
+      // Get authentication data
+      const authData = getAuthData();
+      if (!authData) {
+        throw new Error('Authentication data not found. Please login again.');
+      }
+
+      const { entityId, apiKey, apiSecret } = authData;
+
+      if (!apiKey || !apiSecret) {
+        throw new Error('API credentials not found. Please login again.');
+      }
+
+      // Call the API
+      const response: MarkAsInterestedResponse = await markAsInterested(
+        entityId,
+        opportunityMatchId,
+        apiKey,
+        apiSecret
+      );
+
+      // Check if the response is successful
+      if (response.message.status === 'success') {
+        // Update the local state to reflect the interest
+        const currentOpportunityMatches = get().opportunityMatches;
+        const currentOpportunities = get().opportunities;
+
+        if (currentOpportunityMatches) {
+          const updatedMatches = currentOpportunityMatches.map(match => {
+            if (match.name === opportunityMatchId) {
+              return { ...match, seller_interested: 1 };
+            }
+            return match;
+          });
+
+          // Update the transformed opportunities as well
+          const updatedOpportunities = currentOpportunities?.map(opp => {
+            const matchingMatch = updatedMatches.find(m => m.opportunity_posting === opp.id);
+            if (matchingMatch && matchingMatch.name === opportunityMatchId) {
+              return { ...opp, seller_interested: true };
+            }
+            return opp;
+          }) || null;
+
+          set({
+            opportunityMatches: updatedMatches,
+            opportunities: updatedOpportunities,
+            isMarkingInterest: false,
+            markInterestError: null,
+          });
+        }
+
+        return true;
+      } else {
+        throw new Error(response.message.message || 'Failed to mark interest');
+      }
+    } catch (error: any) {
+      console.error('Error marking interest:', error);
+      set({
+        isMarkingInterest: false,
+        markInterestError: error.message || 'Failed to mark interest',
+      });
+      return false;
+    }
+  },
+
   // Clear error
   clearError: () => {
     set({ error: null });
@@ -225,7 +303,7 @@ export const useIndividualDashboardStore = create<IndividualDashboardState>((set
 
   // Clear opportunity error
   clearOpportunityError: () => {
-    set({ opportunityError: null });
+    set({ opportunityError: null, markInterestError: null });
   },
 
   // Reset store to initial state

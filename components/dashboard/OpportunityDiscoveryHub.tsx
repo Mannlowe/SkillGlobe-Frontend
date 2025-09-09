@@ -245,7 +245,7 @@ export default function OpportunityDiscoveryHub({
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
           <div className="flex items-center justify-between mb-3">
             <h3 className="font-medium text-gray-900">Saved Searches</h3>
-            <button className="text-sm text-blue-600 hover:text-blue-700">Manage all</button>
+            {/* <button className="text-sm text-blue-600 hover:text-blue-700">Manage all</button> */}
           </div>
           <div className="flex gap-2 overflow-x-auto pb-2">
             {savedSearches.slice(0, 5).map((search) => (

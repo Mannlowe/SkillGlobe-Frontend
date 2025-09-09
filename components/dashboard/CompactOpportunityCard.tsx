@@ -6,6 +6,7 @@ import { StandardizedButton } from '@/components/ui/StandardizedButton';
 import { useState } from 'react';
 import OpportunityDetails from '@/components/modal/OpportunityDetails';
 import SkillsSuccessModal from '@/components/modal/SkillsSuccessModal';
+import { useIndividualDashboardStore } from '@/store/dashboard/individualdashboardStore';
 
 interface CompactOpportunityCardProps {
   opportunity: JobOpportunity;
@@ -19,6 +20,10 @@ export default function CompactOpportunityCard({ opportunity, onApply, onSave, o
   const [isBookmarked, setIsBookmarked] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isApplicationModalOpen, setIsApplicationModalOpen] = useState(false);
+  const [hasShownInterest, setHasShownInterest] = useState(false);
+  
+  // Get store actions
+  const { markOpportunityInterest, isMarkingInterest } = useIndividualDashboardStore();
 
   const getMatchScoreColor = (score: number) => {
     if (score >= 90) return 'text-green-600 bg-green-50 border-green-200';
@@ -44,10 +49,26 @@ export default function CompactOpportunityCard({ opportunity, onApply, onSave, o
     onSave?.(opportunity.id);
   };
 
-  const handleApply = (e: React.MouseEvent) => {
+  const handleApply = async (e: React.MouseEvent) => {
     e.stopPropagation();
-    setIsApplicationModalOpen(true);
-    onApply?.(opportunity.id);
+    
+    // Find the opportunity match ID from the opportunity object
+    // We need to extract the match ID from the opportunity object
+    const opportunityMatchId = opportunity.id.split('-').pop(); // Assuming ID format includes the match ID at the end
+    
+    if (!opportunityMatchId) {
+      console.error('Could not determine opportunity match ID');
+      return;
+    }
+    
+    // Call the API to mark interest
+    const success = await markOpportunityInterest(`OM-${opportunityMatchId}`);
+    
+    if (success) {
+      setHasShownInterest(true);
+      setIsApplicationModalOpen(true);
+      onApply?.(opportunity.id);
+    }
   };
 
   const handleCardClick = () => {
@@ -73,21 +94,13 @@ export default function CompactOpportunityCard({ opportunity, onApply, onSave, o
     <>
       <style jsx>{`
         .buyer-interested-border {
-          background: linear-gradient(45deg, #ffd700, #ffed4e, #ffd700);
-          background-size: 400% 400%;
-          animation: gradient 3s ease infinite;
-          padding: 0px;
-          border-radius: 6px;
-        }
-        
-        @keyframes gradient {
-          0% { background-position: 0% 50%; }
-          50% { background-position: 100% 50%; }
-          100% { background-position: 0% 50%; }
+          border: 2px solid #FFB84C;
+          border-radius: 8px;
         }
         
         .buyer-interested-border .inner {
           border: none !important;
+          border-radius: 6px;
         }
       `}</style>
       
@@ -98,7 +111,7 @@ export default function CompactOpportunityCard({ opportunity, onApply, onSave, o
       >
         <div 
           onClick={handleCardClick}
-          className="inner bg-white rounded-lg border border-gray-200 hover:shadow-md hover:border-orange-200 transition-all duration-200 p-4 cursor-pointer group relative"
+          className="inner bg-white rounded-lg border border-gray-200 hover:border-orange-200 transition-all duration-200 p-4 cursor-pointer group relative"
         >
       {/* Bookmark Button - Top Right Corner */}
       <button
@@ -188,16 +201,27 @@ export default function CompactOpportunityCard({ opportunity, onApply, onSave, o
 
       {/* Actions Row - Grouped Primary & Secondary */}
       <div className="flex items-center justify-end pt-2 border-t border-gray-100">
-        {/* Primary Action */}
-        <StandardizedButton
-          onClick={handleApply}
-          variant="primary"
-          size="sm"
-          leftIcon={<Send size={14} />}
-          className="w-56 mr-3"
-        >
-          I'm Interested
-        </StandardizedButton>
+        {/* Show either "I'm Interested" button or "Interest Shown" indicator */}
+        {opportunity.seller_interested || hasShownInterest ? (
+          <button 
+            className="flex items-center gap-1.5 px-4 py-1.5 text-sm font-medium text-gray-600 bg-gray-100 rounded-md cursor-default border border-gray-900 shadow-xl"
+            disabled
+          >
+            <Send size={14} className="text-gray-600" />
+            Interest Shown
+          </button>
+        ) : (
+          <StandardizedButton
+            onClick={handleApply}
+            variant="primary"
+            size="sm"
+            leftIcon={<Send size={14} />}
+            className="w-56 mr-3"
+            disabled={isMarkingInterest}
+          >
+            {isMarkingInterest ? "Sending..." : "I'm Interested"}
+          </StandardizedButton>
+        )}
         
         {/* Secondary Actions */}
         {/* <div className="flex items-center gap-2">

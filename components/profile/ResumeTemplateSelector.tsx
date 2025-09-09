@@ -71,31 +71,31 @@ const resumeTemplates: ResumeTemplate[] = [
       skills: ['Digital Marketing', 'Content Strategy', 'Analytics', 'Social Media']
     }
   },
-  {
-    id: 'creative',
-    name: 'Creative Professional',
-    description: 'Modern layout with sidebar and visual elements for creative roles',
-    fields: {
-      personalInfo: true,
-      experience: true,
-      education: true,
-      skills: true,
-      projects: true,
-      certifications: false,
-      languages: false,
-      achievements: true,
-    },
-    sampleData: {
-      personalInfo: {
-        fullName: 'Aiden Williams',
-        email: 'aiden.williams@email.com',
-        phone: '+1 (555) 456-7890',
-        location: 'Los Angeles, CA',
-        summary: 'Creative designer with passion for innovative solutions'
-      },
-      skills: ['UI/UX Design', 'Adobe Creative Suite', 'Figma', 'Prototyping']
-    }
-  }
+  // {
+  //   id: 'creative',
+  //   name: 'Creative Professional',
+  //   description: 'Modern layout with sidebar and visual elements for creative roles',
+  //   fields: {
+  //     personalInfo: true,
+  //     experience: true,
+  //     education: true,
+  //     skills: true,
+  //     projects: true,
+  //     certifications: false,
+  //     languages: false,
+  //     achievements: true,
+  //   },
+  //   sampleData: {
+  //     personalInfo: {
+  //       fullName: 'Aiden Williams',
+  //       email: 'aiden.williams@email.com',
+  //       phone: '+1 (555) 456-7890',
+  //       location: 'Los Angeles, CA',
+  //       summary: 'Creative designer with passion for innovative solutions'
+  //     },
+  //     skills: ['UI/UX Design', 'Adobe Creative Suite', 'Figma', 'Prototyping']
+  //   }
+  // }
 ];
 
 // Resume Template Preview Components
@@ -289,8 +289,8 @@ const getTemplatePreview = (templateId: string) => {
       return <ClassicTemplate />;
     case 'modern':
       return <ModernTemplate />;
-    case 'creative':
-      return <CreativeTemplate />;
+    // case 'creative':
+    //   return <CreativeTemplate />;
     default:
       return <ClassicTemplate />;
   }
@@ -317,11 +317,11 @@ export default function ResumeTemplateSelector({ onTemplateSelect, onCancel }: R
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg p-6 max-w-6xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+      <div className="bg-white rounded-lg p-6 max-w-3xl w-full mx-4 max-h-[90vh] overflow-y-auto">
         <h2 className="text-2xl font-bold text-center mb-2">Choose a Resume Template</h2>
         <p className="text-gray-600 text-center mb-6">Select a template that best fits your professional profile</p>
         
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6 h-[600px]">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6 h-[600px]">
           {resumeTemplates.map((template) => {
             return (
               <div

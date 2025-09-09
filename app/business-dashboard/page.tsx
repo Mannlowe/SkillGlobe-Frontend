@@ -326,7 +326,7 @@ export default function BusinessDashboardPage() {
                   const Icon = stat.icon;
                   const value = insights?.[stat.key as keyof typeof insights] || 0;
                   const changeKey = `${stat.key}_change` as keyof typeof insights;
-                  const change = insights?.[changeKey] || 'No change';
+                  // const change = insights?.[changeKey] || 'No change';
 
                   return (
                     <div key={index} className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
@@ -334,7 +334,7 @@ export default function BusinessDashboardPage() {
                         <div>
                           <p className="text-md font-medium text-gray-600 mb-1">{stat.title}</p>
                           <p className="text-3xl font-bold text-gray-900">{value.toLocaleString()}</p>
-                          <p className="text-sm text-green-600 font-medium mt-1">{change}</p>
+                          {/* <p className="text-sm text-green-600 font-medium mt-1">{change}</p> */}
                         </div>
                         <div className={`w-14 h-14 ${stat.color} rounded-xl flex items-center justify-center`}>
                           <Icon className="text-white" size={24} />

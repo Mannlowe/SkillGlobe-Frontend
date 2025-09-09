@@ -84,7 +84,10 @@ export const getAuthData = () => {
       
       const entityData = entityDataStr ? JSON.parse(entityDataStr) : {};
       console.log('Parsed entity data:', entityData);
-      console.log('Entity ID from parsed data:', entityData.entity_id);
+      
+      // Entity ID is stored in details.entity_id, not directly in entity_id
+      const entityId = entityData.details?.entity_id;
+      console.log('Entity ID from parsed data:', entityId);
       
       // Store auth data directly in localStorage during login
       const apiKey = localStorage.getItem('auth_api_key');
@@ -101,14 +104,17 @@ export const getAuthData = () => {
           
           // Try to get API credentials from state
           if (state && state.token) {
-            // Use hardcoded entity ID if not found in localStorage or state
-            const fallbackEntityId = 'SG-ENT-07-25-00100';
-            const retrievedEntityId = entityData.entity_id || state.entityId || '';
+            const retrievedEntityId = entityId || state.entityId || '';
             
-            console.log('Using entity ID from auth-storage:', retrievedEntityId || fallbackEntityId);
+            if (!retrievedEntityId) {
+              console.error('Entity ID not found in localStorage or auth-storage');
+              return null;
+            }
+            
+            console.log('Using entity ID from auth-storage:', retrievedEntityId);
             
             return {
-              entityId: retrievedEntityId || fallbackEntityId,
+              entityId: retrievedEntityId,
               apiKey: state.apiKey || '',
               apiSecret: state.apiSecret || ''
             };
@@ -118,15 +124,18 @@ export const getAuthData = () => {
         return null;
       }
       
-      // Use hardcoded entity ID if not found in localStorage
-      const fallbackEntityId = 'SG-ENT-07-25-00100';
-      const retrievedEntityId = entityData.entity_id || '';
+      const retrievedEntityId = entityId || '';
+      
+      if (!retrievedEntityId) {
+        console.error('Entity ID not found in localStorage');
+        return null;
+      }
       
       // Log the entity ID being used
-      console.log('Using entity ID:', retrievedEntityId || fallbackEntityId);
+      console.log('Using entity ID:', retrievedEntityId);
       
       return {
-        entityId: retrievedEntityId || fallbackEntityId,
+        entityId: retrievedEntityId,
         apiKey,
         apiSecret
       };

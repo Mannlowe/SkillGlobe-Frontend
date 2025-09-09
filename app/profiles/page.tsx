@@ -10,23 +10,30 @@ import { mockProfileOptimizationHub, mockProfileAnalytics } from '@/lib/mockPhas
 import { useToast } from '@/hooks/use-toast';
 // Import useModals but use it inside useEffect to prevent infinite loop
 import { useModals } from '@/store/uiStore';
-import { Plus, User, Settings, Eye, Share2, Pencil, Trash2, AlertCircle, FileText, Download, X } from 'lucide-react';
+import { useRoleBasedProfileStore, type Profile } from '@/store/role-based-profile/rolebasedprofileStore';
+import { Plus, User, Settings, Eye, Share2, Pencil, Trash2, AlertCircle, FileText, Download, X, Loader2 } from 'lucide-react';
+import { deleteRoleBasedProfile, getAuthData } from '@/app/api/Role Based Profile/rolebasedProfile';
 
-interface Profile {
-  id: string;
-  name: string;
-  type: string;
-  completeness: number;
-  views: number;
-  isActive: boolean;
-  template?: ResumeTemplate | null;
-  formData?: ProfileEntry | null;
-}
+// Profile interface is now imported from the store
 
 export default function ProfilesPage() {
   const { toast } = useToast();
-  // Temporarily disable modal functionality to fix the infinite loop
-  // We'll implement a simple local state modal system instead
+  
+  // Store state
+  const {
+    profiles,
+    isLoading,
+    error,
+    activeProfile,
+    fetchRoleBasedProfiles,
+    setActiveProfile,
+    addProfile,
+    updateProfile,
+    clearError,
+    resetStore
+  } = useRoleBasedProfileStore();
+  
+  // Local UI state
   const [isModalOpen, setIsModalOpen] = useState(false);
   // Define a type for our modal content
   type ModalContentType = {
@@ -34,7 +41,6 @@ export default function ProfilesPage() {
     props: Record<string, any>;
   } | null;
   const [modalContent, setModalContent] = useState<ModalContentType>(null);
-  const [activeProfile, setActiveProfile] = useState('default');
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [profileToDelete, setProfileToDelete] = useState<string | null>(null);
   const [showTemplateSelector, setShowTemplateSelector] = useState(false);
@@ -42,38 +48,15 @@ export default function ProfilesPage() {
   const [showResumePreview, setShowResumePreview] = useState(false);
   const [previewProfile, setPreviewProfile] = useState<Profile | null>(null);
 
-  const [profiles, setProfiles] = useState<Profile[]>([
-    {
-      id: 'default',
-      name: 'Main Profile',
-      type: 'General',
-      completeness: 85,
-      views: 1247,
-      isActive: true,
-      template: null,
-      formData: null
-    },
-    {
-      id: 'frontend',
-      name: 'Frontend Developer',
-      type: 'Specialized',
-      completeness: 92,
-      views: 823,
-      isActive: false,
-      template: null,
-      formData: null
-    },
-    {
-      id: 'fullstack',
-      name: 'Full Stack Engineer',
-      type: 'Specialized',
-      completeness: 78,
-      views: 654,
-      isActive: false,
-      template: null,
-      formData: null
-    }
-  ]);
+  // Fetch data on component mount
+  useEffect(() => {
+    fetchRoleBasedProfiles();
+    
+    // Cleanup on unmount
+    return () => {
+      resetStore();
+    };
+  }, [fetchRoleBasedProfiles, resetStore]);
 
   const handleTaskComplete = (taskId: string) => {
     console.log('Task completed:', taskId);
@@ -114,18 +97,18 @@ export default function ProfilesPage() {
         onSave: (entries: ProfileEntry[]) => {
           if (entries.length > 0) {
             const entry = entries[0];
-            const newProfile = {
+            const newProfile: Profile = {
               id: entry.id || `profile-${Date.now()}`,
               name: entry.role || template.name,
               type: entry.profileType || 'Specialized',
               completeness: 60,
               views: 0,
               isActive: false,
-              template: template,
+              template: template.name,
               formData: entry
             };
             
-            setProfiles(prevProfiles => [...prevProfiles, newProfile]);
+            addProfile(newProfile);
             
             toast({
               title: "Profile Created",
@@ -149,23 +132,18 @@ export default function ProfilesPage() {
   const handleProfileFormSave = (profileData: ProfileEntry[]) => {
     console.log('Profile data saved:', profileData);
     
-    if (!profileData.length) return;
+    if (!profileData.length || !profiles) return;
     
     const profileEntry = profileData[0];
     const existingProfileIndex = profiles.findIndex(p => p.id === profileEntry.id);
     
     if (existingProfileIndex >= 0) {
-      // Update existing profile
-      const updatedProfiles = [...profiles];
-      updatedProfiles[existingProfileIndex] = {
-        ...updatedProfiles[existingProfileIndex],
-        name: profileEntry.role || updatedProfiles[existingProfileIndex].name,
-        completeness: Math.min(updatedProfiles[existingProfileIndex].completeness + 5, 100), // Increase completeness slightly
-        template: updatedProfiles[existingProfileIndex].template,
+      // Update the profile using the store action
+      updateProfile(profileEntry.id, {
+        name: profileEntry.role || profiles[existingProfileIndex].name,
+        completeness: Math.min(profiles[existingProfileIndex].completeness + 5, 100),
         formData: profileEntry
-      };
-      
-      setProfiles(updatedProfiles);
+      });
       
       // Show toast notification
       setTimeout(() => {
@@ -187,8 +165,8 @@ export default function ProfilesPage() {
         formData: profileEntry
       };
 
-      // Add the new profile to the list using a callback to avoid stale state
-      setProfiles(prevProfiles => [...prevProfiles, newProfile]);
+      // Add the new profile to the list using the store action
+      addProfile(newProfile);
       
       // Show toast notification
       setTimeout(() => {
@@ -204,33 +182,44 @@ export default function ProfilesPage() {
     setModalContent(null);
   };
 
-  const handleProfileSelect = (profileId: string) => {
+  const handleSetActiveProfile = (profileId: string) => {
     setActiveProfile(profileId);
-    const profile = profiles.find(p => p.id === profileId);
     toast({
       title: "Profile Switched",
-      description: `Switched to ${profile?.name} profile.`,
+      description: `Switched to ${profileId} profile.`,
     });
+  };
+
+  const handleProfileSelect = (profileId: string) => {
+    handleSetActiveProfile(profileId);
   };
   
   const handleEditProfile = (e: React.MouseEvent, profileId: string) => {
     e.stopPropagation(); // Prevent profile selection
-    const profileToEdit = profiles.find(p => p.id === profileId);
+    const profileToEdit = (profiles || []).find(p => p.id === profileId);
     
     if (profileToEdit) {
-      // Use stored form data if available, otherwise use defaults
-      const profileEntry: ProfileEntry = profileToEdit.formData || {
+      // Use the formData from the profile which already has the correct domain and subdomain
+      const profileEntry: ProfileEntry = profileToEdit.formData ? {
+        ...profileToEdit.formData,
+        // Ensure required fields are present
+        id: profileToEdit.id,
+        primarySkills: profileToEdit.formData.primarySkills || [],
+        secondarySkills: profileToEdit.formData.secondarySkills || []
+      } : {
+        // Fallback if formData is not available
         id: profileToEdit.id,
         role: profileToEdit.name,
-        profileType: 'General',
-        employmentType: 'Permanent',
+        profileType: profileToEdit.space || 'General',
+        subDomain: '',
+        employmentType: profileToEdit.employmentType || 'Permanent',
         natureOfWork: 'Full-time',
-        workMode: 'No Preference',
-        minimumEarnings: '',
-        currency: '',
+        workMode: profileToEdit.workMode || 'No Preference',
+        minimumEarnings: profileToEdit.minEarnings?.toString() || '',
+        currency: profileToEdit.currency || '',
         preferredCity: '',
         preferredCountry: '',
-        totalExperience: '',
+        totalExperience: profileToEdit.experience?.toString() || '',
         relevantExperience: '',
         resume: null,
         primarySkills: [],
@@ -258,23 +247,38 @@ export default function ProfilesPage() {
     setDeleteModalOpen(true);
   };
   
-  const confirmDeleteProfile = () => {
+  const confirmDeleteProfile = async () => {
     if (profileToDelete) {
-      setProfiles(profiles.filter(p => p.id !== profileToDelete));
-      
-      // If the deleted profile was active, set another one as active
-      if (profileToDelete === activeProfile && profiles.length > 1) {
-        const newActiveProfile = profiles.find(p => p.id !== profileToDelete)?.id || '';
-        setActiveProfile(newActiveProfile);
+      try {
+        const authData = getAuthData();
+        if (!authData) {
+          throw new Error('Authentication data not found');
+        }
+
+        await deleteRoleBasedProfile(
+          authData.entityId,
+          profileToDelete,
+          authData.apiKey,
+          authData.apiSecret
+        );
+
+        // Refresh profiles list after successful deletion
+        await fetchRoleBasedProfiles();
+        
+        setDeleteModalOpen(false);
+        setProfileToDelete(null);
+        toast({
+          title: "Profile Deleted",
+          description: "The profile has been successfully deleted.",
+        });
+      } catch (error: any) {
+        console.error('Delete profile error:', error);
+        toast({
+          title: "Delete Failed",
+          description: error.message || "Failed to delete profile. Please try again.",
+          variant: "destructive",
+        });
       }
-      
-      toast({
-        title: "Profile Deleted",
-        description: "The profile has been deleted successfully.",
-      });
-      
-      setDeleteModalOpen(false);
-      setProfileToDelete(null);
     }
   };
 
@@ -535,7 +539,7 @@ export default function ProfilesPage() {
     if (!template || !formData) return;
 
     // Create HTML content for the resume
-    const resumeHTML = generateResumeHTML(template, formData);
+    const resumeHTML = generateResumeHTML(formData);
     
     // Create a temporary element to render the resume
     const printWindow = window.open('', '_blank');
@@ -576,7 +580,7 @@ export default function ProfilesPage() {
     }
   };
 
-  const generateResumeHTML = (template: ResumeTemplate, formData: ProfileEntry): string => {
+  const generateResumeHTML = (formData: ProfileEntry): string => {
     const commonData = {
       name: formData.role || 'Professional',
       location: formData.preferredCity || 'Location',
@@ -589,106 +593,37 @@ export default function ProfilesPage() {
       earnings: formData.minimumEarnings || ''
     };
 
-    switch (template.id) {
-      case 'classic':
-        return `
-          <div class="resume-container">
-            <div class="header">
-              <h1 style="margin: 0; font-size: 24px;">${commonData.name.toUpperCase()}</h1>
-              <p style="margin: 5px 0; color: #666;">${commonData.location}</p>
-            </div>
-            
-            <div class="section">
-              <div class="section-title">Experience</div>
-              <p>Total Experience: ${commonData.totalExp} years</p>
-              <p>Relevant Experience: ${commonData.relevantExp} years</p>
-              <p>Employment Type: ${commonData.employmentType}</p>
-              <p>Work Mode: ${commonData.workMode}</p>
-            </div>
-            
-            <div class="section">
-              <div class="section-title">Primary Skills</div>
-              <div class="skills">
-                ${commonData.primarySkills.map(skill => `<span class="skill-tag">${skill}</span>`).join('')}
-              </div>
-            </div>
-            
-            <div class="section">
-              <div class="section-title">Secondary Skills</div>
-              <div class="skills">
-                ${commonData.secondarySkills.map(skill => `<span class="skill-tag">${skill}</span>`).join('')}
-              </div>
-            </div>
+    // Generate basic resume HTML
+    return `
+      <div class="resume-container">
+        <div class="header">
+          <h1 style="margin: 0; font-size: 24px;">${commonData.name.toUpperCase()}</h1>
+          <p style="margin: 5px 0; color: #666;">${commonData.location}</p>
+        </div>
+        
+        <div class="section">
+          <div class="section-title">Experience</div>
+          <p>Total Experience: ${commonData.totalExp} years</p>
+          <p>Relevant Experience: ${commonData.relevantExp} years</p>
+          <p>Employment Type: ${commonData.employmentType}</p>
+          <p>Work Mode: ${commonData.workMode}</p>
+        </div>
+        
+        <div class="section">
+          <div class="section-title">Primary Skills</div>
+          <div class="skills">
+            ${commonData.primarySkills.map((skill: any) => `<span class="skill-tag">${skill.canonical_name}</span>`).join('')}
           </div>
-        `;
-      
-      case 'modern':
-        return `
-          <div class="resume-container" style="text-align: center;">
-            <div class="header">
-              <h1 style="margin: 0; font-size: 24px;">${commonData.name.toUpperCase()}</h1>
-              <p style="margin: 5px 0; color: #666;">${commonData.location}</p>
-            </div>
-            
-            <div class="section">
-              <div class="section-title">Professional Summary</div>
-              <p>${commonData.totalExp} years of professional experience in ${commonData.name.toLowerCase()}</p>
-            </div>
-            
-            <div class="section">
-              <div class="section-title">Key Skills</div>
-              <div class="skills" style="justify-content: center;">
-                ${commonData.primarySkills.map(skill => `<span class="skill-tag">${skill}</span>`).join('')}
-              </div>
-            </div>
-            
-            <div class="section">
-              <div class="section-title">Additional Skills</div>
-              <div class="skills" style="justify-content: center;">
-                ${commonData.secondarySkills.map(skill => `<span class="skill-tag">${skill}</span>`).join('')}
-              </div>
-            </div>
+        </div>
+        
+        <div class="section">
+          <div class="section-title">Secondary Skills</div>
+          <div class="skills">
+            ${commonData.secondarySkills.map((skill: any) => `<span class="skill-tag">${skill.canonical_name}</span>`).join('')}
           </div>
-        `;
-      
-      case 'creative':
-        return `
-          <div class="resume-container" style="display: flex; min-height: 600px;">
-            <div style="width: 65%; padding-right: 20px;">
-              <div class="header">
-                <h1 style="margin: 0; font-size: 24px;">${commonData.name.toUpperCase()}</h1>
-                <p style="margin: 5px 0; color: #666;">${commonData.location}</p>
-              </div>
-              
-              <div class="section">
-                <div class="section-title">Objective</div>
-                <p>Creative professional with ${commonData.totalExp} years of experience seeking opportunities in ${commonData.name.toLowerCase()}.</p>
-              </div>
-              
-              <div class="section">
-                <div class="section-title">Experience</div>
-                <p>Total Experience: ${commonData.totalExp} years</p>
-                <p>Relevant Experience: ${commonData.relevantExp} years</p>
-              </div>
-            </div>
-            
-            <div style="width: 35%; background: #1e3a8a; color: white; padding: 20px;">
-              <div class="section">
-                <div class="section-title" style="color: white;">Skills</div>
-                ${commonData.primarySkills.map(skill => `<p style="margin: 5px 0;">• ${skill}</p>`).join('')}
-              </div>
-              
-              <div class="section">
-                <div class="section-title" style="color: white;">Additional Skills</div>
-                ${commonData.secondarySkills.slice(0, 5).map(skill => `<p style="margin: 5px 0;">• ${skill}</p>`).join('')}
-              </div>
-            </div>
-          </div>
-        `;
-      
-      default:
-        return `<div class="resume-container"><h1>${commonData.name}</h1><p>${commonData.location}</p></div>`;
-    }
+        </div>
+      </div>
+    `;
   };
 
   const renderResumePreview = (profile: Profile) => {
@@ -699,7 +634,7 @@ export default function ProfilesPage() {
     return (
       <div className="mt-4 bg-gray-50 rounded-lg p-4">
         <div className="flex items-center justify-between mb-3">
-          <h4 className="font-medium text-gray-900">Resume Preview - {template.name}</h4>
+          <h4 className="font-medium text-gray-900">Resume Preview - {template}</h4>
           <div className="flex space-x-2">
             <button
               onClick={() => handlePreviewResume(profile)}
@@ -753,7 +688,7 @@ export default function ProfilesPage() {
   const renderDeleteModal = () => {
     if (!deleteModalOpen) return null;
     
-    const profileName = profiles.find(p => p.id === profileToDelete)?.name || 'this profile';
+    const profileName = (profiles || []).find(p => p.id === profileToDelete)?.name || 'this profile';
     
     return (
       <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
@@ -798,7 +733,7 @@ export default function ProfilesPage() {
         <div className="bg-white rounded-xl shadow-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
           <div className="flex items-center justify-between p-6 border-b">
             <h3 className="text-xl font-semibold text-gray-900">
-              Resume Preview - {template.name}
+              Resume Preview - {template}
             </h3>
             <div className="flex space-x-3">
               <button
@@ -819,7 +754,7 @@ export default function ProfilesPage() {
           
           <div className="p-6 font-nunito">
             <div className="bg-white border rounded-lg p-8 min-h-[600px]" style={{ fontFamily: 'Arial, sans-serif' }}>
-              {template.id === 'classic' && (
+              {template === 'classic' && (
                 <div>
                   <div className="border-b-2 border-gray-800 pb-4 mb-6">
                     <h1 className="text-3xl font-bold mb-2">{formData.role?.toUpperCase() || 'PROFESSIONAL'}</h1>
@@ -852,8 +787,10 @@ export default function ProfilesPage() {
                   <div className="mb-6">
                     <h2 className="text-lg font-bold mb-3 uppercase">Primary Skills</h2>
                     <div className="flex flex-wrap gap-2">
-                      {formData.primarySkills?.map(skill => (
-                        <span key={skill} className="bg-gray-200 px-3 py-1 rounded text-sm">{skill}</span>
+                      {formData.primarySkills?.map((skill: any) => (
+                        <span key={skill.name || skill} className="bg-gray-200 px-3 py-1 rounded text-sm">
+                          {skill.canonical_name}
+                        </span>
                       )) || <p className="text-gray-500">No primary skills added</p>}
                     </div>
                   </div>
@@ -861,15 +798,17 @@ export default function ProfilesPage() {
                   <div className="mb-6">
                     <h2 className="text-lg font-bold mb-3 uppercase">Secondary Skills</h2>
                     <div className="flex flex-wrap gap-2">
-                      {formData.secondarySkills?.map(skill => (
-                        <span key={skill} className="bg-gray-100 px-3 py-1 rounded text-sm">{skill}</span>
+                      {formData.secondarySkills?.map((skill: any) => (
+                        <span key={skill.name || skill} className="bg-gray-100 px-3 py-1 rounded text-sm">
+                          {skill.canonical_name}
+                        </span>
                       )) || <p className="text-gray-500">No secondary skills added</p>}
                     </div>
                   </div>
                 </div>
               )}
               
-              {template.id === 'modern' && (
+              {template === 'modern' && (
                 <div className="text-center">
                   <div className="border-b-2 border-gray-800 pb-4 mb-6">
                     <h1 className="text-3xl font-bold mb-2">{formData.role?.toUpperCase() || 'PROFESSIONAL'}</h1>
@@ -898,8 +837,10 @@ export default function ProfilesPage() {
                   <div className="mb-6">
                     <h2 className="text-lg font-bold mb-3 uppercase">Key Skills</h2>
                     <div className="flex flex-wrap gap-2 justify-center">
-                      {formData.primarySkills?.map(skill => (
-                        <span key={skill} className="bg-blue-100 text-blue-800 px-3 py-1 rounded text-sm">{skill}</span>
+                      {formData.primarySkills?.map((skill: any) => (
+                        <span key={skill.name || skill} className="bg-blue-100 text-blue-800 px-3 py-1 rounded text-sm">
+                          {skill.canonical_name}
+                        </span>
                       )) || <p className="text-gray-500">No skills added</p>}
                     </div>
                   </div>
@@ -907,15 +848,17 @@ export default function ProfilesPage() {
                   <div className="mb-6">
                     <h2 className="text-lg font-bold mb-3 uppercase">Additional Skills</h2>
                     <div className="flex flex-wrap gap-2 justify-center">
-                      {formData.secondarySkills?.map(skill => (
-                        <span key={skill} className="bg-green-100 text-green-800 px-3 py-1 rounded text-sm">{skill}</span>
+                      {formData.secondarySkills?.map((skill: any) => (
+                        <span key={skill.name || skill} className="bg-green-100 text-green-800 px-3 py-1 rounded text-sm">
+                          {skill.canonical_name}
+                        </span>
                       )) || <p className="text-gray-500">No additional skills added</p>}
                     </div>
                   </div>
                 </div>
               )}
               
-              {template.id === 'creative' && (
+              {template === 'creative' && (
                 <div className="flex min-h-[600px] font-nunito">
                   <div className="w-2/3 pr-8">
                     <div className="mb-6">
@@ -966,8 +909,8 @@ export default function ProfilesPage() {
                     <div className="mb-6">
                       <h3 className="font-bold mb-3 uppercase">Skills</h3>
                       <div className="space-y-2">
-                        {formData.primarySkills?.map(skill => (
-                          <p key={skill} className="text-sm">• {skill}</p>
+                        {formData.primarySkills?.map((skill: any) => (
+                          <p key={skill.name || skill} className="text-sm">• {skill.canonical_name}</p>
                         )) || <p className="text-sm">No skills added</p>}
                       </div>
                     </div>
@@ -975,8 +918,8 @@ export default function ProfilesPage() {
                     <div className="mb-6">
                       <h3 className="font-bold mb-3 uppercase">Additional Skills</h3>
                       <div className="space-y-2">
-                        {formData.secondarySkills?.slice(0, 5).map(skill => (
-                          <p key={skill} className="text-sm">• {skill}</p>
+                        {formData.secondarySkills?.slice(0, 5).map((skill: any) => (
+                          <p key={skill.name || skill} className="text-sm">• {skill.canonical_name}</p>
                         )) || <p className="text-sm">No additional skills</p>}
                       </div>
                     </div>
@@ -1019,9 +962,40 @@ export default function ProfilesPage() {
           </button>
         </div>
 
-        {/* Profile Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {profiles.map((profile) => (
+        {/* Loading State */}
+        {isLoading && (
+          <div className="flex items-center justify-center py-12">
+            <Loader2 className="animate-spin text-blue-500 mr-2" size={24} />
+            <span className="text-gray-600">Loading profiles...</span>
+          </div>
+        )}
+        
+        {/* Error State */}
+        {error && (
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+            <div className="flex items-center">
+              <AlertCircle className="text-red-500 mr-2" size={20} />
+              <div>
+                <div className="text-red-800 font-medium">Error loading profiles</div>
+                <div className="text-red-600 text-sm">{error}</div>
+              </div>
+            </div>
+            <button
+              onClick={() => {
+                clearError();
+                fetchRoleBasedProfiles();
+              }}
+              className="mt-2 px-3 py-1 bg-red-100 text-red-700 rounded text-sm hover:bg-red-200 transition-colors"
+            >
+              Retry
+            </button>
+          </div>
+        )}
+        
+        {/* Profiles Grid */}
+        {!isLoading && !error && (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {(profiles || []).map((profile) => (
             <div
               key={profile.id}
               onClick={() => handleProfileSelect(profile.id)}
@@ -1065,7 +1039,7 @@ export default function ProfilesPage() {
               </div>
 
               <div className="space-y-3">
-                <div>
+                {/* <div>
                   <div className="flex justify-between text-sm mb-1">
                     <span className="text-gray-600">Completeness</span>
                     <span className="font-medium">{profile.completeness}%</span>
@@ -1076,7 +1050,7 @@ export default function ProfilesPage() {
                       style={{ width: `${profile.completeness}%` }}
                     ></div>
                   </div>
-                </div>
+                </div> */}
 
                 {/* Resume Preview Section */}
                 {renderResumePreview(profile)}
@@ -1097,16 +1071,26 @@ export default function ProfilesPage() {
                 </div> */}
               </div>
             </div>
-          ))}
+          ))
+          }
         </div>
+        )}
 
-        {/* Active Profile Management */}
-        <div className="space-y-6">
+      
+      </div>
+    </ModernLayoutWrapper>
+  );
+}
+
+
+
+
+  {/* Active Profile Management */}
+        {/* <div className="space-y-6">
           <h2 className="text-xl font-semibold text-gray-900">
             Optimize: {profiles.find(p => p.id === activeProfile)?.name}
           </h2>
 
-          {/* Strategic Profile Optimizer */}
           <StrategicProfileOptimizer
             profileData={mockProfileOptimizationHub}
             completionTasks={mockProfileOptimizationHub.strategic_completion.completion_priorities}
@@ -1115,13 +1099,9 @@ export default function ProfilesPage() {
             marketImpactMode={true}
           />
           
-          {/* Profile Analytics */}
+       
           <ProfileAnalytics
             analytics={mockProfileAnalytics}
             onViewDetails={(section) => console.log('View details:', section)}
           />
-        </div>
-      </div>
-    </ModernLayoutWrapper>
-  );
-}
+        </div> */}

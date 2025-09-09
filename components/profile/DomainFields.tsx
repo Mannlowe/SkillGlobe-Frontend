@@ -24,43 +24,43 @@ interface DomainFieldsProps {
   setEditingEntry: React.Dispatch<React.SetStateAction<BaseProfileEntry | null>>;
 }
 
-// IT Subdomain options
+// IT Subdomain options - using full names as expected by backend
 export const itSubDomains = [
-  { value: 'IT1', label: 'Software Development & Services' },
-  { value: 'IT2', label: 'Data & Emerging Tech' },
-  { value: 'IT3', label: 'Cybersecurity & Networks' }
+  { value: 'Software Development & Services (IT1)', label: 'Software Development & Services' },
+  { value: 'Data & Emerging Tech (IT2)', label: 'Data & Emerging Tech' },
+  { value: 'Cybersecurity & Networks (IT3)', label: 'Cybersecurity & Networks' }
 ];
 
-// Manufacturing Subdomain options
+// Manufacturing Subdomain options - using full names as expected by backend
 export const manufacturingSubDomains = [
-  { value: 'MF1', label: 'Production & Operations' },
-  { value: 'MF2', label: 'Automotive & Engineering' },
-  { value: 'MF3', label: 'Quality & Maintenance' },
-  { value: 'MF4', label: 'Supply Chain & Materials' }
+  { value: 'Production & Operations (MF1)', label: 'Production & Operations' },
+  { value: 'Automotive & Engineering (MF2)', label: 'Automotive & Engineering' },
+  { value: 'Quality & Maintenance (MF3)', label: 'Quality & Maintenance' },
+  { value: 'Supply Chain & Materials (MF4)', label: 'Supply Chain & Materials' }
 ];
 
-// Banking Subdomain options
+// Banking Subdomain options - using full names as expected by backend
 export const bankingSubDomains = [
-  { value: 'BF1', label: 'Banking' },
-  { value: 'BF2', label: 'Finance & Investments' },
-  { value: 'BF3', label: 'Insurance' },
-  { value: 'BF4', label: 'FinTech & Payments' }
+  { value: 'Banking (BF1)', label: 'Banking' },
+  { value: 'Finance & Investments (BF2)', label: 'Finance & Investments' },
+  { value: 'Insurance (BF3)', label: 'Insurance' },
+  { value: 'FinTech & Payments (BF4)', label: 'FinTech & Payments' }
 ];
 
-// Hospitality Subdomain options
+// Hospitality Subdomain options - using full names as expected by backend
 export const hospitalitySubDomains = [
-  { value: 'HS1', label: 'Hotels & Lodging' },
-  { value: 'HS2', label: 'Food & Beverages' },
-  { value: 'HS3', label: 'Travel & Tourism' },
-  { value: 'HS4', label: 'Events & Recreation' }
+  { value: 'Hotels & Lodging (HS1)', label: 'Hotels & Lodging' },
+  { value: 'Food & Beverages (HS2)', label: 'Food & Beverages' },
+  { value: 'Travel & Tourism (HS3)', label: 'Travel & Tourism' },
+  { value: 'Events & Recreation (HS4)', label: 'Events & Recreation' }
 ];
 
-// Pharma & Healthcare Subdomain options
+// Pharma & Healthcare Subdomain options - using full names as expected by backend
 export const pharmaSubDomains = [
-  { value: 'PH1', label: 'Pharma Manufacturing & Quality' },
-  { value: 'PH2', label: 'Distribution & Supply Chain' },
-  { value: 'PH3', label: 'Research & Clinical' },
-  { value: 'PH4', label: 'Healthcare Services' }
+  { value: 'Pharma Manufacturing & Quality (PH1)', label: 'Pharma Manufacturing & Quality' },
+  { value: 'Distribution & Supply Chain (PH2)', label: 'Distribution & Supply Chain' },
+  { value: 'Research & Clinical (PH3)', label: 'Research & Clinical' },
+  { value: 'Healthcare Services (PH4)', label: 'Healthcare Services' }
 ];
 
 const DomainFields: React.FC<DomainFieldsProps> = ({ profileType, subDomain, editingEntry, setEditingEntry }) => {
@@ -345,7 +345,7 @@ const DomainFields: React.FC<DomainFieldsProps> = ({ profileType, subDomain, edi
 
     switch (subDomain) {
       // Software Development & Services (IT1) Fields
-      case 'IT1':
+      case 'Software Development & Services (IT1)':
         return (
           <div className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -470,7 +470,7 @@ const DomainFields: React.FC<DomainFieldsProps> = ({ profileType, subDomain, edi
         );
 
       // Data & Emerging Tech (IT2) Fields
-      case 'IT2':
+      case 'Data & Emerging Tech (IT2)':
         return (
           <div className="space-y-4">
             <div>
@@ -594,7 +594,7 @@ const DomainFields: React.FC<DomainFieldsProps> = ({ profileType, subDomain, edi
         );
 
       // Cybersecurity & Networks (IT3) Fields
-      case 'IT3':
+      case 'Cybersecurity & Networks (IT3)':
         return (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
@@ -823,7 +823,10 @@ const DomainFields: React.FC<DomainFieldsProps> = ({ profileType, subDomain, edi
   const renderManufacturingSubdomainFields = () => {
     if (!subDomain || !editingEntry) return null;
 
-    switch (subDomain) {
+    // Extract the code from the subdomain value (e.g., "Production & Operations (MF1)" -> "MF1")
+    const subDomainCode = subDomain.includes('(') ? subDomain.match(/\(([^)]+)\)/)?.[1] : subDomain;
+
+    switch (subDomainCode) {
       // Production & Operations (MF1) Fields
       case 'MF1':
         return (
@@ -868,6 +871,7 @@ const DomainFields: React.FC<DomainFieldsProps> = ({ profileType, subDomain, edi
           </div>
         );
 
+
       default:
         return null;
     }
@@ -877,7 +881,10 @@ const DomainFields: React.FC<DomainFieldsProps> = ({ profileType, subDomain, edi
   const renderBankingSubdomainFields = () => {
     if (!subDomain || !editingEntry) return null;
 
-    switch (subDomain) {
+    // Extract the code from the subdomain value (e.g., "Banking (BF1)" -> "BF1")
+    const subDomainCode = subDomain.includes('(') ? subDomain.match(/\(([^)]+)\)/)?.[1] : subDomain;
+
+    switch (subDomainCode) {
       // Banking (BF1) Fields
       case 'BF1':
         return (
@@ -922,6 +929,7 @@ const DomainFields: React.FC<DomainFieldsProps> = ({ profileType, subDomain, edi
           </div>
         );
 
+
       default:
         return null;
     }
@@ -931,7 +939,10 @@ const DomainFields: React.FC<DomainFieldsProps> = ({ profileType, subDomain, edi
   const renderHospitalitySubdomainFields = () => {
     if (!subDomain || !editingEntry) return null;
 
-    switch (subDomain) {
+    // Extract the code from the subdomain value (e.g., "Hotels & Lodging (HS1)" -> "HS1")
+    const subDomainCode = subDomain.includes('(') ? subDomain.match(/\(([^)]+)\)/)?.[1] : subDomain;
+
+    switch (subDomainCode) {
       // Hotels & Lodging (HS1) Fields
       case 'HS1':
         return (
@@ -976,6 +987,7 @@ const DomainFields: React.FC<DomainFieldsProps> = ({ profileType, subDomain, edi
           </div>
         );
 
+
       default:
         return null;
     }
@@ -985,7 +997,10 @@ const DomainFields: React.FC<DomainFieldsProps> = ({ profileType, subDomain, edi
   const renderPharmaSubdomainFields = () => {
     if (!subDomain || !editingEntry) return null;
 
-    switch (subDomain) {
+    // Extract the code from the subdomain value (e.g., "Pharma Manufacturing & Quality (PH1)" -> "PH1")
+    const subDomainCode = subDomain.includes('(') ? subDomain.match(/\(([^)]+)\)/)?.[1] : subDomain;
+
+    switch (subDomainCode) {
       // Pharma Manufacturing & Quality (PH1) Fields
       case 'PH1':
         return (
@@ -1036,8 +1051,8 @@ const DomainFields: React.FC<DomainFieldsProps> = ({ profileType, subDomain, edi
             {renderMultiSelect('ph_licenses', pharmaFieldOptions.ph_licenses, 'Medical Licenses')}
             {renderMultiSelect('ph_languages', pharmaFieldOptions.ph_languages, 'Languages Known')}
           </div>
-
         );
+
 
       default:
         return null;

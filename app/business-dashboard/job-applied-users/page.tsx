@@ -17,136 +17,55 @@ import {
   CheckCircle,
   XCircle,
   Clock,
-  Star
+  Star,
+  Loader2,
+  AlertCircle
 } from 'lucide-react';
 import BusinessSidebar from '@/components/dashboard/BusinessSidebar';
 import BusinessDashboardHeader from '@/components/dashboard/BusinessDashboardHeader';
-
-// Applicant interface
-interface Applicant {
-  id: string;
-  name: string;
-  email: string;
-  phone: string;
-  location: string;
-  appliedDate: string;
-  status: 'pending' | 'shortlisted' | 'rejected' | 'hired' | 'interested';
-  experience: string;
-  skills: string[];
-  resumeUrl?: string;
-  profileImage?: string;
-  rating?: number;
-  coverLetter?: string;
-}
-
-// Job interface
-interface JobDetails {
-  id: string;
-  title: string;
-  skillCategory: string;
-  employmentType: string;
-  workMode: string;
-  location: string;
-  postedDate: string;
-  applicationDeadline?: string;
-  totalApplicants: number;
-}
+import { useProfilesByOpportunityStore, type Applicant, type JobDetails } from '@/store/job-postings/profilesbyopportunityStore';
+import {formatDate} from '@/utils/dateformat';
+// Interfaces are now imported from the store
 
 export default function JobAppliedUsersPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const jobId = searchParams.get('jobId');
   
-  const [applicants, setApplicants] = useState<Applicant[]>([]);
-  const [jobDetails, setJobDetails] = useState<JobDetails | null>(null);
+  // Store state
+  const {
+    applicants,
+    jobDetails,
+    isLoading,
+    error,
+    totalProfiles,
+    fetchProfilesByOpportunity,
+    updateApplicantStatus,
+    clearError,
+    resetStore
+  } = useProfilesByOpportunityStore();
+  
+  // Local UI state
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [selectedApplicant, setSelectedApplicant] = useState<Applicant | null>(null);
   const [showProfileModal, setShowProfileModal] = useState(false);
 
-  // Sample job details
-  const sampleJobDetails: JobDetails = {
-    id: jobId || '1',
-    title: 'Senior Frontend Developer',
-    skillCategory: 'IT & Software',
-    employmentType: 'Full-time',
-    workMode: 'Remote',
-    location: 'Remote',
-    postedDate: '2 days ago',
-    applicationDeadline: '2024-01-15',
-    totalApplicants: 4
-  };
-
-  // Sample applicants data
-  const sampleApplicants: Applicant[] = [
-    {
-      id: '1',
-      name: 'John Smith',
-      email: 'john.smith@email.com',
-      phone: '+91 9876543210',
-      location: 'Bangalore, India',
-      appliedDate: '2024-01-10',
-      status: 'pending',
-      experience: '4 years',
-      skills: ['React', 'TypeScript', 'Node.js', 'AWS'],
-      rating: 4.5,
-      coverLetter: 'I am excited to apply for this position...'
-    },
-    {
-      id: '2',
-      name: 'Sarah Johnson',
-      email: 'sarah.johnson@email.com',
-      phone: '+91 9876543211',
-      location: 'Mumbai, India',
-      appliedDate: '2024-01-09',
-      status: 'shortlisted',
-      experience: '6 years',
-      skills: ['React', 'Vue.js', 'Python', 'Docker'],
-      rating: 4.8,
-      coverLetter: 'With over 6 years of experience in frontend development...'
-    },
-    {
-      id: '3',
-      name: 'Michael Chen',
-      email: 'michael.chen@email.com',
-      phone: '+91 9876543212',
-      location: 'Pune, India',
-      appliedDate: '2024-01-08',
-      status: 'rejected',
-      experience: '2 years',
-      skills: ['JavaScript', 'React', 'CSS'],
-      rating: 3.5,
-      coverLetter: 'I am a passionate developer looking to grow...'
-    },
-    {
-      id: '4',
-      name: 'Emily Davis',
-      email: 'emily.davis@email.com',
-      phone: '+91 9876543213',
-      location: 'Delhi, India',
-      appliedDate: '2024-01-07',
-      status: 'hired',
-      experience: '5 years',
-      skills: ['React', 'Angular', 'TypeScript', 'GraphQL'],
-      rating: 4.9,
-      coverLetter: 'I bring extensive experience in modern frontend technologies...'
-    }
-  ];
-
+  // Fetch data on component mount
   useEffect(() => {
-    // Load job details and applicants
-    setJobDetails(sampleJobDetails);
-    setApplicants(sampleApplicants);
-  }, [jobId]);
+    if (jobId) {
+      fetchProfilesByOpportunity(jobId);
+    }
+    
+    // Cleanup on unmount
+    return () => {
+      resetStore();
+    };
+  }, [jobId, fetchProfilesByOpportunity, resetStore]);
+
 
   const handleStatusChange = (applicantId: string, newStatus: Applicant['status']) => {
-    setApplicants(prev => 
-      prev.map(applicant => 
-        applicant.id === applicantId 
-          ? { ...applicant, status: newStatus }
-          : applicant
-      )
-    );
+    updateApplicantStatus(applicantId, newStatus);
   };
 
   const handleViewProfile = (applicant: Applicant) => {
@@ -176,7 +95,7 @@ export default function JobAppliedUsersPage() {
     }
   };
 
-  const filteredApplicants = applicants.filter(applicant => {
+  const filteredApplicants = (applicants || []).filter(applicant => {
     const matchesSearch = applicant.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          applicant.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          applicant.skills.some(skill => skill.toLowerCase().includes(searchTerm.toLowerCase()));
@@ -190,11 +109,11 @@ export default function JobAppliedUsersPage() {
   });
 
   const statusCounts = {
-    all: applicants.length,
-    pending: applicants.filter(a => a.status === 'pending' || a.status === 'interested').length,
-    shortlisted: applicants.filter(a => a.status === 'shortlisted').length,
-    rejected: applicants.filter(a => a.status === 'rejected').length,
-    hired: applicants.filter(a => a.status === 'hired').length,
+    all: applicants?.length || 0,
+    pending: applicants?.filter(a => a.status === 'pending' || a.status === 'interested').length || 0,
+    shortlisted: applicants?.filter(a => a.status === 'shortlisted').length || 0,
+    rejected: applicants?.filter(a => a.status === 'rejected').length || 0,
+    hired: applicants?.filter(a => a.status === 'hired').length || 0,
   };
 
   return (
@@ -224,7 +143,7 @@ export default function JobAppliedUsersPage() {
                         <MapPin size={16} /> {jobDetails.location}
                       </span>
                       <span className="flex items-center gap-1">
-                        <Calendar size={16} /> Posted {jobDetails.postedDate}
+                        <Calendar size={16} /> Posted {formatDate(jobDetails.postedDate)}
                       </span>
                       <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs">
                         {jobDetails.employmentType}
@@ -235,7 +154,7 @@ export default function JobAppliedUsersPage() {
                     </div>
                   </div>
                   <div className="text-right">
-                    <div className="text-2xl font-bold text-blue-600">{jobDetails.totalApplicants}</div>
+                    <div className="text-2xl font-bold text-blue-600">{totalProfiles}</div>
                     <div className="text-sm text-gray-600">Total Applicants</div>
                   </div>
                 </div>
@@ -277,14 +196,48 @@ export default function JobAppliedUsersPage() {
 
             {/* Applicants List */}
             <div className="p-6 max-h-none">
-              {filteredApplicants.length === 0 ? (
+              {/* Loading State */}
+              {isLoading && (
+                <div className="flex items-center justify-center py-12">
+                  <Loader2 className="animate-spin text-blue-500 mr-2" size={24} />
+                  <span className="text-gray-600">Loading applicants...</span>
+                </div>
+              )}
+              
+              {/* Error State */}
+              {error && (
+                <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
+                  <div className="flex items-center">
+                    <AlertCircle className="text-red-500 mr-2" size={20} />
+                    <div>
+                      <div className="text-red-800 font-medium">Error loading applicants</div>
+                      <div className="text-red-600 text-sm">{error}</div>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => {
+                      clearError();
+                      if (jobId) fetchProfilesByOpportunity(jobId);
+                    }}
+                    className="mt-2 px-3 py-1 bg-red-100 text-red-700 rounded text-sm hover:bg-red-200 transition-colors"
+                  >
+                    Retry
+                  </button>
+                </div>
+              )}
+              
+              {/* Empty State */}
+              {!isLoading && !error && filteredApplicants.length === 0 && (
                 <div className="text-center py-8">
                   <div className="text-gray-500 mb-2">No applicants found</div>
                   <div className="text-sm text-gray-400">
                     {searchTerm ? 'Try adjusting your search criteria' : 'No applications received yet'}
                   </div>
                 </div>
-              ) : (
+              )}
+              
+              {/* Applicants List */}
+              {!isLoading && !error && filteredApplicants.length > 0 && (
                 <div className="space-y-4 pb-8">
                   {filteredApplicants.map((applicant) => (
                     <div key={applicant.id} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
@@ -311,7 +264,12 @@ export default function JobAppliedUsersPage() {
                               {applicant.rating && (
                                 <div className="flex items-center gap-1">
                                   <Star size={14} className="text-yellow-500 fill-current" />
-                                  <span className="text-sm text-gray-600">{applicant.rating}</span>
+                                  <span className="text-sm text-gray-600">{applicant.rating.toFixed(1)}</span>
+                                </div>
+                              )}
+                              {applicant.matchScore && (
+                                <div className="flex items-center gap-1">
+                                  <span className="text-sm text-blue-600 font-medium">{applicant.matchScore}% match</span>
                                 </div>
                               )}
                             </div>
@@ -398,7 +356,7 @@ export default function JobAppliedUsersPage() {
                       </div>
                       
                       <div className="mt-3 text-sm text-gray-600">
-                        Applied on {new Date(applicant.appliedDate).toLocaleDateString()}
+                      Applied On: {formatDate(applicant.appliedDate)}
                       </div>
                     </div>
                   ))}

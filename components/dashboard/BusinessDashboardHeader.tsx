@@ -94,14 +94,14 @@ export default function BusinessDashboardHeader({ title, onMenuClick }: Business
               )}
 
               {/* Search Bar */}
-              <div className="relative">
+              {/* <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
                 <input
                   type="text"
                   placeholder="Search "
                   className="pl-10 pr-4 py-2 w-80 bg-gray-50 rounded-lg border-0 focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all"
                 />
-              </div>
+              </div> */}
             </>
           )}
 
@@ -110,9 +110,9 @@ export default function BusinessDashboardHeader({ title, onMenuClick }: Business
         {/* Right Side */}
         <div className="flex items-center space-x-4">
           {/* Mobile Search */}
-          <button className="md:hidden p-2 rounded-lg hover:bg-gray-100 transition-colors">
+          {/* <button className="md:hidden p-2 rounded-lg hover:bg-gray-100 transition-colors">
             <Search size={20} />
-          </button>
+          </button>  */}
 
           {/* Messages */}
           {/* <button className="p-2 rounded-lg hover:bg-gray-100 transition-colors relative">

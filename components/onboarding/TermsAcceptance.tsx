@@ -2,8 +2,9 @@
 
 import { useState } from 'react';
 import { Shield, FileText, Eye } from 'lucide-react';
-import Link from 'next/link';
 import { useRegistrationStore } from '@/store/registration';
+import TermsAndCondition from '@/components/modal/TermsAndCondition';
+import PrivacyPolicy from '@/components/modal/PrivacyPolicy';
 
 interface TermsAcceptanceProps {
   data: any;
@@ -14,6 +15,8 @@ interface TermsAcceptanceProps {
 export default function TermsAcceptance({ data, updateData, nextStep }: TermsAcceptanceProps) {
   const [hasRead, setHasRead] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showTermsModal, setShowTermsModal] = useState(false);
+  const [showPrivacyModal, setShowPrivacyModal] = useState(false);
   
   // Get registration store state and actions
   const { completeRegistration, isLoading, error: apiError, request_id, password } = useRegistrationStore();
@@ -54,6 +57,16 @@ export default function TermsAcceptance({ data, updateData, nextStep }: TermsAcc
       console.error('Error completing registration:', error);
       // Error is handled by the store
     }
+  };
+
+  const openTermsModal = () => {
+    setShowTermsModal(true);
+    setHasRead(true);
+  };
+
+  const openPrivacyModal = () => {
+    setShowPrivacyModal(true);
+    setHasRead(true);
   };
 
   return (
@@ -100,25 +113,21 @@ export default function TermsAcceptance({ data, updateData, nextStep }: TermsAcc
 
         {/* Document Links */}
         <div className="grid grid-cols-2 gap-3">
-          <Link 
-            href="/terms" 
-            target="_blank"
+          <button 
+            onClick={openTermsModal}
             className="flex items-center justify-center p-3 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors"
-            onClick={() => setHasRead(true)}
           >
             <Eye size={16} className="mr-2 text-gray-600" />
             <span className="text-sm font-medium text-gray-700">Terms of Service</span>
-          </Link>
+          </button>
           
-          <Link 
-            href="/privacy" 
-            target="_blank"
+          <button 
+            onClick={openPrivacyModal}
             className="flex items-center justify-center p-3 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors"
-            onClick={() => setHasRead(true)}
           >
             <Eye size={16} className="mr-2 text-gray-600" />
             <span className="text-sm font-medium text-gray-700">Privacy Policy</span>
-          </Link>
+          </button>
         </div>
 
         {/* Acceptance Checkbox */}
@@ -163,6 +172,10 @@ export default function TermsAcceptance({ data, updateData, nextStep }: TermsAcc
       <div className="text-center text-sm text-gray-500">
         You must accept these terms to use SkillGlobe
       </div>
+
+      {/* Modals */}
+      <TermsAndCondition isOpen={showTermsModal} onClose={() => setShowTermsModal(false)} />
+      <PrivacyPolicy isOpen={showPrivacyModal} onClose={() => setShowPrivacyModal(false)} />
     </div>
   );
 }

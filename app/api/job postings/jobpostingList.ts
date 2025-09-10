@@ -42,6 +42,52 @@ export interface JobPostingListResponse {
   };
 }
 
+// Interface for close opportunity request
+export interface CloseOpportunityRequest {
+  entity_id: string;
+  name: string;
+}
+
+// Interface for close opportunity response
+export interface CloseOpportunityResponse {
+  message: {
+    status: string;
+    message: string;
+    timestamp: string;
+  };
+}
+
+// Interface for closed opportunities request
+export interface ClosedOpportunitiesRequest {
+  entity_id: string;
+}
+
+// Interface for closed opportunity data
+export interface ClosedOpportunity {
+  name: string;
+  opportunity_title: string;
+  role_skill_category: string;
+  employment_type: string;
+  work_mode: string;
+  experience_required: string;
+  location: string;
+  application_deadline: string;
+  profiles_match_count: number;
+}
+
+// Interface for closed opportunities response
+export interface ClosedOpportunitiesResponse {
+  message: {
+    status: string;
+    message: string;
+    data: {
+      closed_opportunity_posting: ClosedOpportunity[];
+      entity_id: string;
+    };
+    timestamp: string;
+  };
+}
+
 export const getJobPostingList = async (entityId: string): Promise<JobPostingListResponse> => {
   try {
     // Get API credentials
@@ -64,6 +110,65 @@ export const getJobPostingList = async (entityId: string): Promise<JobPostingLis
     return response.data;
   } catch (error: any) {
     console.error('Job posting list error:', error.response?.data || error.message || error);
+    throw error;
+  }
+};
+
+export const closeOpportunity = async (entityId: string, opportunityName: string): Promise<CloseOpportunityResponse> => {
+  try {
+    // Get API credentials
+    const { apiKey, apiSecret } = getApiCredentials();
+    
+    // Create authorization header using API key and secret
+    const authHeader = `token ${apiKey}:${apiSecret}`;
+    
+    const requestBody: CloseOpportunityRequest = {
+      entity_id: entityId,
+      name: opportunityName
+    };
+    
+    const response = await axios.post<CloseOpportunityResponse>(
+      `${API_BASE_URL}/api/method/skillglobe_be.api.opportunity_posting.form.enable_opportunity_closed`,
+      requestBody,
+      {
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+          'Authorization': authHeader
+        }
+      }
+    );
+    
+    console.log('Close opportunity response:', response.data);
+    return response.data;
+  } catch (error: any) {
+    console.error('Close opportunity error:', error.response?.data || error.message || error);
+    throw error;
+  }
+};
+
+export const getClosedOpportunities = async (entityId: string): Promise<ClosedOpportunitiesResponse> => {
+  try {
+    // Get API credentials
+    const { apiKey, apiSecret } = getApiCredentials();
+    
+    // Create authorization header using API key and secret
+    const authHeader = `token ${apiKey}:${apiSecret}`;
+    
+    const response = await axios.get<ClosedOpportunitiesResponse>(
+      `${API_BASE_URL}/api/method/skillglobe_be.api.opportunity_posting.form.get_closed_opportunity_posting?entity_id=${entityId}`,
+      {
+        headers: {
+          'Accept': 'application/json',
+          'Authorization': authHeader
+        }
+      }
+    );
+    
+    console.log('Closed opportunities response:', response.data);
+    return response.data;
+  } catch (error: any) {
+    console.error('Closed opportunities error:', error.response?.data || error.message || error);
     throw error;
   }
 };

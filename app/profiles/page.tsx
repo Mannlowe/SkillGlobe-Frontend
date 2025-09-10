@@ -11,8 +11,10 @@ import { useToast } from '@/hooks/use-toast';
 // Import useModals but use it inside useEffect to prevent infinite loop
 import { useModals } from '@/store/uiStore';
 import { useRoleBasedProfileStore, type Profile } from '@/store/role-based-profile/rolebasedprofileStore';
-import { Plus, User, Settings, Eye, Share2, Pencil, Trash2, AlertCircle, FileText, Download, X, Loader2 } from 'lucide-react';
-import { deleteRoleBasedProfile, getAuthData } from '@/app/api/Role Based Profile/rolebasedProfile';
+import { useResumeTemplateStore } from '@/store/resume-template/resumetemplateStore';
+import { Plus, User, Settings, Eye, Share2, Pencil, Trash2, AlertCircle, FileText, Download, X, Loader2, Mail, Phone, MapPin, Globe } from 'lucide-react';
+import { getAuthData } from '@/utils/auth';
+import { deleteRoleBasedProfile } from '@/app/api/Role Based Profile/rolebasedProfile';
 
 // Profile interface is now imported from the store
 
@@ -32,6 +34,16 @@ export default function ProfilesPage() {
     clearError,
     resetStore
   } = useRoleBasedProfileStore();
+
+  // Resume template store
+  const {
+    profilePreviewData,
+    isLoadingPreview,
+    previewError,
+    fetchProfilePreview,
+    clearPreviewData,
+    clearPreviewError
+  } = useResumeTemplateStore();
   
   // Local UI state
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -251,7 +263,7 @@ export default function ProfilesPage() {
     if (profileToDelete) {
       try {
         const authData = getAuthData();
-        if (!authData) {
+        if (!authData || !authData.entityId || !authData.apiKey || !authData.apiSecret) {
           throw new Error('Authentication data not found');
         }
 
@@ -282,10 +294,43 @@ export default function ProfilesPage() {
     }
   };
 
-  const handlePreviewResume = (profile: Profile) => {
-    if (profile.template && profile.formData) {
+  const handlePreviewResume = async (profile: Profile) => {
+    try {
+      // Clear any previous preview data and errors
+      clearPreviewData();
+      clearPreviewError();
+      
+      // Get auth data for entity_id
+      const authData = getAuthData();
+      if (!authData?.entityId) {
+        toast({
+          title: "Error",
+          description: "Authentication data not found. Please log in again.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Debug logs
+      console.log('Profile object:', profile);
+      console.log('Profile ID (should be RBP00001):', profile.id);
+      console.log('Profile name (role title):', profile.name);
+      console.log('Entity ID:', authData.entityId);
+
+      // Fetch profile preview data from API - use profile.id instead of profile.name
+      await fetchProfilePreview(profile.id); // Pass the profile ID (e.g., "RBP00001")
+
+      // Set the profile for preview and show modal
       setPreviewProfile(profile);
       setShowResumePreview(true);
+      
+    } catch (error) {
+      console.error('Error fetching profile preview:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load profile preview data. Please try again.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -550,14 +595,27 @@ export default function ProfilesPage() {
         <head>
           <title>${formData.role || 'Resume'}</title>
           <style>
-            body { font-family: Arial, sans-serif; margin: 0; padding: 20px; }
+            body { font-family: 'Nunito', Arial, sans-serif; margin: 0; padding: 20px; color: #333; }
             .resume-container { max-width: 800px; margin: 0 auto; }
-            .header { border-bottom: 2px solid #333; padding-bottom: 10px; margin-bottom: 20px; }
-            .section { margin-bottom: 20px; }
-            .section-title { font-weight: bold; font-size: 14px; margin-bottom: 10px; text-transform: uppercase; }
-            .skills { display: flex; flex-wrap: wrap; gap: 8px; }
-            .skill-tag { background: #f0f0f0; padding: 4px 8px; border-radius: 4px; font-size: 12px; }
-            @media print { body { margin: 0; } }
+            .header { border-bottom: 2px solid #333; padding-bottom: 15px; margin-bottom: 25px; }
+            .section { margin-bottom: 25px; }
+            .section-title { font-weight: bold; font-size: 16px; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.5px; color: #111; }
+            h1 { font-size: 28px; margin: 0 0 5px 0; }
+            h2 { font-size: 20px; margin: 0 0 10px 0; color: #444; font-weight: 500; }
+            h3 { font-size: 16px; margin: 10px 0 8px 0; font-weight: 600; }
+            h4 { font-size: 15px; margin: 0; font-weight: 500; }
+            p { margin: 5px 0; line-height: 1.5; }
+            strong { font-weight: 600; }
+            
+            /* Skills styling */
+            .skills { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+            
+            /* Print optimization */
+            @media print { 
+              body { margin: 0; }
+              .resume-container { max-width: 100%; }
+              .section { page-break-inside: avoid; }
+            }
           </style>
         </head>
         <body>
@@ -581,45 +639,168 @@ export default function ProfilesPage() {
   };
 
   const generateResumeHTML = (formData: ProfileEntry): string => {
-    const commonData = {
-      name: formData.role || 'Professional',
-      location: formData.preferredCity || 'Location',
-      totalExp: formData.totalExperience || 'N/A',
-      relevantExp: formData.relevantExperience || 'N/A',
-      primarySkills: formData.primarySkills || [],
-      secondarySkills: formData.secondarySkills || [],
-      employmentType: formData.employmentType || '',
-      workMode: formData.workMode || '',
-      earnings: formData.minimumEarnings || ''
+    // Get portfolio and role-based profile data from the store
+    const { profilePreviewData } = useResumeTemplateStore.getState();
+    
+    // If we have preview data, use it; otherwise, fall back to form data
+    const portfolio = profilePreviewData?.portfolio || {
+      first_name: '',
+      last_name: '',
+      email: '',
+      mobile_no: '',
+      city: formData.preferredCity || '',
+      country: '',
+      linkedin_profile: '',
+      facebook_profile: '',
+      twitter_handle: '',
+      instagram_handle: '',
+      professional_summary: '',
+      education: [],
+      work_experience: []
+    };
+    
+    const role_based_profile = profilePreviewData?.role_based_profile || {
+      name: formData.id || '',
+      role: formData.role || 'Professional',
+      desired_job_role: '',
+      space: formData.profileType || '',
+      industry: '',
+      career_level: '',
+      employment_type: formData.employmentType || '',
+      nature_of_work: formData.natureOfWork || '',
+      work_mode: formData.workMode || '',
+      relevant_experience: parseInt(formData.relevantExperience || '0'),
+      total_experience_years: formData.totalExperience || '',
+      certifications: '',
+      primary_skills: formData.primarySkills || [],
+      secondary_skills: formData.secondarySkills || []
     };
 
-    // Generate basic resume HTML
+    // Generate resume HTML that matches the preview
     return `
       <div class="resume-container">
+        <!-- Header Section -->
         <div class="header">
-          <h1 style="margin: 0; font-size: 24px;">${commonData.name.toUpperCase()}</h1>
-          <p style="margin: 5px 0; color: #666;">${commonData.location}</p>
-        </div>
-        
-        <div class="section">
-          <div class="section-title">Experience</div>
-          <p>Total Experience: ${commonData.totalExp} years</p>
-          <p>Relevant Experience: ${commonData.relevantExp} years</p>
-          <p>Employment Type: ${commonData.employmentType}</p>
-          <p>Work Mode: ${commonData.workMode}</p>
-        </div>
-        
-        <div class="section">
-          <div class="section-title">Primary Skills</div>
-          <div class="skills">
-            ${commonData.primarySkills.map((skill: any) => `<span class="skill-tag">${skill.canonical_name}</span>`).join('')}
+          <h1 style="margin: 0; font-size: 24px;">${portfolio.first_name || ''} ${portfolio.last_name || ''}</h1>
+          <h2 style="margin: 5px 0; font-size: 18px; color: #444;">${role_based_profile.role || ''}</h2>
+          <div style="display: flex; flex-wrap: wrap; gap: 15px; margin-top: 10px; font-size: 14px; color: #666;">
+            ${portfolio.email ? `<div>${portfolio.email}</div>` : ''}
+            ${portfolio.mobile_no ? `<div>${portfolio.mobile_no}</div>` : ''}
+            ${(portfolio.city || portfolio.country) ? `<div>${[portfolio.city, portfolio.country].filter(Boolean).join(', ')}</div>` : ''}
+            ${portfolio.linkedin_profile ? `<div>LinkedIn: ${portfolio.linkedin_profile}</div>` : ''}
+            ${portfolio.facebook_profile ? `<div>Facebook: ${portfolio.facebook_profile}</div>` : ''}
+            ${portfolio.twitter_handle ? `<div>Twitter: ${portfolio.twitter_handle}</div>` : ''}
+            ${portfolio.instagram_handle ? `<div>Instagram: ${portfolio.instagram_handle}</div>` : ''}
           </div>
         </div>
         
+        <!-- Professional Summary -->
+        ${portfolio.professional_summary ? `
         <div class="section">
-          <div class="section-title">Secondary Skills</div>
-          <div class="skills">
-            ${commonData.secondarySkills.map((skill: any) => `<span class="skill-tag">${skill.canonical_name}</span>`).join('')}
+          <div class="section-title">Professional Summary</div>
+          <p style="margin-top: 5px; line-height: 1.5;">${portfolio.professional_summary}</p>
+        </div>
+        ` : ''}
+        
+        <!-- Experience Section -->
+        <div class="section">
+          <div class="section-title">Experience</div>
+          <div style="margin-top: 10px;">
+            <p><strong>Total Experience:</strong> ${role_based_profile.total_experience_years || 'N/A'} ${role_based_profile.total_experience_years ? 'years' : ''}</p>
+            <p><strong>Relevant Experience:</strong> ${role_based_profile.relevant_experience || 'N/A'} ${role_based_profile.relevant_experience ? 'years' : ''}</p>
+            <p><strong>Employment Type:</strong> ${role_based_profile.employment_type || 'N/A'}</p>
+            <p><strong>Work Mode:</strong> ${role_based_profile.work_mode || 'N/A'}</p>
+            <p><strong>Nature of Work:</strong> ${role_based_profile.nature_of_work || 'N/A'}</p>
+          </div>
+          
+          <!-- Work Experience Details -->
+          ${portfolio.work_experience && portfolio.work_experience.length > 0 ? `
+          <div style="margin-top: 15px;">
+            <h3 style="font-size: 16px; margin-bottom: 10px;">Work History</h3>
+            <div>
+              ${portfolio.work_experience.map((exp: any) => `
+                <div style="border-left: 2px solid #3b82f6; padding-left: 15px; margin-bottom: 15px;">
+                  <h4 style="margin: 0; font-size: 15px;">${exp.position || 'Position'}</h4>
+                  <p style="margin: 3px 0; color: #555;">${exp.company || 'Company'}</p>
+                  <p style="margin: 3px 0; font-size: 13px; color: #777;">${exp.duration || 'Duration'}</p>
+                  ${exp.description ? `<p style="margin: 5px 0; font-size: 14px;">${exp.description}</p>` : ''}
+                </div>
+              `).join('')}
+            </div>
+          </div>
+          ` : ''}
+        </div>
+        
+        <!-- Skills Section -->
+        <div class="section">
+          <div class="section-title">Skills</div>
+          
+          <!-- Primary Skills -->
+          ${role_based_profile.primary_skills && role_based_profile.primary_skills.length > 0 ? `
+          <div style="margin-top: 10px;">
+            <h3 style="font-size: 16px; margin-bottom: 8px;">Primary Skills</h3>
+            <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+              ${role_based_profile.primary_skills.map((skill: any) => `
+                <span style="background: #dbeafe; color: #1e40af; padding: 4px 10px; border-radius: 15px; font-size: 13px;">
+                  ${typeof skill === 'string' ? skill : skill.skill_name || skill.canonical_name || skill.skill || ''}
+                </span>
+              `).join('')}
+            </div>
+          </div>
+          ` : ''}
+          
+          <!-- Secondary Skills -->
+          ${role_based_profile.secondary_skills && role_based_profile.secondary_skills.length > 0 ? `
+          <div style="margin-top: 15px;">
+            <h3 style="font-size: 16px; margin-bottom: 8px;">Secondary Skills</h3>
+            <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+              ${role_based_profile.secondary_skills.map((skill: any) => `
+                <span style="background: #f3f4f6; color: #4b5563; padding: 4px 10px; border-radius: 15px; font-size: 13px;">
+                  ${typeof skill === 'string' ? skill : skill.skill_name || skill.canonical_name || skill.skill || ''}
+                </span>
+              `).join('')}
+            </div>
+          </div>
+          ` : ''}
+        </div>
+        
+        <!-- Education Section -->
+        ${portfolio.education && portfolio.education.length > 0 ? `
+        <div class="section">
+          <div class="section-title">Education</div>
+          <div style="margin-top: 10px;">
+            ${portfolio.education.map((edu: any) => `
+              <div style="border-left: 2px solid #22c55e; padding-left: 15px; margin-bottom: 15px;">
+                <p style="margin: 3px 0; font-weight: 500;">Stream: ${edu.stream || 'Degree'}</p>
+                <p style="margin: 3px 0;">University: ${edu.university_board || 'Institution'}</p>
+                <p style="margin: 3px 0;">Year of Completion: ${edu.year_of_completion || 'Year'}</p>
+                ${edu.grade ? `<p style="margin: 3px 0;">Grade: ${edu.grade}</p>` : ''}
+              </div>
+            `).join('')}
+          </div>
+        </div>
+        ` : ''}
+        
+        <!-- Certifications -->
+        ${role_based_profile.certifications ? `
+        <div class="section">
+          <div class="section-title">Certifications</div>
+          <p style="margin-top: 5px;">${role_based_profile.certifications}</p>
+        </div>
+        ` : ''}
+        
+        <!-- Additional Information -->
+        <div class="section">
+          <div class="section-title">Additional Information</div>
+          <div style="margin-top: 10px; display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+            <div>
+              <p><strong>Space:</strong> ${role_based_profile.space || 'N/A'}</p>
+              ${role_based_profile.industry ? `<p><strong>Industry:</strong> ${role_based_profile.industry}</p>` : ''}
+              ${role_based_profile.career_level ? `<p><strong>Career Level:</strong> ${role_based_profile.career_level}</p>` : ''}
+            </div>
+            <div>
+              ${role_based_profile.desired_job_role ? `<p><strong>Desired Role:</strong> ${role_based_profile.desired_job_role}</p>` : ''}
+            </div>
           </div>
         </div>
       </div>
@@ -725,15 +906,71 @@ export default function ProfilesPage() {
   const renderResumePreviewModal = () => {
     if (!showResumePreview || !previewProfile) return null;
 
-    const { template, formData } = previewProfile;
-    if (!template || !formData) return null;
+    // Show loading state while fetching data
+    if (isLoadingPreview) {
+      return (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-lg p-8 text-center">
+            <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4 text-blue-600" />
+            <p className="text-gray-600">Loading resume preview...</p>
+          </div>
+        </div>
+      );
+    }
+
+    // Show error state if API call failed
+    if (previewError) {
+      return (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-lg p-8 text-center max-w-md">
+            <AlertCircle className="w-8 h-8 text-red-500 mx-auto mb-4" />
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">Error Loading Preview</h3>
+            <p className="text-gray-600 mb-4">{previewError}</p>
+            <div className="flex space-x-3 justify-center">
+              <button
+                onClick={() => handlePreviewResume(previewProfile)}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                Retry
+              </button>
+              <button
+                onClick={() => setShowResumePreview(false)}
+                className="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition-colors"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // Show resume preview with API data
+    if (!profilePreviewData) {
+      return (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-lg p-8 text-center">
+            <AlertCircle className="w-8 h-8 text-yellow-500 mx-auto mb-4" />
+            <p className="text-gray-600">No preview data available</p>
+            <button
+              onClick={() => setShowResumePreview(false)}
+              className="mt-4 px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition-colors"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      );
+    }
+
+    const { portfolio, role_based_profile } = profilePreviewData;
 
     return (
       <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
         <div className="bg-white rounded-xl shadow-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
           <div className="flex items-center justify-between p-6 border-b">
             <h3 className="text-xl font-semibold text-gray-900">
-              Resume Preview - {template}
+              Resume Preview - {role_based_profile.role}
             </h3>
             <div className="flex space-x-3">
               <button
@@ -744,7 +981,10 @@ export default function ProfilesPage() {
                 Download PDF
               </button>
               <button
-                onClick={() => setShowResumePreview(false)}
+                onClick={() => {
+                  setShowResumePreview(false);
+                  clearPreviewData();
+                }}
                 className="p-2 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100"
               >
                 <X className="w-5 h-5" />
@@ -754,185 +994,168 @@ export default function ProfilesPage() {
           
           <div className="p-6 font-nunito">
             <div className="bg-white border rounded-lg p-8 min-h-[600px]" style={{ fontFamily: 'Arial, sans-serif' }}>
-              {template === 'classic' && (
-                <div>
-                  <div className="border-b-2 border-gray-800 pb-4 mb-6">
-                    <h1 className="text-3xl font-bold mb-2">{formData.role?.toUpperCase() || 'PROFESSIONAL'}</h1>
-                    <p className="text-gray-600 text-lg">{formData.preferredCity || 'Location'}</p>
-                  </div>
-                  
-                  <div className="mb-6">
-                    <h2 className="text-lg font-bold mb-3 uppercase">Experience</h2>
-                    <div className="space-y-2">
-                      <p><strong>Total Experience:</strong> {formData.totalExperience || 'N/A'} years</p>
-                      <p><strong>Relevant Experience:</strong> {formData.relevantExperience || 'N/A'} years</p>
-                      <p><strong>Employment Type:</strong> {formData.employmentType || 'Not specified'}</p>
-                      <p><strong>Work Mode:</strong> {formData.workMode || 'Not specified'}</p>
-                      {formData.minimumEarnings && (
-                        <p><strong>Expected Salary:</strong> {formData.minimumEarnings} {formData.currency || ''}</p>
-                      )}
+              {/* Header Section */}
+              <div className="border-b-2 border-gray-800 pb-4 mb-6">
+                <h1 className="text-3xl font-bold mb-2">
+                  {portfolio.first_name} {portfolio.last_name}
+                </h1>
+                <h2 className="text-xl text-gray-700 mb-2">{role_based_profile.role}</h2>
+                <div className="flex flex-wrap gap-4 text-sm text-gray-600">
+                  {portfolio.email && (
+                    <div className="flex items-center">
+                      <Mail className="w-4 h-4 mr-1" />
+                      {portfolio.email}
+                    </div>
+                  )}
+                  {portfolio.mobile_no && (
+                    <div className="flex items-center">
+                      <Phone className="w-4 h-4 mr-1" />
+                      {portfolio.mobile_no}
+                    </div>
+                  )}
+                  {(portfolio.city || portfolio.country) && (
+                    <div className="flex items-center">
+                      <MapPin className="w-4 h-4 mr-1" />
+                      {[portfolio.city, portfolio.country].filter(Boolean).join(', ')}
+                    </div>
+                  )}
+                  {portfolio.linkedin_profile && (
+                    <div className="flex items-center">
+                      <Globe className="w-4 h-4 mr-1" />
+                      {portfolio.linkedin_profile}
+                    </div>
+                  )}
+                  {portfolio.facebook_profile && (
+                    <div className="flex items-center">
+                      <Globe className="w-4 h-4 mr-1" />
+                      {portfolio.facebook_profile}
+                    </div>
+                  )}
+                  {portfolio.twitter_handle && (
+                    <div className="flex items-center">
+                      <Globe className="w-4 h-4 mr-1" />
+                      {portfolio.twitter_handle}
+                    </div>
+                  )}
+                  {portfolio.instagram_handle && (
+                    <div className="flex items-center">
+                      <Globe className="w-4 h-4 mr-1" />
+                      {portfolio.instagram_handle}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Professional Summary */}
+              {portfolio.professional_summary && (
+                <div className="mb-6">
+                  <h2 className="text-lg font-bold mb-3 uppercase">Professional Summary</h2>
+                  <p className="text-gray-700 leading-relaxed">{portfolio.professional_summary}</p>
+                </div>
+              )}
+
+              {/* Experience Section */}
+              <div className="mb-6">
+                <h2 className="text-lg font-bold mb-3 uppercase">Experience</h2>
+                <div className="space-y-2">
+                  <p><strong>Total Experience:</strong> {role_based_profile.total_experience_years} years</p>
+                  <p><strong>Relevant Experience:</strong> {role_based_profile.relevant_experience} years</p>
+                  <p><strong>Employment Type:</strong> {role_based_profile.employment_type}</p>
+                  <p><strong>Work Mode:</strong> {role_based_profile.work_mode}</p>
+                  <p><strong>Nature of Work:</strong> {role_based_profile.nature_of_work}</p>
+                </div>
+                
+                {/* Work Experience Details */}
+                {portfolio.work_experience && portfolio.work_experience.length > 0 && (
+                  <div className="mt-4">
+                    <h3 className="font-semibold mb-2">Work History</h3>
+                    <div className="space-y-3">
+                      {portfolio.work_experience.map((exp: any, index: number) => (
+                        <div key={index} className="border-l-2 border-blue-500 pl-4">
+                          <h4 className="font-medium">{exp.position || 'Position'}</h4>
+                          <p className="text-gray-600">{exp.company || 'Company'}</p>
+                          <p className="text-sm text-gray-500">{exp.duration || 'Duration'}</p>
+                          {exp.description && <p className="text-sm mt-1">{exp.description}</p>}
+                        </div>
+                      ))}
                     </div>
                   </div>
-                  
-                  {formData.profileType && (
-                    <div className="mb-6">
-                      <h2 className="text-lg font-bold mb-3 uppercase">{formData.profileType} Specialization</h2>
-                      <div className="space-y-2">
-                        <p className="text-gray-700">Specialized in {formData.profileType} domain</p>
-                        {renderSubdomainFields(formData)}
+                )}
+              </div>
+
+              {/* Skills Section */}
+              <div className="mb-6">
+                <h2 className="text-lg font-bold mb-3 uppercase">Skills</h2>
+                <div className="space-y-3">
+                  {role_based_profile.primary_skills && role_based_profile.primary_skills.length > 0 && (
+                    <div>
+                      <h3 className="font-semibold mb-2">Primary Skills</h3>
+                      <div className="flex flex-wrap gap-2">
+                        {role_based_profile.primary_skills.map((skill: any, index: number) => (
+                          <span key={index} className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm">
+                            {typeof skill === 'string' ? skill : skill.skill_name || skill.skill_name}
+                          </span>
+                        ))}
                       </div>
                     </div>
                   )}
                   
-                  <div className="mb-6">
-                    <h2 className="text-lg font-bold mb-3 uppercase">Primary Skills</h2>
-                    <div className="flex flex-wrap gap-2">
-                      {formData.primarySkills?.map((skill: any) => (
-                        <span key={skill.name || skill} className="bg-gray-200 px-3 py-1 rounded text-sm">
-                          {skill.canonical_name}
-                        </span>
-                      )) || <p className="text-gray-500">No primary skills added</p>}
-                    </div>
-                  </div>
-                  
-                  <div className="mb-6">
-                    <h2 className="text-lg font-bold mb-3 uppercase">Secondary Skills</h2>
-                    <div className="flex flex-wrap gap-2">
-                      {formData.secondarySkills?.map((skill: any) => (
-                        <span key={skill.name || skill} className="bg-gray-100 px-3 py-1 rounded text-sm">
-                          {skill.canonical_name}
-                        </span>
-                      )) || <p className="text-gray-500">No secondary skills added</p>}
-                    </div>
-                  </div>
-                </div>
-              )}
-              
-              {template === 'modern' && (
-                <div className="text-center">
-                  <div className="border-b-2 border-gray-800 pb-4 mb-6">
-                    <h1 className="text-3xl font-bold mb-2">{formData.role?.toUpperCase() || 'PROFESSIONAL'}</h1>
-                    <p className="text-gray-600 text-lg">{formData.preferredCity || 'Location'}</p>
-                  </div>
-                  
-                  <div className="mb-6">
-                    <h2 className="text-lg font-bold mb-3 uppercase">Professional Summary</h2>
-                    <p className="text-gray-700 max-w-2xl mx-auto">
-                      {formData.totalExperience || 'N/A'} years of professional experience in {formData.role?.toLowerCase() || 'the field'}
-                      {formData.profileType && `, specializing in ${formData.profileType}`}, 
-                      with expertise in {formData.primarySkills?.slice(0, 3).join(', ') || 'various technologies'}.
-                    </p>
-                  </div>
-                  
-                  {formData.profileType && (
-                    <div className="mb-6">
-                      <h2 className="text-lg font-bold mb-3 uppercase">{formData.profileType} Specialization</h2>
-                      <p className="text-gray-700 max-w-2xl mx-auto">
-                        Specialized expertise in {formData.profileType} domain with focus on industry best practices.
-                      </p>
-                      {renderSubdomainFields(formData)}
+                  {role_based_profile.secondary_skills && role_based_profile.secondary_skills.length > 0 && (
+                    <div>
+                      <h3 className="font-semibold mb-2">Secondary Skills</h3>
+                      <div className="flex flex-wrap gap-2">
+                        {role_based_profile.secondary_skills.map((skill: any, index: number) => (
+                          <span key={index} className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm">
+                            {typeof skill === 'string' ? skill : skill.skill_name || skill.skill_name}
+                          </span>
+                        ))}
+                      </div>
                     </div>
                   )}
-                  
-                  <div className="mb-6">
-                    <h2 className="text-lg font-bold mb-3 uppercase">Key Skills</h2>
-                    <div className="flex flex-wrap gap-2 justify-center">
-                      {formData.primarySkills?.map((skill: any) => (
-                        <span key={skill.name || skill} className="bg-blue-100 text-blue-800 px-3 py-1 rounded text-sm">
-                          {skill.canonical_name}
-                        </span>
-                      )) || <p className="text-gray-500">No skills added</p>}
-                    </div>
-                  </div>
-                  
-                  <div className="mb-6">
-                    <h2 className="text-lg font-bold mb-3 uppercase">Additional Skills</h2>
-                    <div className="flex flex-wrap gap-2 justify-center">
-                      {formData.secondarySkills?.map((skill: any) => (
-                        <span key={skill.name || skill} className="bg-green-100 text-green-800 px-3 py-1 rounded text-sm">
-                          {skill.canonical_name}
-                        </span>
-                      )) || <p className="text-gray-500">No additional skills added</p>}
-                    </div>
+                </div>
+              </div>
+
+              {/* Education Section */}
+              {portfolio.education && portfolio.education.length > 0 && (
+                <div className="mb-6 font-nunito">
+                  <h2 className="text-lg font-bold mb-3 uppercase">Education</h2>
+                  <div className="space-y-3">
+                    {portfolio.education.map((edu: any, index: number) => (
+                      <div key={index} className="border-l-2 border-green-500 pl-4">
+                        <p className="font-medium text-md">Stream: {edu.stream || 'Degree'}</p>
+                        <p className="text-md">University: {edu.university_board || 'Institution'}</p>
+                        <p className="text-md">Year of Completion: {edu.year_of_completion || 'Year'}</p>
+                        {edu.grade && <p className="text-md">Grade: {edu.grade}</p>}
+                      </div>
+                    ))}
                   </div>
                 </div>
               )}
-              
-              {template === 'creative' && (
-                <div className="flex min-h-[600px] font-nunito">
-                  <div className="w-2/3 pr-8">
-                    <div className="mb-6">
-                      <h1 className="text-3xl font-bold mb-2">{formData.role?.toUpperCase() || 'PROFESSIONAL'}</h1>
-                      <p className="text-gray-600 text-lg">{formData.preferredCity || 'Location'}</p>
-                    </div>
-                    
-                    <div className="mb-6">
-                      <h2 className="text-lg font-bold mb-3 uppercase">Objective</h2>
-                      <p className="text-gray-700">
-                        Creative professional with {formData.totalExperience || 'N/A'} years of experience seeking opportunities 
-                        in {formData.role?.toLowerCase() || 'the creative field'}. Passionate about delivering innovative solutions 
-                        and exceptional user experiences.
-                      </p>
-                    </div>
-                    
-                    <div className="mb-6">
-                      <h2 className="text-lg font-bold mb-3 uppercase">Experience</h2>
-                      <div className="space-y-2">
-                        <p><strong>Total Experience:</strong> {formData.totalExperience || 'N/A'} years</p>
-                        <p><strong>Relevant Experience:</strong> {formData.relevantExperience || 'N/A'} years</p>
-                        <p><strong>Work Preference:</strong> {formData.workMode || 'Not specified'}</p>
-                      </div>
-                    </div>
-                    
-                    {formData.profileType && (
-                      <div className="mb-6">
-                        <h2 className="text-lg font-bold mb-3 uppercase">{formData.profileType} Expertise</h2>
-                        <p className="text-gray-700">
-                          Specialized knowledge and experience in {formData.profileType} domain.
-                        </p>
-                        {renderSubdomainFields(formData)}
-                      </div>
-                    )}
+
+              {/* Certifications */}
+              {role_based_profile.certifications && (
+                <div className="mb-6">
+                  <h2 className="text-lg font-bold mb-3 uppercase">Certifications</h2>
+                  <p className="text-gray-700">{role_based_profile.certifications}</p>
+                </div>
+              )}
+
+              {/* Additional Information */}
+              <div className="mb-6">
+                <h2 className="text-lg font-bold mb-3 uppercase">Additional Information</h2>
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <p><strong>Space:</strong> {role_based_profile.space}</p>
+                    {role_based_profile.industry && <p><strong>Industry:</strong> {role_based_profile.industry}</p>}
+                    {role_based_profile.career_level && <p><strong>Career Level:</strong> {role_based_profile.career_level}</p>}
                   </div>
-                  
-                  <div className="w-1/3 bg-blue-900 text-white p-6">
-                    <div className="mb-6">
-                      {/* <div className="w-20 h-20 bg-white rounded-full mx-auto mb-4"></div> */}
-                      <div className="text-center text-sm">
-                        <p>{formData.preferredCity || 'Location'}</p>
-                        {formData.minimumEarnings && (
-                          <p>Expected: {formData.minimumEarnings} {formData.currency || ''}</p>
-                        )}
-                      </div>
-                    </div>
-                    
-                    <div className="mb-6">
-                      <h3 className="font-bold mb-3 uppercase">Skills</h3>
-                      <div className="space-y-2">
-                        {formData.primarySkills?.map((skill: any) => (
-                          <p key={skill.name || skill} className="text-sm">• {skill.canonical_name}</p>
-                        )) || <p className="text-sm">No skills added</p>}
-                      </div>
-                    </div>
-                    
-                    <div className="mb-6">
-                      <h3 className="font-bold mb-3 uppercase">Additional Skills</h3>
-                      <div className="space-y-2">
-                        {formData.secondarySkills?.slice(0, 5).map((skill: any) => (
-                          <p key={skill.name || skill} className="text-sm">• {skill.canonical_name}</p>
-                        )) || <p className="text-sm">No additional skills</p>}
-                      </div>
-                    </div>
-                    
-                    {formData.profileType && (
-                      <div className="mb-6">
-                        <p className="text-sm">Domain Specialization</p>
-                        <h3 className="font-bold mb-3 uppercase">{formData.profileType}</h3>
-                      </div>
+                  <div>
+                    {role_based_profile.desired_job_role && (
+                      <p><strong>Desired Role:</strong> {role_based_profile.desired_job_role}</p>
                     )}
                   </div>
                 </div>
-              )}
+              </div>
             </div>
           </div>
         </div>
@@ -1081,27 +1304,3 @@ export default function ProfilesPage() {
     </ModernLayoutWrapper>
   );
 }
-
-
-
-
-  {/* Active Profile Management */}
-        {/* <div className="space-y-6">
-          <h2 className="text-xl font-semibold text-gray-900">
-            Optimize: {profiles.find(p => p.id === activeProfile)?.name}
-          </h2>
-
-          <StrategicProfileOptimizer
-            profileData={mockProfileOptimizationHub}
-            completionTasks={mockProfileOptimizationHub.strategic_completion.completion_priorities}
-            onTaskComplete={handleTaskComplete}
-            onSkillAdd={handleSkillAdd}
-            marketImpactMode={true}
-          />
-          
-       
-          <ProfileAnalytics
-            analytics={mockProfileAnalytics}
-            onViewDetails={(section) => console.log('View details:', section)}
-          />
-        </div> */}

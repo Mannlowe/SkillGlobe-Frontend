@@ -2,8 +2,9 @@
 
 import { useState } from 'react';
 import { Shield, FileText, Eye, Upload, Download, Check } from 'lucide-react';
-import Link from 'next/link';
 import { useRegistrationStore } from '@/store/registration';
+import TermsAndCondition from '@/components/modal/TermsAndCondition';
+import PrivacyPolicy from '@/components/modal/PrivacyPolicy';
 
 interface BusinessTermsAcceptanceProps {
   data: any;
@@ -16,6 +17,8 @@ export default function BusinessTermsAcceptance({ data, updateData, nextStep }: 
   const [agreementDownloaded, setAgreementDownloaded] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [isCheckboxEnabled, setIsCheckboxEnabled] = useState<boolean>(false);
+  const [showTermsModal, setShowTermsModal] = useState(false);
+  const [showPrivacyModal, setShowPrivacyModal] = useState(false);
   
   // Get registration store state and actions
   const { completeRegistration, isLoading, error: apiError, request_id, password } = useRegistrationStore();
@@ -30,16 +33,24 @@ export default function BusinessTermsAcceptance({ data, updateData, nextStep }: 
   };
   
   const handleDownloadAgreement = () => {
-    // Create a link to download the agreement.pdf file
+    // In Next.js, files in the public directory are served at the root path
     const link = document.createElement('a');
-    link.href = '/documents/agreement.pdf'; // Path to your agreement PDF
-    link.download = 'SkillGlobe_Agreement.pdf';
+    link.href = '/documents/SkillGlobe_TermsAndConditions_Full.pdf';
+    link.download = 'SkillGlobe_TermsAndConditions_Full.pdf';
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
     
     // Set state to indicate agreement has been downloaded
     setAgreementDownloaded(true);
+  };
+
+  const openTermsModal = () => {
+    setShowTermsModal(true);
+  };
+
+  const openPrivacyModal = () => {
+    setShowPrivacyModal(true);
   };
 
   const handleAccept = async () => {
@@ -128,23 +139,21 @@ export default function BusinessTermsAcceptance({ data, updateData, nextStep }: 
 
         {/* Document Links */}
         <div className="grid grid-cols-2 gap-3">
-          <Link 
-            href="/business-terms" 
-            target="_blank"
+          <button 
+            onClick={openTermsModal}
             className="flex items-center justify-center p-3 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors"
           >
             <Eye size={16} className="mr-2 text-gray-600" />
             <span className="text-sm font-medium text-gray-700">Business Terms</span>
-          </Link>
+          </button>
           
-          <Link 
-            href="/privacy" 
-            target="_blank"
+          <button 
+            onClick={openPrivacyModal}
             className="flex items-center justify-center p-3 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors"
           >
             <Eye size={16} className="mr-2 text-gray-600" />
             <span className="text-sm font-medium text-gray-700">Privacy Policy</span>
-          </Link>
+          </button>
         </div>
 
         {/* Authorization Agreement Document */}
@@ -251,6 +260,10 @@ export default function BusinessTermsAcceptance({ data, updateData, nextStep }: 
       <div className="text-center text-sm text-gray-500">
         You must accept these terms to use SkillGlobe for Business
       </div>
+
+      {/* Modals */}
+      <TermsAndCondition isOpen={showTermsModal} onClose={() => setShowTermsModal(false)} />
+      <PrivacyPolicy isOpen={showPrivacyModal} onClose={() => setShowPrivacyModal(false)} />
     </div>
   );
 }

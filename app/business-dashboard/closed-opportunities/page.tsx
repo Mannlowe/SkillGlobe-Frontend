@@ -5,9 +5,8 @@ import { Briefcase, Search, Users, ArrowLeft } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import BusinessSidebar from '@/components/dashboard/BusinessSidebar';
 import BusinessDashboardHeader from '@/components/dashboard/BusinessDashboardHeader';
-import { useClosedOpportunitiesStore } from '@/store/job-postings/closedOpportunitiesStore';
+import { getClosedOpportunities, ClosedOpportunity as ApiClosedOpportunity } from '@/app/api/job postings/jobpostingList';
 import { useAuthStore } from '@/store/authStore';
-import { ClosedOpportunity } from '@/app/api/job postings/addjobPosting';
 
 // Job posting interface
 interface JobPosting {
@@ -32,68 +31,65 @@ interface JobPosting {
 
 export default function ClosedOpportunitiesPage() {
   const router = useRouter();
+  const [closedJobs, setClosedJobs] = useState<JobPosting[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
-  
-  // Use the closed opportunities store
-  const { 
-    closedOpportunities, 
-    isLoading, 
-    error, 
-    fetchClosedOpportunities 
-  } = useClosedOpportunitiesStore();
-  
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
   // Get entity ID from auth store
   const { entity } = useAuthStore();
   const entityId = entity?.details?.entity_id || "";
 
-  // Sample closed job postings data
-  const sampleClosedJobs: JobPosting[] = [
-    {
-      id: '1',
-      title: 'Marketing Manager',
-      skillCategory: 'Marketing',
-      employmentType: 'Full-time',
-      workMode: 'On-site',
-      experienceRequired: '5+ years',
-      location: 'Mumbai, India',
-      postedDate: '2 weeks ago',
-      closedDate: '3 days ago',
-      status: 'Closed',
-      applicantCount: 25
-    },
-    {
-      id: '2',
-      title: 'Data Analyst',
-      skillCategory: 'IT & Software',
-      employmentType: 'Contract',
-      workMode: 'Remote',
-      experienceRequired: '2-3 years',
-      location: 'Remote',
-      postedDate: '1 month ago',
-      closedDate: '1 week ago',
-      status: 'Closed',
-      applicantCount: 18
-    }
-  ];
-
-  // Fetch closed opportunities when component mounts and entity_id is available
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchClosedOpportunities = async () => {
       if (!entityId) {
         console.log('Waiting for entity_id to be loaded...');
         return;
       }
-      
+
+      setIsLoading(true);
+      setError(null);
+
       try {
         console.log('Fetching closed opportunities for entity_id:', entityId);
-        await fetchClosedOpportunities(entityId);
-      } catch (error) {
+        const response = await getClosedOpportunities(entityId);
+        
+        console.log('API Response:', response);
+        console.log('Closed opportunities data:', response.message.data.closed_opportunity_posting);
+        
+        if (response.message.status === 'success') {
+          // Map API response to UI format
+          const mappedClosedJobs: JobPosting[] = response.message.data.closed_opportunity_posting.map((job: ApiClosedOpportunity) => ({
+            id: job.name,
+            title: job.opportunity_title,
+            skillCategory: job.role_skill_category,
+            employmentType: job.employment_type,
+            workMode: job.work_mode,
+            experienceRequired: job.experience_required,
+            location: job.location || 'Not specified',
+            applicationDeadline: job.application_deadline,
+            postedDate: 'N/A',
+            closedDate: 'Recently closed',
+            status: 'Closed',
+            applicantCount: job.profiles_match_count || 0
+          }));
+          
+          console.log('Mapped closed jobs:', mappedClosedJobs);
+          setClosedJobs(mappedClosedJobs);
+        } else {
+          console.log('API response status not success:', response.message.status);
+          setError('Failed to fetch closed opportunities');
+        }
+      } catch (error: any) {
         console.error('Error fetching closed opportunities:', error);
+        setError(error.message || 'Failed to fetch closed opportunities');
+      } finally {
+        setIsLoading(false);
       }
     };
-    
-    fetchData();
-  }, [fetchClosedOpportunities, entityId]);
+
+    fetchClosedOpportunities();
+  }, [entityId]);
 
   const handleTitleClick = (jobId: string) => {
     router.push(`/business-dashboard/job-applied-users?jobId=${jobId}`);
@@ -103,22 +99,7 @@ export default function ClosedOpportunitiesPage() {
     router.push('/business-dashboard/job-postings');
   };
 
-  // Map API data to UI format and filter
-  const mappedClosedJobs: JobPosting[] = closedOpportunities.map((opportunity: ClosedOpportunity) => ({
-    id: opportunity.name,
-    title: opportunity.opportunity_title,
-    skillCategory: opportunity.role_skill_category,
-    employmentType: opportunity.employment_type,
-    workMode: opportunity.work_mode,
-    experienceRequired: opportunity.experience_required,
-    location: opportunity.location || 'Not specified',
-    postedDate: new Date(opportunity.creation).toLocaleDateString(),
-    closedDate: new Date(opportunity.modified).toLocaleDateString(),
-    status: 'Closed',
-    applicantCount: 0 // This would need to come from another API if available
-  }));
-  
-  const filteredJobs = mappedClosedJobs.filter(job =>
+  const filteredJobs = closedJobs.filter(job =>
     job.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
     job.skillCategory?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     job.location.toLowerCase().includes(searchTerm.toLowerCase())
@@ -141,9 +122,25 @@ export default function ClosedOpportunitiesPage() {
             </button>
             
             <div className="text-sm text-gray-600">
-              Total Closed Opportunities: {closedOpportunities.length}
+              Total Closed Opportunities: {closedJobs.length}
             </div>
           </div>
+
+          {/* Loading and error states */}
+          {(!entityId || isLoading) && (
+            <div className="flex justify-center items-center p-8">
+              <div className="w-8 h-8 border-4 border-orange-600 border-t-transparent rounded-full animate-spin"></div>
+              <span className="ml-2">
+                {!entityId ? 'Loading user session...' : 'Loading closed opportunities...'}
+              </span>
+            </div>
+          )}
+          
+          {error && entityId && (
+            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4">
+              {error}
+            </div>
+          )}
           
           <div className="bg-white rounded-xl shadow-sm mb-6">
             <div className="p-4 border-b border-gray-200">
@@ -160,30 +157,14 @@ export default function ClosedOpportunitiesPage() {
             </div>
             
             <div className="flex-1 overflow-y-auto p-6">
-              {/* Loading and error states */}
-              {(!entityId || isLoading) && (
-                <div className="flex justify-center items-center p-8">
-                  <div className="w-8 h-8 border-4 border-orange-600 border-t-transparent rounded-full animate-spin"></div>
-                  <span className="ml-2">
-                    {!entityId ? 'Loading user session...' : 'Loading closed opportunities...'}
-                  </span>
-                </div>
-              )}
-              
-              {error && entityId && (
-                <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4">
-                  {error}
-                </div>
-              )}
-              
-              {!isLoading && !error && filteredJobs.length === 0 ? (
+              {filteredJobs.length === 0 && !isLoading && !error ? (
                 <div className="text-center py-8">
                   <div className="text-gray-500 mb-2">No closed opportunities found</div>
                   <div className="text-sm text-gray-400">
                     {searchTerm ? 'Try adjusting your search criteria' : 'Closed job postings will appear here'}
                   </div>
                 </div>
-              ) : !isLoading && !error && (
+              ) : (
                 <table className="w-full">
                   <thead className="bg-gray-50">
                     <tr>
@@ -193,7 +174,7 @@ export default function ClosedOpportunitiesPage() {
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Work Mode</th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Experience</th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Location</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Closed Date</th>
+                      {/* <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Closed Date</th> */}
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
@@ -235,9 +216,9 @@ export default function ClosedOpportunitiesPage() {
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="text-sm text-gray-900">{job.location}</div>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {/* <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                           {job.closedDate || 'Not specified'}
-                        </td>
+                        </td> */}
                       </tr>
                     ))}
                   </tbody>

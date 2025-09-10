@@ -1,5 +1,6 @@
 import { create } from 'zustand';
-import { closeOpportunity, getClosedOpportunities, ClosedOpportunity, getAuthData } from '@/app/api/job postings/addjobPosting';
+import { closeOpportunity, CloseOpportunityResponse } from '@/app/api/job postings/jobpostingList';
+import { getClosedOpportunities, ClosedOpportunity, getAuthData } from '@/app/api/job postings/addjobPosting';
 
 interface ClosedOpportunitiesState {
   closedOpportunities: ClosedOpportunity[];
@@ -57,11 +58,9 @@ export const useClosedOpportunitiesStore = create<ClosedOpportunitiesState>((set
         throw new Error('Authentication data not found');
       }
 
-      const response = await closeOpportunity(
+      const response: CloseOpportunityResponse = await closeOpportunity(
         authData.entityId,
-        opportunityName,
-        authData.apiKey,
-        authData.apiSecret
+        opportunityName
       );
 
       if (response.message.status === 'success') {

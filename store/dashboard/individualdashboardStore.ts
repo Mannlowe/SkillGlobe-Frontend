@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { getProfileInsights, getOpportunityMatches, getAuthData, markAsInterested, ProfileInsightsResponse, OpportunityMatchesResponse, OpportunityMatch, MarkAsInterestedResponse } from '@/app/api/Dashboard/individualDashboard';
+import { getProfileInsights, getOpportunityMatches, getAuthData, markAsInterested, saveOpportunityMatch, ProfileInsightsResponse, OpportunityMatchesResponse, OpportunityMatch, MarkAsInterestedResponse, SaveOpportunityMatchResponse } from '@/app/api/Dashboard/individualDashboard';
 import type { JobOpportunity } from '@/types/dashboard';
 
 // Utility function to convert API opportunity match to JobOpportunity format
@@ -27,6 +27,7 @@ const mapOpportunityMatchToJobOpportunity = (match: OpportunityMatch): JobOpport
     recruiter_activity: 'Recently posted',
     buyer_interested: match.buyer_interested === 1,
     seller_interested: match.seller_interested === 1,
+    bookmarked: match.bookmarked_by_profile_owner === 1, // Use bookmarked_by_profile_owner instead of bookmarked
   };
 };
 
@@ -57,10 +58,18 @@ interface IndividualDashboardState {
   isMarkingInterest: boolean;
   markInterestError: string | null;
   
+  // Bookmarking
+  isBookmarking: boolean;
+  bookmarkError: string | null;
+  bookmarkedOpportunities: JobOpportunity[] | null;
+  isLoadingBookmarks: boolean;
+  
   // Actions
   fetchProfileInsights: () => Promise<void>;
-  fetchOpportunityMatches: (searchQuery?: string) => Promise<void>;
+  fetchOpportunityMatches: (searchQuery?: string, filters?: Record<string, any>) => Promise<void>;
   markOpportunityInterest: (opportunityMatchId: string) => Promise<boolean>;
+  bookmarkOpportunity: (opportunityMatchId: string) => Promise<boolean>;
+  fetchBookmarkedOpportunities: () => Promise<void>;
   clearError: () => void;
   clearOpportunityError: () => void;
   resetStore: () => void;
@@ -79,6 +88,10 @@ const initialState = {
   totalPages: 0,
   isMarkingInterest: false,
   markInterestError: null,
+  isBookmarking: false,
+  bookmarkError: null,
+  bookmarkedOpportunities: null,
+  isLoadingBookmarks: false,
 };
 
 // Create the store
@@ -156,7 +169,7 @@ export const useIndividualDashboardStore = create<IndividualDashboardState>((set
   },
 
   // Fetch opportunity matches data
-  fetchOpportunityMatches: async (searchQuery?: string) => {
+  fetchOpportunityMatches: async (searchQuery?: string, filters?: Record<string, any>) => {
     try {
       set({ isLoadingOpportunities: true, opportunityError: null });
 
@@ -172,14 +185,15 @@ export const useIndividualDashboardStore = create<IndividualDashboardState>((set
         throw new Error('API credentials not found. Please login again.');
       }
 
-      console.log('Fetching opportunities with search query:', searchQuery);
+      console.log('Fetching opportunities with search query:', searchQuery, 'and filters:', filters);
 
-      // Call the API with optional search query
+      // Call the API with optional search query and filters
       const response: OpportunityMatchesResponse = await getOpportunityMatches(
         entityId,
         apiKey,
         apiSecret,
-        searchQuery
+        searchQuery,
+        filters
       );
 
       // Check if the response is successful
@@ -259,7 +273,7 @@ export const useIndividualDashboardStore = create<IndividualDashboardState>((set
 
         if (currentOpportunityMatches) {
           const updatedMatches = currentOpportunityMatches.map(match => {
-            if (match.name === opportunityMatchId) {
+            if (match.opportunity_match_id === opportunityMatchId) {
               return { ...match, seller_interested: 1 };
             }
             return match;
@@ -268,7 +282,7 @@ export const useIndividualDashboardStore = create<IndividualDashboardState>((set
           // Update the transformed opportunities as well
           const updatedOpportunities = currentOpportunities?.map(opp => {
             const matchingMatch = updatedMatches.find(m => m.opportunity_posting === opp.id);
-            if (matchingMatch && matchingMatch.name === opportunityMatchId) {
+            if (matchingMatch && matchingMatch.opportunity_match_id === opportunityMatchId) {
               return { ...opp, seller_interested: true };
             }
             return opp;
@@ -296,6 +310,153 @@ export const useIndividualDashboardStore = create<IndividualDashboardState>((set
     }
   },
 
+  // Bookmark opportunity
+  bookmarkOpportunity: async (opportunityMatchId: string) => {
+    try {
+      set({ isBookmarking: true, bookmarkError: null });
+
+      // Get authentication data
+      const authData = getAuthData();
+      if (!authData) {
+        throw new Error('Authentication data not found. Please login again.');
+      }
+
+      const { entityId, apiKey, apiSecret } = authData;
+
+      if (!apiKey || !apiSecret) {
+        throw new Error('API credentials not found. Please login again.');
+      }
+
+      // Call the API
+      const response: SaveOpportunityMatchResponse = await saveOpportunityMatch(
+        entityId,
+        opportunityMatchId,
+        apiKey,
+        apiSecret
+      );
+
+      // Check if the response is successful
+      if (response.message.status === 'success') {
+        // Update the local state to reflect the bookmark
+        const currentOpportunityMatches = get().opportunityMatches;
+        const currentOpportunities = get().opportunities;
+        const bookmarkedOpportunities = get().bookmarkedOpportunities;
+
+        if (currentOpportunityMatches) {
+          // Find the current match to determine if we're toggling on or off
+          const match = currentOpportunityMatches.find(m => m.opportunity_match_id === opportunityMatchId);
+          const currentBookmarkedValue = match?.bookmarked_by_profile_owner || 0;
+          const newBookmarkedValue = currentBookmarkedValue === 1 ? 0 : 1;
+          
+          // Update matches
+          const updatedMatches = currentOpportunityMatches.map(match => {
+            if (match.opportunity_match_id === opportunityMatchId) {
+              return { ...match, bookmarked_by_profile_owner: newBookmarkedValue };
+            }
+            return match;
+          });
+
+          // Update transformed opportunities
+          const updatedOpportunities = currentOpportunities?.map(opp => {
+            const matchingMatch = updatedMatches.find(m => m.opportunity_posting === opp.id);
+            if (matchingMatch && matchingMatch.opportunity_match_id === opportunityMatchId) {
+              return { ...opp, bookmarked: newBookmarkedValue === 1 };
+            }
+            return opp;
+          }) || null;
+          
+          // Update bookmarked opportunities list - if toggling off, remove from list
+          let updatedBookmarkedOpportunities = bookmarkedOpportunities;
+          if (newBookmarkedValue === 0 && bookmarkedOpportunities) {
+            // If toggling off, remove from bookmarked list
+            updatedBookmarkedOpportunities = bookmarkedOpportunities.filter(
+              opp => !opp.id.includes(opportunityMatchId.replace('OM-', ''))
+            );
+          } else if (newBookmarkedValue === 1) {
+            // If toggling on, we'll need to refresh the bookmarked list
+            // This will be handled by calling fetchBookmarkedOpportunities after this function
+          }
+
+          set({
+            opportunityMatches: updatedMatches,
+            opportunities: updatedOpportunities,
+            bookmarkedOpportunities: updatedBookmarkedOpportunities,
+            isBookmarking: false,
+            bookmarkError: null,
+          });
+          
+          // If toggling on, refresh the bookmarked list
+          if (newBookmarkedValue === 1) {
+            get().fetchBookmarkedOpportunities();
+          }
+        }
+
+        return true;
+      } else {
+        throw new Error(response.message.message || 'Failed to bookmark opportunity');
+      }
+    } catch (error: any) {
+      console.error('Error bookmarking opportunity:', error);
+      set({
+        isBookmarking: false,
+        bookmarkError: error.message || 'Failed to bookmark opportunity',
+      });
+      return false;
+    }
+  },
+
+  // Fetch bookmarked opportunities
+  fetchBookmarkedOpportunities: async () => {
+    try {
+      set({ isLoadingBookmarks: true, bookmarkError: null });
+
+      // Get authentication data
+      const authData = getAuthData();
+      if (!authData) {
+        throw new Error('Authentication data not found. Please login again.');
+      }
+
+      const { entityId, apiKey, apiSecret } = authData;
+
+      if (!apiKey || !apiSecret) {
+        throw new Error('API credentials not found. Please login again.');
+      }
+
+      // Call the API with bookmarked filter
+      const response: OpportunityMatchesResponse = await getOpportunityMatches(
+        entityId,
+        apiKey,
+        apiSecret,
+        undefined, // No search query
+        { bookmarked: 1 } // Filter for bookmarked opportunities
+      );
+
+      // Check if the response is successful
+      if (response.message.status === 'success') {
+        // Transform API data to UI format
+        const transformedOpportunities = response.message.data.map(mapOpportunityMatchToJobOpportunity);
+        
+        console.log('Bookmarked opportunities API response:', response.message.data);
+        console.log('Transformed bookmarked opportunities for UI:', transformedOpportunities);
+        
+        set({
+          bookmarkedOpportunities: transformedOpportunities,
+          isLoadingBookmarks: false,
+          bookmarkError: null,
+        });
+      } else {
+        throw new Error(response.message.message || 'Failed to fetch bookmarked opportunities');
+      }
+    } catch (error: any) {
+      console.error('Error fetching bookmarked opportunities:', error);
+      set({
+        isLoadingBookmarks: false,
+        bookmarkError: error.message || 'Failed to fetch bookmarked opportunities',
+        bookmarkedOpportunities: null,
+      });
+    }
+  },
+
   // Clear error
   clearError: () => {
     set({ error: null });
@@ -303,7 +464,7 @@ export const useIndividualDashboardStore = create<IndividualDashboardState>((set
 
   // Clear opportunity error
   clearOpportunityError: () => {
-    set({ opportunityError: null, markInterestError: null });
+    set({ opportunityError: null, markInterestError: null, bookmarkError: null });
   },
 
   // Reset store to initial state

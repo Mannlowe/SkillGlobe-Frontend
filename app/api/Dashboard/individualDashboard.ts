@@ -26,7 +26,8 @@ export interface ProfileInsightsResponse {
 
 // Interface for opportunity match item
 export interface OpportunityMatch {
-  name: string;
+  bookmarked_by_profile_owner: number;
+  opportunity_match_id: string;
   opportunity_posting: string;
   role_based_profile: string;
   entity: string;
@@ -67,6 +68,21 @@ export interface MarkAsInterestedRequest {
 
 // Interface for mark as interested response
 export interface MarkAsInterestedResponse {
+  message: {
+    status: string;
+    message: string;
+    timestamp: string;
+  };
+}
+
+// Interface for save opportunity match request
+export interface SaveOpportunityMatchRequest {
+  entity_id: string;
+  opportunity_match_id: string;
+}
+
+// Interface for save opportunity match response
+export interface SaveOpportunityMatchResponse {
   message: {
     status: string;
     message: string;
@@ -204,7 +220,8 @@ export const getOpportunityMatches = async (
   entityId: string,
   apiKey: string,
   apiSecret: string,
-  searchQuery?: string
+  searchQuery?: string,
+  filters?: Record<string, any>
 ): Promise<OpportunityMatchesResponse> => {
   try {
     // Validate entity_id to ensure it's not empty
@@ -220,8 +237,20 @@ export const getOpportunityMatches = async (
 
     // API endpoint with entity_id and optional search_query as query parameters
     let url = `${API_BASE_URL}/api/method/skillglobe_be.api.opportunity_match.list.opportunity_matches?entity_id=${entityId}`;
+    
+    // Add search query if provided
     if (searchQuery && searchQuery.trim()) {
       url += `&search_query=${encodeURIComponent(searchQuery.trim())}`;
+    }
+    
+    // Add filters if provided
+    if (filters && Object.keys(filters).length > 0) {
+      url += `&filters=${encodeURIComponent(JSON.stringify(filters))}`;
+    }
+
+    // Only add default bookmarked_by_profile_owner=0 if we're not specifically filtering for bookmarked items
+    if (!filters || (!filters.bookmarked && !filters.hasOwnProperty('bookmarked'))) {
+      url += `&bookmarked_by_profile_owner=0`;
     }
 
     const response = await axios.get<OpportunityMatchesResponse>(url, {
@@ -281,6 +310,52 @@ export const markAsInterested = async (
     return response.data;
   } catch (error: any) {
     console.error('Mark as interested error:', error.response?.data || error.message || error);
+    throw error;
+  }
+};
+
+export const saveOpportunityMatch = async (
+  entityId: string,
+  opportunityMatchId: string,
+  apiKey: string,
+  apiSecret: string
+): Promise<SaveOpportunityMatchResponse> => {
+  try {
+    // Validate inputs
+    if (!entityId) {
+      throw new Error('Entity ID is required but was not provided');
+    }
+    if (!opportunityMatchId) {
+      throw new Error('Opportunity Match ID is required but was not provided');
+    }
+    
+    console.log('Saving opportunity match ID:', opportunityMatchId);
+
+    // Authorization header
+    const authHeader = `token ${apiKey}:${apiSecret}`;
+
+    // API endpoint
+    const url = `${API_BASE_URL}/api/method/skillglobe_be.api.opportunity_match.form.save_opportunity_match`;
+
+    const response = await axios.post<SaveOpportunityMatchResponse>(
+      url,
+      {
+        entity_id: entityId,
+        opportunity_match_id: opportunityMatchId
+      },
+      {
+        headers: {
+          'Authorization': authHeader,
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        }
+      }
+    );
+
+    console.log('Save opportunity match response:', response.data);
+    return response.data;
+  } catch (error: any) {
+    console.error('Save opportunity match error:', error.response?.data || error.message || error);
     throw error;
   }
 };

@@ -125,6 +125,7 @@ export interface JobOpportunity {
   recruiter_activity: string; // "Actively hiring", "Recently posted"
   buyer_interested?: boolean; // Indicates if buyer has shown special interest
   seller_interested?: boolean; // Indicates if seller has shown interest
+  bookmarked?: boolean; // Indicates if opportunity is bookmarked by the user
 }
 
 export interface MarketMetricCard {

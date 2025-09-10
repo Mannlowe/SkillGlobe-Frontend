@@ -3,19 +3,20 @@
 import { MapPin, DollarSign, Target, Clock, Zap, Bookmark, Send, Eye } from 'lucide-react';
 import type { JobOpportunity } from '@/types/dashboard';
 import { StandardizedButton } from '@/components/ui/StandardizedButton';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import OpportunityDetails from '@/components/modal/OpportunityDetails';
 import SkillsSuccessModal from '@/components/modal/SkillsSuccessModal';
 import { useIndividualDashboardStore } from '@/store/dashboard/individualdashboardStore';
 
 interface CompactOpportunityCardProps {
   opportunity: JobOpportunity;
+  opportunityMatches: any[];
   onApply?: (jobId: string) => void;
   onSave?: (jobId: string) => void;
   onViewDetails?: (jobId: string) => void;
 }
 
-export default function CompactOpportunityCard({ opportunity, onApply, onSave, onViewDetails }: CompactOpportunityCardProps) {
+export default function CompactOpportunityCard({ opportunity, opportunityMatches, onApply, onSave, onViewDetails }: CompactOpportunityCardProps) {
   const [showTooltip, setShowTooltip] = useState(false);
   const [isBookmarked, setIsBookmarked] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -23,7 +24,19 @@ export default function CompactOpportunityCard({ opportunity, onApply, onSave, o
   const [hasShownInterest, setHasShownInterest] = useState(false);
   
   // Get store actions
-  const { markOpportunityInterest, isMarkingInterest } = useIndividualDashboardStore();
+  const { 
+    markOpportunityInterest, 
+    isMarkingInterest,
+    bookmarkOpportunity,
+    isBookmarking
+  } = useIndividualDashboardStore();
+
+  // Set initial bookmark state from opportunity data
+  useEffect(() => {
+    if (opportunity.bookmarked !== undefined) {
+      setIsBookmarked(opportunity.bookmarked);
+    }
+  }, [opportunity.bookmarked]);
 
   const getMatchScoreColor = (score: number) => {
     if (score >= 90) return 'text-green-600 bg-green-50 border-green-200';
@@ -43,31 +56,70 @@ export default function CompactOpportunityCard({ opportunity, onApply, onSave, o
     return urgency === 'Urgent' ? 'bg-red-100 text-red-700' : 'bg-gray-100 text-gray-700';
   };
 
-  const handleBookmark = (e: React.MouseEvent) => {
+  const handleBookmark = async (e: React.MouseEvent) => {
     e.stopPropagation();
-    setIsBookmarked(!isBookmarked);
-    onSave?.(opportunity.id);
+    
+    try {
+      // Find the opportunity match ID from opportunityMatches
+      let opportunityMatchId = null;
+      if (opportunityMatches) {
+        const match = opportunityMatches.find(m => m.opportunity_posting === opportunity.id);
+        if (match) {
+          opportunityMatchId = match.opportunity_match_id; // Use the opportunity_match_id field
+        }
+      }
+      
+      if (!opportunityMatchId) {
+        console.error('Could not determine opportunity match ID');
+        return;
+      }
+      
+      console.log('Bookmarking opportunity with ID:', opportunityMatchId);
+      
+      // Call the API to bookmark/unbookmark
+      const success = await bookmarkOpportunity(opportunityMatchId);
+      
+      if (success) {
+        // Toggle local state
+        setIsBookmarked(!isBookmarked);
+        // Call the parent component's onSave callback if provided
+        onSave?.(opportunity.id);
+      }
+    } catch (error) {
+      console.error('Error bookmarking opportunity:', error);
+    }
   };
 
   const handleApply = async (e: React.MouseEvent) => {
     e.stopPropagation();
     
-    // Find the opportunity match ID from the opportunity object
-    // We need to extract the match ID from the opportunity object
-    const opportunityMatchId = opportunity.id.split('-').pop(); // Assuming ID format includes the match ID at the end
-    
-    if (!opportunityMatchId) {
-      console.error('Could not determine opportunity match ID');
-      return;
-    }
-    
-    // Call the API to mark interest
-    const success = await markOpportunityInterest(`OM-${opportunityMatchId}`);
-    
-    if (success) {
-      setHasShownInterest(true);
-      setIsApplicationModalOpen(true);
-      onApply?.(opportunity.id);
+    try {
+      // Find the opportunity match ID from opportunityMatches
+      let opportunityMatchId = null;
+      if (opportunityMatches) {
+        const match = opportunityMatches.find(m => m.opportunity_posting === opportunity.id);
+        if (match) {
+          opportunityMatchId = match.opportunity_match_id; // Use the opportunity_match_id field
+        }
+      }
+      
+      if (!opportunityMatchId) {
+        console.error('Could not determine opportunity match ID');
+        return;
+      }
+      
+      console.log('Marking interest for opportunity with ID:', opportunityMatchId);
+      
+      // Call the API to mark interest
+      const success = await markOpportunityInterest(opportunityMatchId);
+      
+      if (success) {
+        setHasShownInterest(true);
+        setIsApplicationModalOpen(true);
+        onApply?.(opportunity.id);
+      }
+    } catch (error) {
+      console.error('Error marking interest:', error);
     }
   };
 
@@ -122,6 +174,7 @@ export default function CompactOpportunityCard({ opportunity, onApply, onSave, o
             : 'text-gray-400 hover:text-orange-500 hover:bg-orange-50'
         }`}
         aria-label={isBookmarked ? 'Remove from saved jobs' : 'Save job for later'}
+        disabled={isBookmarking}
       >
         <Bookmark size={16} fill={isBookmarked ? 'currentColor' : 'none'} />
       </button>

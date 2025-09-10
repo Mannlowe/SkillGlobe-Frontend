@@ -29,7 +29,12 @@ export default function OpportunityDiscoveryHub({
     opportunities,
     isLoadingOpportunities,
     opportunityError,
-    fetchOpportunityMatches
+    fetchOpportunityMatches,
+    bookmarkedOpportunities,
+    isLoadingBookmarks,
+    bookmarkError,
+    fetchBookmarkedOpportunities,
+    opportunityMatches
   } = useIndividualDashboardStore();
   const [searchQuery, setSearchQuery] = useState('');
   const [showFilters, setShowFilters] = useState(false);
@@ -39,12 +44,15 @@ export default function OpportunityDiscoveryHub({
   const [visibleCount, setVisibleCount] = useState<number>(3);
   const [isExpanded, setIsExpanded] = useState<boolean>(false);
 
-  // Fetch opportunities on component mount
+  // Fetch opportunities and bookmarked opportunities on component mount
   useEffect(() => {
     if (!opportunities || opportunities.length === 0) {
       fetchOpportunityMatches();
     }
-  }, [opportunities, fetchOpportunityMatches]);
+    
+    // Fetch bookmarked opportunities
+    fetchBookmarkedOpportunities();
+  }, [opportunities, fetchOpportunityMatches, fetchBookmarkedOpportunities]);
 
   const filterOptions = {
     jobTypes: [
@@ -240,31 +248,55 @@ export default function OpportunityDiscoveryHub({
         )}
       </div>
 
-      {/* Saved Searches */}
-      {savedSearches.length > 0 && (
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
-          <div className="flex items-center justify-between mb-3">
-            <h3 className="font-medium text-gray-900">Saved Searches</h3>
-            {/* <button className="text-sm text-blue-600 hover:text-blue-700">Manage all</button> */}
+      {/* Saved Opportunities */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="font-medium text-gray-900">Saved Opportunities</h3>
+        </div>
+        
+        {isLoadingBookmarks ? (
+          <div className="flex items-center justify-center py-8">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-600"></div>
+            <span className="ml-3 text-gray-600">Loading saved opportunities...</span>
           </div>
-          <div className="flex gap-2 overflow-x-auto pb-2">
-            {savedSearches.slice(0, 5).map((search) => (
-              <button
-                key={search.id}
-                className="flex-shrink-0 flex items-center gap-2 px-3 py-2 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors"
+        ) : bookmarkError ? (
+          <div className="flex flex-col items-center justify-center py-6">
+            <p className="text-gray-500 text-center mb-2">
+              We couldn't load your saved opportunities right now.
+            </p>
+            <button
+              onClick={() => fetchBookmarkedOpportunities()}
+              className="px-3 py-1 bg-gray-100 text-gray-700 font-medium rounded-lg hover:bg-gray-200 transition-all duration-300 text-sm"
+            >
+              Retry
+            </button>
+          </div>
+        ) : bookmarkedOpportunities && bookmarkedOpportunities.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            {bookmarkedOpportunities.slice(0, 6).map((job) => (
+              <div 
+                key={job.id} 
+                className="border border-gray-200 rounded-lg p-3 text-center"
+                onClick={() => onViewDetails(job.id)}
               >
-                <Bookmark size={14} className="text-gray-600" />
-                <span className="text-sm text-gray-700">{search.name}</span>
-                {search.new_results_count > 0 && (
-                  <span className="bg-orange-500 text-white text-xs px-2 py-0.5 rounded-full">
-                    {search.new_results_count}
-                  </span>
-                )}
-              </button>
+                <p className="text-gray-800 truncate cursor-pointer">
+                  {job.title}
+                </p>
+              </div>
             ))}
           </div>
-        </div>
-      )}
+        ) : (
+          <div className="flex flex-col items-center justify-center py-8 text-gray-500">
+            <p>We couldn't load your saved opportunities right now.</p>
+            <button
+              onClick={() => fetchBookmarkedOpportunities()}
+              className="mt-2 px-3 py-1 bg-gray-100 text-gray-700 font-medium rounded-lg hover:bg-gray-200 transition-all duration-300 text-sm"
+            >
+              Retry
+            </button>
+          </div>
+        )}
+      </div>
 
       {/* Results Header */}
       <div className="flex items-center justify-between">
@@ -308,7 +340,7 @@ export default function OpportunityDiscoveryHub({
       </div>
 
       {/* Quick Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      {/* <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div className="bg-white rounded-lg border border-gray-200 p-4">
           <div className="flex items-center gap-2 mb-1">
             <Star className="text-yellow-500" size={16} />
@@ -345,7 +377,7 @@ export default function OpportunityDiscoveryHub({
             {opportunities?.filter(job => job.salary_range[1] >= 100000).length || 0}
           </p>
         </div>
-      </div>
+      </div> */}
 
       {/* Opportunities Grid */}
       <div className={`
@@ -386,7 +418,8 @@ export default function OpportunityDiscoveryHub({
                 opportunity={job}
                 onApply={onApply}
                 onSave={onSave}
-                onViewDetails={onViewDetails}
+                onViewDetails={onViewDetails} 
+                opportunityMatches={opportunityMatches || []} 
               />
             </div>
           ))

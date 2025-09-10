@@ -124,6 +124,7 @@ export default function CompactDashboardPage() {
                   <CompactOpportunityCard 
                     key={job.id}
                     opportunity={job}
+                    opportunityMatches={opportunities}
                     onApply={(id) => console.log('Apply:', id)}
                     onSave={(id) => console.log('Save:', id)}
                     onViewDetails={(id) => console.log('Details:', id)}

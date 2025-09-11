@@ -35,8 +35,8 @@ export default function BusinessTermsAcceptance({ data, updateData, nextStep }: 
   const handleDownloadAgreement = () => {
     // In Next.js, files in the public directory are served at the root path
     const link = document.createElement('a');
-    link.href = '/documents/SkillGlobe_TermsAndConditions_Full.pdf';
-    link.download = 'SkillGlobe_TermsAndConditions_Full.pdf';
+    link.href = '/documents/SkillGlobe_Agreement.pdf';
+    link.download = 'SkillGlobe_Agreement.pdf';
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -98,10 +98,10 @@ export default function BusinessTermsAcceptance({ data, updateData, nextStep }: 
           <Shield className="text-blue-600" size={32} />
         </div>
         <h1 className="text-2xl font-bold text-gray-900 mb-2">
-          Business Terms & Authorization
+          Organization Terms & Authorization
         </h1>
         <p className="text-gray-600">
-          Please review and accept our business terms to continue
+          Please review and accept our organization terms
         </p>
       </div>
 
@@ -110,19 +110,19 @@ export default function BusinessTermsAcceptance({ data, updateData, nextStep }: 
         <div className="bg-white p-4 rounded-xl border border-gray-200">
           <div className="flex items-center space-x-3 mb-3">
             <FileText className="text-gray-600" size={20} />
-            <h3 className="font-semibold text-gray-900">Business Agreement Key Points</h3>
+            <h3 className="font-semibold text-gray-900">Organization Agreement Key Points</h3>
           </div>
           
           <div className="space-y-3 text-sm text-gray-600">
             <div className="flex items-start space-x-2">
               <div className="w-1.5 h-1.5 bg-orange-500 rounded-full mt-2"></div>
-              <p>Business data is encrypted and securely stored with enterprise-grade security</p>
+              <p>Organization data is encrypted and securely stored with enterprise-grade security</p>
             </div>
             <div className="flex items-start space-x-2">
               <div className="w-1.5 h-1.5 bg-orange-500 rounded-full mt-2"></div>
               <p>Admin controls for user management and access permissions</p>
             </div>
-            <div className="flex items-start space-x-2">
+            {/* <div className="flex items-start space-x-2">
               <div className="w-1.5 h-1.5 bg-orange-500 rounded-full mt-2"></div>
               <p>Compliance with data protection regulations (GDPR, CCPA)</p>
             </div>
@@ -133,7 +133,7 @@ export default function BusinessTermsAcceptance({ data, updateData, nextStep }: 
             <div className="flex items-start space-x-2">
               <div className="w-1.5 h-1.5 bg-orange-500 rounded-full mt-2"></div>
               <p>24/7 business support and dedicated account management</p>
-            </div>
+            </div> */}
           </div>
         </div>
 
@@ -144,7 +144,7 @@ export default function BusinessTermsAcceptance({ data, updateData, nextStep }: 
             className="flex items-center justify-center p-3 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors"
           >
             <Eye size={16} className="mr-2 text-gray-600" />
-            <span className="text-sm font-medium text-gray-700">Business Terms</span>
+            <span className="text-sm font-medium text-gray-700">Organization Terms</span>
           </button>
           
           <button 
@@ -229,10 +229,10 @@ export default function BusinessTermsAcceptance({ data, updateData, nextStep }: 
             />
             <div className="text-sm">
               <p className="text-gray-900 font-medium mb-1">
-                I agree to the Business Terms of Service and Privacy Policy
+                I agree to the Organization Terms of Service and Privacy Policy
               </p>
               <p className="text-gray-600">
-                As an authorized representative of the business, I confirm that I have the authority to bind the organization to these terms and have read, understood, and agree to be bound by these terms.
+                As an authorized representative of the organization, I confirm that I have the authority to bind the organization to these terms and have read, understood, and agree to be bound by these terms.
               </p>
             </div>
           </label>
@@ -258,7 +258,7 @@ export default function BusinessTermsAcceptance({ data, updateData, nextStep }: 
       </button>
 
       <div className="text-center text-sm text-gray-500">
-        You must accept these terms to use SkillGlobe for Business
+        You must accept these terms to use SkillGlobe for Organization
       </div>
 
       {/* Modals */}

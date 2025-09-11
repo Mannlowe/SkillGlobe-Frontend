@@ -18,9 +18,9 @@ export default function Footer() {
               </span>
             </div>
             <p className="text-gray-400 mb-6 font-nunito">
-              Empowering professionals worldwide with AI-driven talent solutions and personalized career growth.
+              Empowering professionals through AI-driven hiring, curated skills, verified growth, and meaningful opportunities
             </p>
-            <div className="flex space-x-4">
+            {/* <div className="flex space-x-4">
               {[Facebook, Twitter, Linkedin, Instagram].map((Icon, index) => {
                 const socialNames = ['Facebook', 'Twitter', 'LinkedIn', 'Instagram'];
                 return (
@@ -35,7 +35,7 @@ export default function Footer() {
                   </StandardizedButton>
                 );
               })}
-            </div>
+            </div> */}
           </div>
 
           {/* Quick Links */}
@@ -68,15 +68,15 @@ export default function Footer() {
 
           {/* Contact Info */}
           <div className="font-nunito mt-2">
-          <h3 className="text-lg font-semibold mb-4 bg-gradient-to-r from-orange-600 via-[#007BCA] to-[#007BCA] bg-clip-text text-transparent">
-  Get in Touch
-</h3>
+            <h3 className="text-lg font-semibold mb-4 bg-gradient-to-r from-orange-600 via-[#007BCA] to-[#007BCA] bg-clip-text text-transparent">
+              Get in Touch
+            </h3>
 
 
             <div className="space-y-3">
               <div className="flex items-center space-x-3">
                 <Mail size={16} className="text-orange-500" />
-                <span className="text-gray-400">hello@skillglobe.com</span>
+                <span className="text-gray-400">support@skillglobe.ai</span>
               </div>
               {/* <div className="flex items-center space-x-3">
                 <Phone size={16} className="text-orange-500" />
@@ -93,8 +93,9 @@ export default function Footer() {
         <div className="border-t border-gray-800 mt-12 pt-8">
           <div className="flex flex-col md:flex-row justify-end items-end">
             <p className="text-gray-400 text-sm">
-              © 2025 SkillGlobe. All rights reserved.
+              © {new Date().getFullYear()} SkillGlobe. All rights reserved.
             </p>
+
             {/* <div className="flex space-x-6 mt-4 md:mt-0">
               <Link href="/privacy" className="text-gray-400 hover:text-orange-500 text-sm transition-colors">
                 Privacy Policy

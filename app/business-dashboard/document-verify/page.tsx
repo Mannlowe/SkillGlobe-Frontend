@@ -73,10 +73,10 @@ export default function DocumentVerifyPage() {
                   <Shield className="text-green-600" size={32} />
                 </div>
                 <h1 className="text-2xl font-bold text-gray-900 mb-2">
-                  Business Document Verification
+                  Organization Document Verification
                 </h1>
                 <p className="text-gray-600">
-                  Verify your business authenticity with government-issued documents
+                  Verify your organization authenticity with government-issued documents
                 </p>
                 <div className="inline-flex items-center px-3 py-1 bg-blue-100 text-blue-800 text-sm font-medium rounded-full mt-2">
                   Enhances credibility with clients

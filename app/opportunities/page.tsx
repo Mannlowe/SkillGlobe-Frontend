@@ -39,7 +39,7 @@ export default function OpportunitiesPage() {
         <div className="flex justify-between items-center">
           <div>
             <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Job Opportunities</h1>
-            <p className="text-gray-600 mt-2">Discover and apply to jobs that match your skills</p>
+            <p className="text-gray-600 mt-2">Discover and apply to opportunities that match your skills</p>
           </div>
         </div>
 

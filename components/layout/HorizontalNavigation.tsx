@@ -401,11 +401,11 @@ export default function HorizontalNavigation({
                   </p>
                 </div>
               </DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={onProfileClick} className="cursor-pointer font-nunito text-md">
-                {/* <User className="mr-2 h-4 w-4" /> */}
+              {/* <DropdownMenuSeparator /> */}
+              {/* <DropdownMenuItem onClick={onProfileClick} className="cursor-pointer font-nunito text-md">
+                <User className="mr-2 h-4 w-4" />
                 Help & Support
-              </DropdownMenuItem>
+              </DropdownMenuItem> */}
               {/* <DropdownMenuItem onClick={onSettingsClick} className="cursor-pointer sm:hidden font-nunito text-md">
                 <Settings className="mr-2 h-4 w-4" />
                 Settings

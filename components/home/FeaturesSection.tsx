@@ -22,6 +22,12 @@ const features = [
     color: 'from-green-500 to-emerald-500',
   },
   {
+    icon: Globe,
+    title: 'Curated Profiles',
+    description: 'We creates verified profiles, letting candidates showcase skills and employers highlight opportunities, ensuring mutual trust.',
+    color: 'from-indigo-500 to-purple-500',
+  },
+  {
     icon: Shield,
     title: 'Secure Platform',
     description: 'Your data and transactions are protected with enterprise-grade security and privacy measures.',
@@ -32,12 +38,6 @@ const features = [
     title: 'Instant Opportunities',
     description: 'Get real-time notifications for jobs and projects that match your expertise and availability.',
     color: 'from-yellow-500 to-orange-500',
-  },
-  {
-    icon: Globe,
-    title: 'Service Monetization',
-    description: 'Turn your skills into income by offering services and consulting to a global client base.',
-    color: 'from-indigo-500 to-purple-500',
   },
 ];
 

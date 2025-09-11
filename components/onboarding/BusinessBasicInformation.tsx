@@ -137,7 +137,7 @@ export default function BusinessBasicInformation({ data, updateData, nextStep }:
           <Building className="text-blue-600" size={32} />
         </div>
         <h1 className="text-2xl font-bold text-gray-900 mb-2">
-          Business Information
+          Organization Information
         </h1>
         <p className="text-gray-600">
           Tell us about your organization to get started
@@ -148,7 +148,7 @@ export default function BusinessBasicInformation({ data, updateData, nextStep }:
         {/* Business Name */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
-            Business Name <span className="text-red-500">*</span>
+            Organization Name <span className="text-red-500">*</span>
           </label>
           <div className="relative">
             <Building className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
@@ -200,7 +200,7 @@ export default function BusinessBasicInformation({ data, updateData, nextStep }:
             />
           </div>
           {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email}</p>}
-          <p className="text-xs text-gray-500 mt-1">Must be a business domain email</p>
+          <p className="text-xs text-gray-500 mt-1">Must be a organization domain email</p>
         </div>
 
         {/* Mobile Number */}

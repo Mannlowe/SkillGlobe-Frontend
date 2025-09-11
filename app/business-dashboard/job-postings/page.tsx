@@ -252,7 +252,7 @@ export default function JobPostingsPage() {
       <BusinessSidebar />
       
       <div className="flex-1 flex flex-col overflow-hidden pl-64">
-        <BusinessDashboardHeader title="Job Postings" />
+        <BusinessDashboardHeader title="Opportunity Postings" />
         
         <div className="flex-1 bg-gray-50 p-8">
           <div className="flex justify-end items-center mb-3 gap-3">

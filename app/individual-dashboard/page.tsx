@@ -251,7 +251,7 @@ export default function CompactDashboardPage() {
       </div>
 
       {/* Floating Career Coach */}
-      {showCareerCoach && (
+      {/* {showCareerCoach && (
         <FloatingCareerCoach
           coachData={mockFloatingCareerCoach}
           onClose={() => setShowCareerCoach(false)}
@@ -262,9 +262,9 @@ export default function CompactDashboardPage() {
               const profileTab = document.querySelector('[role="tab"]:nth-child(5)') as HTMLButtonElement;
               profileTab?.click();
             }
-          }}
+          }} 
         />
-      )}
+      )} */}
     </ModernLayoutWrapper>
   );
 }

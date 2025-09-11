@@ -192,7 +192,7 @@ export default function BusinessDashboardHeader({ title, onMenuClick }: Business
                     className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                   >
                     <User size={16} className="mr-3 text-gray-500" />
-                    Business Profile
+                    Organization Profile
                   </button>
 
                   {/* <button
@@ -203,13 +203,13 @@ export default function BusinessDashboardHeader({ title, onMenuClick }: Business
                     Settings
                   </button> */}
 
-                  <button
+                  {/* <button
                     onClick={() => router.push('/help')}
                     className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                   >
                     <HelpCircle size={16} className="mr-3 text-gray-500" />
                     Help & Support
-                  </button>
+                  </button> */}
 
                   <hr className="my-2" />
 

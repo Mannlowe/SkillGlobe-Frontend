@@ -132,14 +132,14 @@ export default function OpportunityDetails({
                     {opportunity.remote_option && (
                       <p className="text-xs text-green-600">Remote Available</p>
                     )}
+                    <p className="text-xs text-gray-600">Location</p>
                   </div>
                 </div>
                 
                 <div className="flex items-center gap-2">
-                  <DollarSign size={16} className="text-gray-500" />
                   <div>
                     <p className="text-sm font-medium text-gray-900">
-                      ${Math.floor(opportunity.salary_range[0]/1000)}k - ${Math.floor(opportunity.salary_range[1]/1000)}k
+                    <span>Rs.{opportunity.salary_range[0].toLocaleString()}</span>
                     </p>
                     <p className="text-xs text-gray-600">Annual Salary</p>
                   </div>
@@ -148,23 +148,21 @@ export default function OpportunityDetails({
                 <div className="flex items-center gap-2">
                   <Calendar size={16} className="text-gray-500" />
                   <div>
-                    <p className="text-sm font-medium text-gray-900">{opportunity.application_deadline}</p>
+                    <p className="text-sm font-medium text-gray-900">
+                      {new Date(opportunity.application_deadline).toLocaleDateString('en-US', {
+                        day: 'numeric',
+                        month: 'long',
+                        year: 'numeric'
+                      })}
+                    </p>
                     <p className="text-xs text-gray-600">Deadline</p>
-                  </div>
-                </div>
-                
-                <div className="flex items-center gap-2">
-                  <Clock size={16} className="text-gray-500" />
-                  <div>
-                    <p className="text-sm font-medium text-gray-900">{opportunity.estimated_response_time}</p>
-                    <p className="text-xs text-gray-600">Response Time</p>
                   </div>
                 </div>
               </div>
             </div>
 
             {/* Match Analysis */}
-            <div className="space-y-4">
+            {/* <div className="space-y-4">
               <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
                 <Target className="text-blue-600" size={20} />
                 Why You're a Great Match
@@ -178,7 +176,7 @@ export default function OpportunityDetails({
                   </div>
                 ))}
               </div>
-            </div>
+            </div> */}
 
             {/* Skill Gaps (if any) */}
             {opportunity.skill_gaps.length > 0 && (
@@ -200,7 +198,7 @@ export default function OpportunityDetails({
             )}
 
             {/* Opportunity Metrics */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {/* <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="bg-white border border-gray-200 rounded-lg p-4">
                 <div className="flex items-center gap-2 mb-2">
                   <TrendingUp className="text-blue-600" size={16} />
@@ -230,10 +228,10 @@ export default function OpportunityDetails({
                   {opportunity.culture_fit_score}%
                 </div>
               </div>
-            </div>
+            </div> */}
 
             {/* Hiring Insights */}
-            <div className="bg-blue-50 rounded-lg p-4">
+            {/* <div className="bg-blue-50 rounded-lg p-4">
               <h3 className="text-lg font-semibold text-gray-900 mb-3 flex items-center gap-2">
                 <Zap className="text-blue-600" size={20} />
                 Hiring Insights
@@ -255,50 +253,7 @@ export default function OpportunityDetails({
                   <p className="text-sm text-gray-600">{opportunity.recruiter_activity}</p>
                 </div>
               </div>
-            </div>
-          </div>
-
-          {/* Footer Actions */}
-          <div className="sticky bottom-0 bg-white border-t border-gray-200 px-6 py-4 flex items-end justify-end rounded-b-xl">
-            {/* <div className="flex items-center gap-3">
-              <StandardizedButton
-                onClick={handleBookmark}
-                variant="ghost"
-                size="sm"
-                leftIcon={<Bookmark size={16} fill={isBookmarked ? 'currentColor' : 'none'} />}
-                className={isBookmarked ? 'text-orange-600' : 'text-gray-600'}
-              >
-                {isBookmarked ? 'Saved' : 'Save'}
-              </StandardizedButton>
-              
-              <StandardizedButton
-                variant="ghost"
-                size="sm"
-                leftIcon={<ExternalLink size={16} />}
-                className="text-gray-600"
-              >
-                View Original
-              </StandardizedButton>
             </div> */}
-            
-            <div className="flex items-center gap-3">
-              <StandardizedButton
-                onClick={onClose}
-                variant="ghost"
-                size="default"
-              >
-                Close
-              </StandardizedButton>
-              
-              <StandardizedButton
-                onClick={handleApply}
-                variant="primary"
-                size="default"
-                leftIcon={<Send size={16} />}
-              >
-                Apply Now
-              </StandardizedButton>
-            </div>
           </div>
         </div>
       </div>

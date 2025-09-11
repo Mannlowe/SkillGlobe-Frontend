@@ -208,10 +208,10 @@ export default function CompanyProfilePage() {
             <div className="space-y-6">
               <div>
                 <h1 className="text-2xl font-bold text-gray-900 mb-2">
-                  Business Profile
+                  Organization Profile
                 </h1>
                 <p className="text-gray-600">
-                  Manage your company&apos;s information and presence on SkillGlobe
+                  Manage your organization&apos;s information and presence on SkillGlobe
                 </p>
               </div>
 
@@ -221,7 +221,7 @@ export default function CompanyProfilePage() {
                   {/* Company Name - Read-only */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Business Name <span className="text-red-500">*</span>
+                      Organization Name <span className="text-red-500">*</span>
                     </label>
                     <div className="relative">
                       <Building className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
@@ -344,7 +344,7 @@ export default function CompanyProfilePage() {
                   {/* Business Address */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Business Address <span className="text-red-500">*</span>
+                      Organization Address <span className="text-red-500">*</span>
                     </label>
                     <div className="relative">
                       <MapPin className="absolute left-3 top-3 text-gray-400" size={18} />
@@ -364,7 +364,7 @@ export default function CompanyProfilePage() {
                   {/* Business Description */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Business Description
+                      Organization Description
                     </label>
                     <textarea
                       value={data.businessDescription || ''}
@@ -379,13 +379,13 @@ export default function CompanyProfilePage() {
                 {/* Logo Upload - Full width */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Company Logo
+                    Organization Logo
                   </label>
                   {!logo && !data.logo ? (
                     <label className="block">
                       <div className="border-2 border-dashed border-gray-300 rounded-xl p-4 text-center hover:border-blue-500 transition-colors cursor-pointer">
                         <Upload className="mx-auto text-gray-400 mb-2" size={20} />
-                        <p className="text-sm font-medium text-gray-900">Upload company logo</p>
+                        <p className="text-sm font-medium text-gray-900">Upload organization logo</p>
                         <p className="text-xs text-gray-500 mt-1">PNG, JPG (max 2MB)</p>
                       </div>
                       <input

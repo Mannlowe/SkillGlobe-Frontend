@@ -31,6 +31,7 @@ import {
 import { cn } from '@/lib/utils';
 import Image from 'next/image';
 import { useAuthStore } from '@/store';
+import { useIndividualDashboardStore } from '@/store/dashboard/individualdashboardStore';
 
 interface NavigationItem {
   id: string;
@@ -74,9 +75,22 @@ export default function HorizontalNavigation({
   userAvatar,
 
 }: HorizontalNavigationProps) {
+  // Get total opportunities count from the store
+  const { totalOpportunities, fetchOpportunityMatches } = useIndividualDashboardStore();
   const pathname = usePathname();
   const router = useRouter();
   const [isIdentityOpen, setIsIdentityOpen] = useState(false);
+  
+  // Fetch opportunity matches when component mounts to get the latest count
+  useEffect(() => {
+    // Only fetch if the user is authenticated
+    if (typeof window !== 'undefined') {
+      const authData = localStorage.getItem('auth-storage');
+      if (authData && JSON.parse(authData)?.state?.token) {
+        fetchOpportunityMatches();
+      }
+    }
+  }, [fetchOpportunityMatches]);
 
   const navigationItems: NavigationItem[] = [
     {
@@ -90,7 +104,7 @@ export default function HorizontalNavigation({
       label: 'Opportunities',
       icon: <Target className="w-4 h-4" />,
       href: '/opportunities',
-      badge: 3
+      badge: totalOpportunities || 0
     },
     {
       id: 'identity',

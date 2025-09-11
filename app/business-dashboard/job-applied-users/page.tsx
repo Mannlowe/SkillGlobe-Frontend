@@ -2,14 +2,14 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { 
-  ArrowLeft, 
-  Search, 
-  Filter, 
-  User, 
-  Mail, 
-  Phone, 
-  MapPin, 
+import {
+  ArrowLeft,
+  Search,
+  Filter,
+  User,
+  Mail,
+  Phone,
+  MapPin,
   Calendar,
   FileText,
   Download,
@@ -24,14 +24,14 @@ import {
 import BusinessSidebar from '@/components/dashboard/BusinessSidebar';
 import BusinessDashboardHeader from '@/components/dashboard/BusinessDashboardHeader';
 import { useProfilesByOpportunityStore, type Applicant, type JobDetails } from '@/store/job-postings/profilesbyopportunityStore';
-import {formatDate} from '@/utils/dateformat';
+import { formatDate } from '@/utils/dateformat';
 // Interfaces are now imported from the store
 
 export default function JobAppliedUsersPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const jobId = searchParams.get('jobId');
-  
+
   // Store state
   const {
     applicants,
@@ -44,7 +44,7 @@ export default function JobAppliedUsersPage() {
     clearError,
     resetStore
   } = useProfilesByOpportunityStore();
-  
+
   // Local UI state
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
@@ -56,7 +56,7 @@ export default function JobAppliedUsersPage() {
     if (jobId) {
       fetchProfilesByOpportunity(jobId);
     }
-    
+
     // Cleanup on unmount
     return () => {
       resetStore();
@@ -97,20 +97,19 @@ export default function JobAppliedUsersPage() {
 
   const filteredApplicants = (applicants || []).filter(applicant => {
     const matchesSearch = applicant.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         applicant.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         applicant.skills.some(skill => skill.toLowerCase().includes(searchTerm.toLowerCase()));
-    
-    const matchesStatus = 
-      statusFilter === 'all' || 
-      applicant.status === statusFilter || 
-      (statusFilter === 'pending' && applicant.status === 'interested');
-    
+      applicant.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      applicant.skills.some(skill => skill.toLowerCase().includes(searchTerm.toLowerCase()));
+
+    const matchesStatus =
+      statusFilter === 'all' ||
+      applicant.status === statusFilter;
+
     return matchesSearch && matchesStatus;
   });
 
   const statusCounts = {
     all: applicants?.length || 0,
-    pending: applicants?.filter(a => a.status === 'pending' || a.status === 'interested').length || 0,
+    pending: applicants?.filter(a => a.status === 'pending').length || 0,
     shortlisted: applicants?.filter(a => a.status === 'shortlisted').length || 0,
     rejected: applicants?.filter(a => a.status === 'rejected').length || 0,
     hired: applicants?.filter(a => a.status === 'hired').length || 0,
@@ -119,10 +118,10 @@ export default function JobAppliedUsersPage() {
   return (
     <div className="bg-gray-100 font-rubik">
       <BusinessSidebar />
-      
+
       <div className="pl-64">
-        <BusinessDashboardHeader title="Job Applicants" />
-        
+        <BusinessDashboardHeader title="Opportunity Applicants" />
+
         <div className="bg-gray-50 p-8">
           {/* Header Section */}
           <div className="mb-6">
@@ -132,7 +131,7 @@ export default function JobAppliedUsersPage() {
             >
               <ArrowLeft size={20} className="mr-1" /> Back
             </button>
-            
+
             {jobDetails && (
               <div className="bg-white rounded-xl shadow-sm p-6 mb-6">
                 <div className="flex justify-between items-start">
@@ -181,11 +180,10 @@ export default function JobAppliedUsersPage() {
                     <button
                       key={status}
                       onClick={() => setStatusFilter(status)}
-                      className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${
-                        statusFilter === status
+                      className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${statusFilter === status
                           ? 'bg-blue-500 text-white'
                           : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                      }`}
+                        }`}
                     >
                       {status.charAt(0).toUpperCase() + status.slice(1)} ({count})
                     </button>
@@ -203,29 +201,18 @@ export default function JobAppliedUsersPage() {
                   <span className="text-gray-600">Loading applicants...</span>
                 </div>
               )}
-              
+
               {/* Error State */}
               {error && (
-                <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
-                  <div className="flex items-center">
-                    <AlertCircle className="text-red-500 mr-2" size={20} />
-                    <div>
-                      <div className="text-red-800 font-medium">Error loading applicants</div>
-                      <div className="text-red-600 text-sm">{error}</div>
-                    </div>
+                <div className="flex flex-col items-center justify-center py-12">
+                  <div className="bg-gray-100 rounded-full p-4 mb-4">
+                    <User className="text-gray-400" size={32} />
                   </div>
-                  <button
-                    onClick={() => {
-                      clearError();
-                      if (jobId) fetchProfilesByOpportunity(jobId);
-                    }}
-                    className="mt-2 px-3 py-1 bg-red-100 text-red-700 rounded text-sm hover:bg-red-200 transition-colors"
-                  >
-                    Retry
-                  </button>
+                  <h3 className="text-lg font-medium text-gray-900 mb-1">No Applicants Found</h3>
+                  <p className="text-gray-500 text-center max-w-md mb-4">There are currently no applicants for this opportunity.</p>
                 </div>
               )}
-              
+
               {/* Empty State */}
               {!isLoading && !error && filteredApplicants.length === 0 && (
                 <div className="text-center py-8">
@@ -235,7 +222,7 @@ export default function JobAppliedUsersPage() {
                   </div>
                 </div>
               )}
-              
+
               {/* Applicants List */}
               {!isLoading && !error && filteredApplicants.length > 0 && (
                 <div className="space-y-4 pb-8">
@@ -287,27 +274,12 @@ export default function JobAppliedUsersPage() {
                             </div>
                           </div>
                         </div>
-                        
+
                         <div className="flex items-center gap-3">
-                          {applicant.status === 'interested' && (
-                            <>
-                              <span className={`px-2 py-1 rounded-full text-xs font-medium flex items-center gap-1 ${getStatusColor('pending')}`}>
-                                {getStatusIcon('pending')}
-                                Pending
-                              </span>
-                              <span className={`px-2 py-1 rounded-full text-xs font-medium flex items-center gap-1 ${getStatusColor('interested')}`}>
-                                {getStatusIcon('interested')}
-                                Interested
-                              </span>
-                            </>
-                          )}
-                          {applicant.status !== 'interested' && (
-                            <span className={`px-2 py-1 rounded-full text-xs font-medium flex items-center gap-1 ${getStatusColor(applicant.status)}`}>
-                              {getStatusIcon(applicant.status)}
-                              {applicant.status.charAt(0).toUpperCase() + applicant.status.slice(1)}
-                            </span>
-                          )}
-                          
+                          <span className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(applicant.status.toLowerCase())}`}>
+                            {applicant.status.charAt(0).toUpperCase() + applicant.status.slice(1)}
+                          </span>
+
                           <div className="flex gap-2">
                             <button
                               onClick={() => handleViewProfile(applicant)}
@@ -316,7 +288,7 @@ export default function JobAppliedUsersPage() {
                             >
                               <Eye size={16} />
                             </button>
-                            
+
                             {applicant.status === 'pending' && (
                               <>
                                 <button
@@ -342,7 +314,7 @@ export default function JobAppliedUsersPage() {
                                 </button>
                               </>
                             )}
-                            
+
                             {applicant.status === 'shortlisted' && (
                               <button
                                 onClick={() => handleStatusChange(applicant.id, 'hired')}
@@ -354,10 +326,17 @@ export default function JobAppliedUsersPage() {
                           </div>
                         </div>
                       </div>
-                      
-                      <div className="mt-3 text-sm text-gray-600">
-                      Applied On: {formatDate(applicant.appliedDate)}
+
+                      <div className="mt-3 ml-4 flex items-center gap-3 text-sm text-gray-600">
+                        <span>
+                          Applied On: {formatDate(applicant.appliedDate)}
+                        </span>
+
+                        <button className="px-3 py-1 bg-blue-600 text-white rounded-md hover:bg-blue-700">
+                          View Resume
+                        </button>
                       </div>
+
                     </div>
                   ))}
                 </div>
@@ -380,7 +359,7 @@ export default function JobAppliedUsersPage() {
                 <XCircle size={24} />
               </button>
             </div>
-            
+
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
@@ -400,7 +379,7 @@ export default function JobAppliedUsersPage() {
                   <p className="text-gray-900">{selectedApplicant.experience}</p>
                 </div>
               </div>
-              
+
               <div>
                 <label className="text-sm font-medium text-gray-700">Skills</label>
                 <div className="flex flex-wrap gap-2 mt-1">
@@ -411,7 +390,7 @@ export default function JobAppliedUsersPage() {
                   ))}
                 </div>
               </div>
-              
+
               {selectedApplicant.coverLetter && (
                 <div>
                   <label className="text-sm font-medium text-gray-700">Cover Letter</label>
@@ -420,7 +399,7 @@ export default function JobAppliedUsersPage() {
                   </p>
                 </div>
               )}
-              
+
               <div className="flex justify-end gap-3 pt-4 border-t">
                 <button
                   onClick={() => setShowProfileModal(false)}

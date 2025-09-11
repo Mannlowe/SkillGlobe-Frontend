@@ -10,6 +10,7 @@ export interface Applicant {
   location: string;
   appliedDate: string;
   status: 'pending' | 'shortlisted' | 'rejected' | 'hired' | 'interested';
+  backendStatus?: string; // Original status from backend
   experience: string;
   skills: string[];
   resumeUrl?: string;
@@ -34,9 +35,27 @@ const mapProfileDataToApplicant = (profile: ProfileData): Applicant => {
   
   // Determine status based on API data
   let status: Applicant['status'] = 'pending';
-  if (profile.profile_owner_shown_interest === 1) {
-    status = 'interested';
+  
+  // Check if profile has shown interest - this means it should be shortlisted
+  const hasShownInterest = profile.profile_owner_shown_interest === 1;
+  
+  if (hasShownInterest) {
+    // If profile owner has shown interest, set status to shortlisted
+    status = 'shortlisted';
+  } else if (profile.status && typeof profile.status === 'string') {
+    // If no interest but has backend status, use that
+    const lowerStatus = profile.status.toLowerCase();
+    if (lowerStatus === 'shortlisted') {
+      status = 'shortlisted';
+    } else if (lowerStatus === 'rejected') {
+      status = 'rejected';
+    } else if (lowerStatus === 'hired') {
+      status = 'hired';
+    }
   }
+  
+  // Store the original backend status for filtering
+  const backendStatus = profile.status?.toLowerCase() || '';
   
   // Format location
   const location = profile.preferred_city 

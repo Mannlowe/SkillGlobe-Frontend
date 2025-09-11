@@ -35,6 +35,7 @@ export interface ProfileData {
   country_code: string | null;
   primary_skills: string[];
   secondary_skills: string[];
+  status?: string; // Status field from backend (shortlisted, rejected, etc.)
 }
 
 // Interface for profiles by opportunity response

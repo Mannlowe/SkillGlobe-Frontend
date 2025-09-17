@@ -82,10 +82,18 @@ export const useBusinessRegistrationStore = create<BusinessRegistrationState>((s
 
       return response;
     } catch (err: any) {
+      console.log('Error in submitBusinessDetails:', err);
+      
+      // Just pass through the error message directly
+      // The API layer has already formatted the error message appropriately
+      const errorMessage = err.message || 'Failed to update business details';
+      
       set({
         isLoading: false,
-        error: err.message || 'Failed to update business details'
+        error: errorMessage
       });
+      
+      // Re-throw the same error without wrapping it in a new Error object
       throw err;
     }
   },

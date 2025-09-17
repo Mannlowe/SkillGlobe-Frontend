@@ -125,6 +125,15 @@ export const mockJobOpportunities: JobOpportunity[] = [
     hiring_urgency: 'Urgent',
     recruiter_activity: 'Actively reviewing applications',
     buyer_interested: true,
+    opportunity_type: '',
+    experience_required: '',
+    employment_type: '',
+    work_mode: '',
+    opportunity_closed: false,
+    description: '',
+    preferred_qualifications: null,
+    primary_skills: [],
+    secondary_skills: []
   },
   {
     id: 'job-002',
@@ -148,6 +157,15 @@ export const mockJobOpportunities: JobOpportunity[] = [
     hiring_urgency: 'Normal',
     recruiter_activity: 'Recently posted',
     buyer_interested: false,
+    opportunity_type: '',
+    experience_required: '',
+    employment_type: '',
+    work_mode: '',
+    opportunity_closed: false,
+    description: '',
+    preferred_qualifications: null,
+    primary_skills: [],
+    secondary_skills: []
   },
   {
     id: 'job-003',
@@ -171,6 +189,15 @@ export const mockJobOpportunities: JobOpportunity[] = [
     hiring_urgency: 'Flexible',
     recruiter_activity: 'Multiple rounds of interviews',
     buyer_interested: false,
+    opportunity_type: '',
+    experience_required: '',
+    employment_type: '',
+    work_mode: '',
+    opportunity_closed: false,
+    description: '',
+    preferred_qualifications: null,
+    primary_skills: [],
+    secondary_skills: []
   },
   {
     id: 'job-004',
@@ -194,5 +221,14 @@ export const mockJobOpportunities: JobOpportunity[] = [
     hiring_urgency: 'Normal',
     recruiter_activity: 'Recently posted',
     buyer_interested: false,
+    opportunity_type: '',
+    experience_required: '',
+    employment_type: '',
+    work_mode: '',
+    opportunity_closed: false,
+    description: '',
+    preferred_qualifications: null,
+    primary_skills: [],
+    secondary_skills: []
   },
 ];

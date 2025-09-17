@@ -17,7 +17,9 @@ import {
   Send,
   Bookmark,
   ExternalLink,
-  Star
+  Star,
+  Briefcase,
+  Code
 } from 'lucide-react';
 import type { JobOpportunity } from '@/types/dashboard';
 import { StandardizedButton } from '@/components/ui/StandardizedButton';
@@ -137,6 +139,7 @@ export default function OpportunityDetails({
                 </div>
                 
                 <div className="flex items-center gap-2">
+                  {/* <DollarSign size={16} className="text-gray-500" /> */}
                   <div>
                     <p className="text-sm font-medium text-gray-900">
                     <span>Rs.{opportunity.salary_range[0].toLocaleString()}</span>
@@ -158,25 +161,113 @@ export default function OpportunityDetails({
                     <p className="text-xs text-gray-600">Deadline</p>
                   </div>
                 </div>
+
+                <div className="flex items-center gap-2">
+                  <Briefcase size={16} className="text-gray-500" />
+                  <div>
+                    <p className="text-sm font-medium text-gray-900">{opportunity.employment_type}</p>
+                    <p className="text-xs text-gray-600">Employment Type</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Additional Job Details */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
+                <div className="flex items-center gap-2">
+                  <Clock size={16} className="text-gray-500" />
+                  <div>
+                    <p className="text-sm font-medium text-gray-900">{opportunity.experience_required}</p>
+                    <p className="text-xs text-gray-600">Experience</p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <Building size={16} className="text-gray-500" />
+                  <div>
+                    <p className="text-sm font-medium text-gray-900">{opportunity.work_mode}</p>
+                    <p className="text-xs text-gray-600">Work Mode</p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <Briefcase size={16} className="text-gray-500" />
+                  <div>
+                    <p className="text-sm font-medium text-gray-900">{opportunity.opportunity_type}</p>
+                    <p className="text-xs text-gray-600">Opportunity Type</p>
+                  </div>
+                </div>
               </div>
             </div>
 
-            {/* Match Analysis */}
-            {/* <div className="space-y-4">
+            {/* Job Description */}
+            <div className="space-y-4 mt-6">
               <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-                <Target className="text-blue-600" size={20} />
-                Why You're a Great Match
+                <Briefcase className="text-blue-600" size={20} />
+                Job Description
+              </h3>
+              
+              <div className="p-4 bg-gray-50 rounded-lg">
+                <p className="text-sm text-gray-700 whitespace-pre-line">{opportunity.description}</p>
+              </div>
+            </div>
+
+            {/* Preferred Qualifications */}
+            {opportunity.preferred_qualifications && (
+              <div className="space-y-4 mt-6">
+                <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                  <CheckCircle className="text-green-600" size={20} />
+                  Preferred Qualifications
+                </h3>
+                
+                <div className="p-4 bg-gray-50 rounded-lg">
+                  <p className="text-sm text-gray-700 whitespace-pre-line">{opportunity.preferred_qualifications}</p>
+                </div>
+              </div>
+            )}
+
+            {/* Skills Required */}
+            <div className="space-y-4 mt-6">
+              <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                <Code className="text-purple-600" size={20} />
+                Skills Required
               </h3>
               
               <div className="space-y-3">
-                {opportunity.match_reasons.map((reason, index) => (
-                  <div key={index} className="flex items-start gap-3 p-3 bg-green-50 rounded-lg">
-                    <CheckCircle size={16} className="text-green-600 mt-0.5 flex-shrink-0" />
-                    <p className="text-sm text-gray-700">{reason}</p>
+                {/* Primary Skills */}
+                {opportunity.primary_skills && opportunity.primary_skills.length > 0 && (
+                  <div>
+                    <h4 className="text-sm font-medium text-gray-700 mb-2">Primary Skills</h4>
+                    <div className="flex flex-wrap gap-2">
+                      {opportunity.primary_skills.map((skill, index) => (
+                        <span 
+                          key={index} 
+                          className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-medium"
+                        >
+                          {skill.skill_name || skill.skill}
+                        </span>
+                      ))}
+                    </div>
                   </div>
-                ))}
+                )}
+
+                {/* Secondary Skills */}
+                {opportunity.secondary_skills && opportunity.secondary_skills.length > 0 && (
+                  <div className="mt-3">
+                    <h4 className="text-sm font-medium text-gray-700 mb-2">Secondary Skills</h4>
+                    <div className="flex flex-wrap gap-2">
+                      {opportunity.secondary_skills.map((skill, index) => (
+                        <span 
+                          key={index} 
+                          className="px-3 py-1 bg-green-100 text-gray-800 rounded-full text-xs font-medium"
+                        >
+                          {skill.skill_name || skill.skill}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
-            </div> */}
+            </div>
 
             {/* Skill Gaps (if any) */}
             {opportunity.skill_gaps.length > 0 && (

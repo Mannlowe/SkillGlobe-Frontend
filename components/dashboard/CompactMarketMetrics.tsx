@@ -36,28 +36,11 @@ export default function CompactMarketMetrics({ onViewDetails }: CompactMarketMet
     );
   }
 
-  // Error state
+  // Error state - but we'll use default values instead of showing an error
+  // This ensures new users always see a clean UI with zeros
   if (error) {
-    return (
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 w-full">
-        <div className="flex items-center justify-center h-[200px]">
-          <div className="text-center">
-            <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-2" />
-            <p className="text-red-600 font-medium mb-2">Failed to load profile insights</p>
-            <p className="text-gray-500 text-sm mb-4">{error}</p>
-            <button
-              onClick={() => {
-                clearError();
-                fetchProfileInsights();
-              }}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-            >
-              Try Again
-            </button>
-          </div>
-        </div>
-      </div>
-    );
+    console.log('Profile insights error, using default values:', error);
+    // Continue to the next section where we'll use default values
   }
 
   // Default values if no data

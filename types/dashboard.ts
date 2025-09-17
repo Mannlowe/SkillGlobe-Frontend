@@ -102,6 +102,12 @@ export interface EnhancedMarketplaceStats {
   };
 }
 
+// Interface for skill item in opportunity
+export interface SkillItem {
+  skill: string;
+  skill_name: string | null;
+}
+
 export interface JobOpportunity {
   id: string;
   title: string;
@@ -126,6 +132,17 @@ export interface JobOpportunity {
   buyer_interested?: boolean; // Indicates if buyer has shown special interest
   seller_interested?: boolean; // Indicates if seller has shown interest
   bookmarked?: boolean; // Indicates if opportunity is bookmarked by the user
+
+  // New fields from API response
+  opportunity_type: string; // Permanent, Contract, etc.
+  experience_required: string; // 0-2 years, etc.
+  employment_type: string; // Full-Time, Part-Time, etc.
+  work_mode: string; // WFO, WFH, Hybrid
+  opportunity_closed: boolean; // Whether the opportunity is closed
+  description: string; // Job description
+  preferred_qualifications: string | null; // Preferred qualifications
+  primary_skills: SkillItem[]; // Primary skills required
+  secondary_skills: SkillItem[]; // Secondary skills required
 }
 
 export interface MarketMetricCard {

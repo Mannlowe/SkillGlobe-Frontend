@@ -37,6 +37,7 @@ export default function OpportunityDiscoveryHub({
     opportunityMatches
   } = useIndividualDashboardStore();
   const [searchQuery, setSearchQuery] = useState('');
+  const [hasSearched, setHasSearched] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
   const [selectedFilters, setSelectedFilters] = useState<Partial<OpportunitySearchFilters>>({});
   const [sortBy, setSortBy] = useState<'relevance' | 'date' | 'salary' | 'match_score'>('relevance');
@@ -52,7 +53,8 @@ export default function OpportunityDiscoveryHub({
     
     // Fetch bookmarked opportunities
     fetchBookmarkedOpportunities();
-  }, [opportunities, fetchOpportunityMatches, fetchBookmarkedOpportunities]);
+    // Only run this effect once on component mount
+  }, [/* removed dependencies to prevent re-fetching */]);
 
   const filterOptions = {
     jobTypes: [
@@ -81,6 +83,9 @@ export default function OpportunityDiscoveryHub({
   };
 
   const handleSearch = async () => {
+    // Set hasSearched to true when user performs a search
+    setHasSearched(!!searchQuery.trim());
+    
     // Use the store to fetch opportunities with search query
     await fetchOpportunityMatches(searchQuery.trim() || undefined);
 
@@ -94,6 +99,7 @@ export default function OpportunityDiscoveryHub({
 
   const handleClearSearch = async () => {
     setSearchQuery('');
+    setHasSearched(false);
     // Fetch all opportunities without search filter
     await fetchOpportunityMatches();
   };
@@ -408,8 +414,24 @@ export default function OpportunityDiscoveryHub({
             </button>
           </div>
         ) : sortedOpportunities.length === 0 ? (
-          <div className="col-span-full text-center py-12 text-gray-500">
-            No opportunities match your current filters
+          <div className="col-span-full flex flex-col items-center justify-center py-12">
+            <div className="bg-yellow-50 rounded-full p-4 mb-4">
+              <Search className="h-8 w-8 text-yellow-400" />
+            </div>
+            <h3 className="text-lg font-medium text-gray-900 mb-2">
+              {hasSearched ? `No results found for "${searchQuery}"` : "No opportunities match your current filters"}
+            </h3>
+            <p className="text-gray-500 text-center max-w-sm mb-4">
+              {hasSearched ? "Try different keywords or remove some filters" : "Try adjusting your filters to see more opportunities"}
+            </p>
+            {hasSearched && (
+              <button
+                onClick={handleClearSearch}
+                className="px-4 py-2 bg-gray-100 text-gray-700 font-medium rounded-lg hover:bg-gray-200 transition-all duration-300 text-sm"
+              >
+                Clear Search
+              </button>
+            )}
           </div>
         ) : (
           sortedOpportunities.slice(0, visibleCount).map((job) => (

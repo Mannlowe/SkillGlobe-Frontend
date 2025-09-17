@@ -189,7 +189,7 @@ export const useRegistrationStore = create<RegistrationState>()(
         } catch (error: any) {
           console.error('Personal details update error:', error);
           set({
-            error: 'Email ID already exists',
+            error: 'This email ID or phone number already exists.',
             isLoading: false
           });
           throw error;

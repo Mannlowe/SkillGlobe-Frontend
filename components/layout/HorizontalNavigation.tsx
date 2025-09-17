@@ -104,7 +104,7 @@ export default function HorizontalNavigation({
       label: 'Opportunities',
       icon: <Target className="w-4 h-4" />,
       href: '/opportunities',
-      badge: totalOpportunities || 0
+      badge: totalOpportunities
     },
     {
       id: 'identity',
@@ -322,27 +322,28 @@ export default function HorizontalNavigation({
 
             return (
               <Button
-                key={item.id}
-                variant="ghost"
-                onClick={() => item.href && handleNavigation(item.href)}
-                className={cn(
-                  "flex items-center space-x-2 px-3 py-2 text-sm font-medium transition-colors relative",
-                  isActive(item)
-                    ? "text-[#FF6B35] bg-[#FF6B35]/10"
-                    : "text-gray-700 hover:text-gray-900 hover:bg-gray-100"
-                )}
-              >
-                {item.icon}
-                <span>{item.label}</span>
-                {item.badge && item.badge > 0 && (
-                  <Badge
-                    variant="secondary"
-                    className="ml-1 h-5 px-1.5 text-xs bg-[#FF6B35] text-white"
-                  >
-                    {item.badge}
-                  </Badge>
-                )}
-              </Button>
+              key={item.id}
+              variant="ghost"
+              onClick={() => item.href && handleNavigation(item.href)}
+              className={cn(
+                "flex items-center space-x-2 px-3 py-2 text-sm font-medium transition-colors relative",
+                isActive(item)
+                  ? "text-[#FF6B35] bg-[#FF6B35]/10"
+                  : "text-gray-700 hover:text-gray-900 hover:bg-gray-100"
+              )}
+            >
+              {item.icon}
+              <span>{item.label}</span>
+              {item.badge !== undefined && (
+                <Badge
+                  variant="secondary"
+                  className="ml-1 h-5 px-1.5 text-xs bg-[#FF6B35] text-white"
+                >
+                  {item.badge}
+                </Badge>
+              )}
+            </Button>
+            
             );
           })}
         </nav>

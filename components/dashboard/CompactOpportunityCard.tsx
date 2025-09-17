@@ -74,10 +74,12 @@ export default function CompactOpportunityCard({ opportunity, opportunityMatches
         return;
       }
       
-      console.log('Bookmarking opportunity with ID:', opportunityMatchId);
+      // Determine the value to send (1 for bookmark, 0 for unbookmark)
+      const value = isBookmarked ? 0 : 1;
+      console.log(`${value === 1 ? 'Bookmarking' : 'Unbookmarking'} opportunity with ID:`, opportunityMatchId);
       
-      // Call the API to bookmark/unbookmark
-      const success = await bookmarkOpportunity(opportunityMatchId);
+      // Call the API to bookmark/unbookmark with the value parameter
+      const success = await bookmarkOpportunity(opportunityMatchId, value);
       
       if (success) {
         // Toggle local state

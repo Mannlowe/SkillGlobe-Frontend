@@ -25,18 +25,33 @@ export interface ProfileData {
   opportunity_title: string;
   opportunity_type: string;
   work_mode: string;
-  relevant_experience: number;
-  preferred_city: string | null;
-  preferred_country: string;
+
+  // 🔹 RBP fields (all required, as per your list)
+  rbp_space: string;                 // e.g., "IT"
+  rbp_nature_of_work: string;        // e.g., "Full-time"
+  rbp_portfolio: string | null;      // optional / nullable
+  rbp_employment_type: string;       // e.g., "Permanent"
+  rbp_preferred_city: string;        // e.g., "Pune"
+  rbp_preferred_country: string;     // e.g., "India"
+  rbp_work_eligibility: string;      // e.g., "Citizen"
+  rbp_work_mode: string;             // e.g., "WFO"
+  rbp_desired_job_role: string | null; // nullable if not provided
+  rbp_career_level: string | null;     // nullable if not provided
+  rbp_relevant_experience: number;     // numeric years
+
+  // 🔹 User profile fields
   desired_job_role: string;
   full_name: string;
   email: string;
   mobile_number: string | null;
   country_code: string | null;
-  primary_skills: string[];
-  secondary_skills: string[];
-  status?: string; // Status field from backend (shortlisted, rejected, etc.)
+  primary_skills: Array<string | { skill_name?: string; skill?: string }>;
+  secondary_skills: Array<string | { skill_name?: string; skill?: string }>;
+
+  // Optional backend status
+  status?: string; // shortlisted, rejected, etc.
 }
+
 
 // Interface for profiles by opportunity response
 export interface ProfilesByOpportunityResponse {

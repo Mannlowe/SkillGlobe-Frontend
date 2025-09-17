@@ -137,13 +137,13 @@ export default function CompactDashboardPage() {
                 </div>
                 <h3 className="text-lg font-medium text-gray-900 mb-2">No opportunities Found</h3>
                 <p className="text-gray-500 text-center max-w-sm">
-                  We're working to find the perfect matches for your skills. Check back soon or update your profile to improve matches.
+                 Check back soon or update your profile to improve matches.
                 </p>
                 <button 
-                  onClick={() => router.push('/profile')}
+                  onClick={() => router.push('/individual-dashboard')}
                   className="mt-4 px-4 py-2 bg-gradient-to-r from-orange-500 to-blue-500 text-white font-medium rounded-lg hover:shadow-lg transition-all duration-300 text-sm"
                 >
-                  Update Profile
+                  Refresh
                 </button>
               </div>
             ) : null}

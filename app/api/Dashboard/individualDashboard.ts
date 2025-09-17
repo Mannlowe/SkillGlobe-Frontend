@@ -24,6 +24,12 @@ export interface ProfileInsightsResponse {
   };
 }
 
+// Interface for skill item in opportunity match
+export interface SkillItem {
+  skill: string;
+  skill_name: string | null;
+}
+
 // Interface for opportunity match item
 export interface OpportunityMatch {
   bookmarked_by_profile_owner: number;
@@ -41,6 +47,17 @@ export interface OpportunityMatch {
   min_remuneration: number;
   role_skill_category: string;
   business_name: string | null;
+  // New fields from API response
+  op_opportunity_type: string;
+  op_experience_required: string;
+  op_employment_type: string;
+  op_work_mode: string;
+  op_opportunity_closed: number;
+  op_application_deadline: string;
+  op_description: string;
+  op_preferred_qualifications: string | null;
+  primary_skills: SkillItem[];
+  secondary_skills: SkillItem[];
 }
 
 // Interface for opportunity matches request
@@ -79,6 +96,7 @@ export interface MarkAsInterestedResponse {
 export interface SaveOpportunityMatchRequest {
   entity_id: string;
   opportunity_match_id: string;
+  value: number; // 1 for bookmarked (checked), 0 for unbookmarked (unchecked)
 }
 
 // Interface for save opportunity match response
@@ -248,11 +266,6 @@ export const getOpportunityMatches = async (
       url += `&filters=${encodeURIComponent(JSON.stringify(filters))}`;
     }
 
-    // Only add default bookmarked_by_profile_owner=0 if we're not specifically filtering for bookmarked items
-    if (!filters || (!filters.bookmarked && !filters.hasOwnProperty('bookmarked'))) {
-      url += `&bookmarked_by_profile_owner=0`;
-    }
-
     const response = await axios.get<OpportunityMatchesResponse>(url, {
       headers: {
         'Authorization': authHeader,
@@ -318,7 +331,8 @@ export const saveOpportunityMatch = async (
   entityId: string,
   opportunityMatchId: string,
   apiKey: string,
-  apiSecret: string
+  apiSecret: string,
+  value: number = 1 // Default to 1 (bookmarked) for backward compatibility
 ): Promise<SaveOpportunityMatchResponse> => {
   try {
     // Validate inputs
@@ -341,7 +355,8 @@ export const saveOpportunityMatch = async (
       url,
       {
         entity_id: entityId,
-        opportunity_match_id: opportunityMatchId
+        opportunity_match_id: opportunityMatchId,
+        value: value
       },
       {
         headers: {

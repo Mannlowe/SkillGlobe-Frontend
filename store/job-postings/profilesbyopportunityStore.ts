@@ -25,8 +25,27 @@ export interface Applicant {
 
 // Utility function to convert API profile data to Applicant format
 const mapProfileDataToApplicant = (profile: ProfileData): Applicant => {
-  // Combine primary and secondary skills
-  const allSkills = [...profile.primary_skills, ...profile.secondary_skills];
+  // Process primary and secondary skills - convert objects to strings
+  const primarySkills = Array.isArray(profile.primary_skills) 
+    ? profile.primary_skills.map(skill => {
+        if (typeof skill === 'object' && skill !== null) {
+          return (skill.skill_name || skill.skill || String(skill));
+        }
+        return String(skill);
+      })
+    : [];
+    
+  const secondarySkills = Array.isArray(profile.secondary_skills)
+    ? profile.secondary_skills.map(skill => {
+        if (typeof skill === 'object' && skill !== null) {
+          return (skill.skill_name || skill.skill || String(skill));
+        }
+        return String(skill);
+      })
+    : [];
+  
+  // Combine primary and secondary skills as strings
+  const allSkills = [...primarySkills, ...secondarySkills];
   
   // Format phone number
   const phoneNumber = profile.mobile_number 
@@ -58,9 +77,9 @@ const mapProfileDataToApplicant = (profile: ProfileData): Applicant => {
   const backendStatus = profile.status?.toLowerCase() || '';
   
   // Format location
-  const location = profile.preferred_city 
-    ? `${profile.preferred_city}, ${profile.preferred_country}`
-    : profile.preferred_country;
+  const location = profile.rbp_preferred_city 
+    ? `${profile.rbp_preferred_city}, ${profile.rbp_preferred_country}`
+    : profile.rbp_preferred_country;
   
   return {
     id: profile.opportunity_match_id,
@@ -70,7 +89,7 @@ const mapProfileDataToApplicant = (profile: ProfileData): Applicant => {
     location: location,
     appliedDate: profile.creation.split(' ')[0], // Extract date part
     status: status,
-    experience: `${profile.relevant_experience} years`,
+    experience: `${profile.rbp_relevant_experience} years`,
     skills: allSkills,
     rating: Math.min((profile.match_score / 100) * 5, 5), // Convert match score to 5-star rating
     matchScore: profile.match_score,
@@ -172,7 +191,7 @@ export const useProfilesByOpportunityStore = create<ProfilesByOpportunityState>(
             skillCategory: firstProfile.desired_job_role,
             employmentType: firstProfile.opportunity_type,
             workMode: firstProfile.work_mode,
-            location: firstProfile.preferred_country,
+            location: firstProfile.rbp_preferred_country,
             postedDate: new Date(firstProfile.creation).toLocaleDateString(),
             totalApplicants: response.message.total_count,
           };

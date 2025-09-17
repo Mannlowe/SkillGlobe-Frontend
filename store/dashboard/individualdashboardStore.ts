@@ -12,7 +12,7 @@ const mapOpportunityMatchToJobOpportunity = (match: OpportunityMatch): JobOpport
     salary_range: [match.min_remuneration, match.min_remuneration * 1.3] as [number, number], // Estimate range
     location: match.location || 'Location Not Specified',
     remote_option: match.work_mode === 'WFH' || match.work_mode === 'Hybrid',
-    application_deadline: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 days from now
+    application_deadline: match.op_application_deadline || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
     
     // AI Analysis - using defaults since not provided by API
     match_reasons: [`${match.match_score}% skill match`, `${match.role_skill_category} expertise`],
@@ -28,6 +28,17 @@ const mapOpportunityMatchToJobOpportunity = (match: OpportunityMatch): JobOpport
     buyer_interested: match.buyer_interested === 1,
     seller_interested: match.seller_interested === 1,
     bookmarked: match.bookmarked_by_profile_owner === 1, // Use bookmarked_by_profile_owner instead of bookmarked
+    
+    // New fields from API response
+    opportunity_type: match.op_opportunity_type || '',
+    experience_required: match.op_experience_required || '',
+    employment_type: match.op_employment_type || '',
+    work_mode: match.op_work_mode || '',
+    opportunity_closed: match.op_opportunity_closed === 1,
+    description: match.op_description || '',
+    preferred_qualifications: match.op_preferred_qualifications,
+    primary_skills: match.primary_skills || [],
+    secondary_skills: match.secondary_skills || [],
   };
 };
 
@@ -68,7 +79,7 @@ interface IndividualDashboardState {
   fetchProfileInsights: () => Promise<void>;
   fetchOpportunityMatches: (searchQuery?: string, filters?: Record<string, any>) => Promise<void>;
   markOpportunityInterest: (opportunityMatchId: string) => Promise<boolean>;
-  bookmarkOpportunity: (opportunityMatchId: string) => Promise<boolean>;
+  bookmarkOpportunity: (opportunityMatchId: string, value?: number) => Promise<boolean>;
   fetchBookmarkedOpportunities: () => Promise<void>;
   clearError: () => void;
   clearOpportunityError: () => void;
@@ -143,11 +154,13 @@ export const useIndividualDashboardStore = create<IndividualDashboardState>((set
     } catch (error: any) {
       console.error('Error fetching profile insights:', error);
       
-      // For authentication errors or API failures, show default values instead of error
+      // For authentication errors, API failures, or 401 status, show default values instead of error
       if (error.message?.includes('Authentication data not found') || 
           error.message?.includes('API credentials not found') ||
-          error.message?.includes('Entity ID not found')) {
-        console.log('Setting default profile insights due to auth issues');
+          error.message?.includes('Entity ID not found') ||
+          error.response?.status === 401 ||
+          (error.message && error.message.includes('401'))) {
+        console.log('Setting default profile insights due to auth issues or 401 status');
         set({
           profileInsights: {
             total_matches: 0,
@@ -198,17 +211,38 @@ export const useIndividualDashboardStore = create<IndividualDashboardState>((set
 
       // Check if the response is successful
       if (response.message.status === 'success') {
-        // Transform API data to UI format
-        const transformedOpportunities = response.message.data.map(mapOpportunityMatchToJobOpportunity);
+        // Check if data is an empty object or null/undefined
+        const isEmptyData = !response.message.data || 
+                          (typeof response.message.data === 'object' && 
+                           !Array.isArray(response.message.data) && 
+                           Object.keys(response.message.data).length === 0);
         
-        set({
-          opportunityMatches: response.message.data,
-          opportunities: transformedOpportunities,
-          totalOpportunities: response.message.total_count,
-          totalPages: response.message.total_pages,
-          isLoadingOpportunities: false,
-          opportunityError: null,
-        });
+        if (isEmptyData) {
+          // Handle empty object response
+          console.log('API returned empty data object for search:', searchQuery);
+          set({
+            opportunityMatches: [],
+            opportunities: [],
+            totalOpportunities: 0,
+            totalPages: 0,
+            isLoadingOpportunities: false,
+            opportunityError: null,
+          });
+        } else {
+          // Transform API data to UI format
+          const transformedOpportunities = Array.isArray(response.message.data) 
+            ? response.message.data.map(mapOpportunityMatchToJobOpportunity)
+            : [];
+          
+          set({
+            opportunityMatches: Array.isArray(response.message.data) ? response.message.data : [],
+            opportunities: transformedOpportunities,
+            totalOpportunities: response.message.total_count,
+            totalPages: response.message.total_pages,
+            isLoadingOpportunities: false,
+            opportunityError: null,
+          });
+        }
       } else {
         throw new Error(response.message.message || 'Failed to fetch opportunity matches');
       }
@@ -311,7 +345,7 @@ export const useIndividualDashboardStore = create<IndividualDashboardState>((set
   },
 
   // Bookmark opportunity
-  bookmarkOpportunity: async (opportunityMatchId: string) => {
+  bookmarkOpportunity: async (opportunityMatchId: string, value?: number) => {
     try {
       set({ isBookmarking: true, bookmarkError: null });
 
@@ -327,12 +361,21 @@ export const useIndividualDashboardStore = create<IndividualDashboardState>((set
         throw new Error('API credentials not found. Please login again.');
       }
 
-      // Call the API
+      // Find the current match to determine the value if not provided
+      const currentOpportunityMatches = get().opportunityMatches;
+      const match = currentOpportunityMatches?.find(m => m.opportunity_match_id === opportunityMatchId);
+      
+      // If value is not provided, toggle the current value
+      const currentBookmarkedValue = match?.bookmarked_by_profile_owner || 0;
+      const bookmarkValue = value !== undefined ? value : (currentBookmarkedValue === 1 ? 0 : 1);
+      
+      // Call the API with the value parameter
       const response: SaveOpportunityMatchResponse = await saveOpportunityMatch(
         entityId,
         opportunityMatchId,
         apiKey,
-        apiSecret
+        apiSecret,
+        bookmarkValue
       );
 
       // Check if the response is successful
@@ -343,10 +386,8 @@ export const useIndividualDashboardStore = create<IndividualDashboardState>((set
         const bookmarkedOpportunities = get().bookmarkedOpportunities;
 
         if (currentOpportunityMatches) {
-          // Find the current match to determine if we're toggling on or off
-          const match = currentOpportunityMatches.find(m => m.opportunity_match_id === opportunityMatchId);
-          const currentBookmarkedValue = match?.bookmarked_by_profile_owner || 0;
-          const newBookmarkedValue = currentBookmarkedValue === 1 ? 0 : 1;
+          // Use the bookmarkValue we determined earlier
+          const newBookmarkedValue = bookmarkValue;
           
           // Update matches
           const updatedMatches = currentOpportunityMatches.map(match => {
@@ -422,13 +463,13 @@ export const useIndividualDashboardStore = create<IndividualDashboardState>((set
         throw new Error('API credentials not found. Please login again.');
       }
 
-      // Call the API with bookmarked filter
+      // Call the API with bookmarked_by_profile_owner filter
       const response: OpportunityMatchesResponse = await getOpportunityMatches(
         entityId,
         apiKey,
         apiSecret,
         undefined, // No search query
-        { bookmarked: 1 } // Filter for bookmarked opportunities
+        { bookmarked_by_profile_owner: 1 } // Filter for bookmarked opportunities
       );
 
       // Check if the response is successful

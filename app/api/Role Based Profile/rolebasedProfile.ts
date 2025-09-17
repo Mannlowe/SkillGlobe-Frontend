@@ -27,6 +27,7 @@ export interface CreateUpdateRoleBasedProfileRequest {
   work_eligibility?: string;
   primary_skills?: Array<{skill: string}>;
   secondary_skills?: Array<{skill: string}>;
+  template_id?: string; // ID of the selected resume template
   
   // Banking & Financial Services fields
   banking_domain?: string;

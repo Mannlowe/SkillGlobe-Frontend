@@ -120,9 +120,13 @@ export default function BusinessBasicInformation({ data, updateData, nextStep }:
         nextStep();
       } catch (error: any) {
         console.error('Error submitting business details:', error);
+        
+        // Simply use the error message that was already formatted in the API layer
+        const errorMessage = error.message || 'Failed to submit business details. Please try again.';
+        
         setErrors((prev: Record<string, string>) => ({
           ...prev,
-          apiError: error.message || 'Failed to submit business details. Please try again.'
+          apiError: errorMessage
         }));
       } finally {
         setIsSubmitting(false);

@@ -19,6 +19,7 @@ import DomainFields from './DomainFields';
 import { useRoleBasedProfileStore } from '@/store/role-based-profile/rolebasedprofileStore';
 import { CreateUpdateRoleBasedProfileRequest } from '@/app/api/Role Based Profile/rolebasedProfile';
 import { getSkills, getAuthData, type Skill } from '@/app/api/job postings/addjobPosting';
+import { ResumeTemplate } from './ResumeTemplateSelector';
 
 interface ProfileFormProps {
   onSave: (data: ProfileEntry[]) => void;
@@ -26,7 +27,7 @@ interface ProfileFormProps {
   initialData?: ProfileEntry[];
   showFormDirectly?: boolean;
   isEditing?: boolean;
-  selectedTemplate?: any;
+  selectedTemplate?: ResumeTemplate;
 }
 
 export interface ProfileEntry {
@@ -202,6 +203,7 @@ export default function ProfileForm({ onSave, onCancel, initialData = [], showFo
   const [activeSection, setActiveSection] = useState('resume');
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
+  const [error, setError] = useState("");
   
   // Skills dropdown states
   const [primarySkillsDropdownOpen, setPrimarySkillsDropdownOpen] = useState(false);
@@ -303,6 +305,12 @@ export default function ProfileForm({ onSave, onCancel, initialData = [], showFo
       ...editingEntry,
       primarySkills: updatedSkills
     });
+
+    if (updatedSkills.length > 0) {
+      setError("");
+    } else {
+      setError("Please select at least one primary skill.");
+    }
   };
   
   const toggleSecondarySkill = (skillObj: {name: string, canonical_name: string}) => {
@@ -597,6 +605,11 @@ export default function ProfileForm({ onSave, onCancel, initialData = [], showFo
       return;
     }
 
+    if (!editingEntry?.primarySkills || editingEntry.primarySkills.length === 0) {
+      setError("Please select at least one primary skill.");
+      return;
+    }
+
     // Clear previous errors
     clearCreateError();
     clearUpdateError();
@@ -619,6 +632,9 @@ export default function ProfileForm({ onSave, onCancel, initialData = [], showFo
         work_eligibility: '',
         primary_skills: editingEntry.primarySkills?.map(skill => ({ skill: skill.name })) || [],
         secondary_skills: editingEntry.secondarySkills?.map(skill => ({ skill: skill.name })) || [],
+        
+        // Add the selected template ID if available
+        template_id: selectedTemplate?.id,
         
         // Add domain-specific fields based on profileType and subDomain
         ...mapDomainSpecificFields(editingEntry)
@@ -738,6 +754,11 @@ export default function ProfileForm({ onSave, onCancel, initialData = [], showFo
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!editingEntry?.primarySkills || editingEntry.primarySkills.length === 0) {
+      setError("Please select at least one primary skill.");
+      return;
+    }
+    
     onSave(profileEntries);
   };
 
@@ -1257,8 +1278,8 @@ export default function ProfileForm({ onSave, onCancel, initialData = [], showFo
             
             {/* Primary Skills */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Primary Skills
+              <label className="block text-sm font-medium text-gray-700 mb-1 ">
+                Primary Skills <span className="text-red-500">*</span>
               </label>
               <div className="flex gap-4">
                 <div className="w-1/2 relative" ref={primarySkillsDropdownRef}>
@@ -1285,6 +1306,11 @@ export default function ProfileForm({ onSave, onCancel, initialData = [], showFo
                           className="w-full px-3 py-2 text-sm border border-gray-200 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                           onClick={(e) => e.stopPropagation()}
                         />
+                        {error && (
+  <p className="text-red-500 text-sm mt-1">{error}</p>
+)}
+
+                     
                       </div>
                       {skillsLoading ? (
                         <div className="px-4 py-2 text-center text-gray-500">
@@ -1334,6 +1360,7 @@ export default function ProfileForm({ onSave, onCancel, initialData = [], showFo
                   )}
                 </div>
               </div>
+                 {error && <p className="text-red-500 text-sm mt-1">{error}</p>}
             </div>
             
             {/* Secondary Skills */}
@@ -1457,3 +1484,7 @@ export default function ProfileForm({ onSave, onCancel, initialData = [], showFo
     </form>
   );
 }
+function setError(arg0: string) {
+  throw new Error('Function not implemented.');
+}
+

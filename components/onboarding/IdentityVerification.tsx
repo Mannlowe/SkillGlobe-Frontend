@@ -12,7 +12,7 @@ interface IdentityVerificationProps {
 const documentTypes = [
   { id: 'aadhaar', name: 'Aadhaar Card', icon: CreditCard, description: 'Most trusted verification' },
   { id: 'pan', name: 'PAN Card', icon: FileText, description: 'Alternative verification' },
-  { id: 'passport', name: 'Passport', icon: FileText, description: 'International ID' },
+  // { id: 'passport', name: 'Passport', icon: FileText, description: 'International ID' },
   { id: 'voter', name: 'Voter ID', icon: FileText, description: 'Government issued ID' },
 ];
 

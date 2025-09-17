@@ -10,8 +10,8 @@ import { useVerificationStore } from '@/store/verificationStore';
 const documentTypes = [
   { id: 'aadhaar', name: 'Aadhaar Card', icon: IdCard, description: 'Most trusted verification' },
   { id: 'pan', name: 'PAN Card', icon: IdCard, description: 'Alternative verification' },
-  { id: 'passport', name: 'Passport', icon: FileText, description: 'International ID' },
-  { id: 'voter', name: 'Voter ID', icon: IdCard, description: 'Government issued ID' },
+  // { id: 'passport', name: 'Passport', icon: FileText, description: 'International ID' },
+  { id: 'driving', name: 'Driving License', icon: IdCard, description: 'Government issued ID' },
 ];
 
 interface IdentityVerificationProps {
@@ -38,6 +38,7 @@ export default function IdentityVerification({
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [isOtpModalOpen, setIsOtpModalOpen] = useState(false);
   const [isVerifying, setIsVerifying] = useState(false);
+  const [documentNumber, setDocumentNumber] = useState('');
 
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -58,8 +59,47 @@ export default function IdentityVerification({
   };
 
   const handleVerify = () => {
+    // Check if document number is entered
+    if (!documentNumber) {
+      toast.error(`Please enter your ${documentTypes.find(d => d.id === selectedDoc)?.name} number`);
+      return;
+    }
+
+    // Validate document number format based on document type
+    let isValid = true;
+    let errorMessage = '';
+
+    if (selectedDoc === 'aadhaar') {
+      // Remove spaces for validation
+      const cleanNumber = documentNumber.replace(/\s+/g, '');
+      if (!/^\d{12}$/.test(cleanNumber)) {
+        isValid = false;
+        errorMessage = 'Aadhaar number must be 12 digits';
+      }
+    } else if (selectedDoc === 'pan') {
+      if (!/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(documentNumber)) {
+        isValid = false;
+        errorMessage = 'Invalid PAN format. Should be like ABCDE1234F';
+      }
+    } else if (selectedDoc === 'passport') {
+      if (!/^[A-Z][0-9]{7}$/.test(documentNumber)) {
+        isValid = false;
+        errorMessage = 'Invalid Passport format. Should be like A1234567';
+      }
+    } else if (selectedDoc === 'voter') {
+      if (!/^[A-Z]{3}[0-9]{7}$/.test(documentNumber)) {
+        isValid = false;
+        errorMessage = 'Invalid Voter ID format. Should be like ABC1234567';
+      }
+    }
+
+    if (!isValid) {
+      toast.error(errorMessage);
+      return;
+    }
+
     // For Aadhaar card, show OTP modal
-    if (selectedDoc === 'aadhaar' && uploadedFile) {
+    if (selectedDoc === 'aadhaar') {
       setIsOtpModalOpen(true);
     } else {
       // For other documents, directly mark as verified
@@ -76,16 +116,18 @@ export default function IdentityVerification({
   const handleOtpVerify = (otp: string) => {
     setIsVerifying(true);
     
-    // Simulate OTP verification
+    // Simulate OTP verification with document number
     setTimeout(() => {
       setIsVerifying(false);
       setIsOtpModalOpen(false);
       setShowVerifiedUI(true);
       
-      // Update the persistent store
+      // Update the persistent store with document type and document number
       setIdentityVerified(true, selectedDoc);
       
-      toast.success('Aadhaar verification successful!');
+      // Show document number in success message
+      const maskedNumber = documentNumber.slice(-4).padStart(documentNumber.length, '*');
+      toast.success(`${documentTypes.find(d => d.id === selectedDoc)?.name} verification successful! (${maskedNumber})`);
       
       // Navigate to verification page after showing success UI
       setTimeout(() => {
@@ -109,35 +151,35 @@ export default function IdentityVerification({
 
   return (
     <>
-    <div className={`bg-white rounded-xl shadow-sm p-3 space-y-6 w-full font-rubik ${className}`}>
-      {/* <div className="text-center">
-        <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-          <Shield className="text-green-600" size={32} />
-        </div>
-        <h1 className="text-2xl font-bold text-gray-900 mb-2">
-          Identity Verification
-        </h1>
-        <p className="text-gray-600">
-          Verify your identity to build trust and unlock premium features
-        </p>
-        <div className="inline-flex items-center px-3 py-1 bg-blue-100 text-blue-800 text-sm font-medium rounded-full mt-2">
-          Optional - Skip for now
-        </div>
-      </div> */}
+      <div className={`bg-white rounded-xl shadow-sm p-3 space-y-6 w-full font-rubik ${className}`}>
+        {/* <div className="text-center">
+          <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <Shield className="text-green-600" size={32} />
+          </div>
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">
+            Identity Verification
+          </h1>
+          <p className="text-gray-600">
+            Verify your identity to build trust and unlock premium features
+          </p>
+          <div className="inline-flex items-center px-3 py-1 bg-blue-100 text-blue-800 text-sm font-medium rounded-full mt-2">
+            Optional - Skip for now
+          </div>
+        </div> */}
 
-      {!showVerifiedUI ? (
-        <div className="space-y-4">
-          {/* Document Type Selection */}
-          <div>
-            <h3 className="font-semibold text-gray-900 mb-3">Select Document Type</h3>
-            <div className="grid grid-cols-2 gap-3">
-              {documentTypes.map((doc) => {
-                const Icon = doc.icon;
-                return (
-                  <button
-                    key={doc.id}
-                    onClick={() => setSelectedDoc(doc.id)}
-                    className={`p-4 rounded-xl border-2 transition-all flex flex-col items-center justify-center h-full ${
+        {!showVerifiedUI ? (
+          <div className="space-y-4">
+            {/* Document Type Selection */}
+            <div>
+              <h3 className="font-semibold text-gray-900 mb-3">Select Document Type</h3>
+              <div className="grid grid-cols-2 gap-3">
+                {documentTypes.map((doc) => {
+                  const Icon = doc.icon;
+                  return (
+                    <button
+                      key={doc.id}
+                      onClick={() => setSelectedDoc(doc.id)}
+                      className={`p-4 rounded-xl border-2 transition-all flex flex-col items-center justify-center h-full ${
                       isIdentityVerified && verifiedDocType === doc.id
                         ? doc.id === 'aadhaar' 
                           ? 'border-green-500 bg-green-50'
@@ -164,11 +206,43 @@ export default function IdentityVerification({
             </div>
           </div>
 
-          {/* File Upload */}
+          {/* Document Number Input */}
           {selectedDoc && (
             <div className="bg-white p-4 rounded-xl border border-gray-200">
-              <h3 className="font-semibold text-gray-900 mb-3">Upload Document</h3>
+              <h3 className="font-semibold text-gray-900 mb-3">Enter {documentTypes.find(d => d.id === selectedDoc)?.name} Number</h3>
               
+              <div className="space-y-3">
+                <div className="relative">
+                  <IdCard className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+                  <input
+                    type="text"
+                    value={documentNumber}
+                    onChange={(e) => setDocumentNumber(e.target.value)}
+                    placeholder={`Enter your ${documentTypes.find(d => d.id === selectedDoc)?.name} number`}
+                    className="w-full pl-10 pr-4 py-3 bg-gray-50 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                  />
+                </div>
+                
+                {selectedDoc === 'aadhaar' && (
+                  <p className="text-xs text-gray-500 mt-1">Format: XXXX XXXX XXXX (12 digits)</p>
+                )}
+                {selectedDoc === 'pan' && (
+                  <p className="text-xs text-gray-500 mt-1">Format: ABCDE1234F (10 characters)</p>
+                )}
+                {selectedDoc === 'passport' && (
+                  <p className="text-xs text-gray-500 mt-1">Format: A1234567 (8 characters)</p>
+                )}
+                {selectedDoc === 'voter' && (
+                  <p className="text-xs text-gray-500 mt-1">Format: ABC1234567 (10 characters)</p>
+                )}
+              </div>
+            </div>
+          )}
+          
+          {/* File Upload Section */}
+          {/* {selectedDoc && (
+            <div className="bg-white p-4 rounded-xl border border-gray-200">
+              <h3 className="font-semibold text-gray-900 mb-3">Upload Document</h3>
               {!uploadedFile ? (
                 <label className="block">
                   <div className="border-2 border-dashed border-gray-300 rounded-xl p-6 text-center hover:border-orange-500 transition-colors cursor-pointer">
@@ -213,8 +287,6 @@ export default function IdentityVerification({
                       <X size={16} />
                     </button>
                   </div>
-                  
-                  {/* Document Preview */}
                   {previewUrl && (
                     <div className="mt-3 border border-gray-200 rounded-xl overflow-hidden">
                       {uploadedFile?.type.startsWith('image/') ? (
@@ -242,8 +314,8 @@ export default function IdentityVerification({
                 </div>
               )}
             </div>
-          )}
-
+          )} */}
+          
           {/* Security Note */}
           <div className="bg-blue-50 p-4 rounded-xl border border-blue-200">
             <div className="flex items-start space-x-3">
@@ -259,38 +331,38 @@ export default function IdentityVerification({
         </div>
       ) : (
         <div className="text-center py-8">
-  <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-    <CheckCircle className="text-green-600" size={32} />
-  </div>
-  <h3 className="text-lg font-semibold text-gray-900 mb-2">Verification Complete!</h3>
-  <p className="text-gray-600 mb-4">Your identity has been successfully verified</p>
+          <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <CheckCircle className="text-green-600" size={32} />
+          </div>
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">Verification Complete!</h3>
+          <p className="text-gray-600 mb-4">Your identity has been successfully verified</p>
 
-  <button
-    onClick={() => {
-      setShowVerifiedUI(false);
-      setSelectedDoc('');
-      setUploadedFile(null);
-      setPreviewUrl(null);
-    }}
-    className="mt-4 inline-flex items-center px-4 py-2 text-sm font-medium text-blue-600 hover:underline"
-  >
-    ← Back to document selection
-  </button>
-</div>
+          <button
+            onClick={() => {
+              setShowVerifiedUI(false);
+              setSelectedDoc('');
+              setUploadedFile(null);
+              setPreviewUrl(null);
+            }}
+            className="mt-4 inline-flex items-center px-4 py-2 text-sm font-medium text-blue-600 hover:underline"
+          >
+            ← Back to document selection
+          </button>
+        </div>
 
       )}
 
-{!showVerifiedUI && (
-  <div className="flex justify-center items-center pt-4">
-    <button
-      onClick={handleVerify}
-      disabled={!uploadedFile || isUploading}
-      className="w-44 bg-[#007BCA] text-white font-semibold py-3 px-6 rounded-xl hover:shadow-lg transition-all duration-300 disabled:cursor-not-allowed"
-    >
-      Verify Identity
-    </button>
-  </div>
-)}
+      {!showVerifiedUI && (
+        <div className="flex justify-center items-center pt-4">
+          <button
+            onClick={handleVerify}
+            disabled={!documentNumber}
+            className="w-44 bg-[#007BCA] text-white font-semibold py-3 px-6 rounded-xl hover:shadow-lg transition-all duration-300 disabled:cursor-not-allowed"
+          >
+            Verify Identity
+          </button>
+        </div>
+      )}
     </div>
     
  

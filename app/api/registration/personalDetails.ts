@@ -29,17 +29,6 @@ export interface PersonalDetailsResponse {
   };
 }
 
-/**
- * Update personal details in the registration process
- * @param requestId Registration request ID
- * @param email User email
- * @param phone User phone number
- * @param fullName User full name
- * @param password User password
- * @param leadReference Optional lead reference for lead tracking
- * @param emailToken Optional email token for lead verification
- * @returns Promise with update response
- */
 export const updatePersonalDetails = async (
   requestId: string,
   email: string,
@@ -50,14 +39,17 @@ export const updatePersonalDetails = async (
   emailToken?: string
 ): Promise<PersonalDetailsResponse> => {
   try {
-    console.log('Updating personal details:', { requestId, email, phone, fullName });
+    // Format phone number with + prefix if it doesn't already have it
+    const formattedPhone = phone.startsWith('+') ? phone : `+${phone}`;
+    
+    console.log('Updating personal details:', { requestId, email, phone: formattedPhone, fullName });
     
     const response = await axios.post<PersonalDetailsResponse>(
       `${API_BASE_URL}/api/method/skillglobe_be.api.register.register.update_personal_details`,
       {
         request_id: requestId,
         email: email,
-        phone: phone,
+        phone: formattedPhone,
         full_name: fullName,
         password: password,
         ...(leadReference && { lead_reference: leadReference }),

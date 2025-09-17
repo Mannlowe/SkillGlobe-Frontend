@@ -1,12 +1,35 @@
-'use client';
+"use client";
 
-import { Calendar, MapPin, Globe, Upload, AtSign, Phone, User, Landmark, Locate, Briefcase, FileText, Check } from 'lucide-react';
-import PhoneInput from 'react-phone-input-2';
-import 'react-phone-input-2/lib/style.css';
-import Image from 'next/image';
-import { usePersonalInfoForm, PersonalInfoFormProps } from './PersonalInfoConstant';
+import {
+  Calendar,
+  MapPin,
+  Globe,
+  Upload,
+  AtSign,
+  Phone,
+  User,
+  Landmark,
+  Locate,
+  Briefcase,
+  FileText,
+  Check,
+} from "lucide-react";
+import PhoneInput from "react-phone-input-2";
+import "react-phone-input-2/lib/style.css";
+import Image from "next/image";
+import {
+  usePersonalInfoForm,
+  PersonalInfoFormProps,
+} from "./PersonalInfoConstant";
+import { useEffect, useState } from "react";
+import { useNationalityStore } from "@/store/portfolio/nationalityListStore";
+import { fetchNationalitiesAPI } from "@/app/api/portfolio/nationalityAPI";
 
-export default function PersonalInfoForm({ onSave, onCancel, initialData = {} }: PersonalInfoFormProps) {
+export default function PersonalInfoForm({
+  onSave,
+  onCancel,
+  initialData = {},
+}: PersonalInfoFormProps) {
   // Use the custom hook from PersonalInfoConstant.tsx
   const {
     formData,
@@ -26,10 +49,25 @@ export default function PersonalInfoForm({ onSave, onCancel, initialData = {} }:
     userMobile, // Get userName from the hook
   } = usePersonalInfoForm({ onSave, onCancel, initialData });
 
+  const { nationalities, setNationalities } = useNationalityStore();
+
+  useEffect(() => {
+    const getNationalities = async () => {
+      const data = await fetchNationalitiesAPI();
+      if (data.message?.status === "success" && data.message.data) {
+        setNationalities(data.message.data); 
+      }
+    };
+
+    getNationalities();
+  }, [setNationalities]);
+
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <div className="bg-white p-6 rounded-xl shadow-lg">
-        <h3 className="font-semibold text-gray-900 mb-4">Personal Information</h3>
+        <h3 className="font-semibold text-gray-900 mb-4">
+          Personal Information
+        </h3>
 
         {/* Profile Picture Upload */}
         <div className="flex flex-col items-center mb-6">
@@ -78,7 +116,9 @@ export default function PersonalInfoForm({ onSave, onCancel, initialData = {} }:
               className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-50"
               placeholder="Full name from your account"
             />
-            <p className="text-xs text-gray-500 mt-1">Auto-filled from your account</p>
+            <p className="text-xs text-gray-500 mt-1">
+              Auto-filled from your account
+            </p>
           </div>
 
           {/* Email */}
@@ -87,7 +127,10 @@ export default function PersonalInfoForm({ onSave, onCancel, initialData = {} }:
               Email <span className="text-red-500">*</span>
             </label>
             <div className="relative">
-              <AtSign className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
+              <AtSign
+                className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+                size={16}
+              />
               <input
                 type="email"
                 name="email"
@@ -98,7 +141,9 @@ export default function PersonalInfoForm({ onSave, onCancel, initialData = {} }:
                 placeholder="your.email@example.com"
               />
             </div>
-            <p className="text-xs text-gray-500 mt-1">Auto-filled from your account</p>
+            <p className="text-xs text-gray-500 mt-1">
+              Auto-filled from your account
+            </p>
           </div>
 
           {/* Phone */}
@@ -108,30 +153,40 @@ export default function PersonalInfoForm({ onSave, onCancel, initialData = {} }:
             </label>
             <div className="phone-input-container">
               <PhoneInput
-                country={'in'}
+                country={"in"}
                 value={formData.mobile_no || userMobile}
                 onChange={(phone) => {
-                  const digitsOnly = phone.replace(/\D/g, '');
-                  
+                  const digitsOnly = phone.replace(/\D/g, "");
+
                   // Update formData with the new phone number
                   handleInputChange({
                     target: {
-                      name: 'mobile_no',
+                      name: "mobile_no",
                       value: digitsOnly,
-                      type: 'tel'
-                    }
+                      type: "tel",
+                    },
                   } as React.ChangeEvent<HTMLInputElement>);
-                  
+
                   // Validate phone number length
                   if (!digitsOnly) {
-                    setErrors(prev => ({ ...prev, phone: 'Mobile number is required' }));
+                    setErrors((prev) => ({
+                      ...prev,
+                      phone: "Mobile number is required",
+                    }));
                   } else if (digitsOnly.length < 10) {
-                    setErrors(prev => ({ ...prev, mobile_no: 'Mobile number must be at least 10 digits' }));
+                    setErrors((prev) => ({
+                      ...prev,
+                      mobile_no: "Mobile number must be at least 10 digits",
+                    }));
                   } else {
-                    setErrors(prev => ({ ...prev, mobile_no: '' }));
+                    setErrors((prev) => ({ ...prev, mobile_no: "" }));
                   }
                 }}
-                inputClass={`w-full py-2 border ${errors.mobile_no ? 'border-red-500 ring-1 ring-red-500' : 'border-gray-300'} rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500`}
+                inputClass={`w-full py-2 border ${
+                  errors.mobile_no
+                    ? "border-red-500 ring-1 ring-red-500"
+                    : "border-gray-300"
+                } rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500`}
                 containerClass="phone-input-container"
                 buttonClass="phone-input-button"
                 dropdownClass="phone-input-dropdown"
@@ -139,7 +194,7 @@ export default function PersonalInfoForm({ onSave, onCancel, initialData = {} }:
                 disableSearchIcon={false}
                 searchPlaceholder="Search country..."
                 inputProps={{
-                  name: 'phone',
+                  name: "phone",
                   required: true,
                   autoFocus: false,
                 }}
@@ -148,7 +203,9 @@ export default function PersonalInfoForm({ onSave, onCancel, initialData = {} }:
             {errors.mobile_no ? (
               <p className="text-red-500 text-xs mt-1">{errors.mobile_no}</p>
             ) : (
-              <p className="text-xs text-gray-500 mt-1">Auto-filled from your account</p>
+              <p className="text-xs text-gray-500 mt-1">
+                Auto-filled from your account
+              </p>
             )}
           </div>
 
@@ -163,7 +220,7 @@ export default function PersonalInfoForm({ onSave, onCancel, initialData = {} }:
                   type="radio"
                   name="gender"
                   value="Male"
-                  checked={formData.gender === 'Male'}
+                  checked={formData.gender === "Male"}
                   onChange={handleInputChange}
                   required
                   className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
@@ -175,7 +232,7 @@ export default function PersonalInfoForm({ onSave, onCancel, initialData = {} }:
                   type="radio"
                   name="gender"
                   value="Female"
-                  checked={formData.gender === 'Female'}
+                  checked={formData.gender === "Female"}
                   onChange={handleInputChange}
                   required
                   className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
@@ -187,7 +244,7 @@ export default function PersonalInfoForm({ onSave, onCancel, initialData = {} }:
                   type="radio"
                   name="gender"
                   value="Other"
-                  checked={formData.gender === 'Other'}
+                  checked={formData.gender === "Other"}
                   onChange={handleInputChange}
                   required
                   className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
@@ -203,14 +260,21 @@ export default function PersonalInfoForm({ onSave, onCancel, initialData = {} }:
               Date of Birth <span className="text-red-500">*</span>
             </label>
             <div className="relative">
-              <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
+              <Calendar
+                className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+                size={16}
+              />
               <input
                 type="date"
                 name="dateOfBirth"
                 value={formData.dateOfBirth}
                 onChange={handleInputChange}
                 required
-                className={`w-full pl-10 pr-4 py-2 border ${errors.dateOfBirth ? 'border-red-500 ring-1 ring-red-500' : 'border-gray-300'} rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500`}
+                className={`w-full pl-10 pr-4 py-2 border ${
+                  errors.dateOfBirth
+                    ? "border-red-500 ring-1 ring-red-500"
+                    : "border-gray-300"
+                } rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500`}
               />
             </div>
             {errors.dateOfBirth && (
@@ -223,7 +287,7 @@ export default function PersonalInfoForm({ onSave, onCancel, initialData = {} }:
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Nationality <span className="text-red-500">*</span>
             </label>
-            <input
+            {/* <input
               type="text"
               name="nationality"
               value={formData.nationality}
@@ -231,7 +295,23 @@ export default function PersonalInfoForm({ onSave, onCancel, initialData = {} }:
               required
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               placeholder="Enter your nationality"
-            />
+            /> */}
+            <select
+              name="nationality"
+              value={formData.nationality}
+              onChange={handleInputChange}
+              required
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            >
+              <option value="" disabled>
+                Select your nationality
+              </option>
+              {nationalities.map((n, index) => (
+                <option key={index} value={n.name}>
+                  {n.name}
+                </option>
+              ))}
+            </select>
           </div>
 
           {/* Country */}
@@ -254,7 +334,10 @@ export default function PersonalInfoForm({ onSave, onCancel, initialData = {} }:
               Country
             </label>
             <div className="relative">
-              <Globe className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
+              <Globe
+                className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+                size={16}
+              />
               <select
                 name="country"
                 value={formData.country}
@@ -278,7 +361,10 @@ export default function PersonalInfoForm({ onSave, onCancel, initialData = {} }:
               City
             </label>
             <div className="relative">
-              <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
+              <MapPin
+                className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+                size={16}
+              />
               <input
                 type="text"
                 name="city"
@@ -295,7 +381,10 @@ export default function PersonalInfoForm({ onSave, onCancel, initialData = {} }:
               Landmark
             </label>
             <div className="relative">
-              <Landmark className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
+              <Landmark
+                className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+                size={16}
+              />
               <input
                 type="text"
                 name="landmark"
@@ -312,7 +401,10 @@ export default function PersonalInfoForm({ onSave, onCancel, initialData = {} }:
               Pincode
             </label>
             <div className="relative">
-              <Locate className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
+              <Locate
+                className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+                size={16}
+              />
               <input
                 type="text" // Keep as text to prevent issues with leading 0
                 name="pincode"
@@ -320,8 +412,9 @@ export default function PersonalInfoForm({ onSave, onCancel, initialData = {} }:
                 maxLength={6}
                 value={formData.pincode}
                 onChange={handleInputChange}
-                className={`w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${errors.pincode ? 'border-red-500' : 'border-gray-300'
-                  }`}
+                className={`w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                  errors.pincode ? "border-red-500" : "border-gray-300"
+                }`}
                 placeholder="Enter your pincode"
               />
             </div>
@@ -330,7 +423,6 @@ export default function PersonalInfoForm({ onSave, onCancel, initialData = {} }:
               <p className="text-red-500 text-sm mt-1">{errors.pincode}</p>
             )}
           </div>
-
         </div>
       </div>
 
@@ -344,7 +436,9 @@ export default function PersonalInfoForm({ onSave, onCancel, initialData = {} }:
               Twitter Handle
             </label>
             <div className="relative">
-              <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">@</span>
+              <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
+                @
+              </span>
               <input
                 type="text"
                 name="twitterHandle"
@@ -362,7 +456,9 @@ export default function PersonalInfoForm({ onSave, onCancel, initialData = {} }:
               LinkedIn Profile
             </label>
             <div className="relative">
-              <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">in/</span>
+              <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
+                in/
+              </span>
               <input
                 type="text"
                 name="linkedinHandle"
@@ -389,13 +485,14 @@ export default function PersonalInfoForm({ onSave, onCancel, initialData = {} }:
               />
             </div>
           </div>
-
         </div>
       </div>
 
       {/* Employment Status - Separate Section */}
       <div className="bg-white p-6 rounded-xl shadow-lg mt-6">
-        <h3 className="font-semibold text-gray-900 mb-4">Professional Information</h3>
+        <h3 className="font-semibold text-gray-900 mb-4">
+          Professional Information
+        </h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {/* Employment Status */}
           <div>
@@ -403,7 +500,10 @@ export default function PersonalInfoForm({ onSave, onCancel, initialData = {} }:
               Employment Status <span className="text-red-500">*</span>
             </label>
             <div className="relative">
-              <Briefcase className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
+              <Briefcase
+                className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+                size={16}
+              />
               <select
                 name="employmentStatus"
                 value={formData.employmentStatus}
@@ -426,7 +526,10 @@ export default function PersonalInfoForm({ onSave, onCancel, initialData = {} }:
               Own Website
             </label>
             <div className="relative">
-              <Globe className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
+              <Globe
+                className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+                size={16}
+              />
               <input
                 type="url"
                 name="website"
@@ -443,7 +546,10 @@ export default function PersonalInfoForm({ onSave, onCancel, initialData = {} }:
               Total Experience <span className="text-red-500">*</span>
             </label>
             <div className="relative">
-              <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
+              <Calendar
+                className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+                size={16}
+              />
               <input
                 type="number"
                 min={0}
@@ -462,7 +568,10 @@ export default function PersonalInfoForm({ onSave, onCancel, initialData = {} }:
               Notice Period
             </label>
             <div className="relative">
-              <Briefcase className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
+              <Briefcase
+                className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+                size={16}
+              />
               <select
                 name="noticePeriod"
                 value={formData.noticePeriod}
@@ -483,7 +592,10 @@ export default function PersonalInfoForm({ onSave, onCancel, initialData = {} }:
               Professional Summary
             </label>
             <div className="relative">
-              <FileText className="absolute left-3 top-3 text-gray-400" size={16} />
+              <FileText
+                className="absolute left-3 top-3 text-gray-400"
+                size={16}
+              />
               <textarea
                 rows={1}
                 name="professionalSummary"
@@ -494,7 +606,6 @@ export default function PersonalInfoForm({ onSave, onCancel, initialData = {} }:
               />
             </div>
           </div>
-
         </div>
       </div>
 
@@ -520,21 +631,23 @@ export default function PersonalInfoForm({ onSave, onCancel, initialData = {} }:
         <button
           type="submit"
           disabled={isSubmitting}
-          className={`px-6 py-2 font-medium rounded-lg transition-colors flex items-center justify-center min-w-[150px] ${isSuccess
-            ? 'bg-green-500 hover:bg-green-600 text-white'
-            : isSubmitting
-              ? 'bg-blue-300 text-white cursor-not-allowed'
-              : 'bg-blue-500 hover:bg-blue-600 text-white'}`}
+          className={`px-6 py-2 font-medium rounded-lg transition-colors flex items-center justify-center min-w-[150px] ${
+            isSuccess
+              ? "bg-green-500 hover:bg-green-600 text-white"
+              : isSubmitting
+              ? "bg-blue-300 text-white cursor-not-allowed"
+              : "bg-blue-500 hover:bg-blue-600 text-white"
+          }`}
         >
           {isSubmitting ? (
-            'Saving...'
+            "Saving..."
           ) : isSuccess ? (
             <>
               <Check className="mr-1" size={18} />
               Saved
             </>
           ) : (
-            'Save Information'
+            "Save Information"
           )}
         </button>
       </div>

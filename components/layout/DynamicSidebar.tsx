@@ -24,7 +24,8 @@ import {
   Phone,
   Award,
   GraduationCap,
-  Briefcase
+  Briefcase,
+  Upload
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
@@ -336,237 +337,116 @@ export default function DynamicSidebar({ isOpen, onClose, isMobile = false }: Dy
             </div>
           </div>
 
-          {/* Verification Status Section */}
-          <div className="px-4 py-3 border-b border-gray-200 bg-gradient-to-r from-orange-50 to-red-50">
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-2">
-                  <Shield className="w-4 h-4 text-orange-600" />
-                  <h3 className="text-sm font-semibold text-gray-900">Verification Status</h3>
-                </div>
-                <Badge variant="secondary" className="text-xs">
-                  {getVerificationScore()}%
-                </Badge>
-              </div>
-              
-              <div className="space-y-2">
-                {/* Next Verification Step */}
-                {(() => {
-                  const nextStep = getNextVerificationStep();
-                  if (nextStep) {
-                    return (
-                      <button
-                        onClick={() => {
-                          if (nextStep.type === 'email') router.push('/verification?step=email');
-                          else if (nextStep.type === 'phone') router.push('/verification?step=phone');
-                          else if (nextStep.type === 'identity') router.push('/verification');
-                          else if (nextStep.type === 'skills') router.push('/skills');
-                        }}
-                        className="w-full flex items-center space-x-2 p-2 rounded-lg bg-white border border-orange-200 hover:border-orange-300 hover:bg-orange-50 transition-colors"
-                      >
-                        <div className={cn(
-                          "w-2 h-2 rounded-full animate-pulse",
-                          nextStep.priority === 'high' ? 'bg-red-500' : 
-                          nextStep.priority === 'medium' ? 'bg-orange-500' : 'bg-blue-500'
-                        )} />
-                        <span className="text-xs text-gray-700 flex-1 text-left">{nextStep.message}</span>
-                        <ChevronRight className="w-3 h-3 text-gray-400" />
-                      </button>
-                    );
-                  }
-                  return (
-                    <div className="flex items-center space-x-2 p-2 rounded-lg bg-green-50 border border-green-200">
-                      <CheckCircle className="w-3 h-3 text-green-600" />
-                      <span className="text-xs text-green-700">All verifications complete!</span>
-                    </div>
-                  );
-                })()}
-
-                {/* Verification Status Icons */}
-                <div className="grid grid-cols-6 gap-1">
-                  <div className={cn(
-                    "w-6 h-6 rounded-full flex items-center justify-center",
-                    verificationStatus.email.verified ? 'bg-green-100' : 'bg-gray-100'
-                  )}>
-                    <Mail className={cn(
-                      "w-3 h-3",
-                      verificationStatus.email.verified ? 'text-green-600' : 'text-gray-400'
-                    )} />
-                  </div>
-                  <div className={cn(
-                    "w-6 h-6 rounded-full flex items-center justify-center",
-                    verificationStatus.phone.verified ? 'bg-green-100' : 'bg-gray-100'
-                  )}>
-                    <Phone className={cn(
-                      "w-3 h-3",
-                      verificationStatus.phone.verified ? 'text-green-600' : 'text-gray-400'
-                    )} />
-                  </div>
-                  <div className={cn(
-                    "w-6 h-6 rounded-full flex items-center justify-center",
-                    verificationStatus.identity.verified ? 'bg-green-100' : 'bg-gray-100'
-                  )}>
-                    <Shield className={cn(
-                      "w-3 h-3",
-                      verificationStatus.identity.verified ? 'text-green-600' : 'text-gray-400'
-                    )} />
-                  </div>
-                  <div className={cn(
-                    "w-6 h-6 rounded-full flex items-center justify-center",
-                    verificationStatus.skills.verified > 0 ? 'bg-green-100' : 'bg-gray-100'
-                  )}>
-                    <Award className={cn(
-                      "w-3 h-3",
-                      verificationStatus.skills.verified > 0 ? 'text-green-600' : 'text-gray-400'
-                    )} />
-                  </div>
-                  <div className={cn(
-                    "w-6 h-6 rounded-full flex items-center justify-center",
-                    verificationStatus.education.verified ? 'bg-green-100' : 'bg-gray-100'
-                  )}>
-                    <GraduationCap className={cn(
-                      "w-3 h-3",
-                      verificationStatus.education.verified ? 'text-green-600' : 'text-gray-400'
-                    )} />
-                  </div>
-                  <div className={cn(
-                    "w-6 h-6 rounded-full flex items-center justify-center",
-                    verificationStatus.employment.verified ? 'bg-green-100' : 'bg-gray-100'
-                  )}>
-                    <Briefcase className={cn(
-                      "w-3 h-3",
-                      verificationStatus.employment.verified ? 'text-green-600' : 'text-gray-400'
-                    )} />
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
           {/* Content */}
-          <ScrollArea className="flex-1 px-4 py-4 overflow-hidden">
-            {contextualData.loading ? (
-              <div className="space-y-6">
-                {/* Loading skeleton */}
+          <ScrollArea className="flex-1 px-4 py-4">
+            <div className="space-y-4">
+
+              {/* Early Access Member Section */}
+              <div className="bg-green-500 rounded-lg p-4 text-white">
+                <div className="flex items-center space-x-2 mb-2">
+                  <Star className="w-4 h-4" />
+                  <span className="text-sm font-semibold">Early Access Member</span>
+                </div>
+                <p className="text-xs mb-1">You're helping us build SkillGlobe</p>
+              </div>
+
+              {/* Boost Your Chances Section */}
+              <div>
+                <div className="flex items-center space-x-2 mb-3 mt-8">
+                  <Star className="w-4 h-4 text-pink-500" />
+                  <h3 className="text-sm font-semibold text-gray-900">Boost Your Chances</h3>
+                </div>
+
                 <div className="space-y-3">
-                  <div className="h-4 bg-gray-200 rounded animate-pulse w-1/2"></div>
-                  <div className="space-y-2">
-                    {[1, 2, 3].map((i) => (
-                      <div key={i} className="flex items-center space-x-3 p-3 rounded-lg bg-gray-50">
-                        <div className="w-4 h-4 bg-gray-200 rounded animate-pulse"></div>
-                        <div className="flex-1 space-y-1">
-                          <div className="h-3 bg-gray-200 rounded animate-pulse w-3/4"></div>
-                          <div className="h-2 bg-gray-200 rounded animate-pulse w-1/2"></div>
-                        </div>
+                  {/* Verify Email Card */}
+                  <div className="bg-gray-50 rounded-lg p-3 border border-gray-200 hover:border-purple-200 hover:bg-purple-50 transition-colors cursor-pointer">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
+                        <Mail className="w-4 h-4 text-purple-600" />
                       </div>
-                    ))}
+                      <div className="flex-1">
+                        <h4 className="text-sm font-medium text-gray-900">Verify Email</h4>
+                        <p className="text-xs text-blue-600 mt-0.5">Unlock direct messaging</p>
+                        <p className="text-xs text-gray-500 mt-0.5">Takes 30 seconds →</p>
+                      </div>
+                    </div>
                   </div>
+
+                  {/* Add TypeScript Skill Card */}
+                  <div className="bg-gray-50 rounded-lg p-3 border border-gray-200 hover:border-yellow-200 hover:bg-yellow-50 transition-colors cursor-pointer">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-8 h-8 bg-yellow-100 rounded-lg flex items-center justify-center">
+                        <Star className="w-4 h-4 text-yellow-600" />
+                      </div>
+                      <div className="flex-1">
+                        <h4 className="text-sm font-medium text-gray-900">Add TypeScript skill</h4>
+                        <p className="text-xs text-blue-600 mt-0.5">+8 new matches waiting</p>
+                        <p className="text-xs text-gray-500 mt-0.5">Add now →</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Upload Resume Card */}
+                  <div className="bg-gray-50 rounded-lg p-3 border border-gray-200 hover:border-blue-200 hover:bg-blue-50 transition-colors cursor-pointer">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                        <Upload className="w-4 h-4 text-blue-600" />
+                      </div>
+                      <div className="flex-1">
+                        <h4 className="text-sm font-medium text-gray-900">Upload resume</h4>
+                        <p className="text-xs text-blue-600 mt-0.5">Auto-fill applications</p>
+                        <p className="text-xs text-gray-500 mt-0.5">Upload →</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Complete Profile Card */}
+                  <div className="bg-gray-50 rounded-lg p-3 border border-gray-200 hover:border-green-200 hover:bg-green-50 transition-colors cursor-pointer">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
+                        <Users className="w-4 h-4 text-green-600" />
+                      </div>
+                      <div className="flex-1">
+                        <h4 className="text-sm font-medium text-gray-900">Complete profile</h4>
+                        <p className="text-xs text-blue-600 mt-0.5">Increase visibility</p>
+                        <p className="text-xs text-gray-500 mt-0.5">Complete →</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Add Experience Card */}
+                  <div className="bg-gray-50 rounded-lg p-3 border border-gray-200 hover:border-orange-200 hover:bg-orange-50 transition-colors cursor-pointer">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-8 h-8 bg-orange-100 rounded-lg flex items-center justify-center">
+                        <Briefcase className="w-4 h-4 text-orange-600" />
+                      </div>
+                      <div className="flex-1">
+                        <h4 className="text-sm font-medium text-gray-900">Add experience</h4>
+                        <p className="text-xs text-blue-600 mt-0.5">Show your expertise</p>
+                        <p className="text-xs text-gray-500 mt-0.5">Add now →</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Take Assessment Card */}
+                  <div className="bg-gray-50 rounded-lg p-3 border border-gray-200 hover:border-indigo-200 hover:bg-indigo-50 transition-colors cursor-pointer">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-8 h-8 bg-indigo-100 rounded-lg flex items-center justify-center">
+                        <Award className="w-4 h-4 text-indigo-600" />
+                      </div>
+                      <div className="flex-1">
+                        <h4 className="text-sm font-medium text-gray-900">Take skill assessment</h4>
+                        <p className="text-xs text-blue-600 mt-0.5">Verify your skills</p>
+                        <p className="text-xs text-gray-500 mt-0.5">Start test →</p>
+                      </div>
+                    </div>
+                  </div>
+
+
                 </div>
               </div>
-            ) : (
-            <div className="space-y-6 w-full">
-              {/* To-dos */}
-              {contextualData.todos.length > 0 && (
-                <div>
-                  <h3 className="text-sm font-semibold text-gray-700 mb-2">
-                    Profile To-dos
-                  </h3>
-                  <div className="space-y-1">
-                    {contextualData.todos.map(renderActionItem)}
-                  </div>
-                </div>
-              )}
-
-              {/* Quick Stats */}
-              {contextualData.stats.length > 0 && (
-                <div>
-                  <h3 className="text-sm font-semibold text-gray-700 mb-2">
-                    Quick Stats
-                  </h3>
-                  <div className="space-y-1">
-                    {contextualData.stats.map(renderActionItem)}
-                  </div>
-                </div>
-              )}
-
-              {/* Smart Actions */}
-              {contextualData.smartActions.length > 0 && (
-                <div>
-                  <h3 className="text-sm font-semibold text-gray-700 mb-2">
-                    Smart Actions
-                  </h3>
-                  <div className="space-y-1">
-                    {contextualData.smartActions.map(renderActionItem)}
-                  </div>
-                </div>
-              )}
-
-              {/* Opportunities */}
-              {contextualData.opportunities.length > 0 && (
-                <div>
-                  <h3 className="text-sm font-semibold text-gray-700 mb-2">
-                    Opportunities
-                  </h3>
-                  <div className="space-y-1">
-                    {contextualData.opportunities.map(renderActionItem)}
-                  </div>
-                </div>
-              )}
-
-              {/* Skill Alerts */}
-              {contextualData.skillAlerts.length > 0 && (
-                <div>
-                  <h3 className="text-sm font-semibold text-gray-700 mb-2 flex items-center">
-                    <span>Skill Alerts</span>
-                    <span className="ml-2 text-red-600 text-xs">⚠️</span>
-                  </h3>
-                  <div className="space-y-1">
-                    {contextualData.skillAlerts.map(renderActionItem)}
-                  </div>
-                </div>
-              )}
-
-              {/* Trending Skills */}
-              {contextualData.trendingSkills.length > 0 && (
-                <div>
-                  <h3 className="text-sm font-semibold text-gray-700 mb-2 flex items-center">
-                    <span>Trending Skills</span>
-                    <span className="ml-2 text-green-600 text-xs">🔥</span>
-                  </h3>
-                  <div className="space-y-1">
-                    {contextualData.trendingSkills.map(renderActionItem)}
-                  </div>
-                </div>
-              )}
-
-              {/* Interview Pipeline */}
-              {contextualData.interviewPipeline.length > 0 && (
-                <div>
-                  <h3 className="text-sm font-semibold text-gray-700 mb-2 flex items-center">
-                    <span>Interview Pipeline</span>
-                    <Badge variant="secondary" className="ml-2 text-xs">
-                      {contextualData.interviewPipeline.length}
-                    </Badge>
-                  </h3>
-                  <div className="space-y-1">
-                    {contextualData.interviewPipeline.map(renderActionItem)}
-                  </div>
-                </div>
-              )}
             </div>
-            )}
           </ScrollArea>
-
-          {/* Footer */}
-          <div className="p-4 border-t border-gray-200">
-            <Button 
-              variant="outline" 
-              className="w-full"
-              onClick={() => router.push('/insights')}
-            >
-              View All Insights
-            </Button>
-          </div>
         </div>
       </aside>
     </>

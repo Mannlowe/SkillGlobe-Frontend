@@ -11,12 +11,18 @@ interface OTPVerificationProps {
 }
 
 export default function OTPVerification({ data, updateData, nextStep }: OTPVerificationProps) {
-  const [emailTimer, setEmailTimer] = useState(60);
-  const [mobileTimer, setMobileTimer] = useState(60);
+  const [emailTimer, setEmailTimer] = useState(300);
+  const [mobileTimer, setMobileTimer] = useState(300);
   const [canResendEmail, setCanResendEmail] = useState(false);
   const [canResendMobile, setCanResendMobile] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
-  
+
+  const formatTime = (timeInSeconds: number): string => {
+    const minutes = Math.floor(timeInSeconds / 60);
+    const seconds = timeInSeconds % 60;
+    return `${minutes} min ${seconds < 10 ? '0' : ''}${seconds} sec`;
+  };
+
   // Get registration store state and actions
   const { verifyOtpCodes, isLoading, error: apiError, request_id } = useRegistrationStore();
 
@@ -54,19 +60,19 @@ export default function OTPVerification({ data, updateData, nextStep }: OTPVerif
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
-    
+
     if (!data.emailOTP) {
       newErrors.emailOTP = 'Email verification code is required';
     } else if (data.emailOTP.length !== 6) {
       newErrors.emailOTP = 'Email verification code must be 6 digits';
     }
-    
+
     if (!data.mobileOTP) {
       newErrors.mobileOTP = 'Mobile verification code is required';
     } else if (data.mobileOTP.length !== 6) {
       newErrors.mobileOTP = 'Mobile verification code must be 6 digits';
     }
-    
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -75,7 +81,7 @@ export default function OTPVerification({ data, updateData, nextStep }: OTPVerif
     if (!validateForm()) {
       return;
     }
-    
+
     // Check if request_id exists
     if (!request_id) {
       setErrors({
@@ -90,7 +96,7 @@ export default function OTPVerification({ data, updateData, nextStep }: OTPVerif
         data.emailOTP,
         data.mobileOTP
       );
-      
+
       // Proceed to next step on success
       nextStep();
     } catch (error) {
@@ -122,7 +128,7 @@ export default function OTPVerification({ data, updateData, nextStep }: OTPVerif
               <p className="text-sm text-gray-600">{data.email}</p>
             </div>
           </div>
-          
+
           <input
             type="text"
             value={data.emailOTP}
@@ -132,19 +138,20 @@ export default function OTPVerification({ data, updateData, nextStep }: OTPVerif
             maxLength={6}
           />
           {errors.emailOTP && <p className="text-red-500 text-xs mt-1">{errors.emailOTP}</p>}
-          
+
           <div className="flex items-center justify-between mt-3">
             <span className="text-sm text-gray-500">
-              {emailTimer > 0 ? `Resend in ${emailTimer}s` : 'Code expired'}
+              {emailTimer > 0 ? `Expires in ${formatTime(emailTimer)}` : 'Code expired'}
             </span>
-            <button
+
+            {/* <button
               onClick={handleResendEmail}
               disabled={!canResendEmail}
               className="text-sm text-orange-600 hover:text-orange-700 disabled:text-gray-400 flex items-center"
             >
               <RefreshCw size={14} className="mr-1" />
               Resend
-            </button>
+            </button> */}
           </div>
         </div>
 
@@ -159,7 +166,7 @@ export default function OTPVerification({ data, updateData, nextStep }: OTPVerif
               <p className="text-sm text-gray-600">{data.mobile}</p>
             </div>
           </div>
-          
+
           <input
             type="text"
             value={data.mobileOTP}
@@ -169,19 +176,19 @@ export default function OTPVerification({ data, updateData, nextStep }: OTPVerif
             maxLength={6}
           />
           {errors.mobileOTP && <p className="text-red-500 text-xs mt-1">{errors.mobileOTP}</p>}
-          
+
           <div className="flex items-center justify-between mt-3">
             <span className="text-sm text-gray-500">
-              {mobileTimer > 0 ? `Resend in ${mobileTimer}s` : 'Code expired'}
+            {mobileTimer > 0 ? `Expires in ${formatTime(mobileTimer)}` : 'Code expired'}
             </span>
-            <button
+            {/* <button
               onClick={handleResendMobile}
               disabled={!canResendMobile}
               className="text-sm text-orange-600 hover:text-orange-700 disabled:text-gray-400 flex items-center"
             >
               <RefreshCw size={14} className="mr-1" />
               Resend
-            </button>
+            </button> */}
           </div>
         </div>
       </div>

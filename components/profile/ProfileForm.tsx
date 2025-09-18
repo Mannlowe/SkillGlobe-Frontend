@@ -1083,7 +1083,7 @@ export default function ProfileForm({ onSave, onCancel, initialData = [], showFo
           )}
           
           {/* Resume Upload Button */}
-          <div className="flex justify-center">
+          {/* <div className="flex justify-center">
             {!resumeUploaded ? (
               <label className="relative inline-flex items-center justify-center px-6 py-3 overflow-hidden font-medium text-white transition duration-300 ease-out bg-gradient-to-r from-orange-500 to-red-500 rounded-full shadow-lg cursor-pointer group hover:shadow-xl">
                 <span className="absolute inset-0 w-full h-full bg-gradient-to-br from-orange-600 via-red-600 to-pink-700 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></span>
@@ -1110,7 +1110,7 @@ export default function ProfileForm({ onSave, onCancel, initialData = [], showFo
                 </button>
               </div>
             )}
-          </div>
+          </div> */}
             {/* Required Fields */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>

@@ -50,7 +50,8 @@ export default function CompactDashboardPage() {
     opportunities, 
     isLoadingOpportunities, 
     opportunityError,
-    fetchOpportunityMatches 
+    fetchOpportunityMatches,
+    opportunityMatches
   } = useIndividualDashboardStore();
   
   useEffect(() => {
@@ -124,7 +125,7 @@ export default function CompactDashboardPage() {
                   <CompactOpportunityCard 
                     key={job.id}
                     opportunity={job}
-                    opportunityMatches={opportunities}
+                    opportunityMatches={opportunityMatches || []}
                     onApply={(id) => console.log('Apply:', id)}
                     onSave={(id) => console.log('Save:', id)}
                     onViewDetails={(id) => console.log('Details:', id)}

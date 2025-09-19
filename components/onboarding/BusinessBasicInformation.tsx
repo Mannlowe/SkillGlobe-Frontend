@@ -23,6 +23,7 @@ export default function BusinessBasicInformation({ data, updateData, nextStep }:
   const {
     updateBusinessData,
     submitBusinessDetails,
+    clearError,
     isLoading,
     error: apiError
   } = useBusinessRegistrationStore();
@@ -33,6 +34,11 @@ export default function BusinessBasicInformation({ data, updateData, nextStep }:
   useEffect(() => {
     console.log('Current request_id from registration store:', request_id);
   }, [request_id]);
+
+  // Clear any previous errors when component mounts
+  useEffect(() => {
+    clearError();
+  }, [clearError]);
 
   const digitsOnly = data.mobile.replace(/\D/g, '');
 

@@ -21,22 +21,34 @@ export interface VerifyOtpResponse {
     data: Record<string, any>;
     timestamp: string;
     request_id: string;
-    email_verified: boolean;
-    phone_verified: boolean;
+    email_verified: number; // API returns 0 or 1 instead of boolean
+    phone_verified: number; // API returns 0 or 1 instead of boolean
     registration_step: string;
     is_complete: boolean;
+    email_verification_id?: string;
+    phone_verification_id?: string;
+    email_error?: string;
+    email_error_code?: string;
+    phone_error?: string;
+    phone_error_code?: string;
   };
 }
 
-/**
- * Verify OTP codes for email and phone
- * @param requestId Registration request ID
- * @param emailOtp Email OTP code
- * @param phoneOtp Phone OTP code
- * @param leadReference Optional lead reference for lead tracking
- * @param emailToken Optional email token for lead verification
- * @returns Promise with verification response
- */
+// Interface for resend OTP request
+export interface ResendOtpRequest {
+  otp_id: string;
+}
+
+// Interface for resend OTP response
+export interface ResendOtpResponse {
+  message: {
+    status: string;
+    message: string;
+    data: Record<string, any>;
+    timestamp: string;
+  };
+}
+
 export const verifyOtp = async (
   requestId: string,
   emailOtp: string,
@@ -68,6 +80,31 @@ export const verifyOtp = async (
     return response.data;
   } catch (error: any) {
     console.error('OTP verification error:', error.response?.data || error.message || error);
+    throw error;
+  }
+};
+
+export const resendOtp = async (otpId: string): Promise<ResendOtpResponse> => {
+  try {
+    console.log('Resending OTP with ID:', otpId);
+    
+    const response = await axios.post<ResendOtpResponse>(
+      `${API_BASE_URL}/api/method/skillglobe_be.skillglobe_backend.api.otp.resend_otp`,
+      {
+        otp_id: otpId
+      },
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        }
+      }
+    );
+    
+    console.log('Resend OTP response:', response.data);
+    return response.data;
+  } catch (error: any) {
+    console.error('Resend OTP error:', error.response?.data || error.message || error);
     throw error;
   }
 };

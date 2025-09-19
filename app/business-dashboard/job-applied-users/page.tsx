@@ -24,6 +24,7 @@ import {
 import BusinessSidebar from '@/components/dashboard/BusinessSidebar';
 import BusinessDashboardHeader from '@/components/dashboard/BusinessDashboardHeader';
 import { useProfilesByOpportunityStore, type Applicant, type JobDetails } from '@/store/job-postings/profilesbyopportunityStore';
+import { getResumeForBuyer, getAuthData, type ResumeData } from '@/app/api/job postings/resumeagainstopportunity';
 import { formatDate } from '@/utils/dateformat';
 // Interfaces are now imported from the store
 
@@ -50,6 +51,9 @@ export default function JobAppliedUsersPage() {
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [selectedApplicant, setSelectedApplicant] = useState<Applicant | null>(null);
   const [showProfileModal, setShowProfileModal] = useState(false);
+  const [detailedProfile, setDetailedProfile] = useState<ResumeData | null>(null);
+  const [profileLoading, setProfileLoading] = useState(false);
+  const [profileError, setProfileError] = useState<string | null>(null);
 
   // Fetch data on component mount
   useEffect(() => {
@@ -68,9 +72,36 @@ export default function JobAppliedUsersPage() {
     updateApplicantStatus(applicantId, newStatus);
   };
 
-  const handleViewProfile = (applicant: Applicant) => {
+  const handleViewProfile = async (applicant: Applicant) => {
     setSelectedApplicant(applicant);
     setShowProfileModal(true);
+    setDetailedProfile(null);
+    setProfileError(null);
+    
+    if (applicant.roleBasedProfile) {
+      setProfileLoading(true);
+      try {
+        // Get authentication data
+        const authData = getAuthData();
+        if (!authData) {
+          throw new Error('Authentication data not found. Please login again.');
+        }
+
+        const response = await getResumeForBuyer(
+          applicant.roleBasedProfile,
+          authData.apiKey,
+          authData.apiSecret
+        );
+        setDetailedProfile(response.message.data);
+      } catch (error: any) {
+        console.error('Error fetching detailed profile:', error);
+        setProfileError('Failed to load detailed profile information');
+      } finally {
+        setProfileLoading(false);
+      }
+    } else {
+      setProfileError('Role based profile ID not available');
+    }
   };
 
   const getStatusColor = (status: string) => {
@@ -281,13 +312,15 @@ export default function JobAppliedUsersPage() {
                           </span>
 
                           <div className="flex gap-2">
-                            <button
-                              onClick={() => handleViewProfile(applicant)}
-                              className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                              title="View Profile"
-                            >
-                              <Eye size={16} />
-                            </button>
+                            {applicant.status !== 'pending' && (
+                              <button
+                                onClick={() => handleViewProfile(applicant)}
+                                className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                                title="View Profile"
+                              >
+                                <Eye size={16} />
+                              </button>
+                            )}
 
                             {applicant.status === 'pending' && (
                               <>
@@ -332,9 +365,9 @@ export default function JobAppliedUsersPage() {
                           Applied On: {formatDate(applicant.appliedDate)}
                         </span>
 
-                        <button className="px-3 py-1 bg-blue-600 text-white rounded-md hover:bg-blue-700">
+                        {/* <button className="px-3 py-1 bg-blue-600 text-white rounded-md hover:bg-blue-700">
                           View Resume
-                        </button>
+                        </button> */}
                       </div>
 
                     </div>
@@ -349,9 +382,11 @@ export default function JobAppliedUsersPage() {
       {/* Profile Modal */}
       {showProfileModal && selectedApplicant && (
         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-            <div className="flex justify-between items-start mb-4">
-              <h3 className="text-xl font-semibold text-gray-900">{selectedApplicant.name}</h3>
+          <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-start mb-6">
+              <h3 className="text-2xl font-semibold text-gray-900">
+                {detailedProfile ? `${detailedProfile.portfolio.first_name} ${detailedProfile.portfolio.last_name}` : selectedApplicant.name}
+              </h3>
               <button
                 onClick={() => setShowProfileModal(false)}
                 className="text-gray-400 hover:text-gray-600"
@@ -360,60 +395,192 @@ export default function JobAppliedUsersPage() {
               </button>
             </div>
 
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="text-sm font-medium text-gray-700">Email</label>
-                  <p className="text-gray-900">{selectedApplicant.email}</p>
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-gray-700">Phone</label>
-                  <p className="text-gray-900">{selectedApplicant.phone}</p>
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-gray-700">Location</label>
-                  <p className="text-gray-900">{selectedApplicant.location}</p>
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-gray-700">Experience</label>
-                  <p className="text-gray-900">{selectedApplicant.experience}</p>
-                </div>
+            {profileLoading && (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="animate-spin mr-2" size={24} />
+                <span>Loading detailed profile...</span>
               </div>
+            )}
 
-              <div>
-                <label className="text-sm font-medium text-gray-700">Skills</label>
-                <div className="flex flex-wrap gap-2 mt-1">
-                  {selectedApplicant.skills.map((skill, index) => (
-                    <span key={index} className="px-3 py-1 bg-blue-100 text-blue-800 text-sm rounded-full">
-                      {skill}
-                    </span>
-                  ))}
-                </div>
+            {profileError && (
+              <div className="flex items-center justify-center py-8 text-red-600">
+                <AlertCircle className="mr-2" size={24} />
+                <span>{profileError}</span>
               </div>
+            )}
 
-              {selectedApplicant.coverLetter && (
-                <div>
-                  <label className="text-sm font-medium text-gray-700">Cover Letter</label>
-                  <p className="text-gray-900 mt-1 p-3 bg-gray-50 rounded-lg">
-                    {selectedApplicant.coverLetter}
-                  </p>
+            {detailedProfile && (
+              <div className="space-y-6">
+                {/* Personal Information */}
+                <div className="bg-gray-50 p-4 rounded-lg">
+                  <h4 className="text-lg font-semibold text-gray-900 mb-3">Personal Information</h4>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-sm font-medium text-gray-700">Email</label>
+                      <p className="text-gray-900">{detailedProfile.portfolio.email || 'Not provided'}</p>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-700">Mobile</label>
+                      <p className="text-gray-900">{detailedProfile.portfolio.mobile_no || 'Not provided'}</p>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-700">Location</label>
+                      <p className="text-gray-900">{detailedProfile.portfolio.city}, {detailedProfile.portfolio.country}</p>
+                    </div>
+                  </div>
                 </div>
-              )}
 
-              <div className="flex justify-end gap-3 pt-4 border-t">
-                <button
-                  onClick={() => setShowProfileModal(false)}
-                  className="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors"
-                >
-                  Close
-                </button>
-                {selectedApplicant.resumeUrl && (
-                  <button className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors flex items-center gap-2">
-                    <Download size={16} />
-                    Download Resume
-                  </button>
+                {/* Professional Summary */}
+                {detailedProfile.portfolio.professional_summary && (
+                  <div>
+                    <h4 className="text-lg font-semibold text-gray-900 mb-3">Professional Summary</h4>
+                    <p className="text-gray-700 p-3 bg-gray-50 rounded-lg">
+                      {detailedProfile.portfolio.professional_summary}
+                    </p>
+                  </div>
                 )}
+
+                {/* Role Information */}
+                <div className="bg-blue-50 p-4 rounded-lg">
+                  <h4 className="text-lg font-semibold text-gray-900 mb-3">Role Information</h4>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-sm font-medium text-gray-700">Role</label>
+                      <p className="text-gray-900">{detailedProfile.role_based_profile.role}</p>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-700">Space/Domain</label>
+                      <p className="text-gray-900">{detailedProfile.role_based_profile.space}</p>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-700">Employment Type</label>
+                      <p className="text-gray-900">{detailedProfile.role_based_profile.employment_type}</p>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-700">Work Mode</label>
+                      <p className="text-gray-900">{detailedProfile.role_based_profile.work_mode}</p>
+                    </div>
+                    {detailedProfile.role_based_profile.relevant_experience > 0 && (
+                      <div>
+                        <label className="text-sm font-medium text-gray-700">Relevant Experience</label>
+                        <p className="text-gray-900">{detailedProfile.role_based_profile.relevant_experience} years</p>
+                      </div>
+                    )}
+                    {Number(detailedProfile.role_based_profile.total_experience_years) > 0 && (
+                      <div>
+                        <label className="text-sm font-medium text-gray-700">Total Experience</label>
+                        <p className="text-gray-900">{detailedProfile.role_based_profile.total_experience_years} years</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Skills */}
+                <div>
+                  <h4 className="text-lg font-semibold text-gray-900 mb-3">Skills</h4>
+                  <div className="space-y-3">
+                    {detailedProfile.role_based_profile.primary_skills.length > 0 && (
+                      <div>
+                        <label className="text-sm font-medium text-gray-700 mb-2 block">Primary Skills</label>
+                        <div className="flex flex-wrap gap-2">
+                          {detailedProfile.role_based_profile.primary_skills.map((skill, index) => (
+                            <span key={index} className="px-3 py-1 bg-blue-100 text-blue-800 text-sm rounded-full">
+                              {skill.skill_name}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    {detailedProfile.role_based_profile.secondary_skills.length > 0 && (
+                      <div>
+                        <label className="text-sm font-medium text-gray-700 mb-2 block">Secondary Skills</label>
+                        <div className="flex flex-wrap gap-2">
+                          {detailedProfile.role_based_profile.secondary_skills.map((skill, index) => (
+                            <span key={index} className="px-3 py-1 bg-green-100 text-green-800 text-sm rounded-full">
+                              {skill.skill_name}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Work Experience */}
+                {detailedProfile.portfolio.work_experience.length > 0 && (
+                  <div>
+                    <h4 className="text-lg font-semibold text-gray-900 mb-3">Work Experience</h4>
+                    <div className="space-y-3">
+                      {detailedProfile.portfolio.work_experience.map((exp, index) => (
+                        <div key={index} className="p-3 bg-gray-50 rounded-lg">
+                          <p className="font-medium text-gray-900">{exp.designation}</p>
+                          <p className="text-gray-600">{exp.company}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Education */}
+                {detailedProfile.portfolio.education.length > 0 && (
+                  <div>
+                    <h4 className="text-lg font-semibold text-gray-900 mb-3">Education</h4>
+                    <div className="space-y-3">
+                      {detailedProfile.portfolio.education.map((edu, index) => (
+                        <div key={index} className="p-3 bg-gray-50 rounded-lg">
+                          <p className="font-medium text-gray-900">{edu.stream}</p>
+                          <p className="text-gray-600">
+                            {edu.university_board && `${edu.university_board} • `}
+                            Completed: {edu.year_of_completion}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Social Profiles */}
+                <div>
+                  <h4 className="text-lg font-semibold text-gray-900 mb-3">Social Profiles</h4>
+                  <div className="grid grid-cols-2 gap-4">
+                    {detailedProfile.portfolio.linkedin_profile && (
+                      <div>
+                        <label className="text-sm font-medium text-gray-700">LinkedIn</label>
+                        <a 
+                          href={detailedProfile.portfolio.linkedin_profile} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="text-blue-600 hover:text-blue-800 block truncate"
+                        >
+                          {detailedProfile.portfolio.linkedin_profile}
+                        </a>
+                      </div>
+                    )}
+                    {detailedProfile.portfolio.facebook_profile && (
+                      <div>
+                        <label className="text-sm font-medium text-gray-700">Facebook</label>
+                        <a 
+                          href={detailedProfile.portfolio.facebook_profile} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="text-blue-600 hover:text-blue-800 block truncate"
+                        >
+                          {detailedProfile.portfolio.facebook_profile}
+                        </a>
+                      </div>
+                    )}
+                  </div>
+                </div>
               </div>
+            )}
+
+            <div className="flex justify-end gap-3 pt-6 border-t mt-6">
+              <button
+                onClick={() => setShowProfileModal(false)}
+                className="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors"
+              >
+                Close
+              </button>
             </div>
           </div>
         </div>

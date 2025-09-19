@@ -11,8 +11,8 @@ interface OTPVerificationProps {
 }
 
 export default function OTPVerification({ data, updateData, nextStep }: OTPVerificationProps) {
-  const [emailTimer, setEmailTimer] = useState(300);
-  const [mobileTimer, setMobileTimer] = useState(300);
+  const [emailTimer, setEmailTimer] = useState(90);
+  const [mobileTimer, setMobileTimer] = useState(90);
   const [canResendEmail, setCanResendEmail] = useState(false);
   const [canResendMobile, setCanResendMobile] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -24,7 +24,12 @@ export default function OTPVerification({ data, updateData, nextStep }: OTPVerif
   };
 
   // Get registration store state and actions
-  const { verifyOtpCodes, isLoading, error: apiError, request_id } = useRegistrationStore();
+  const { verifyOtpCodes, resendEmailOtp, resendPhoneOtp, clearError, isLoading, error: apiError, request_id } = useRegistrationStore();
+
+  // Clear any previous errors when component mounts
+  useEffect(() => {
+    clearError();
+  }, [clearError]);
 
   useEffect(() => {
     // Email timer
@@ -46,16 +51,42 @@ export default function OTPVerification({ data, updateData, nextStep }: OTPVerif
     }
   }, [mobileTimer]);
 
-  const handleResendEmail = () => {
-    setEmailTimer(60);
-    setCanResendEmail(false);
-    // Simulate sending OTP
+  const handleResendEmail = async () => {
+    try {
+      setEmailTimer(60);
+      setCanResendEmail(false);
+      setErrors({});
+      
+      // Call API to resend email OTP
+      await resendEmailOtp();
+      
+      // Show success message or handle success
+      console.log('Email OTP resent successfully');
+    } catch (error) {
+      console.error('Error resending email OTP:', error);
+      // Reset timer on error so user can try again
+      setEmailTimer(0);
+      setCanResendEmail(true);
+    }
   };
 
-  const handleResendMobile = () => {
-    setMobileTimer(60);
-    setCanResendMobile(false);
-    // Simulate sending OTP
+  const handleResendMobile = async () => {
+    try {
+      setMobileTimer(60);
+      setCanResendMobile(false);
+      setErrors({});
+      
+      // Call API to resend mobile OTP
+      await resendPhoneOtp();
+      
+      // Show success message or handle success
+      console.log('Mobile OTP resent successfully');
+    } catch (error) {
+      console.error('Error resending mobile OTP:', error);
+      // Reset timer on error so user can try again
+      setMobileTimer(0);
+      setCanResendMobile(true);
+    }
   };
 
   const validateForm = () => {
@@ -144,14 +175,14 @@ export default function OTPVerification({ data, updateData, nextStep }: OTPVerif
               {emailTimer > 0 ? `Expires in ${formatTime(emailTimer)}` : 'Code expired'}
             </span>
 
-            {/* <button
+            <button
               onClick={handleResendEmail}
-              disabled={!canResendEmail}
+              disabled={!canResendEmail || isLoading}
               className="text-sm text-orange-600 hover:text-orange-700 disabled:text-gray-400 flex items-center"
             >
               <RefreshCw size={14} className="mr-1" />
               Resend
-            </button> */}
+            </button>
           </div>
         </div>
 
@@ -181,14 +212,14 @@ export default function OTPVerification({ data, updateData, nextStep }: OTPVerif
             <span className="text-sm text-gray-500">
             {mobileTimer > 0 ? `Expires in ${formatTime(mobileTimer)}` : 'Code expired'}
             </span>
-            {/* <button
+            <button
               onClick={handleResendMobile}
-              disabled={!canResendMobile}
+              disabled={!canResendMobile || isLoading}
               className="text-sm text-orange-600 hover:text-orange-700 disabled:text-gray-400 flex items-center"
             >
               <RefreshCw size={14} className="mr-1" />
               Resend
-            </button> */}
+            </button>
           </div>
         </div>
       </div>

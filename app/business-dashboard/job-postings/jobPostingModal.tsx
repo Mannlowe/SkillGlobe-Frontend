@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { X } from 'lucide-react';
 import { useJobPostingStore } from '@/store/job-postings/addjobpostingStore';
-import { getSkills, getApplyOpportunities, getAuthData, type Skill } from '@/app/api/job postings/addjobPosting';
+import { getSkills, getApplyOpportunities, getCityList, getAuthData, type Skill, type City } from '@/app/api/job postings/addjobPosting';
 
 // Define document type interface
 export interface DocumentFile {
@@ -87,6 +87,10 @@ export default function JobPostingModal({ showModal, setShowModal, onSubmit, edi
   const [applyOpportunities, setApplyOpportunities] = useState<string[]>([]);
   const [applyOpportunitiesLoading, setApplyOpportunitiesLoading] = useState(false);
   
+  // City list API state
+  const [cityList, setCityList] = useState<City[]>([]);
+  const [cityListLoading, setCityListLoading] = useState(false);
+  
   const [newJob, setNewJob] = useState<JobFormState>({
     title: '',
     skillCategory: '',
@@ -151,24 +155,46 @@ export default function JobPostingModal({ showModal, setShowModal, onSubmit, edi
     }
   }, []);
 
+  // Function to fetch city list from API
+  const fetchCityList = useCallback(async () => {
+    const authData = getAuthData();
+    if (!authData) {
+      console.error('No auth data available for city list API');
+      return [];
+    }
+
+    setCityListLoading(true);
+    try {
+      const cities = await getCityList(authData.apiKey, authData.apiSecret);
+      return cities;
+    } catch (error) {
+      console.error('Error fetching city list:', error);
+      return [];
+    } finally {
+      setCityListLoading(false);
+    }
+  }, []);
+
   // Load initial data on component mount
   useEffect(() => {
     const loadInitialData = async () => {
-      const [skills, opportunities] = await Promise.all([
+      const [skills, opportunities, cities] = await Promise.all([
         fetchSkills(),
-        fetchApplyOpportunities()
+        fetchApplyOpportunities(),
+        fetchCityList()
       ]);
       
       setAvailableSkills(skills);
       setFilteredPrimarySkills(skills);
       setFilteredSecondarySkills(skills);
       setApplyOpportunities(opportunities);
+      setCityList(cities);
     };
     
     if (showModal) {
       loadInitialData();
     }
-  }, [showModal, fetchSkills, fetchApplyOpportunities]);
+  }, [showModal, fetchSkills, fetchApplyOpportunities, fetchCityList]);
 
   // Filter skills based on search terms
   useEffect(() => {
@@ -487,7 +513,7 @@ export default function JobPostingModal({ showModal, setShowModal, onSubmit, edi
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
       <div className="bg-white rounded-xl shadow-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between border-b border-gray-200 p-4">
-          <h3 className="text-lg font-semibold text-gray-900">New Job Posting</h3>
+          <h3 className="text-lg font-semibold text-gray-900">New Opportunity Posting</h3>
           <button 
             onClick={() => setShowModal(false)}
             className="p-1 rounded-md hover:bg-gray-100"
@@ -573,25 +599,15 @@ export default function JobPostingModal({ showModal, setShowModal, onSubmit, edi
       <label className="block text-sm font-medium text-gray-700 mb-1">
         Role / Skill Category <span className="text-red-500">*</span>
       </label>
-      <select
+      <input
+        type="text"
         name="skillCategory"
         value={newJob.skillCategory}
         onChange={handleInputChange}
         className="w-full px-4 py-2 bg-gray-50 rounded-lg border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all"
+        placeholder="e.g. Frontend Development, Data Science"
         required
-      >
-        <option value="">Select a category</option>
-        <option value="frontend">Frontend Development</option>
-        <option value="backend">Backend Development</option>
-        <option value="fullstack">Full Stack Development</option>
-        <option value="mobile">Mobile Development</option>
-        <option value="devops">DevOps</option>
-        <option value="data">Data Science</option>
-        <option value="design">UI/UX Design</option>
-        <option value="product">Product Management</option>
-        <option value="marketing">Marketing</option>
-        <option value="sales">Sales</option>
-      </select>
+      />
     </div>
     
     {/* Opportunity Type */}
@@ -692,17 +708,15 @@ export default function JobPostingModal({ showModal, setShowModal, onSubmit, edi
         <label className="block text-sm font-medium text-gray-700 mb-1">
           Experience Required
         </label>
-        <select
+        <input
+          type="number"
           name="experienceRequired"
           value={newJob.experienceRequired}
           onChange={handleInputChange}
           className="w-full px-4 py-2 bg-gray-50 rounded-lg border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all"
-        >
-          <option value="0-2 years">0-2 years</option>
-          <option value="2-5 years">2-5 years</option>
-          <option value="5-10 years">5-10 years</option>
-          <option value="10+ years">10+ years</option>
-        </select>
+          placeholder="Enter years of experience"
+          min="0"
+        />
       </div>
       
       {/* Min Remuneration */}
@@ -761,6 +775,30 @@ export default function JobPostingModal({ showModal, setShowModal, onSubmit, edi
           min="1"
         />
       </div>
+    </div>
+    
+    {/* Location */}
+    <div>
+      <label className="block text-sm font-medium text-gray-700 mb-1">
+        Location <span className="text-red-500">*</span>
+      </label>
+      <select
+        name="location"
+        value={newJob.location}
+        onChange={handleInputChange}
+        className="w-full px-4 py-2 bg-gray-50 rounded-lg border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all"
+        required
+        disabled={cityListLoading}
+      >
+        <option value="">
+          {cityListLoading ? 'Loading locations...' : 'Select a location'}
+        </option>
+        {Array.isArray(cityList) && cityList.map((city) => (
+          <option key={city.name} value={city.name}>
+            {city.name}
+          </option>
+        ))}
+      </select>
     </div>
     
     <h4 className="text-md font-semibold text-blue-600 mt-6 mb-2">Step 2: Detailed Information</h4>
@@ -960,21 +998,6 @@ export default function JobPostingModal({ showModal, setShowModal, onSubmit, edi
       />
     </div>
     
-    {/* Location */}
-    <div>
-      <label className="block text-sm font-medium text-gray-700 mb-1">
-        Location <span className="text-red-500">*</span>
-      </label>
-      <input
-        type="text"
-        name="location"
-        value={newJob.location}
-        onChange={handleInputChange}
-        className="w-full px-4 py-2 bg-gray-50 rounded-lg border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all"
-        placeholder="e.g. Bangalore, Remote, Hybrid"
-        required
-      />
-    </div>
     
     <h4 className="text-md font-semibold text-blue-600 mt-6 mb-2">Step 3: Additional Filters</h4>
     

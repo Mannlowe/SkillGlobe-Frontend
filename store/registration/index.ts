@@ -3,7 +3,7 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { startRegistration } from '@/app/api/registration/userType';
 import { updatePersonalDetails } from '@/app/api/registration/personalDetails';
-import { verifyOtp } from '@/app/api/registration/verifyOtp';
+import { verifyOtp, resendOtp } from '@/app/api/registration/verifyOtp';
 import { completeRegistration } from '@/app/api/registration/completeRegistration';
 
 // Registration state interface
@@ -31,6 +31,8 @@ interface RegistrationState {
   isEmailVerified: boolean;
   isPhoneVerified: boolean;
   isRegistrationComplete: boolean;
+  emailVerificationId: string | null;
+  phoneVerificationId: string | null;
   
   // User email and entity ID after registration
   userEmail: string | null;
@@ -47,7 +49,10 @@ interface RegistrationState {
   initializeWithLead: (userType: 'individual' | 'business', leadReference: string, emailToken: string) => Promise<void>;
   updatePersonalDetails: (firstName: string, lastName: string, email: string, mobile: string, password: string) => Promise<any>;
   verifyOtpCodes: (emailOtp: string, phoneOtp: string) => Promise<any>;
+  resendEmailOtp: () => Promise<any>;
+  resendPhoneOtp: () => Promise<any>;
   completeRegistration: (agreed?: number) => Promise<any>;
+  clearError: () => void;
   resetRegistration: () => void;
 }
 
@@ -72,6 +77,8 @@ export const useRegistrationStore = create<RegistrationState>()(
       isEmailVerified: false,
       isPhoneVerified: false,
       isRegistrationComplete: false,
+      emailVerificationId: null,
+      phoneVerificationId: null,
       userEmail: null,
       entityId: null,
       isLoading: false,
@@ -182,6 +189,8 @@ export const useRegistrationStore = create<RegistrationState>()(
             email,
             mobile,
             password,
+            emailVerificationId: response.message.email_verification_id,
+            phoneVerificationId: response.message.phone_verification_id,
             isLoading: false
           });
           
@@ -219,10 +228,38 @@ export const useRegistrationStore = create<RegistrationState>()(
             emailToken || undefined
           );
           
-          // Update state with response data
+          // Check if both email and phone are verified
+          // API returns 0/1 (integers) where 1 = verified, 0 = not verified
+          const emailVerified = response.message.email_verified === 1;
+          const phoneVerified = response.message.phone_verified === 1;
+          
+          if (!emailVerified || !phoneVerified) {
+            // If either verification failed, throw an error with specific message
+            let errorMessage = 'Verification failed: ';
+            if (!emailVerified && !phoneVerified) {
+              errorMessage += 'Both email and phone verification codes are incorrect.';
+            } else if (!emailVerified) {
+              errorMessage += 'Email verification code is incorrect.';
+            } else if (!phoneVerified) {
+              errorMessage += 'Phone verification code is incorrect.';
+              
+            }
+            
+            set({
+              isEmailVerified: emailVerified,
+              isPhoneVerified: phoneVerified,
+              isRegistrationComplete: false,
+              isLoading: false,
+              error: errorMessage
+            });
+            
+            throw new Error(errorMessage);
+          }
+          
+          // Update state with response data only if both are verified
           set({
-            isEmailVerified: response.message.email_verified,
-            isPhoneVerified: response.message.phone_verified,
+            isEmailVerified: emailVerified,
+            isPhoneVerified: phoneVerified,
             isRegistrationComplete: response.message.is_complete,
             isLoading: false
           });
@@ -230,8 +267,66 @@ export const useRegistrationStore = create<RegistrationState>()(
           return response as any;
         } catch (error: any) {
           console.error('OTP verification error:', error);
+          
+          // If it's our custom validation error, preserve the specific message
+          const errorMessage = error.message && error.message.startsWith('Verification failed:') 
+            ? error.message 
+            : 'Failed to verify OTP codes. Please try again.';
+          
           set({
-            error: 'Failed to verify OTP codes. Please try again.',
+            error: errorMessage,
+            isLoading: false
+          });
+          throw error;
+        }
+      },
+      
+      // Resend email OTP
+      resendEmailOtp: async () => {
+        set({ isLoading: true, error: null });
+        
+        try {
+          const { emailVerificationId } = get();
+          
+          if (!emailVerificationId) {
+            throw new Error('Email verification ID not found. Please complete personal details first.');
+          }
+          
+          // Call the API to resend email OTP
+          const response = await resendOtp(emailVerificationId);
+          
+          set({ isLoading: false });
+          return response as any;
+        } catch (error: any) {
+          console.error('Resend email OTP error:', error);
+          set({
+            error: 'Failed to resend email OTP. Please try again.',
+            isLoading: false
+          });
+          throw error;
+        }
+      },
+      
+      // Resend phone OTP
+      resendPhoneOtp: async () => {
+        set({ isLoading: true, error: null });
+        
+        try {
+          const { phoneVerificationId } = get();
+          
+          if (!phoneVerificationId) {
+            throw new Error('Phone verification ID not found. Please complete personal details first.');
+          }
+          
+          // Call the API to resend phone OTP
+          const response = await resendOtp(phoneVerificationId);
+          
+          set({ isLoading: false });
+          return response as any;
+        } catch (error: any) {
+          console.error('Resend phone OTP error:', error);
+          set({
+            error: 'Failed to resend phone OTP. Please try again.',
             isLoading: false
           });
           throw error;
@@ -284,6 +379,11 @@ export const useRegistrationStore = create<RegistrationState>()(
         }
       },
       
+      // Clear error state
+      clearError: () => {
+        set({ error: null });
+      },
+      
       // Reset registration state
       resetRegistration: () => {
         set({
@@ -303,6 +403,10 @@ export const useRegistrationStore = create<RegistrationState>()(
           isEmailVerified: false,
           isPhoneVerified: false,
           isRegistrationComplete: false,
+          emailVerificationId: null,
+          phoneVerificationId: null,
+          userEmail: null,
+          entityId: null,
           isLoading: false,
           error: null
         });

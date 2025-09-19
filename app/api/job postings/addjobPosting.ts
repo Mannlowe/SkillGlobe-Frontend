@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 // Base URL for API calls
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://skillglobedev.m.frappe.cloud';
 
 // Interface for job posting data
 export interface JobPostingData {
@@ -357,6 +357,57 @@ export const getClosedOpportunities = async (
     return [];
   } catch (error: any) {
     console.error('Closed opportunities API error:', error);
+    return [];
+  }
+};
+
+// Interface for city data
+export interface City {
+  name: string;
+  country: string;
+  pincode: string | null;
+}
+
+// Interface for city list API response
+export interface CityListResponse {
+  message: {
+    status: string;
+    message?: string;
+    data?: {
+      cities: City[];
+      total: number;
+    };
+    timestamp?: string;
+  };
+}
+
+// Function to fetch city list from API
+export const getCityList = async (
+  apiKey: string,
+  apiSecret: string
+): Promise<City[]> => {
+  try {
+    // Create authorization header
+    const authHeader = `token ${apiKey}:${apiSecret}`;
+    
+    const response = await axios.get<CityListResponse>(
+      `${API_BASE_URL}/api/method/skillglobe_be.api.opportunity_posting.list.get_city_list`,
+      {
+        headers: {
+          'Authorization': authHeader,
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
+        }
+      }
+    );
+    
+    if (response.data.message.status === 'success' && response.data.message.data?.cities) {
+      return response.data.message.data.cities;
+    }
+    
+    return [];
+  } catch (error: any) {
+    console.error('City list API error:', error);
     return [];
   }
 };

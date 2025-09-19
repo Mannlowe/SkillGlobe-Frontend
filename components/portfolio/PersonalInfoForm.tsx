@@ -55,7 +55,7 @@ export default function PersonalInfoForm({
     const getNationalities = async () => {
       const data = await fetchNationalitiesAPI();
       if (data.message?.status === "success" && data.message.data) {
-        setNationalities(data.message.data); 
+        setNationalities(data.message.data);
       }
     };
 
@@ -565,7 +565,7 @@ export default function PersonalInfoForm({
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Notice Period
+              Last Working Day
             </label>
             <div className="relative">
               <Briefcase

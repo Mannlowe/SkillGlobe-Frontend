@@ -37,7 +37,7 @@ export const fetchNationalitiesAPI =
           },
         }
       );
-
+      
       return response.data;
     } catch (error: any) {
       console.error(

@@ -487,7 +487,7 @@ export default function JobPostingModal({ showModal, setShowModal, onSubmit, edi
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
       <div className="bg-white rounded-xl shadow-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between border-b border-gray-200 p-4">
-          <h3 className="text-lg font-semibold text-gray-900">New Job Posting</h3>
+          <h3 className="text-lg font-semibold text-gray-900">New Opportunity Posting</h3>
           <button 
             onClick={() => setShowModal(false)}
             className="p-1 rounded-md hover:bg-gray-100"

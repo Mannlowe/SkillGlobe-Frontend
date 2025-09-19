@@ -682,17 +682,15 @@ export default function JobPostingModal({ showModal, setShowModal, onSubmit, edi
         <label className="block text-sm font-medium text-gray-700 mb-1">
           Experience Required
         </label>
-        <select
+        <input
+          type="number"
           name="experienceRequired"
           value={newJob.experienceRequired}
           onChange={handleInputChange}
           className="w-full px-4 py-2 bg-gray-50 rounded-lg border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all"
-        >
-          <option value="0-2 years">0-2 years</option>
-          <option value="2-5 years">2-5 years</option>
-          <option value="5-10 years">5-10 years</option>
-          <option value="10+ years">10+ years</option>
-        </select>
+          placeholder="Enter years of experience"
+          min="0"
+        />
       </div>
       
       {/* Min Remuneration */}

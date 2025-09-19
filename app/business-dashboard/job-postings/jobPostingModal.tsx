@@ -623,8 +623,10 @@ export default function JobPostingModal({ showModal, setShowModal, onSubmit, edi
         required
       >
         <option value="Permanent">Permanent</option>
+        <option value="Contract2Perm">Contract2Perm</option>
         <option value="Internship">Internship</option>
-        <option value="Contract">Contract</option>
+        <option value="Project / Gig">Project / Gig</option>
+        <option value="Contractual / Freelance Work">Contractual / Freelance Work</option>
       </select>
     </div>
     </div>

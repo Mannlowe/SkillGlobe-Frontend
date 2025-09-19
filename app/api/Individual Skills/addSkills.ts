@@ -41,6 +41,7 @@ export interface SkillListResponse {
         name?: string;
         skill?: string;
         skill_name?: string;
+        type_of_skills?: string;
       }>
     }
     timestamp?: string;

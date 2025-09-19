@@ -70,7 +70,7 @@ export const useAddSkillsStore = create<AddSkillsState>((set, get) => ({
       // Prepare data for API
       const skillsData: AddSkillsRequest = {
         entity_id: authData.entityId,
-        skills: skills
+        skill: skills
       };
       
       // Call API
@@ -120,7 +120,7 @@ export const useAddSkillsStore = create<AddSkillsState>((set, get) => ({
       const uniqueSkillsMap = new Map();
       
       skillsList.forEach(item => {
-        const skillName = item.skills || '';
+        const skillName = item.skill || '';
         const skillCategory = item.type_of_skills || 'Technical';
         
         // Create a unique key based on lowercase name and category

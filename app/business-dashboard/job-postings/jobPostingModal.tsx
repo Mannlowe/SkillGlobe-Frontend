@@ -751,6 +751,23 @@ export default function JobPostingModal({ showModal, setShowModal, onSubmit, edi
       </div>
     </div>
     
+    {/* Location */}
+    <div>
+      <label className="block text-sm font-medium text-gray-700 mb-1">
+        Location <span className="text-red-500">*</span>
+      </label>
+      <select
+        name="location"
+        value={newJob.location}
+        onChange={handleInputChange}
+        className="w-full px-4 py-2 bg-gray-50 rounded-lg border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all"
+        required
+      >
+        <option value="">Select a location</option>
+        {/* Location options will be populated from API */}
+      </select>
+    </div>
+    
     <h4 className="text-md font-semibold text-blue-600 mt-6 mb-2">Step 2: Detailed Information</h4>
     
     {/* Description */}
@@ -948,21 +965,6 @@ export default function JobPostingModal({ showModal, setShowModal, onSubmit, edi
       />
     </div>
     
-    {/* Location */}
-    <div>
-      <label className="block text-sm font-medium text-gray-700 mb-1">
-        Location <span className="text-red-500">*</span>
-      </label>
-      <input
-        type="text"
-        name="location"
-        value={newJob.location}
-        onChange={handleInputChange}
-        className="w-full px-4 py-2 bg-gray-50 rounded-lg border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all"
-        placeholder="e.g. Bangalore, Remote, Hybrid"
-        required
-      />
-    </div>
     
     <h4 className="text-md font-semibold text-blue-600 mt-6 mb-2">Step 3: Additional Filters</h4>
     

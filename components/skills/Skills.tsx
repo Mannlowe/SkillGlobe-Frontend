@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { Search, Plus, X, Star, Trash2 } from 'lucide-react';
 import SkillsSuccessModal from '../modal/SkillsSuccessModal';
 import { getSkills, Skill } from '@/app/api/job postings/addjobPosting';
+import { addSkills, AddSkillsRequest, SkillData as APISkillData, getSkillsList, SkillListResponse } from '@/app/api/Individual Skills/addSkills';
 import { getAuthData } from '@/utils/auth';
 import { toast } from 'react-hot-toast';
 
@@ -31,6 +32,10 @@ export default function Skills({ onSkillsComplete, onSkip, className = '' }: Ski
   const [aiSearchQuery, setAiSearchQuery] = useState('');
   const [isAiSearching, setIsAiSearching] = useState(false);
   const [aiResult, setAiResult] = useState<{ enteredValue: string; canonicalName: string; aliases: string[] } | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoadingUserSkills, setIsLoadingUserSkills] = useState(false);
+  const [existingSkills, setExistingSkills] = useState<SkillData[]>([]);
+  const [newSkills, setNewSkills] = useState<SkillData[]>([]);
 
   // Add a skill
   const addSkill = (skill: string | Skill) => {
@@ -39,19 +44,66 @@ export default function Skills({ onSkillsComplete, onSkip, className = '' }: Ski
       const skillData: SkillData = typeof skill === 'string' 
         ? { name: skill }
         : { name: skill.name, canonical_name: skill.canonical_name, skill_id: skill.skill_id };
+      
+      // Add to selected skills
       setSelectedSkills([...selectedSkills, skillData]);
+      
+      // Add to new skills if it's not already in existing skills
+      if (!existingSkills.some((s) => s.name.toLowerCase() === skillName.toLowerCase())) {
+        setNewSkills([...newSkills, skillData]);
+      }
     }
   };
 
   // Remove a skill
   const removeSkill = (skillName: string) => {
     setSelectedSkills(selectedSkills.filter((s) => s.name !== skillName));
+    // Also remove from new skills if it exists there
+    setNewSkills(newSkills.filter((s) => s.name !== skillName));
   };
 
-  // Continue → just open modal
-  const handleContinue = () => {
-    if (selectedSkills.length > 0) {
-      setShowSuccessModal(true);
+  // Continue → call API to save skills and then open modal
+  const handleContinue = async () => {
+    if (newSkills.length === 0) return;
+    
+    try {
+      setIsSubmitting(true);
+      
+      // Get authentication data
+      const authData = getAuthData();
+      if (!authData || !authData.apiKey || !authData.apiSecret || !authData.entityId) {
+        throw new Error('Authentication data not found');
+      }
+      
+      // Prepare the API payload with only new skills
+      const skillsPayload: AddSkillsRequest = {
+        entity_id: authData.entityId,
+        skill: newSkills.map(skill => ({
+          skill: skill.skill_id || skill.name, // Use skill_id if available, otherwise use name
+          skill_name: skill.canonical_name || skill.name // Use canonical_name if available, otherwise use name
+        }))
+      };
+      
+      console.log('Submitting skills payload:', skillsPayload);
+      
+      // Call the API
+      const response = await addSkills(skillsPayload, authData.apiKey, authData.apiSecret);
+      
+      if (response.message.status === 'success') {
+        toast.success(`Successfully added ${newSkills.length} new skill${newSkills.length !== 1 ? 's' : ''}!`);
+        // Clear new skills since they've been saved
+        setNewSkills([]);
+        // Refresh the skills list to show the updated skills from the server
+        await fetchUserSkills();
+        setShowSuccessModal(true);
+      } else {
+        throw new Error(response.message.data?.message || 'Failed to add skills');
+      }
+    } catch (error: any) {
+      console.error('Error adding skills:', error);
+      toast.error(error.message || 'Failed to add skills. Please try again.');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -64,6 +116,41 @@ export default function Skills({ onSkillsComplete, onSkip, className = '' }: Ski
 
   const handleSkip = () => {
     if (onSkip) onSkip();
+  };
+
+  // Fetch user's existing skills
+  const fetchUserSkills = async () => {
+    try {
+      setIsLoadingUserSkills(true);
+      
+      // Get authentication data
+      const authData = getAuthData();
+      if (!authData || !authData.apiKey || !authData.apiSecret || !authData.entityId) {
+        console.log('Authentication data not found, skipping skills fetch');
+        return;
+      }
+      
+      // Call the API to get user's skills
+      const response = await getSkillsList(authData.entityId, authData.apiKey, authData.apiSecret);
+      
+      if (response.message?.status === 'success' && response.message.data?.skills_list) {
+        // Convert API response to SkillData format
+        const userSkills: SkillData[] = response.message.data.skills_list.map(skill => ({
+          name: skill.skill_name || skill.skill || '',
+          canonical_name: skill.skill_name || '',
+          skill_id: skill.skill || ''
+        })).filter(skill => skill.name); // Filter out empty skills
+        
+        console.log('Fetched user skills:', userSkills);
+        setExistingSkills(userSkills);
+        setSelectedSkills(userSkills);
+      }
+    } catch (error: any) {
+      console.error('Error fetching user skills:', error);
+      // Don't show error toast for this as it's not critical
+    } finally {
+      setIsLoadingUserSkills(false);
+    }
   };
 
   // Mock AI classification function (for static export compatibility)
@@ -319,6 +406,11 @@ export default function Skills({ onSkillsComplete, onSkip, className = '' }: Ski
     };
   }, [showDropdown]);
 
+  // Fetch user's existing skills on component mount
+  useEffect(() => {
+    fetchUserSkills();
+  }, []);
+
   return (
     <div
       className={`bg-white rounded-xl shadow-sm p-3 space-y-6 w-full font-rubik ${className}`}
@@ -484,16 +576,21 @@ export default function Skills({ onSkillsComplete, onSkip, className = '' }: Ski
       {/* Selected Skills */}
       <div className="bg-white p-4 rounded-xl border border-gray-200">
         <h3 className="font-semibold text-gray-900 mb-3">Selected Skills</h3>
-        {selectedSkills.length > 0 ? (
+        {isLoadingUserSkills ? (
+          <div className="flex justify-center items-center py-8">
+            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500"></div>
+            <span className="ml-2 text-gray-600 text-sm">Loading your skills...</span>
+          </div>
+        ) : selectedSkills.length > 0 ? (
           <div className="grid grid-cols-3 gap-3">
             {selectedSkills.map((skill) => (
               <div
                 key={skill.name}
                 className="flex items-center justify-between bg-white p-3 rounded-lg shadow-sm border border-gray-100"
               >
-                
-                <span className="text-sm font-medium text-blue-800">{skill.canonical_name}</span>
-           
+                <span className="text-sm font-medium text-blue-800">
+                  {skill.canonical_name || skill.name}
+                </span>
                 <button
                   onClick={() => removeSkill(skill.name)}
                   className="text-red-500 hover:text-red-700 transition-colors"
@@ -529,13 +626,17 @@ export default function Skills({ onSkillsComplete, onSkip, className = '' }: Ski
       <div className="flex space-x-3">
         <button
           onClick={handleContinue}
-          disabled={selectedSkills.length === 0}
-          className="max-w-[12rem] mx-auto flex-1 bg-blue-500 text-white font-semibold py-3 px-6 rounded-xl hover:shadow-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+          disabled={newSkills.length === 0 || isSubmitting}
+          className="max-w-[12rem] mx-auto flex-1 bg-blue-500 text-white font-semibold py-3 px-6 rounded-xl hover:shadow-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
         >
-          {/* {`Continue with ${selectedSkills.length} skill${
-            selectedSkills.length !== 1 ? 's' : ''
-          }`} */}
-          Continue
+          {isSubmitting ? (
+            <>
+              <div className="animate-spin rounded-full h-4 w-4 border-2 border-t-transparent border-white mr-2"></div>
+              Saving...
+            </>
+          ) : (
+            'Continue'
+          )}
         </button>
       </div>
 

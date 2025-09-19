@@ -463,13 +463,13 @@ export const useIndividualDashboardStore = create<IndividualDashboardState>((set
         throw new Error('API credentials not found. Please login again.');
       }
 
-      // Call the API with bookmarked_by_profile_owner filter
+      // Call the API with bookmarked filter
       const response: OpportunityMatchesResponse = await getOpportunityMatches(
         entityId,
         apiKey,
         apiSecret,
         undefined, // No search query
-        { bookmarked_by_profile_owner: 1 } // Filter for bookmarked opportunities
+        { bookmarked: 1 } // Filter for bookmarked opportunities
       );
 
       // Check if the response is successful

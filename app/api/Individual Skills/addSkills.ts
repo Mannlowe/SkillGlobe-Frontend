@@ -3,16 +3,16 @@ import axios from 'axios';
 // Base URL for API calls
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
-// Interface for skill data
+// Interface for skill data - updated to match new API payload
 export interface SkillData {
-  skills: string;
-  type_of_skills: string;
+  skill: string;
+  skill_name: string;
 }
 
-// Interface for add skills request
+// Interface for add skills request - updated to match new API payload
 export interface AddSkillsRequest {
   entity_id: string;
-  skills: SkillData[];
+  skill: SkillData[];
 }
 
 // Interface for delete skill request
@@ -29,7 +29,7 @@ export interface AddSkillsResponse {
   };
 }
 
-// Interface for skill list response
+// Interface for skill list response - updated to match actual API response
 export interface SkillListResponse {
   message?: {
     status: string;
@@ -39,8 +39,8 @@ export interface SkillListResponse {
       entity_id?: string;
       skills_list?: Array<{
         name?: string;
-        skills?: string;
-        type_of_skills?: string;
+        skill?: string;
+        skill_name?: string;
       }>
     }
     timestamp?: string;

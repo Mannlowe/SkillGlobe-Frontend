@@ -7,16 +7,7 @@ import BusinessSidebar from '@/components/dashboard/BusinessSidebar';
 import { useBusinessRegistrationStore } from '@/store/businessRegistrationStore';
 import { useAuthStore } from '@/store/authStore';
 import BusinessProfileSuccessModal from '@/components/modal/BusinessProfileSuccessModal';
-import { updateBusinessProfile, getAuthData } from '@/app/api/Business Profile/businessProfile';
-
-const industrySectors = [
-  'Technology',
-  'Service',
-  'Software',
-  'Sports',
-  'Telecommunication',
-
-];
+import { updateBusinessProfile, getAuthData, getIndustryTypes, getBusinessProfile, uploadCompanyLogo } from '@/app/api/Business Profile/businessProfile';
 
 const organizationSizes = [
   '1-10',
@@ -36,6 +27,10 @@ export default function CompanyProfilePage() {
   const [isSaving, setIsSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [industrySectors, setIndustrySectors] = useState<string[]>([]);
+  const [loadingIndustries, setLoadingIndustries] = useState(false);
+  const [loadingProfile, setLoadingProfile] = useState(false);
+  const [logoUrl, setLogoUrl] = useState<string | null>(null);
 
   // Get business name from entity details or fall back to registration store
   const { entity, isAuthenticated } = useAuthStore();
@@ -99,6 +94,91 @@ export default function CompanyProfilePage() {
   }, [businessName]);
     // Add businessName as dependency
 
+  // Fetch industry types on component mount
+  useEffect(() => {
+    const fetchIndustryTypes = async () => {
+      setLoadingIndustries(true);
+      try {
+        const response = await getIndustryTypes();
+        if (response.message && Array.isArray(response.message)) {
+          setIndustrySectors(response.message);
+        }
+      } catch (error) {
+        console.error('Error fetching industry types:', error);
+        // Fallback to hardcoded list if API fails
+        setIndustrySectors([
+          'Technology',
+          'Service',
+          'Software',
+          'Sports',
+          'Telecommunication'
+        ]);
+      } finally {
+        setLoadingIndustries(false);
+      }
+    };
+
+    fetchIndustryTypes();
+  }, []);
+
+  // Fetch business profile data on component mount
+  useEffect(() => {
+    const fetchBusinessProfile = async () => {
+      const authData = getAuthData();
+      if (!authData || !authData.entityId) {
+        console.log('No auth data or entity ID available');
+        return;
+      }
+
+      setLoadingProfile(true);
+      try {
+        const response = await getBusinessProfile(authData.entityId);
+        if (response.message.status === 'success' && response.message.data.business_profile) {
+          const profile = response.message.data.business_profile;
+          
+          // Map API response to form data
+          const profileData = {
+            businessName: profile.business_name || '',
+            aboutCompany: profile.about_company || '',
+            website: profile.website || '',
+            headquarters: profile.headquarters_address || '',
+            industrySector: profile.industry || '',
+            organizationSize: profile.number_of_employees || '',
+            taxId: profile.tax_id || '',
+            logo: profile.company_logo || null
+          };
+          
+          setData(profileData);
+          
+          // Set logo URL if it exists in the profile
+          if (profile.company_logo) {
+            console.log('Setting logo URL from profile:', profile.company_logo);
+            // Convert relative path to full URL
+            const fullLogoUrl = profile.company_logo.startsWith('http') 
+              ? profile.company_logo 
+              : `${process.env.NEXT_PUBLIC_API_BASE_URL || 'https://skillglobedev.m.frappe.cloud'}${profile.company_logo}`;
+            console.log('Full logo URL:', fullLogoUrl);
+            setLogoUrl(fullLogoUrl);
+          }
+          
+          // Update business name state
+          if (profile.business_name) {
+            setBusinessName(profile.business_name);
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching business profile:', error);
+      } finally {
+        setLoadingProfile(false);
+      }
+    };
+
+    // Only fetch if we have auth data
+    if (isAuthenticated) {
+      fetchBusinessProfile();
+    }
+  }, [isAuthenticated]);
+
   const updateData = (newData: any) => {
     setData((prevData: any) => ({
       ...prevData,
@@ -128,15 +208,91 @@ export default function CompanyProfilePage() {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      if (file.size > 2 * 1024 * 1024) { // 2MB limit
-        alert('Logo file size must be less than 2MB');
-        return;
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      alert('Please select a valid image file');
+      return;
+    }
+
+    // Validate file size (2MB limit)
+    if (file.size > 2 * 1024 * 1024) {
+      alert('Logo file size must be less than 2MB');
+      return;
+    }
+
+    const authData = getAuthData();
+    if (!authData || !authData.entityId) {
+      alert('Authentication data not available. Please login again.');
+      return;
+    }
+
+    console.log('File details:', {
+      name: file.name,
+      type: file.type,
+      size: file.size,
+      entityId: authData.entityId
+    });
+
+    setLogo(file);
+    updateData({ logo: file.name });
+
+    try {
+      console.log('Uploading logo...');
+      const response = await uploadCompanyLogo(authData.entityId, file);
+      
+      if (response.message.status === 'success') {
+        console.log('Full response data:', response.message.data);
+        
+        // Check different possible locations for the file URL
+        const fileUrl = response.message.data?.file_url || 
+                       response.message.data?.url || 
+                       response.message.data?.logo_url ||
+                       response.message.data?.company_logo;
+        
+        if (fileUrl) {
+          setLogoUrl(fileUrl);
+          updateData({ logoUrl: fileUrl });
+          console.log('Logo uploaded successfully with URL:', fileUrl);
+        } else {
+          // Even if no URL returned, the upload was successful
+          // Refresh the profile to get the updated logo
+          console.log('Logo uploaded successfully, but no URL returned from upload API');
+          console.log('Refreshing profile to get updated logo...');
+          
+          // Refresh profile to get the logo URL
+          try {
+            const profileResponse = await getBusinessProfile(authData.entityId);
+            if (profileResponse.message.status === 'success' && profileResponse.message.data.business_profile.company_logo) {
+              const logoPath = profileResponse.message.data.business_profile.company_logo;
+              console.log('Got updated logo URL from profile:', logoPath);
+              
+              // Convert relative path to full URL
+              const fullLogoUrl = logoPath.startsWith('http') 
+                ? logoPath 
+                : `${process.env.NEXT_PUBLIC_API_BASE_URL || 'https://skillglobedev.m.frappe.cloud'}${logoPath}`;
+              console.log('Full updated logo URL:', fullLogoUrl);
+              
+              setLogoUrl(fullLogoUrl);
+              updateData({ logoUrl: fullLogoUrl });
+            }
+          } catch (profileError) {
+            console.error('Error refreshing profile for logo:', profileError);
+          }
+        }
+        alert('Logo uploaded successfully!');
+      } else {
+        throw new Error('Upload failed: ' + response.message.message);
       }
-      setLogo(file);
-      updateData({ logo: file.name });
+    } catch (error: any) {
+      console.error('Error uploading logo:', error);
+      const errorMessage = error.response?.data?.message?.message || error.message || 'Failed to upload logo';
+      alert(`Upload failed: ${errorMessage}`);
+      setLogo(null);
+      updateData({ logo: null });
     }
   };
 
@@ -214,6 +370,13 @@ export default function CompanyProfilePage() {
                   Manage your organization&apos;s information and presence on SkillGlobe
                 </p>
               </div>
+
+              {loadingProfile && (
+                <div className="flex items-center justify-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+                  <span className="ml-2 text-gray-600">Loading profile data...</span>
+                </div>
+              )}
 
               <form onSubmit={handleSubmit} className="space-y-5">
                 {/* Grid layout for form fields */}
@@ -305,12 +468,16 @@ export default function CompanyProfilePage() {
                       <select
                         value={data.industrySector || ''}
                         onChange={(e) => updateData({ industrySector: e.target.value })}
-                        className={`w-full pl-10 pr-4 py-3 bg-gray-50 rounded-xl border-0 focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all appearance-none ${
+                        disabled={loadingIndustries}
+                        className={`w-full pl-10 pr-4 py-3 bg-gray-50 rounded-xl border-0 focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all appearance-none h-12 ${
                           errors.industrySector ? 'ring-2 ring-red-500' : ''
-                        }`}
+                        } ${loadingIndustries ? 'opacity-50 cursor-not-allowed' : ''}`}
+                        style={{ maxHeight: '100px' }}
                       >
-                        <option value="">Select industry sector</option>
-                        {industrySectors.map((sector) => (
+                        <option value="">
+                          {loadingIndustries ? 'Loading industry sectors...' : 'Select industry sector'}
+                        </option>
+                        {!loadingIndustries && industrySectors.map((sector) => (
                           <option key={sector} value={sector}>{sector}</option>
                         ))}
                       </select>
@@ -381,7 +548,7 @@ export default function CompanyProfilePage() {
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Organization Logo
                   </label>
-                  {!logo && !data.logo ? (
+                  {!logo && !data.logo && !logoUrl ? (
                     <label className="block">
                       <div className="border-2 border-dashed border-gray-300 rounded-xl p-4 text-center hover:border-blue-500 transition-colors cursor-pointer">
                         <Upload className="mx-auto text-gray-400 mb-2" size={20} />
@@ -396,9 +563,41 @@ export default function CompanyProfilePage() {
                       />
                     </label>
                   ) : (
-                    <div className="bg-green-50 p-3 rounded-xl border border-green-200">
-                      <p className="text-sm font-medium text-green-900">✓ {logo?.name || data.logo}</p>
-                      <p className="text-xs text-green-700">Logo uploaded successfully</p>
+                    <div className="space-y-3">
+                      {/* Show uploaded logo image */}
+                      {logoUrl && (
+                        <div className="flex items-center justify-center p-4 bg-gray-50 rounded-xl border">
+                          <img 
+                            src={logoUrl} 
+                            alt="Company Logo" 
+                            className="max-h-20 max-w-40 object-contain rounded"
+                            onError={(e) => {
+                              console.error('Error loading logo image');
+                              e.currentTarget.style.display = 'none';
+                            }}
+                          />
+                        </div>
+                      )}
+                      
+                      {/* Success message */}
+                      <div className="bg-green-50 p-3 rounded-xl border border-green-200">
+                        <p className="text-sm font-medium text-green-900">✓ {logo?.name || data.logo || 'Logo uploaded successfully'}</p>
+                        <p className="text-xs text-green-700">Logo uploaded successfully</p>
+                      </div>
+                      
+                      {/* Option to upload new logo */}
+                      <label className="block">
+                        <div className="border border-gray-300 rounded-xl p-3 text-center hover:border-blue-500 transition-colors cursor-pointer bg-white">
+                          <Upload className="mx-auto text-gray-400 mb-1" size={16} />
+                          <p className="text-xs font-medium text-gray-700">Upload new logo</p>
+                        </div>
+                        <input
+                          type="file"
+                          accept="image/png,image/jpeg"
+                          onChange={handleLogoUpload}
+                          className="hidden"
+                        />
+                      </label>
                     </div>
                   )}
                 </div>

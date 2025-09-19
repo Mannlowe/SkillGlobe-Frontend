@@ -52,6 +52,7 @@ interface RegistrationState {
   resendEmailOtp: () => Promise<any>;
   resendPhoneOtp: () => Promise<any>;
   completeRegistration: (agreed?: number) => Promise<any>;
+  clearError: () => void;
   resetRegistration: () => void;
 }
 
@@ -376,6 +377,11 @@ export const useRegistrationStore = create<RegistrationState>()(
           });
           throw error;
         }
+      },
+      
+      // Clear error state
+      clearError: () => {
+        set({ error: null });
       },
       
       // Reset registration state

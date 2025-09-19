@@ -24,7 +24,12 @@ export default function OTPVerification({ data, updateData, nextStep }: OTPVerif
   };
 
   // Get registration store state and actions
-  const { verifyOtpCodes, resendEmailOtp, resendPhoneOtp, isLoading, error: apiError, request_id } = useRegistrationStore();
+  const { verifyOtpCodes, resendEmailOtp, resendPhoneOtp, clearError, isLoading, error: apiError, request_id } = useRegistrationStore();
+
+  // Clear any previous errors when component mounts
+  useEffect(() => {
+    clearError();
+  }, [clearError]);
 
   useEffect(() => {
     // Email timer

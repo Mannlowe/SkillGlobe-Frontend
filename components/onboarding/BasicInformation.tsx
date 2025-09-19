@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { User, Mail, Lock, Eye, EyeOff } from 'lucide-react';
 import PhoneInput from 'react-phone-input-2';
 import 'react-phone-input-2/lib/style.css';
@@ -132,7 +132,12 @@ export default function BasicInformation({ data, updateData, nextStep }: BasicIn
   };
 
   // Get registration store state and actions
-  const { updatePersonalDetails, isLoading, error: apiError, request_id } = useRegistrationStore();
+  const { updatePersonalDetails, clearError, isLoading, error: apiError, request_id } = useRegistrationStore();
+
+  // Clear any previous errors when component mounts
+  useEffect(() => {
+    clearError();
+  }, [clearError]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

@@ -25,6 +25,7 @@ export interface BusinessRegistrationState {
   setRequestId: (requestId: string) => void;
   updateBusinessData: (data: Partial<BusinessRegistrationState>) => void;
   submitBusinessDetails: () => Promise<BusinessDetailsResponse>;
+  clearError: () => void;
   resetBusinessRegistration: () => void;
 }
 
@@ -47,6 +48,8 @@ export const useBusinessRegistrationStore = create<BusinessRegistrationState>((s
   setRequestId: (requestId: string) => set({ requestId }),
 
   updateBusinessData: (data) => set({ ...data }),
+
+  clearError: () => set({ error: null }),
 
   submitBusinessDetails: async () => {
     set({ isLoading: true, error: null });

@@ -573,25 +573,15 @@ export default function JobPostingModal({ showModal, setShowModal, onSubmit, edi
       <label className="block text-sm font-medium text-gray-700 mb-1">
         Role / Skill Category <span className="text-red-500">*</span>
       </label>
-      <select
+      <input
+        type="text"
         name="skillCategory"
         value={newJob.skillCategory}
         onChange={handleInputChange}
         className="w-full px-4 py-2 bg-gray-50 rounded-lg border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all"
+        placeholder="e.g. Frontend Development, Data Science"
         required
-      >
-        <option value="">Select a category</option>
-        <option value="frontend">Frontend Development</option>
-        <option value="backend">Backend Development</option>
-        <option value="fullstack">Full Stack Development</option>
-        <option value="mobile">Mobile Development</option>
-        <option value="devops">DevOps</option>
-        <option value="data">Data Science</option>
-        <option value="design">UI/UX Design</option>
-        <option value="product">Product Management</option>
-        <option value="marketing">Marketing</option>
-        <option value="sales">Sales</option>
-      </select>
+      />
     </div>
     
     {/* Opportunity Type */}

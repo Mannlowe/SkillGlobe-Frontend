@@ -623,8 +623,10 @@ export default function JobPostingModal({ showModal, setShowModal, onSubmit, edi
         required
       >
         <option value="Permanent">Permanent</option>
+        <option value="Contract2Perm">Contract2Perm</option>
         <option value="Internship">Internship</option>
-        <option value="Contract">Contract</option>
+        <option value="Project / Gig">Project / Gig</option>
+        <option value="Contractual / Freelance Work">Contractual / Freelance Work</option>
       </select>
     </div>
     </div>
@@ -1114,18 +1116,15 @@ export default function JobPostingModal({ showModal, setShowModal, onSubmit, edi
       <label className="block text-sm font-medium text-gray-700 mb-1">
         Anticipated Number of Applications
       </label>
-      <select
+      <input
+        type="number"
         name="anticipatedApplications"
         value={newJob.anticipatedApplications}
         onChange={handleInputChange}
         className="w-full px-4 py-2 bg-gray-50 rounded-lg border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all"
-      >
-        <option value="10">~10</option>
-        <option value="25">~25</option>
-        <option value="50">~50</option>
-        <option value="100">~100</option>
-        <option value="200">200+</option>
-      </select>
+        placeholder="Enter anticipated number of applications"
+        min="1"
+      />
     </div>
     
     <div className="flex justify-center pt-4">

@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { X } from 'lucide-react';
 import { useJobPostingStore } from '@/store/job-postings/addjobpostingStore';
-import { getSkills, getApplyOpportunities, getAuthData, type Skill } from '@/app/api/job postings/addjobPosting';
+import { getSkills, getApplyOpportunities, getCityList, getAuthData, type Skill, type City } from '@/app/api/job postings/addjobPosting';
 
 // Define document type interface
 export interface DocumentFile {
@@ -87,6 +87,10 @@ export default function JobPostingModal({ showModal, setShowModal, onSubmit, edi
   const [applyOpportunities, setApplyOpportunities] = useState<string[]>([]);
   const [applyOpportunitiesLoading, setApplyOpportunitiesLoading] = useState(false);
   
+  // City list API state
+  const [cityList, setCityList] = useState<City[]>([]);
+  const [cityListLoading, setCityListLoading] = useState(false);
+  
   const [newJob, setNewJob] = useState<JobFormState>({
     title: '',
     skillCategory: '',
@@ -151,24 +155,46 @@ export default function JobPostingModal({ showModal, setShowModal, onSubmit, edi
     }
   }, []);
 
+  // Function to fetch city list from API
+  const fetchCityList = useCallback(async () => {
+    const authData = getAuthData();
+    if (!authData) {
+      console.error('No auth data available for city list API');
+      return [];
+    }
+
+    setCityListLoading(true);
+    try {
+      const cities = await getCityList(authData.apiKey, authData.apiSecret);
+      return cities;
+    } catch (error) {
+      console.error('Error fetching city list:', error);
+      return [];
+    } finally {
+      setCityListLoading(false);
+    }
+  }, []);
+
   // Load initial data on component mount
   useEffect(() => {
     const loadInitialData = async () => {
-      const [skills, opportunities] = await Promise.all([
+      const [skills, opportunities, cities] = await Promise.all([
         fetchSkills(),
-        fetchApplyOpportunities()
+        fetchApplyOpportunities(),
+        fetchCityList()
       ]);
       
       setAvailableSkills(skills);
       setFilteredPrimarySkills(skills);
       setFilteredSecondarySkills(skills);
       setApplyOpportunities(opportunities);
+      setCityList(cities);
     };
     
     if (showModal) {
       loadInitialData();
     }
-  }, [showModal, fetchSkills, fetchApplyOpportunities]);
+  }, [showModal, fetchSkills, fetchApplyOpportunities, fetchCityList]);
 
   // Filter skills based on search terms
   useEffect(() => {
@@ -762,9 +788,16 @@ export default function JobPostingModal({ showModal, setShowModal, onSubmit, edi
         onChange={handleInputChange}
         className="w-full px-4 py-2 bg-gray-50 rounded-lg border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all"
         required
+        disabled={cityListLoading}
       >
-        <option value="">Select a location</option>
-        {/* Location options will be populated from API */}
+        <option value="">
+          {cityListLoading ? 'Loading locations...' : 'Select a location'}
+        </option>
+        {Array.isArray(cityList) && cityList.map((city) => (
+          <option key={city.name} value={city.name}>
+            {city.name}
+          </option>
+        ))}
       </select>
     </div>
     

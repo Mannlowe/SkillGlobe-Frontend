@@ -246,6 +246,7 @@ export default function OnboardingPage() {
               data={onboardingData}
               updateData={updateData}
               nextStep={nextStep}
+              userType={onboardingData.userType}
               // prevStep={prevStep}
               // isFirstStep={currentStep === 0}
               // isLastStep={currentStep === steps.length - 1}

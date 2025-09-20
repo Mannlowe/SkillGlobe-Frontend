@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { X } from 'lucide-react';
-import { useJobPostingStore } from '@/store/job-postings/addjobpostingStore';
+import { useJobPostingStore, JobPostingFormData } from '@/store/job-postings/addjobpostingStore';
 import { getSkills, getApplyOpportunities, getCityList, getAuthData, type Skill, type City } from '@/app/api/job postings/addjobPosting';
 
 // Define document type interface
@@ -50,7 +50,7 @@ export interface JobFormState {
   primarySkills: string[];
   secondarySkills: string[];
   preferredQualifications: string;
-  location: string;
+  location: string[];
   gender: string[];
   language: string[];
   visibilitySettings: string;
@@ -70,10 +70,12 @@ export default function JobPostingModal({ showModal, setShowModal, onSubmit, edi
   const [secondarySkillsDropdownOpen, setSecondarySkillsDropdownOpen] = useState(false);
   const [genderDropdownOpen, setGenderDropdownOpen] = useState(false);
   const [languageDropdownOpen, setLanguageDropdownOpen] = useState(false);
+  const [locationDropdownOpen, setLocationDropdownOpen] = useState(false);
   const primarySkillsDropdownRef = useRef<HTMLDivElement>(null);
   const secondarySkillsDropdownRef = useRef<HTMLDivElement>(null);
   const genderDropdownRef = useRef<HTMLDivElement>(null);
   const languageDropdownRef = useRef<HTMLDivElement>(null);
+  const locationDropdownRef = useRef<HTMLDivElement>(null);
   
   // Skills API state
   const [availableSkills, setAvailableSkills] = useState<Skill[]>([]);
@@ -90,6 +92,8 @@ export default function JobPostingModal({ showModal, setShowModal, onSubmit, edi
   // City list API state
   const [cityList, setCityList] = useState<City[]>([]);
   const [cityListLoading, setCityListLoading] = useState(false);
+  const [locationSearch, setLocationSearch] = useState('');
+  const [filteredCities, setFilteredCities] = useState<City[]>([]);
   
   // Date validation state
   const [dateError, setDateError] = useState<string>('');
@@ -112,7 +116,7 @@ export default function JobPostingModal({ showModal, setShowModal, onSubmit, edi
     primarySkills: [],
     secondarySkills: [],
     preferredQualifications: '',
-    location: '',
+    location: [],
     gender: [],
     language: [],
     visibilitySettings: 'all',
@@ -195,6 +199,7 @@ export default function JobPostingModal({ showModal, setShowModal, onSubmit, edi
       setFilteredSecondarySkills(skills);
       setApplyOpportunities(opportunities);
       setCityList(cities);
+      setFilteredCities(cities);
     };
     
     if (showModal) {
@@ -224,6 +229,17 @@ export default function JobPostingModal({ showModal, setShowModal, onSubmit, edi
       setFilteredSecondarySkills(availableSkills);
     }
   }, [secondarySkillsSearch, availableSkills]);
+
+  useEffect(() => {
+    if (locationSearch.trim()) {
+      const filtered = cityList.filter(city => 
+        city.name.toLowerCase().includes(locationSearch.toLowerCase())
+      );
+      setFilteredCities(filtered);
+    } else {
+      setFilteredCities(cityList);
+    }
+  }, [locationSearch, cityList]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -369,7 +385,7 @@ export default function JobPostingModal({ showModal, setShowModal, onSubmit, edi
         primarySkills: primarySkills,
         secondarySkills: secondarySkills,
         preferredQualifications: '',
-        location: editData.location || '',
+        location: editData.location ? [editData.location] : [],
         gender: editData.genderPreference || [],
         language: editData.languageRequirement || [],
         visibilitySettings: 'all',
@@ -392,6 +408,9 @@ export default function JobPostingModal({ showModal, setShowModal, onSubmit, edi
       }
       if (languageDropdownRef.current && !languageDropdownRef.current.contains(event.target as Node)) {
         setLanguageDropdownOpen(false);
+      }
+      if (locationDropdownRef.current && !locationDropdownRef.current.contains(event.target as Node)) {
+        setLocationDropdownOpen(false);
       }
     };
     
@@ -426,6 +445,29 @@ export default function JobPostingModal({ showModal, setShowModal, onSubmit, edi
     setNewJob(prev => ({
       ...prev,
       language: prev.language.filter(language => language !== languageToRemove)
+    }));
+  };
+
+  const toggleLocation = (cityName: string) => {
+    setNewJob(prev => {
+      if (prev.location.includes(cityName)) {
+        return {
+          ...prev,
+          location: prev.location.filter(loc => loc !== cityName)
+        };
+      } else {
+        return {
+          ...prev,
+          location: [...prev.location, cityName]
+        };
+      }
+    });
+  };
+
+  const removeLocation = (cityToRemove: string) => {
+    setNewJob(prev => ({
+      ...prev,
+      location: prev.location.filter(city => city !== cityToRemove)
     }));
   };
   
@@ -491,7 +533,14 @@ export default function JobPostingModal({ showModal, setShowModal, onSubmit, edi
     }
     
     try {
-      const response = await submitJobPosting(newJob);
+      // Convert JobFormState to JobPostingFormData format
+      const jobPostingData: JobPostingFormData = {
+        ...newJob,
+        location: newJob.location, // Pass the full location array
+        documents: newJob.documents || []
+      };
+      
+      const response = await submitJobPosting(jobPostingData);
       
       if (response) {
         // Success - call the original onSubmit for any additional handling
@@ -513,7 +562,7 @@ export default function JobPostingModal({ showModal, setShowModal, onSubmit, edi
           primarySkills: [],
           secondarySkills: [],
           preferredQualifications: '',
-          location: '',
+          location: [],
           gender: [],
           language: [],
           visibilitySettings: 'all',
@@ -828,23 +877,78 @@ export default function JobPostingModal({ showModal, setShowModal, onSubmit, edi
       <label className="block text-sm font-medium text-gray-700 mb-1">
         Location <span className="text-red-500">*</span>
       </label>
-      <select
-        name="location"
-        value={newJob.location}
-        onChange={handleInputChange}
-        className="w-full px-4 py-2 bg-gray-50 rounded-lg border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all"
-        required
-        disabled={cityListLoading}
-      >
-        <option value="">
-          {cityListLoading ? 'Loading locations...' : 'Select a location'}
-        </option>
-        {Array.isArray(cityList) && cityList.map((city) => (
-          <option key={city.name} value={city.name}>
-            {city.name}
-          </option>
-        ))}
-      </select>
+      <div className="flex gap-4">
+        <div className="w-1/2 relative" ref={locationDropdownRef}>
+          <div 
+            className="w-full px-4 py-2 bg-gray-50 rounded-lg border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all flex justify-between items-center cursor-pointer"
+            onClick={() => setLocationDropdownOpen(!locationDropdownOpen)}
+          >
+            <span className={newJob.location.length === 0 ? "text-gray-500" : ""}>
+              {newJob.location.length === 0 ? 'Select locations' : `${newJob.location.length} location(s) selected`}
+            </span>
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+            </svg>
+          </div>
+          
+          {locationDropdownOpen && (
+            <div className="absolute z-10 mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-auto">
+              <div className="p-2 border-b border-gray-200">
+                <input
+                  type="text"
+                  placeholder="Search locations..."
+                  value={locationSearch}
+                  onChange={(e) => setLocationSearch(e.target.value)}
+                  className="w-full px-3 py-2 text-sm border border-gray-200 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  onClick={(e) => e.stopPropagation()}
+                />
+              </div>
+              {cityListLoading ? (
+                <div className="px-4 py-2 text-center text-gray-500">
+                  Loading locations...
+                </div>
+              ) : filteredCities.length > 0 ? (
+                filteredCities.map((city) => (
+                  <div 
+                    key={city.name} 
+                    className="px-4 py-2 hover:bg-blue-50 cursor-pointer flex items-center justify-between"
+                    onClick={() => toggleLocation(city.name)}
+                  >
+                    <span>{city.name}</span>
+                    {newJob.location.includes(city.name) && (
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-blue-600" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                      </svg>
+                    )}
+                  </div>
+                ))
+              ) : (
+                <div className="px-4 py-2 text-center text-gray-500">
+                  No locations found
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+        <div className="w-1/2 bg-gray-50 border border-gray-200 rounded-lg p-2 min-h-[42px] max-h-[150px] overflow-y-auto">
+          {newJob.location.length > 0 ? (
+            newJob.location.map((cityName) => (
+              <div key={cityName} className="inline-flex items-center bg-green-100 text-green-800 rounded-full px-3 py-1 text-sm mr-2 mb-2">
+                {cityName}
+                <button 
+                  type="button"
+                  className="ml-1 text-blue-600 hover:text-blue-800"
+                  onClick={() => removeLocation(cityName)}
+                >
+                  ×
+                </button>
+              </div>
+            ))
+          ) : (
+            <p className="text-sm text-gray-500 italic">No locations selected</p>
+          )}
+        </div>
+      </div>
     </div>
     
     <h4 className="text-md font-semibold text-blue-600 mt-6 mb-2">Step 2: Detailed Information</h4>

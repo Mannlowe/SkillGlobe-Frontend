@@ -211,7 +211,7 @@ export default function JobPostingsPage() {
         employmentType: job.employmentType,
         workMode: job.workMode,
         experienceRequired: job.experienceRequired,
-        location: job.location || 'Not specified',
+        location: (job.location && job.location.length > 0) ? job.location[0] : 'Not specified',
         // Additional fields stored but not displayed in table
         salary: job.minRemuneration,
         primarySkills: job.primarySkills,
@@ -237,7 +237,7 @@ export default function JobPostingsPage() {
         employmentType: job.employmentType,
         workMode: job.workMode,
         experienceRequired: job.experienceRequired,
-        location: job.location || 'Not specified',
+        location: (job.location && job.location.length > 0) ? job.location[0] : 'Not specified',
         // Additional fields stored but not displayed in table
         salary: job.minRemuneration,
         primarySkills: job.primarySkills,

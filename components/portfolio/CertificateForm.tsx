@@ -9,6 +9,7 @@ import {
   Trash2,
   GripVertical,
   Check,
+  Loader2,
 } from "lucide-react";
 import {
   addCertificate,
@@ -76,10 +77,21 @@ export default function CertificateForm({
     certificateEntries[0]?.id || ""
   );
   const [editMode, setEditMode] = useState<boolean>(true);
+  const [flag1, setFlag1] = useState<boolean>(true);
   const [validationErrors, setValidationErrors] = useState<{
     [key: string]: string;
   }>({});
   const [apiCertificates, setApiCertificates] = useState<any[]>([]);
+
+  useEffect(() => {
+    if (flag1) {
+      const timer = setTimeout(() => {
+        setFlag1(false);
+      }, 1500);
+
+      return () => clearTimeout(timer);
+    }
+  }, [flag1]);
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement>,
@@ -110,31 +122,31 @@ export default function CertificateForm({
 
   // Fetch certificate list on component mount
   useEffect(() => {
-    const fetchCertificateList = async () => {
-      const authData = getAuthData();
-      if (!authData) return;
-
-      try {
-        const response = await getCertificateList(
-          authData.entityId,
-          authData.apiKey,
-          authData.apiSecret
-        );
-        const updatedList = response.message?.data?.certificate_list || [];
-        setApiCertificates(updatedList);
-        setCertificateList?.(updatedList);
-        setEditMode(false);
-        setActiveEntryId(updatedList[0]?.name || "");
-
-        console.log("Fetched certificate list:", updatedList);
-      } catch (error) {
-        console.error("Error fetching certificate list:", error);
-      }
-    };
-
     fetchCertificateList();
   }, [setCertificateList]);
 
+  const fetchCertificateList = async () => {
+    const authData = getAuthData();
+    if (!authData) return;
+
+    try {
+      const response = await getCertificateList(
+        authData.entityId,
+        authData.apiKey,
+        authData.apiSecret
+      );
+      const updatedList = response.message?.data?.certificate_list || [];
+      setApiCertificates(updatedList);
+      setCertificateList?.(updatedList);
+      setEditMode(false);
+      setFlag1(false);
+      setActiveEntryId(updatedList[0]?.name || "");
+
+      console.log("Fetched certificate list:", updatedList);
+    } catch (error) {
+      console.error("Error fetching certificate list:", error);
+    }
+  };
   // // Update certificate list when a certificate is uploaded
   // useEffect(() => {
   //   const fetchUpdatedList = async () => {
@@ -322,7 +334,7 @@ export default function CertificateForm({
               : entry
           )
         );
-
+        fetchCertificateList();
         // Exit edit mode after successful upload
         setEditMode(false);
       } catch (error: any) {
@@ -568,7 +580,15 @@ export default function CertificateForm({
             <Plus size={16} className="mr-1" /> Add Certificate
           </button>
         </div>
-
+        {flag1 && (
+          <>
+            <Loader2
+              // size={323} // makes it 32x32
+              // strokeWidth={3}
+              className="h-14 w-14 animate-spin"
+            />
+          </>
+        )}
         {/* Certificate entries list */}
         {!editMode && (
           <div className="mb-6">
@@ -807,14 +827,14 @@ export default function CertificateForm({
             )}
           </button>
         )}
-        <button
+        {/* <button
           type="submit"
           className="px-6 py-2 bg-blue-500 text-white font-medium rounded-lg hover:bg-blue-600 transition-colors"
         >
           {certificateEntries.length > 0
             ? "Save Certificates"
             : "Skip Certificates"}
-        </button>
+        </button> */}
       </div>
     </form>
   );

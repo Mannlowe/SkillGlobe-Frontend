@@ -720,15 +720,8 @@ export default function ProfileForm({ onSave, onCancel, initialData = [], showFo
         
         if (response) {
           console.log('Profile created successfully');
-          // Add to local state
-          const newEntry = {
-            ...editingEntry,
-            id: response.message.data.name || editingEntry.id, // Use API response name if available
-            primarySkills: Array.isArray(editingEntry.primarySkills) ? [...editingEntry.primarySkills] : [],
-            secondarySkills: Array.isArray(editingEntry.secondarySkills) ? [...editingEntry.secondarySkills] : []
-          };
-          
-          setProfileEntries([...profileEntries, newEntry]);
+          // Note: The store's createRoleBasedProfile already refreshes the profile list
+          // so we don't need to add to local state here to avoid duplication
           
           // Show success message
           setSuccessMessage('Profile created successfully!');

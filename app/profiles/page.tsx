@@ -107,21 +107,9 @@ export default function ProfilesPage() {
           setShowTemplateSelector(false);
         },
         onSave: (entries: ProfileEntry[]) => {
+          // Note: The ProfileForm's createRoleBasedProfile already handles adding the profile
+          // and refreshing the list, so we don't need to manually add it here
           if (entries.length > 0) {
-            const entry = entries[0];
-            const newProfile: Profile = {
-              id: entry.id || `profile-${Date.now()}`,
-              name: entry.role || template.name,
-              type: entry.profileType || 'Specialized',
-              completeness: 60,
-              views: 0,
-              isActive: false,
-              template: template.name,
-              formData: entry
-            };
-            
-            addProfile(newProfile);
-            
             toast({
               title: "Profile Created",
               description: `Your new ${template.name} profile has been created successfully.`,
@@ -165,20 +153,7 @@ export default function ProfilesPage() {
         });
       }, 100);
     } else {
-      // Create a new profile based on the form data
-      const newProfile: Profile = {
-        id: profileEntry.id || `profile-${Date.now()}`,
-        name: profileEntry.role || 'New Profile',
-        type: 'Specialized',
-        completeness: 60,
-        views: 0,
-        isActive: false,
-        template: null,
-        formData: profileEntry
-      };
-
-      // Add the new profile to the list using the store action
-      addProfile(newProfile);
+      console.log('New profile creation should be handled by the store\'s createRoleBasedProfile function');
       
       // Show toast notification
       setTimeout(() => {

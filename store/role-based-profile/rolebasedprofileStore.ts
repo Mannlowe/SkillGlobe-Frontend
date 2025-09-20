@@ -95,6 +95,17 @@ const mapRoleBasedProfileToProfile = (profile: RoleBasedProfileData, index: numb
     ? `${profile.preferred_city}, ${profile.preferred_country}`
     : profile.preferred_country;
   
+  // Helper function to safely convert field to array
+  const toArray = (field: any): string[] => {
+    if (Array.isArray(field)) {
+      return field;
+    }
+    if (typeof field === 'string' && field.trim()) {
+      return field.split(', ').map(item => item.trim()).filter(item => item);
+    }
+    return [];
+  };
+
   // Helper function to map API field names to frontend field names
   const mapDomainSpecificFields = (profileData: any) => {
     const mappedFields: any = {};
@@ -115,88 +126,88 @@ const mapRoleBasedProfileToProfile = (profile: RoleBasedProfileData, index: numb
     // IT Domain field mappings
     if (profileData.github__portfolio) mappedFields.it_portfolio = profileData.github__portfolio;
     if (profileData.development_methodology) mappedFields.it_dev_method = profileData.development_methodology;
-    if (profileData.domain_expertise) mappedFields.it_domain_exp = profileData.domain_expertise?.split(', ') || [];
-    if (profileData.tools_platforms) mappedFields.it_tools_used = profileData.tools_platforms?.split(', ') || [];
-    if (profileData.tools_used) mappedFields.it_tools = profileData.tools_used?.split(', ') || [];
+    if (profileData.domain_expertise) mappedFields.it_domain_exp = toArray(profileData.domain_expertise);
+    if (profileData.tools_platforms) mappedFields.it_tools_used = toArray(profileData.tools_platforms);
+    if (profileData.tools_used) mappedFields.it_tools = toArray(profileData.tools_used);
     if (profileData.research__papers) mappedFields.it_research = profileData.research__papers;
-    if (profileData.data_domain_focus) mappedFields.it_data_domain_exp = profileData.data_domain_focus?.split(', ') || [];
+    if (profileData.data_domain_focus) mappedFields.it_data_domain_exp = toArray(profileData.data_domain_focus);
     if (profileData.major_projects) mappedFields.it_data_projects = profileData.major_projects;
-    if (profileData.compliance) mappedFields.it_compliance = profileData.compliance?.split(', ') || [];
-    if (profileData.security_tools_used) mappedFields.it_security_tools = profileData.security_tools_used?.split(', ') || [];
-    if (profileData.incident_handling) mappedFields.it_incident_exp = profileData.incident_handling?.split(', ') || [];
+    if (profileData.compliance) mappedFields.it_compliance = toArray(profileData.compliance);
+    if (profileData.security_tools_used) mappedFields.it_security_tools = toArray(profileData.security_tools_used);
+    if (profileData.incident_handling) mappedFields.it_incident_exp = toArray(profileData.incident_handling);
     if (profileData.security_clearance) mappedFields.it_security_clearance = profileData.security_clearance;
-    if (profileData.network_expertise) mappedFields.it_network_exp = profileData.network_expertise?.split(', ') || [];
+    if (profileData.network_expertise) mappedFields.it_network_exp = toArray(profileData.network_expertise);
     
     // Manufacturing Domain field mappings
-    if (profileData.production_area) mappedFields.mf_production_area = profileData.production_area?.split(', ') || [];
-    if (profileData.machine_handling) mappedFields.mf_machine_handling = profileData.machine_handling?.split(', ') || [];
+    if (profileData.production_area) mappedFields.mf_production_area = toArray(profileData.production_area);
+    if (profileData.machine_handling) mappedFields.mf_machine_handling = toArray(profileData.machine_handling);
     if (profileData.shift_preference) mappedFields.mf_shift_preference = profileData.shift_preference;
-    if (profileData.safety_training) mappedFields.mf_safety_cert = profileData.safety_training?.split(', ') || [];
-    if (profileData.engineering_domain) mappedFields.mf_engineering_domain = profileData.engineering_domain?.split(', ') || [];
-    if (profileData.design_tools) mappedFields.mf_design_tools = profileData.design_tools?.split(', ') || [];
-    if (profileData.prototyping_experience) mappedFields.mf_prototyping_exp = profileData.prototyping_experience?.split(', ') || [];
-    if (profileData.regulatory_standards) mappedFields.mf_regulatory_knowledge = profileData.regulatory_standards?.split(', ') || [];
-    if (profileData.quality_tools) mappedFields.mf_quality_tools = profileData.quality_tools?.split(', ') || [];
-    if (profileData.testing_methods) mappedFields.mf_testing_methods = profileData.testing_methods?.split(', ') || [];
-    if (profileData.quality_certifications) mappedFields.mf_certifications_qm = profileData.quality_certifications?.split(', ') || [];
-    if (profileData.maintenance_expertise) mappedFields.mf_maintenance_exp = profileData.maintenance_expertise?.split(', ') || [];
-    if (profileData.supply_chain_area) mappedFields.mf_supply_area = profileData.supply_chain_area?.split(', ') || [];
-    if (profileData.material_expertise) mappedFields.mf_material_expertise = profileData.material_expertise?.split(', ') || [];
-    if (profileData.scm_tools) mappedFields.mf_tools_used = profileData.scm_tools?.split(', ') || [];
-    if (profileData.regulatory_compliance) mappedFields.mf_regulatory_compliance = profileData.regulatory_compliance?.split(', ') || [];
+    if (profileData.safety_training) mappedFields.mf_safety_cert = toArray(profileData.safety_training);
+    if (profileData.engineering_domain) mappedFields.mf_engineering_domain = toArray(profileData.engineering_domain);
+    if (profileData.design_tools) mappedFields.mf_design_tools = toArray(profileData.design_tools);
+    if (profileData.prototyping_experience) mappedFields.mf_prototyping_exp = toArray(profileData.prototyping_experience);
+    if (profileData.regulatory_standards) mappedFields.mf_regulatory_knowledge = toArray(profileData.regulatory_standards);
+    if (profileData.quality_tools) mappedFields.mf_quality_tools = toArray(profileData.quality_tools);
+    if (profileData.testing_methods) mappedFields.mf_testing_methods = toArray(profileData.testing_methods);
+    if (profileData.quality_certifications) mappedFields.mf_certifications_qm = toArray(profileData.quality_certifications);
+    if (profileData.maintenance_expertise) mappedFields.mf_maintenance_exp = toArray(profileData.maintenance_expertise);
+    if (profileData.supply_chain_area) mappedFields.mf_supply_area = toArray(profileData.supply_chain_area);
+    if (profileData.material_expertise) mappedFields.mf_material_expertise = toArray(profileData.material_expertise);
+    if (profileData.scm_tools) mappedFields.mf_tools_used = toArray(profileData.scm_tools);
+    if (profileData.regulatory_compliance) mappedFields.mf_regulatory_compliance = toArray(profileData.regulatory_compliance);
     
     // Banking Domain field mappings
-    if (profileData.banking_domain) mappedFields.bf_banking_domain = profileData.banking_domain?.split(', ') || [];
-    if (profileData.core_banking_systems) mappedFields.bf_core_banking_systems = profileData.core_banking_systems?.split(', ') || [];
-    if (profileData.regulatory_exposure) mappedFields.bf_regulatory_exp = profileData.regulatory_exposure?.split(', ') || [];
-    if (profileData.compliance_knowledge) mappedFields.bf_compliance_knowledge = profileData.compliance_knowledge?.split(', ') || [];
-    if (profileData.finance_focus_area) mappedFields.bf_finance_area = profileData.finance_focus_area?.split(', ') || [];
-    if (profileData.erp__financial_tools) mappedFields.bf_erp_tools = profileData.erp__financial_tools?.split(', ') || [];
-    if (profileData.reporting_standards) mappedFields.bf_reporting_standards = profileData.reporting_standards?.split(', ') || [];
-    if (profileData.industry_finance_exp) mappedFields.bf_industry_experience = profileData.industry_finance_exp?.split(', ') || [];
-    if (profileData.insurance_domain) mappedFields.bf_insurance_domain = profileData.insurance_domain?.split(', ') || [];
-    if (profileData.insurance_products) mappedFields.bf_insurance_products = profileData.insurance_products?.split(', ') || [];
-    if (profileData.regulatory_licenses) mappedFields.bf_licensing = profileData.regulatory_licenses?.split(', ') || [];
-    if (profileData.claims_underwriting) mappedFields.bf_claims_exp = profileData.claims_underwriting?.split(', ') || [];
-    if (profileData.payment_systems) mappedFields.bf_payment_systems = profileData.payment_systems?.split(', ') || [];
-    if (profileData.fintech_platforms) mappedFields.bf_digital_platforms = profileData.fintech_platforms?.split(', ') || [];
-    if (profileData.regulatory_tech) mappedFields.bf_regtech_knowledge = profileData.regulatory_tech?.split(', ') || [];
-    if (profileData.security_standards) mappedFields.bf_security_compliance = profileData.security_standards?.split(', ') || [];
+    if (profileData.banking_domain) mappedFields.bf_banking_domain = toArray(profileData.banking_domain);
+    if (profileData.core_banking_systems) mappedFields.bf_core_banking_systems = toArray(profileData.core_banking_systems);
+    if (profileData.regulatory_exposure) mappedFields.bf_regulatory_exp = toArray(profileData.regulatory_exposure);
+    if (profileData.compliance_knowledge) mappedFields.bf_compliance_knowledge = toArray(profileData.compliance_knowledge);
+    if (profileData.finance_focus_area) mappedFields.bf_finance_area = toArray(profileData.finance_focus_area);
+    if (profileData.erp__financial_tools) mappedFields.bf_erp_tools = toArray(profileData.erp__financial_tools);
+    if (profileData.reporting_standards) mappedFields.bf_reporting_standards = toArray(profileData.reporting_standards);
+    if (profileData.industry_finance_exp) mappedFields.bf_industry_experience = toArray(profileData.industry_finance_exp);
+    if (profileData.insurance_domain) mappedFields.bf_insurance_domain = toArray(profileData.insurance_domain);
+    if (profileData.insurance_products) mappedFields.bf_insurance_products = toArray(profileData.insurance_products);
+    if (profileData.regulatory_licenses) mappedFields.bf_licensing = toArray(profileData.regulatory_licenses);
+    if (profileData.claims_underwriting) mappedFields.bf_claims_exp = toArray(profileData.claims_underwriting);
+    if (profileData.payment_systems) mappedFields.bf_payment_systems = toArray(profileData.payment_systems);
+    if (profileData.fintech_platforms) mappedFields.bf_digital_platforms = toArray(profileData.fintech_platforms);
+    if (profileData.regulatory_tech) mappedFields.bf_regtech_knowledge = toArray(profileData.regulatory_tech);
+    if (profileData.security_standards) mappedFields.bf_security_compliance = toArray(profileData.security_standards);
     
     // Pharma Domain field mappings
-    if (profileData.compliance_standards) mappedFields.ph_compliance = profileData.compliance_standards?.split(', ') || [];
-    if (profileData.equipment_handling) mappedFields.ph_equipment_handling = profileData.equipment_handling?.split(', ') || [];
+    if (profileData.compliance_standards) mappedFields.ph_compliance = toArray(profileData.compliance_standards);
+    if (profileData.equipment_handling) mappedFields.ph_equipment_handling = toArray(profileData.equipment_handling);
     if (profileData.ph1_shift_preference) mappedFields.ph_shift_preference = profileData.ph1_shift_preference;
-    if (profileData.quality_tools_used) mappedFields.ph_quality_tools = profileData.quality_tools_used?.split(', ') || [];
-    if (profileData.supply_chain_focus) mappedFields.ph_supply_chain_area = profileData.supply_chain_focus?.split(', ') || [];
-    if (profileData.regulatory_knowledge) mappedFields.ph_regulatory_knowledge = profileData.regulatory_knowledge?.split(', ') || [];
-    if (profileData.scm_tools_used) mappedFields.ph_tools_used = profileData.scm_tools_used?.split(', ') || [];
-    if (profileData.clinical_trial_phases) mappedFields.ph_trial_phase_exp = profileData.clinical_trial_phases?.split(', ') || [];
-    if (profileData.regulatory_documents) mappedFields.ph_regulatory_docs = profileData.regulatory_documents?.split(', ') || [];
+    if (profileData.quality_tools_used) mappedFields.ph_quality_tools = toArray(profileData.quality_tools_used);
+    if (profileData.supply_chain_focus) mappedFields.ph_supply_chain_area = toArray(profileData.supply_chain_focus);
+    if (profileData.regulatory_knowledge) mappedFields.ph_regulatory_knowledge = toArray(profileData.regulatory_knowledge);
+    if (profileData.scm_tools_used) mappedFields.ph_tools_used = toArray(profileData.scm_tools_used);
+    if (profileData.clinical_trial_phases) mappedFields.ph_trial_phase_exp = toArray(profileData.clinical_trial_phases);
+    if (profileData.regulatory_documents) mappedFields.ph_regulatory_docs = toArray(profileData.regulatory_documents);
     if (profileData.publications__papers) mappedFields.ph_publications = profileData.publications__papers;
-    if (profileData.lab_tools__platforms) mappedFields.ph_lab_tools = profileData.lab_tools__platforms?.split(', ') || [];
-    if (profileData.medical_licenses) mappedFields.ph_licenses = profileData.medical_licenses?.split(', ') || [];
-    if (profileData.languages_known) mappedFields.ph_languages = profileData.languages_known?.split(', ') || [];
+    if (profileData.lab_tools__platforms) mappedFields.ph_lab_tools = toArray(profileData.lab_tools__platforms);
+    if (profileData.medical_licenses) mappedFields.ph_licenses = toArray(profileData.medical_licenses);
+    if (profileData.languages_known) mappedFields.ph_languages = toArray(profileData.languages_known);
     if (profileData.ph4_shift_preference) mappedFields.ph_shift_preference = profileData.ph4_shift_preference;
     if (profileData.department) mappedFields.ph_department = profileData.department;
     
     // Hospitality Domain field mappings
     if (profileData.department) mappedFields.hs_department = profileData.department;
-    if (profileData.property_type) mappedFields.hs_property_type = profileData.property_type?.split(', ') || [];
-    if (profileData.guest_mgmt_system) mappedFields.hs_guest_mgmt_system = profileData.guest_mgmt_system?.split(', ') || [];
-    if (profileData.hs1_languages_known) mappedFields.hs_languages_known = profileData.hs1_languages_known?.split(', ') || [];
-    if (profileData.fb_specialization) mappedFields.hs_fnb_specialization = profileData.fb_specialization?.split(', ') || [];
-    if (profileData.service_type) mappedFields.hs_service_type = profileData.service_type?.split(', ') || [];
-    if (profileData.fb_certifications) mappedFields.hs_fnb_certifications = profileData.fb_certifications?.split(', ') || [];
-    if (profileData.beverage_knowledge) mappedFields.hs_beverage_knowledge = profileData.beverage_knowledge?.split(', ') || [];
-    if (profileData.travel_domain) mappedFields.hs_travel_domain = profileData.travel_domain?.split(', ') || [];
-    if (profileData.ticketing_systems) mappedFields.hs_ticketing_systems = profileData.ticketing_systems?.split(', ') || [];
-    if (profileData.destination_expertise) mappedFields.hs_destination_expertise = profileData.destination_expertise?.split(', ') || [];
-    if (profileData.customer_type) mappedFields.hs_customer_type = profileData.customer_type?.split(', ') || [];
-    if (profileData.event_type) mappedFields.hs_event_type = profileData.event_type?.split(', ') || [];
-    if (profileData.event_skills) mappedFields.hs_event_skills = profileData.event_skills?.split(', ') || [];
-    if (profileData.ticketing_platforms) mappedFields.hs_ticketing_platforms = profileData.ticketing_platforms?.split(', ') || [];
-    if (profileData.venue_type) mappedFields.hs_property_type_event = profileData.venue_type?.split(', ') || [];
+    if (profileData.property_type) mappedFields.hs_property_type = toArray(profileData.property_type);
+    if (profileData.guest_mgmt_system) mappedFields.hs_guest_mgmt_system = toArray(profileData.guest_mgmt_system);
+    if (profileData.hs1_languages_known) mappedFields.hs_languages_known = toArray(profileData.hs1_languages_known);
+    if (profileData.fb_specialization) mappedFields.hs_fnb_specialization = toArray(profileData.fb_specialization);
+    if (profileData.service_type) mappedFields.hs_service_type = toArray(profileData.service_type);
+    if (profileData.fb_certifications) mappedFields.hs_fnb_certifications = toArray(profileData.fb_certifications);
+    if (profileData.beverage_knowledge) mappedFields.hs_beverage_knowledge = toArray(profileData.beverage_knowledge);
+    if (profileData.travel_domain) mappedFields.hs_travel_domain = toArray(profileData.travel_domain);
+    if (profileData.ticketing_systems) mappedFields.hs_ticketing_systems = toArray(profileData.ticketing_systems);
+    if (profileData.destination_expertise) mappedFields.hs_destination_expertise = toArray(profileData.destination_expertise);
+    if (profileData.customer_type) mappedFields.hs_customer_type = toArray(profileData.customer_type);
+    if (profileData.event_type) mappedFields.hs_event_type = toArray(profileData.event_type);
+    if (profileData.event_skills) mappedFields.hs_event_skills = toArray(profileData.event_skills);
+    if (profileData.ticketing_platforms) mappedFields.hs_ticketing_platforms = toArray(profileData.ticketing_platforms);
+    if (profileData.venue_type) mappedFields.hs_property_type_event = toArray(profileData.venue_type);
     
     return mappedFields;
   };

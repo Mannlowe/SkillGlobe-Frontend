@@ -64,12 +64,100 @@ export const pharmaSubDomains = [
 ];
 
 const DomainFields: React.FC<DomainFieldsProps> = ({ profileType, subDomain, editingEntry, setEditingEntry }) => {
-  // Type-safe setter function that ensures compatibility between ProfileEntry types
-  const updateEditingEntry = (updater: (prev: ProfileEntry | null) => ProfileEntry | null) => {
-    setEditingEntry(prev => updater(prev as unknown as ProfileEntry) as unknown as BaseProfileEntry);
-  };
-  // State for managing dropdown visibility
+  // State for managing input values for each field separately
+  const [inputValues, setInputValues] = useState<Record<string, string>>({});
   const [openDropdowns, setOpenDropdowns] = useState<Record<string, boolean>>({});
+
+  // Type-safe setter function that ensures compatibility between ProfileEntry types
+  const updateEditingEntry = (updater: (prev: any) => any) => {
+    setEditingEntry(updater);
+  };
+
+  // Enhanced multi-value input with Enter key support
+  const renderEnhancedMultiValueInput = (
+    fieldName: string,
+    label: string,
+    placeholder: string,
+    colorClass: string,
+    mandatory: boolean = false
+  ) => {
+    const inputValue = inputValues[fieldName] || '';
+
+    const addValue = (value: string) => {
+      const trimmedValue = value.trim();
+      if (trimmedValue) {
+        const currentValues = (editingEntry as any)?.[fieldName] || [];
+        if (!currentValues.includes(trimmedValue)) {
+          updateEditingEntry(prev => prev ? { 
+            ...prev, 
+            [fieldName]: [...currentValues, trimmedValue] 
+          } : null);
+        }
+        // Clear the input for this specific field
+        setInputValues(prev => ({ ...prev, [fieldName]: '' }));
+      }
+    };
+
+    const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        addValue(inputValue);
+      }
+    };
+
+    const handleBlur = () => {
+      addValue(inputValue);
+    };
+
+    const handleInputChange = (value: string) => {
+      console.log(`Updating input for ${fieldName}:`, value); // Debug log
+      setInputValues(prev => ({ ...prev, [fieldName]: value }));
+    };
+
+    const removeValue = (valueToRemove: string) => {
+      const updated = ((editingEntry as any)?.[fieldName] || []).filter((v: string) => v !== valueToRemove);
+      updateEditingEntry(prev => prev ? { ...prev, [fieldName]: updated } : null);
+    };
+
+    return (
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          {label} {mandatory && <span className="text-red-500">*</span>}
+        </label>
+        <div className="flex gap-4">
+          <div className="w-1/2">
+            <input
+              type="text"
+              value={inputValue}
+              onChange={(e) => {
+                console.log(`Input change event for ${fieldName}:`, e.target.value);
+                handleInputChange(e.target.value);
+              }}
+              onKeyDown={handleKeyDown}
+              onBlur={handleBlur}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder={placeholder}
+            />
+          </div>
+          <div className="w-1/2 flex flex-wrap gap-2 p-3 border border-gray-300 rounded-md min-h-[42px] bg-gray-50">
+            {((editingEntry as any)?.[fieldName] || []).map((value: string) => (
+              <span key={value} className={`inline-flex items-center px-3 py-1 rounded-full text-sm ${colorClass}`}>
+                {value}
+                <button
+                  type="button"
+                  onClick={() => removeValue(value)}
+                  className="ml-2 hover:opacity-80"
+                >
+                  ×
+                </button>
+              </span>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
 
   // Field options for IT subdomains
   const itFieldOptions = {
@@ -309,16 +397,23 @@ const DomainFields: React.FC<DomainFieldsProps> = ({ profileType, subDomain, edi
         <label className="block text-sm font-medium text-gray-700 mb-1">
           {label} {mandatory && <span className="text-red-500">*</span>}
         </label>
-        <select
+        {/* <select
           value={(editingEntry as any)?.[fieldName] || ''}
           onChange={(e) => handleFieldChange(fieldName, e.target.value)}
           className="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
         >
-          <option value="">Select {label}</option>
-          {options.map((option) => (
+          <option value="">Select {label.toLowerCase()}</option>
+          {options.map(option => (
             <option key={option} value={option}>{option}</option>
           ))}
-        </select>
+        </select> */}
+        <input
+          type="text"
+          value={(editingEntry as any)?.[fieldName] || ''}
+          onChange={(e) => handleFieldChange(fieldName, e.target.value)}
+          className="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          placeholder={`Enter ${label.toLowerCase()}`}
+        />
       </div>
     );
   };
@@ -362,110 +457,29 @@ const DomainFields: React.FC<DomainFieldsProps> = ({ profileType, subDomain, edi
                 />
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Development Methodology
-                </label>
-                <select
-                  value={editingEntry?.it_dev_method || ''}
-                  onChange={(e) => updateEditingEntry(prev => prev ? { ...prev, it_dev_method: e.target.value } : null)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="">Select Methodology</option>
-                  {itFieldOptions.it_dev_method.map(method => (
-                    <option key={method} value={method}>{method}</option>
-                  ))}
-                </select>
-              </div>
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Domain Expertise
-              </label>
-              <div className="flex gap-4">
-                <div className="w-1/2">
-                  <select
-                    value=""
-                    onChange={(e) => {
-                      if (e.target.value && !(editingEntry?.it_domain_exp || []).includes(e.target.value)) {
-                        const updated = [...(editingEntry?.it_domain_exp || []), e.target.value];
-                        updateEditingEntry(prev => prev ? { ...prev, it_domain_exp: updated } : null);
-                      }
-                    }}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  >
-                    <option value="">Select domain expertise</option>
-                    {itFieldOptions.it_domain_exp
-                      .filter(domain => !(editingEntry?.it_domain_exp || []).includes(domain))
-                      .map(domain => (
-                        <option key={domain} value={domain}>{domain}</option>
-                      ))}
-                  </select>
-                </div>
-                <div className="w-1/2 flex flex-wrap gap-2 p-3 border border-gray-300 rounded-md min-h-[42px] bg-gray-50">
-                  {(editingEntry?.it_domain_exp || []).map(domain => (
-                    <span key={domain} className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-blue-100 text-blue-800">
-                      {domain}
-                      <button
-                        type="button"
-                        onClick={() => {
-                          const updated = (editingEntry?.it_domain_exp || []).filter(d => d !== domain);
-                          updateEditingEntry(prev => prev ? { ...prev, it_domain_exp: updated } : null);
-                        }}
-                        className="ml-2 text-blue-600 hover:text-blue-800"
-                      >
-                        ×
-                      </button>
-                    </span>
-                  ))}
-                </div>
-              </div>
-            </div>
+            {renderEnhancedMultiValueInput(
+              'it_dev_method',
+              'Development Methodology',
+              'Enter methodology and press Enter (e.g., Agile, Scrum, DevOps)',
+              'bg-blue-100 text-blue-800',
+              true
+            )}
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Tools & Platforms
-              </label>
-              <div className="flex gap-4">
-                <div className="w-1/2">
-                  <select
-                    value=""
-                    onChange={(e) => {
-                      if (e.target.value && !(editingEntry?.it_tools_used || []).includes(e.target.value)) {
-                        const updated = [...(editingEntry?.it_tools_used || []), e.target.value];
-                        updateEditingEntry(prev => prev ? { ...prev, it_tools_used: updated } : null);
-                      }
-                    }}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  >
-                    <option value="">Select tools</option>
-                    {itFieldOptions.it_tools_used
-                      .filter(tool => !(editingEntry?.it_tools_used || []).includes(tool))
-                      .map(tool => (
-                        <option key={tool} value={tool}>{tool}</option>
-                      ))}
-                  </select>
-                </div>
-                <div className="w-1/2 flex flex-wrap gap-2 p-3 border border-gray-300 rounded-md min-h-[42px] bg-gray-50">
-                  {(editingEntry?.it_tools_used || []).map(tool => (
-                    <span key={tool} className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-green-100 text-green-800">
-                      {tool}
-                      <button
-                        type="button"
-                        onClick={() => {
-                          const updated = (editingEntry?.it_tools_used || []).filter(t => t !== tool);
-                          updateEditingEntry(prev => prev ? { ...prev, it_tools_used: updated } : null);
-                        }}
-                        className="ml-2 text-green-600 hover:text-green-800"
-                      >
-                        ×
-                      </button>
-                    </span>
-                  ))}
-                </div>
-              </div>
-            </div>
+            {renderEnhancedMultiValueInput(
+              'it_domain_exp',
+              'Domain Expertise',
+              'Enter domain and press Enter (e.g., FinTech, HealthTech, EdTech)',
+              'bg-purple-100 text-purple-800'
+            )}
+
+            {renderEnhancedMultiValueInput(
+              'it_tools_used',
+              'Tools & Platforms',
+              'Enter tool/platform and press Enter (e.g., Jira, Confluence, Docker)',
+              'bg-green-100 text-green-800'
+            )}
           </div>
         );
 
@@ -473,93 +487,19 @@ const DomainFields: React.FC<DomainFieldsProps> = ({ profileType, subDomain, edi
       case 'Data & Emerging Tech (IT2)':
         return (
           <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Tools Used
-              </label>
-              <div className="flex gap-4">
-                <div className="w-1/2">
-                  <select
-                    value=""
-                    onChange={(e) => {
-                      if (e.target.value && !(editingEntry?.it_tools || []).includes(e.target.value)) {
-                        const updated = [...(editingEntry?.it_tools || []), e.target.value];
-                        updateEditingEntry(prev => prev ? { ...prev, it_tools: updated } : null);
-                      }
-                    }}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  >
-                    <option value="">Select tools</option>
-                    {itFieldOptions.it_tools
-                      .filter(tool => !(editingEntry?.it_tools || []).includes(tool))
-                      .map(tool => (
-                        <option key={tool} value={tool}>{tool}</option>
-                      ))}
-                  </select>
-                </div>
-                <div className="w-1/2 flex flex-wrap gap-2 p-3 border border-gray-300 rounded-md min-h-[42px] bg-gray-50">
-                  {(editingEntry?.it_tools || []).map(tool => (
-                    <span key={tool} className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-purple-100 text-purple-800">
-                      {tool}
-                      <button
-                        type="button"
-                        onClick={() => {
-                          const updated = (editingEntry?.it_tools || []).filter(t => t !== tool);
-                          updateEditingEntry(prev => prev ? { ...prev, it_tools: updated } : null);
-                        }}
-                        className="ml-2 text-purple-600 hover:text-purple-800"
-                      >
-                        ×
-                      </button>
-                    </span>
-                  ))}
-                </div>
-              </div>
-            </div>
+            {renderEnhancedMultiValueInput(
+              'it_tools',
+              'Tools Used',
+              'Enter tool and press Enter (e.g., Tableau, PowerBI, Hadoop, Spark)',
+              'bg-purple-100 text-purple-800'
+            )}
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Data Domain Focus
-              </label>
-              <div className="flex gap-4">
-                <div className="w-1/2">
-                  <select
-                    value=""
-                    onChange={(e) => {
-                      if (e.target.value && !(editingEntry?.it_data_domain_exp || []).includes(e.target.value)) {
-                        const updated = [...(editingEntry?.it_data_domain_exp || []), e.target.value];
-                        updateEditingEntry(prev => prev ? { ...prev, it_data_domain_exp: updated } : null);
-                      }
-                    }}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  >
-                    <option value="">Select data domains</option>
-                    {itFieldOptions.it_data_domain_exp
-                      .filter(domain => !(editingEntry?.it_data_domain_exp || []).includes(domain))
-                      .map(domain => (
-                        <option key={domain} value={domain}>{domain}</option>
-                      ))}
-                  </select>
-                </div>
-                <div className="w-1/2 flex flex-wrap gap-2 p-3 border border-gray-300 rounded-md min-h-[42px] bg-gray-50">
-                  {(editingEntry?.it_data_domain_exp || []).map(domain => (
-                    <span key={domain} className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-indigo-100 text-indigo-800">
-                      {domain}
-                      <button
-                        type="button"
-                        onClick={() => {
-                          const updated = (editingEntry?.it_data_domain_exp || []).filter(d => d !== domain);
-                          updateEditingEntry(prev => prev ? { ...prev, it_data_domain_exp: updated } : null);
-                        }}
-                        className="ml-2 text-indigo-600 hover:text-indigo-800"
-                      >
-                        ×
-                      </button>
-                    </span>
-                  ))}
-                </div>
-              </div>
-            </div>
+            {renderEnhancedMultiValueInput(
+              'it_data_domain_exp',
+              'Data Domain Focus',
+              'Enter domain and press Enter (e.g., Healthcare, Finance, Retail, IoT)',
+              'bg-indigo-100 text-indigo-800'
+            )}
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
@@ -596,140 +536,37 @@ const DomainFields: React.FC<DomainFieldsProps> = ({ profileType, subDomain, edi
       // Cybersecurity & Networks (IT3) Fields
       case 'Cybersecurity & Networks (IT3)':
         return (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Compliance
-              </label>
-              <div className="flex gap-4">
-                <div className="w-1/2">
-                  <select
-                    value=""
-                    onChange={(e) => {
-                      if (e.target.value && !(editingEntry?.it_compliance || []).includes(e.target.value)) {
-                        const updated = [...(editingEntry?.it_compliance || []), e.target.value];
-                        updateEditingEntry(prev => prev ? { ...prev, it_compliance: updated } : null);
-                      }
-                    }}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  >
-                    <option value="">{(editingEntry?.it_compliance || []).length} compliance selected</option>
-                    {itFieldOptions.it_compliance
-                      .filter(compliance => !(editingEntry?.it_compliance || []).includes(compliance))
-                      .map(compliance => (
-                        <option key={compliance} value={compliance}>{compliance}</option>
-                      ))}
-                  </select>
-                </div>
-                <div className="w-1/2 flex flex-wrap gap-2 p-3 border border-gray-300 rounded-md min-h-[42px] bg-gray-50">
-                  {(editingEntry?.it_compliance || []).map(compliance => (
-                    <span key={compliance} className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-red-100 text-red-800">
-                      {compliance}
-                      <button
-                        type="button"
-                        onClick={() => {
-                          const updated = (editingEntry?.it_compliance || []).filter(c => c !== compliance);
-                          updateEditingEntry(prev => prev ? { ...prev, it_compliance: updated } : null);
-                        }}
-                        className="ml-2 text-red-600 hover:text-red-800"
-                      >
-                        ×
-                      </button>
-                    </span>
-                  ))}
-                </div>
-              </div>
-            </div>
+          <div className="space-y-4">
+            {renderEnhancedMultiValueInput(
+              'it_compliance',
+              'Compliance',
+              'Enter compliance standard and press Enter (e.g., ISO27001, GDPR, HIPAA)',
+              'bg-red-100 text-red-800'
+            )}
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Security Tools Used
-              </label>
-              <div className="flex gap-4">
-                <div className="w-1/2">
-                  <select
-                    value=""
-                    onChange={(e) => {
-                      if (e.target.value && !(editingEntry?.it_security_tools || []).includes(e.target.value)) {
-                        const updated = [...(editingEntry?.it_security_tools || []), e.target.value];
-                        updateEditingEntry(prev => prev ? { ...prev, it_security_tools: updated } : null);
-                      }
-                    }}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  >
-                    <option value="">{(editingEntry?.it_security_tools || []).length} security tools selected</option>
-                    {itFieldOptions.it_security_tools
-                      .filter(tool => !(editingEntry?.it_security_tools || []).includes(tool))
-                      .map(tool => (
-                        <option key={tool} value={tool}>{tool}</option>
-                      ))}
-                  </select>
-                </div>
-                <div className="w-1/2 flex flex-wrap gap-2 p-3 border border-gray-300 rounded-md min-h-[42px] bg-gray-50">
-                  {(editingEntry?.it_security_tools || []).map(tool => (
-                    <span key={tool} className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-orange-100 text-orange-800">
-                      {tool}
-                      <button
-                        type="button"
-                        onClick={() => {
-                          const updated = (editingEntry?.it_security_tools || []).filter(t => t !== tool);
-                          updateEditingEntry(prev => prev ? { ...prev, it_security_tools: updated } : null);
-                        }}
-                        className="ml-2 text-orange-600 hover:text-orange-800"
-                      >
-                        ×
-                      </button>
-                    </span>
-                  ))}
-                </div>
-              </div>
-            </div>
+            {renderEnhancedMultiValueInput(
+              'it_security_tools',
+              'Security Tools Used',
+              'Enter security tool and press Enter (e.g., SIEM, IDS, Firewalls, Splunk)',
+              'bg-orange-100 text-orange-800'
+            )}
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Incident Handling
-              </label>
-              <div className="flex gap-4">
-                <div className="w-1/2">
-                  <select
-                    value=""
-                    onChange={(e) => {
-                      if (e.target.value && !(editingEntry?.it_incident_exp || []).includes(e.target.value)) {
-                        const updated = [...(editingEntry?.it_incident_exp || []), e.target.value];
-                        updateEditingEntry(prev => prev ? { ...prev, it_incident_exp: updated } : null);
-                      }
-                    }}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  >
-                    <option value="">{(editingEntry?.it_incident_exp || []).length} incident handling selected</option>
-                    {itFieldOptions.it_incident_exp
-                      .filter(exp => !(editingEntry?.it_incident_exp || []).includes(exp))
-                      .map(exp => (
-                        <option key={exp} value={exp}>{exp}</option>
-                      ))}
-                  </select>
-                </div>
-                <div className="w-1/2 flex flex-wrap gap-2 p-3 border border-gray-300 rounded-md min-h-[42px] bg-gray-50">
-                  {(editingEntry?.it_incident_exp || []).map(exp => (
-                    <span key={exp} className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-yellow-100 text-yellow-800">
-                      {exp}
-                      <button
-                        type="button"
-                        onClick={() => {
-                          const updated = (editingEntry?.it_incident_exp || []).filter(e => e !== exp);
-                          setEditingEntry((prev: ProfileEntry | null) => prev ? { ...prev, it_incident_exp: updated } : null);
-                        }}
-                        className="ml-2 text-yellow-600 hover:text-yellow-800"
-                      >
-                        ×
-                      </button>
-                    </span>
-                  ))}
-                </div>
-              </div>
-            </div>
+            {renderEnhancedMultiValueInput(
+              'it_incident_exp',
+              'Incident Handling',
+              'Enter experience and press Enter (e.g., SOC, Threat Hunting)',
+              'bg-yellow-100 text-yellow-800'
+            )}
 
-            <div>
+            
+            {renderEnhancedMultiValueInput(
+              'it_network_exp',
+              'Network Expertise',
+              'Enter expertise and press Enter (e.g., Routing, Switching, VPNs, SD-WAN)',
+              'bg-teal-100 text-teal-800'
+            )}
+
+<div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Security Clearance
               </label>
@@ -743,50 +580,13 @@ const DomainFields: React.FC<DomainFieldsProps> = ({ profileType, subDomain, edi
                   <option key={clearance} value={clearance}>{clearance}</option>
                 ))}
               </select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Network Expertise
-              </label>
-              <div className="flex gap-4">
-                <div className="w-1/2">
-                  <select
-                    value=""
-                    onChange={(e) => {
-                      if (e.target.value && !(editingEntry?.it_network_exp || []).includes(e.target.value)) {
-                        const updated = [...(editingEntry?.it_network_exp || []), e.target.value];
-                        setEditingEntry((prev: ProfileEntry | null) => prev ? { ...prev, it_network_exp: updated } : null);
-                      }
-                    }}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  >
-                    <option value="">{(editingEntry?.it_network_exp || []).length} network expertise selected</option>
-                    {itFieldOptions.it_network_exp
-                      .filter(exp => !(editingEntry?.it_network_exp || []).includes(exp))
-                      .map(exp => (
-                        <option key={exp} value={exp}>{exp}</option>
-                      ))}
-                  </select>
-                </div>
-                <div className="w-1/2 flex flex-wrap gap-2 p-3 border border-gray-300 rounded-md min-h-[42px] bg-gray-50">
-                  {(editingEntry?.it_network_exp || []).map(exp => (
-                    <span key={exp} className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-teal-100 text-teal-800">
-                      {exp}
-                      <button
-                        type="button"
-                        onClick={() => {
-                          const updated = (editingEntry?.it_network_exp || []).filter(e => e !== exp);
-                          setEditingEntry((prev: ProfileEntry | null) => prev ? { ...prev, it_network_exp: updated } : null);
-                        }}
-                        className="ml-2 text-teal-600 hover:text-teal-800"
-                      >
-                        ×
-                      </button>
-                    </span>
-                  ))}
-                </div>
-              </div>
+              {/* <input
+                type="text"
+                value={editingEntry?.it_security_clearance || ''}
+                onChange={(e) => setEditingEntry((prev: ProfileEntry | null) => prev ? { ...prev, it_security_clearance: e.target.value } : null)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="Enter security clearance level (e.g., None, Confidential, Secret, Top Secret)"
+              /> */}
             </div>
           </div>
         );
@@ -794,11 +594,11 @@ const DomainFields: React.FC<DomainFieldsProps> = ({ profileType, subDomain, edi
       case 'Banking':
         return (
           <div className="space-y-4">
-            {renderMultiSelect('bankingDomain', bankingDomains, 'Banking Domain', true)}
-            {renderMultiSelect('bankingCertifications', bankingCertifications, 'Certifications')}
-            {renderMultiSelect('complianceKnowledge', complianceKnowledge, 'Compliance Knowledge')}
-            {renderMultiSelect('coreBankingSoftware', coreBankingSoftware, 'Core Banking Software')}
-            {renderMultiSelect('regulatoryExperience', regulatoryExperience, 'Regulatory Experience')}
+            {renderTextInput('bankingDomain', 'Banking Domain', 'text', true)}
+            {renderTextInput('bankingCertifications', 'Certifications')}
+            {renderTextInput('complianceKnowledge', 'Compliance Knowledge')}
+            {renderTextInput('coreBankingSoftware', 'Core Banking Software')}
+            {renderTextInput('regulatoryExperience', 'Regulatory Experience')}
           </div>
         );
 
@@ -806,10 +606,10 @@ const DomainFields: React.FC<DomainFieldsProps> = ({ profileType, subDomain, edi
         return (
           <div className="space-y-4">
             {renderSelect('hospitalityDepartment', hospitalityDepartments, 'Department', true)}
-            {renderMultiSelect('hospitalitySkills', hospitalitySkills, 'Skills')}
-            {renderMultiSelect('languagesKnown', languages, 'Languages Known')}
-            {renderMultiSelect('hospitalityCertifications', hospitalityCertifications, 'Certifications')}
-            {renderMultiSelect('propertyType', propertyTypes, 'Property Type')}
+            {renderTextInput('hospitalitySkills', 'Skills')}
+            {renderTextInput('languagesKnown', 'Languages Known')}
+            {renderTextInput('hospitalityCertifications', 'Certifications')}
+            {renderTextInput('propertyType', 'Property Type')}
             {renderSelect('willingToRelocate', ['Yes', 'No'], 'Willing to Relocate')}
           </div>
         );
@@ -831,10 +631,34 @@ const DomainFields: React.FC<DomainFieldsProps> = ({ profileType, subDomain, edi
       case 'MF1':
         return (
           <div className="space-y-4">
-            {renderMultiSelect('mf_production_area', manufacturingFieldOptions.mf_production_area, 'Production Area', true)}
-            {renderMultiSelect('mf_machine_handling', manufacturingFieldOptions.mf_machine_handling, 'Machine Handling')}
-            {renderMultiSelect('mf_safety_cert', manufacturingFieldOptions.mf_safety_cert, 'Safety Training')}
-            {renderSelect('mf_shift_preference', manufacturingFieldOptions.mf_shift_preference, 'Shift Preference')}
+            {renderEnhancedMultiValueInput(
+              'mf_production_area',
+              'Production Area',
+              'Enter production area and press Enter (e.g., Assembly, Fabrication, Packaging)',
+              'bg-blue-100 text-blue-800',
+              true
+            )}
+
+            {renderEnhancedMultiValueInput(
+              'mf_machine_handling',
+              'Machine Handling',
+              'Enter machine and press Enter (e.g., CNC, Lathe, Injection Molding)',
+              'bg-green-100 text-green-800'
+            )}
+
+            {renderEnhancedMultiValueInput(
+              'mf_safety_cert',
+              'Safety Training',
+              'Enter training and press Enter (e.g., OSHA, Fire Safety, PPE)',
+              'bg-yellow-100 text-yellow-800'
+            )}
+
+            {renderEnhancedMultiValueInput(
+              'mf_shift_preference',
+              'Shift Preference',
+              'Enter preference and press Enter (e.g., Day Shift, Night Shift, Rotational)',
+              'bg-purple-100 text-purple-800'
+            )}
           </div>
         );
 
@@ -842,10 +666,34 @@ const DomainFields: React.FC<DomainFieldsProps> = ({ profileType, subDomain, edi
       case 'MF2':
         return (
           <div className="space-y-4">
-            {renderMultiSelect('mf_engineering_domain', manufacturingFieldOptions.mf_engineering_domain, 'Engineering Domain', true)}
-            {renderMultiSelect('mf_design_tools', manufacturingFieldOptions.mf_design_tools, 'Design Tools')}
-            {renderMultiSelect('mf_prototyping_exp', manufacturingFieldOptions.mf_prototyping_exp, 'Prototyping Experience')}
-            {renderMultiSelect('mf_regulatory_knowledge', manufacturingFieldOptions.mf_regulatory_knowledge, 'Regulatory Standards')}
+            {renderEnhancedMultiValueInput(
+              'mf_engineering_domain',
+              'Engineering Domain',
+              'Enter domain and press Enter (e.g., Automotive, Aerospace, Rail)',
+              'bg-indigo-100 text-indigo-800',
+              true
+            )}
+
+            {renderEnhancedMultiValueInput(
+              'mf_design_tools',
+              'Design Tools',
+              'Enter tool and press Enter (e.g., AutoCAD, SolidWorks, CATIA)',
+              'bg-cyan-100 text-cyan-800'
+            )}
+
+            {renderEnhancedMultiValueInput(
+              'mf_prototyping_exp',
+              'Prototyping Experience',
+              'Enter experience and press Enter (e.g., 3D Printing, CNC, Injection Molding)',
+              'bg-emerald-100 text-emerald-800'
+            )}
+
+            {renderEnhancedMultiValueInput(
+              'mf_regulatory_knowledge',
+              'Regulatory Standards',
+              'Enter knowledge and press Enter (e.g., ISO/TS16949, AS9100, BIS)',
+              'bg-red-100 text-red-800'
+            )}
           </div>
         );
 
@@ -853,10 +701,34 @@ const DomainFields: React.FC<DomainFieldsProps> = ({ profileType, subDomain, edi
       case 'MF3':
         return (
           <div className="space-y-4">
-            {renderMultiSelect('mf_quality_tools', manufacturingFieldOptions.mf_quality_tools, 'Quality Tools', true)}
-            {renderMultiSelect('mf_testing_methods', manufacturingFieldOptions.mf_testing_methods, 'Testing Methods')}
-            {renderMultiSelect('mf_certifications_qm', manufacturingFieldOptions.mf_certifications_qm, 'Quality Certifications')}
-            {renderMultiSelect('mf_maintenance_exp', manufacturingFieldOptions.mf_maintenance_exp, 'Maintenance Expertise')}
+            {renderEnhancedMultiValueInput(
+              'mf_quality_tools',
+              'Quality Tools',
+              'Enter tool and press Enter (e.g., Six Sigma, Lean, SPC)',
+              'bg-purple-100 text-purple-800',
+              true
+            )}
+
+            {renderEnhancedMultiValueInput(
+              'mf_testing_methods',
+              'Testing Methods',
+              'Enter method and press Enter (e.g., NDT, Destructive Testing, CMM)',
+              'bg-blue-100 text-blue-800'
+            )}
+
+            {renderEnhancedMultiValueInput(
+              'mf_certifications_qm',
+              'Quality Certifications',
+              'Enter certification and press Enter (e.g., ISO 9001, Six Sigma Black Belt)',
+              'bg-orange-100 text-orange-800'
+            )}
+
+            {renderEnhancedMultiValueInput(
+              'mf_maintenance_exp',
+              'Maintenance Experience',
+              'Enter experience and press Enter (e.g., Preventive, Predictive, TPM)',
+              'bg-emerald-100 text-emerald-800'
+            )}
           </div>
         );
 
@@ -864,10 +736,31 @@ const DomainFields: React.FC<DomainFieldsProps> = ({ profileType, subDomain, edi
       case 'MF4':
         return (
           <div className="space-y-4">
-            {renderMultiSelect('mf_supply_area', manufacturingFieldOptions.mf_supply_area, 'Supply Chain Area', true)}
-            {renderMultiSelect('mf_material_expertise', manufacturingFieldOptions.mf_material_expertise, 'Material Expertise')}
-            {renderMultiSelect('mf_tools_used', manufacturingFieldOptions.mf_tools_used, 'SCM Tools')}
-            {renderMultiSelect('mf_regulatory_compliance', manufacturingFieldOptions.mf_regulatory_compliance, 'Regulatory Compliance')}
+            {renderEnhancedMultiValueInput(
+              'mf_supply_area',
+              'Supply Chain Area',
+              'Enter area and press Enter (e.g., Procurement, Logistics, Warehousing)',
+              'bg-indigo-100 text-indigo-800',
+              true
+            )}
+            {renderEnhancedMultiValueInput(
+              'mf_material_expertise',
+              'Material Expertise',
+              'Enter expertise and press Enter (e.g., Steel, Plastics, Composites)',
+              'bg-teal-100 text-teal-800'
+            )}
+            {renderEnhancedMultiValueInput(
+              'mf_tools_used',
+              'SCM Tools',
+              'Enter tool and press Enter (e.g., SAP, Oracle SCM, JDA)',
+              'bg-cyan-100 text-cyan-800'
+            )}
+            {renderEnhancedMultiValueInput(
+              'mf_regulatory_compliance',
+              'Regulatory Compliance',
+              'Enter compliance and press Enter (e.g., ISO 14001, REACH, RoHS)',
+              'bg-rose-100 text-rose-800'
+            )}
           </div>
         );
 
@@ -889,10 +782,35 @@ const DomainFields: React.FC<DomainFieldsProps> = ({ profileType, subDomain, edi
       case 'BF1':
         return (
           <div className="space-y-4">
-            {renderMultiSelect('bf_banking_domain', bankingFieldOptions.bf_banking_domain, 'Banking Domain', true)}
-            {renderMultiSelect('bf_core_banking_systems', bankingFieldOptions.bf_core_banking_systems, 'Core Banking Systems')}
-            {renderMultiSelect('bf_regulatory_exp', bankingFieldOptions.bf_regulatory_exp, 'Regulatory Exposure')}
-            {renderMultiSelect('bf_compliance_knowledge', bankingFieldOptions.bf_compliance_knowledge, 'Compliance Knowledge')}
+            {renderEnhancedMultiValueInput(
+              'bf_banking_domain',
+              'Banking Domain',
+              'Enter domain and press Enter (e.g., Retail Banking, Corporate Banking)',
+              'bg-blue-100 text-blue-800',
+              true
+            )}
+
+            {renderEnhancedMultiValueInput(
+              'bf_core_banking_systems',
+              'Core Banking Systems',
+              'Enter system and press Enter (e.g., Temenos, Finacle, Oracle FLEXCUBE)',
+              'bg-green-100 text-green-800',
+              true
+            )}
+
+            {renderEnhancedMultiValueInput(
+              'bf_regulatory_exp',
+              'Regulatory Exposure',
+              'Enter regulation and press Enter (e.g., Basel III, GDPR, PCI DSS)',
+              'bg-yellow-100 text-yellow-800'
+            )}
+
+            {renderEnhancedMultiValueInput(
+              'bf_compliance_knowledge',
+              'Compliance Knowledge',
+              'Enter compliance area and press Enter (e.g., AML, KYC, SOX)',
+              'bg-purple-100 text-purple-800'
+            )}
           </div>
         );
 
@@ -900,10 +818,34 @@ const DomainFields: React.FC<DomainFieldsProps> = ({ profileType, subDomain, edi
       case 'BF2':
         return (
           <div className="space-y-4">
-            {renderMultiSelect('bf_finance_area', bankingFieldOptions.bf_finance_area, 'Finance Focus Area', true)}
-            {renderMultiSelect('bf_erp_tools', bankingFieldOptions.bf_erp_tools, 'ERP / Financial Tools')}
-            {renderMultiSelect('bf_reporting_standards', bankingFieldOptions.bf_reporting_standards, 'Reporting Standards')}
-            {renderMultiSelect('bf_industry_experience', bankingFieldOptions.bf_industry_experience, 'Industry Finance Exp')}
+            {renderEnhancedMultiValueInput(
+              'bf_finance_area',
+              'Finance Focus Area',
+              'Enter area and press Enter (e.g., Investment Banking, Asset Management, Risk)',
+              'bg-indigo-100 text-indigo-800',
+              true
+            )}
+
+            {renderEnhancedMultiValueInput(
+              'bf_erp_tools',
+              'ERP / Financial Tools',
+              'Enter tool and press Enter (e.g., SAP, Oracle ERP, QuickBooks)',
+              'bg-cyan-100 text-cyan-800'
+            )}
+
+            {renderEnhancedMultiValueInput(
+              'bf_reporting_standards',
+              'Reporting Standards',
+              'Enter standard and press Enter (e.g., GAAP, IFRS, SOX)',
+              'bg-pink-100 text-pink-800'
+            )}
+
+            {renderEnhancedMultiValueInput(
+              'bf_industry_experience',
+              'Industry Finance Experience',
+              'Enter experience and press Enter (e.g., Healthcare Finance, Tech Finance)',
+              'bg-red-100 text-red-800'
+            )}
           </div>
         );
 
@@ -911,10 +853,34 @@ const DomainFields: React.FC<DomainFieldsProps> = ({ profileType, subDomain, edi
       case 'BF3':
         return (
           <div className="space-y-4">
-            {renderMultiSelect('bf_insurance_domain', bankingFieldOptions.bf_insurance_domain, 'Insurance Domain', true)}
-            {renderMultiSelect('bf_insurance_products', bankingFieldOptions.bf_insurance_products, 'Insurance Products')}
-            {renderMultiSelect('bf_licensing', bankingFieldOptions.bf_licensing, 'Regulatory Licenses')}
-            {renderMultiSelect('bf_claims_exp', bankingFieldOptions.bf_claims_exp, 'Claims & Underwriting')}
+            {renderEnhancedMultiValueInput(
+              'bf_insurance_domain',
+              'Insurance Domain',
+              'Enter domain and press Enter (e.g., Life Insurance, Health Insurance)',
+              'bg-teal-100 text-teal-800',
+              true
+            )}
+
+            {renderEnhancedMultiValueInput(
+              'bf_insurance_products',
+              'Insurance Products',
+              'Enter product and press Enter (e.g., Term Life, Annuities, Auto)',
+              'bg-orange-100 text-orange-800'
+            )}
+
+            {renderEnhancedMultiValueInput(
+              'bf_licensing',
+              'Regulatory Licenses',
+              'Enter license and press Enter (e.g., Series 7, Series 66, Life & Health)',
+              'bg-emerald-100 text-emerald-800'
+            )}
+
+            {renderEnhancedMultiValueInput(
+              'bf_claims_exp',
+              'Claims & Underwriting',
+              'Enter experience and press Enter (e.g., Claims Processing, Risk Assessment)',
+              'bg-violet-100 text-violet-800'
+            )}
           </div>
         );
 
@@ -922,10 +888,34 @@ const DomainFields: React.FC<DomainFieldsProps> = ({ profileType, subDomain, edi
       case 'BF4':
         return (
           <div className="space-y-4">
-            {renderMultiSelect('bf_payment_systems', bankingFieldOptions.bf_payment_systems, 'Payment Systems', true)}
-            {renderMultiSelect('bf_digital_platforms', bankingFieldOptions.bf_digital_platforms, 'FinTech Platforms')}
-            {renderMultiSelect('bf_regtech_knowledge', bankingFieldOptions.bf_regtech_knowledge, 'Regulatory Tech')}
-            {renderMultiSelect('bf_security_compliance', bankingFieldOptions.bf_security_compliance, 'Security Standards')}
+            {renderEnhancedMultiValueInput(
+              'bf_payment_systems',
+              'Payment Systems',
+              'Enter system and press Enter (e.g., Stripe, PayPal, Square)',
+              'bg-blue-100 text-blue-800',
+              true
+            )}
+
+            {renderEnhancedMultiValueInput(
+              'bf_digital_platforms',
+              'FinTech Platforms',
+              'Enter platform and press Enter (e.g., Robinhood, Coinbase, Plaid)',
+              'bg-green-100 text-green-800'
+            )}
+
+            {renderEnhancedMultiValueInput(
+              'bf_regtech_knowledge',
+              'Regulatory Tech',
+              'Enter knowledge and press Enter (e.g., Compliance Automation, Risk Management)',
+              'bg-yellow-100 text-yellow-800'
+            )}
+
+            {renderEnhancedMultiValueInput(
+              'bf_security_compliance',
+              'Security Standards',
+              'Enter standard and press Enter (e.g., PCI DSS, ISO 27001, SOC 2)',
+              'bg-purple-100 text-purple-800'
+            )}
           </div>
         );
 
@@ -947,10 +937,34 @@ const DomainFields: React.FC<DomainFieldsProps> = ({ profileType, subDomain, edi
       case 'HS1':
         return (
           <div className="space-y-4">
-            {renderSelect('hs_department', hospitalityFieldOptions.hs_department, 'Department', true)}
-            {renderMultiSelect('hs_property_type', hospitalityFieldOptions.hs_property_type, 'Property Type')}
-            {renderMultiSelect('hs_guest_mgmt_system', hospitalityFieldOptions.hs_guest_mgmt_system, 'Guest Management System')}
-            {renderMultiSelect('hs_languages_known', hospitalityFieldOptions.hs_languages_known, 'Languages Known')}
+            {renderEnhancedMultiValueInput(
+              'hs_department',
+              'Department',
+              'Enter department and press Enter (e.g., Front Office, Housekeeping, Concierge)',
+              'bg-blue-100 text-blue-800',
+              true
+            )}
+
+            {renderEnhancedMultiValueInput(
+              'hs_property_type',
+              'Property Type',
+              'Enter type and press Enter (e.g., Hotel, Resort, Boutique)',
+              'bg-green-100 text-green-800'
+            )}
+
+            {renderEnhancedMultiValueInput(
+              'hs_guest_mgmt_system',
+              'Guest Management System',
+              'Enter system and press Enter (e.g., Opera, Fidelio, RoomMaster)',
+              'bg-purple-100 text-purple-800'
+            )}
+
+            {renderEnhancedMultiValueInput(
+              'hs_languages_known',
+              'Languages Known',
+              'Enter language and press Enter (e.g., English, Spanish, French)',
+              'bg-purple-100 text-purple-800'
+            )}
           </div>
         );
 
@@ -958,10 +972,34 @@ const DomainFields: React.FC<DomainFieldsProps> = ({ profileType, subDomain, edi
       case 'HS2':
         return (
           <div className="space-y-4">
-            {renderMultiSelect('hs_fnb_specialization', hospitalityFieldOptions.hs_fnb_specialization, 'F&B Specialization', true)}
-            {renderMultiSelect('hs_service_type', hospitalityFieldOptions.hs_service_type, 'Service Type')}
-            {renderMultiSelect('hs_fnb_certifications', hospitalityFieldOptions.hs_fnb_certifications, 'F&B Certifications')}
-            {renderMultiSelect('hs_beverage_knowledge', hospitalityFieldOptions.hs_beverage_knowledge, 'Beverage Knowledge')}
+            {renderEnhancedMultiValueInput(
+              'hs_fnb_specialization',
+              'F&B Specialization',
+              'Enter specialization and press Enter (e.g., Fine Dining, Casual Dining, Catering)',
+              'bg-indigo-100 text-indigo-800',
+              true
+            )}
+
+            {renderEnhancedMultiValueInput(
+              'hs_service_type',
+              'Service Type',
+              'Enter type and press Enter (e.g., Table Service, Counter Service, Buffet)',
+              'bg-cyan-100 text-cyan-800'
+            )}
+
+            {renderEnhancedMultiValueInput(
+              'hs_fnb_certifications',
+              'F&B Certifications',
+              'Enter certification and press Enter (e.g., ServSafe, HACCP, Sommelier)',
+              'bg-pink-100 text-pink-800'
+            )}
+
+            {renderEnhancedMultiValueInput(
+              'hs_beverage_knowledge',
+              'Beverage Knowledge',
+              'Enter knowledge and press Enter (e.g., Wine, Cocktails, Coffee)',
+              'bg-red-100 text-red-800'
+            )}
           </div>
         );
 
@@ -969,10 +1007,34 @@ const DomainFields: React.FC<DomainFieldsProps> = ({ profileType, subDomain, edi
       case 'HS3':
         return (
           <div className="space-y-4">
-            {renderMultiSelect('hs_travel_domain', hospitalityFieldOptions.hs_travel_domain, 'Travel Domain', true)}
-            {renderMultiSelect('hs_ticketing_systems', hospitalityFieldOptions.hs_ticketing_systems, 'Ticketing Systems')}
-            {renderMultiSelect('hs_destination_expertise', hospitalityFieldOptions.hs_destination_expertise, 'Destination Expertise')}
-            {renderMultiSelect('hs_customer_type', hospitalityFieldOptions.hs_customer_type, 'Customer Type')}
+            {renderEnhancedMultiValueInput(
+              'hs_travel_domain',
+              'Travel Domain',
+              'Enter domain and press Enter (e.g., Corporate Travel, Leisure Travel, Adventure)',
+              'bg-teal-100 text-teal-800',
+              true
+            )}
+
+            {renderEnhancedMultiValueInput(
+              'hs_ticketing_systems',
+              'Ticketing Systems',
+              'Enter system and press Enter (e.g., Amadeus, Sabre, Galileo)',
+              'bg-orange-100 text-orange-800'
+            )}
+
+            {renderEnhancedMultiValueInput(
+              'hs_destination_expertise',
+              'Destination Expertise',
+              'Enter destination and press Enter (e.g., Europe, Asia, Caribbean)',
+              'bg-emerald-100 text-emerald-800'
+            )}
+
+            {renderEnhancedMultiValueInput(
+              'hs_customer_type',
+              'Customer Type',
+              'Enter type and press Enter (e.g., Business Travelers, Families, Solo Travelers)',
+              'bg-violet-100 text-violet-800'
+            )}
           </div>
         );
 
@@ -980,10 +1042,34 @@ const DomainFields: React.FC<DomainFieldsProps> = ({ profileType, subDomain, edi
       case 'HS4':
         return (
           <div className="space-y-4">
-            {renderMultiSelect('hs_event_type', hospitalityFieldOptions.hs_event_type, 'Event Type', true)}
-            {renderMultiSelect('hs_event_skills', hospitalityFieldOptions.hs_event_skills, 'Event Skills')}
-            {renderMultiSelect('hs_ticketing_platforms', hospitalityFieldOptions.hs_ticketing_platforms, 'Ticketing Platforms')}
-            {renderMultiSelect('hs_property_type_event', hospitalityFieldOptions.hs_property_type_event, 'Venue Type')}
+            {renderEnhancedMultiValueInput(
+              'hs_event_type',
+              'Event Type',
+              'Enter type and press Enter (e.g., Corporate Events, Weddings, Conferences)',
+              'bg-blue-100 text-blue-800',
+              true
+            )}
+
+            {renderEnhancedMultiValueInput(
+              'hs_event_skills',
+              'Event Skills',
+              'Enter skill and press Enter (e.g., Event Planning, Vendor Management, Logistics)',
+              'bg-green-100 text-green-800'
+            )}
+
+            {renderEnhancedMultiValueInput(
+              'hs_ticketing_platforms',
+              'Ticketing Platforms',
+              'Enter platform and press Enter (e.g., Eventbrite, Ticketmaster, BookMyShow)',
+              'bg-yellow-100 text-yellow-800'
+            )}
+
+            {renderEnhancedMultiValueInput(
+              'hs_property_type_event',
+              'Venue Type',
+              'Enter type and press Enter (e.g., Convention Centers, Hotels, Outdoor Venues)',
+              'bg-purple-100 text-purple-800'
+            )}
           </div>
         );
 
@@ -1005,12 +1091,33 @@ const DomainFields: React.FC<DomainFieldsProps> = ({ profileType, subDomain, edi
       case 'PH1':
         return (
           <div className="space-y-4">
-            {renderMultiSelect('ph_compliance', pharmaFieldOptions.ph_compliance, 'Compliance Standards')}
-            {renderMultiSelect('ph_equipment_handling', pharmaFieldOptions.ph_equipment_handling, 'Equipment Handling')}
-            {renderMultiSelect('ph_quality_tools', pharmaFieldOptions.ph_quality_tools, 'Quality Tools Used')}
-            <div className="w-1/2">
-              {renderSelect('ph_shift_preference', pharmaFieldOptions.ph_shift_preference, 'Shift Preference')}
-            </div>
+            {renderEnhancedMultiValueInput(
+              'ph_compliance',
+              'Compliance Standards',
+              'Enter compliance standard and press Enter (e.g., GMP, FDA, ICH)',
+              'bg-blue-100 text-blue-800'
+            )}
+
+            {renderEnhancedMultiValueInput(
+              'ph_equipment_handling',
+              'Equipment Handling',
+              'Enter equipment and press Enter (e.g., Bioreactors, HPLC, Tablet Press)',
+              'bg-green-100 text-green-800'
+            )}
+
+            {renderEnhancedMultiValueInput(
+              'ph_quality_tools',
+              'Quality Tools Used',
+              'Enter tool and press Enter (e.g., SPC, CAPA, Validation)',
+              'bg-yellow-100 text-yellow-800'
+            )}
+
+            {renderEnhancedMultiValueInput(
+              'ph_shift_preference',
+              'Shift Preference',
+              'Enter preference and press Enter (e.g., Day Shift, Night Shift, Rotational)',
+              'bg-purple-100 text-purple-800'
+            )}
           </div>
         );
 
@@ -1018,9 +1125,26 @@ const DomainFields: React.FC<DomainFieldsProps> = ({ profileType, subDomain, edi
       case 'PH2':
         return (
           <div className="space-y-4">
-            {renderMultiSelect('ph_supply_chain_area', pharmaFieldOptions.ph_supply_chain_area, 'Supply Chain Focus')}
-            {renderMultiSelect('ph_regulatory_knowledge', pharmaFieldOptions.ph_regulatory_knowledge, 'Regulatory Knowledge')}
-            {renderMultiSelect('ph_tools_used', pharmaFieldOptions.ph_tools_used, 'SCM Tools Used')}
+            {renderEnhancedMultiValueInput(
+              'ph_supply_chain_area',
+              'Supply Chain Focus',
+              'Enter area and press Enter (e.g., Procurement, Distribution, Logistics)',
+              'bg-purple-100 text-purple-800'
+            )}
+
+            {renderEnhancedMultiValueInput(
+              'ph_regulatory_knowledge',
+              'Regulatory Knowledge',
+              'Enter knowledge and press Enter (e.g., GDP, Cold Chain, Import/Export)',
+              'bg-indigo-100 text-indigo-800'
+            )}
+
+            {renderEnhancedMultiValueInput(
+              'ph_tools_used',
+              'SCM Tools Used',
+              'Enter tool and press Enter (e.g., SAP, Oracle WMS, TraceLink)',
+              'bg-teal-100 text-teal-800'
+            )}
           </div>
         );
 
@@ -1028,9 +1152,27 @@ const DomainFields: React.FC<DomainFieldsProps> = ({ profileType, subDomain, edi
       case 'PH3':
         return (
           <div className="space-y-4">
-            {renderMultiSelect('ph_trial_phase_exp', pharmaFieldOptions.ph_trial_phase_exp, 'Clinical Trial Phases')}
-            {renderMultiSelect('ph_regulatory_docs', pharmaFieldOptions.ph_regulatory_docs, 'Regulatory Documents')}
-            {renderMultiSelect('ph_lab_tools', pharmaFieldOptions.ph_lab_tools, 'Lab Tools / Platforms')}
+            {renderEnhancedMultiValueInput(
+              'ph_trial_phase_exp',
+              'Clinical Trial Phases',
+              'Enter phase and press Enter (e.g., Phase I, Phase II, Phase III)',
+              'bg-red-100 text-red-800'
+            )}
+
+            {renderEnhancedMultiValueInput(
+              'ph_regulatory_docs',
+              'Regulatory Documents',
+              'Enter document and press Enter (e.g., IND, NDA, CTD)',
+              'bg-orange-100 text-orange-800'
+            )}
+
+            {renderEnhancedMultiValueInput(
+              'ph_lab_tools',
+              'Lab Tools / Platforms',
+              'Enter tool and press Enter (e.g., LIMS, EDC, Statistical Software)',
+              'bg-emerald-100 text-emerald-800'
+            )}
+
             {renderTextInput('ph_publications', 'Publications / Papers', 'url')}
           </div>
         );
@@ -1039,17 +1181,34 @@ const DomainFields: React.FC<DomainFieldsProps> = ({ profileType, subDomain, edi
       case 'PH4':
         return (
           <div className="space-y-4">
-            <div className="flex space-x-4">
-              <div className="w-1/2">
-                {renderSelect('ph_department', pharmaFieldOptions.ph_department, 'Department', true)}
-              </div>
-              <div className="w-1/2">
-                {renderSelect('ph_shift_preference', pharmaFieldOptions.ph_shift_preference, 'Shift Preference')}
-              </div>
-            </div>
+            {renderEnhancedMultiValueInput(
+              'ph_department',
+              'Department',
+              'Enter department and press Enter (e.g., Nursing, Surgery, Radiology, Pharmacy)',
+              'bg-blue-100 text-blue-800',
+              true
+            )}
 
-            {renderMultiSelect('ph_licenses', pharmaFieldOptions.ph_licenses, 'Medical Licenses')}
-            {renderMultiSelect('ph_languages', pharmaFieldOptions.ph_languages, 'Languages Known')}
+            {renderEnhancedMultiValueInput(
+              'ph_shift_preference',
+              'Shift Preference',
+              'Enter preference and press Enter (e.g., Day Shift, Night Shift, Rotational)',
+              'bg-indigo-100 text-indigo-800'
+            )}
+
+            {renderEnhancedMultiValueInput(
+              'ph_licenses',
+              'Medical Licenses',
+              'Enter license and press Enter (e.g., MD, RN, PharmD)',
+              'bg-pink-100 text-pink-800'
+            )}
+
+            {renderEnhancedMultiValueInput(
+              'ph_languages',
+              'Languages Known',
+              'Enter language and press Enter (e.g., English, Spanish, French)',
+              'bg-cyan-100 text-cyan-800'
+            )}
           </div>
         );
 
@@ -1065,21 +1224,26 @@ const DomainFields: React.FC<DomainFieldsProps> = ({ profileType, subDomain, edi
       case 'IT':
         return (
           <div className="space-y-4">
-            {renderMultiSelect('itCertifications', itCertifications, 'Certifications')}
+            {renderEnhancedMultiValueInput(
+              'itCertifications',
+              'Certifications',
+              'Enter certification and press Enter (e.g., AWS Certified, Azure Fundamentals, Google Cloud)',
+              'bg-blue-100 text-blue-800'
+            )}
             <div className="grid grid-cols-2 gap-4">
-              {/* <div>
+              <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">GitHub / Portfolio</label>
                 <input 
                   type="url" 
                   value={editingEntry?.githubPortfolio || ''} 
-                  onChange={(e) => setEditingEntry((prev: ProfileEntry | null) => prev ? {...prev, githubPortfolio: e.target.value} : null)}
+                  onChange={(e) => setEditingEntry((prev: ProfileEntry | null) => prev ? { ...prev, githubPortfolio: e.target.value } : null)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="https://github.com/username or portfolio URL"
+                  placeholder="Enter GitHub or portfolio URL"
                 />
-              </div> */}
+              </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Notice Period</label>
-                <select
+                <label className="block text-sm font-medium text-gray-700 mb-1">Notice Period <span className='text-gray-500'>(in days)</span></label>
+                {/* <select
                   value={editingEntry?.noticePeriod || ''}
                   onChange={(e) => setEditingEntry((prev: ProfileEntry | null) => prev ? { ...prev, noticePeriod: e.target.value } : null)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -1088,12 +1252,18 @@ const DomainFields: React.FC<DomainFieldsProps> = ({ profileType, subDomain, edi
                   {noticePeriods.map(period => (
                     <option key={period} value={period}>{period}</option>
                   ))}
-                </select>
+                </select> */}
+                <input
+                  type="number"
+                  value={editingEntry?.noticePeriod || ''}
+                  onChange={(e) => setEditingEntry((prev: ProfileEntry | null) => prev ? { ...prev, noticePeriod: e.target.value } : null)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="Enter notice period"
+                />
               </div>
             </div>
             {subDomain && (
               <div className="mt-6">
-                <div className="border-t border-gray-200 my-4"></div>
                 <h5 className="text-md font-medium text-gray-900 mb-4">
                   {itSubDomains.find(sub => sub.value === subDomain)?.label} Fields
                 </h5>
@@ -1120,10 +1290,10 @@ const DomainFields: React.FC<DomainFieldsProps> = ({ profileType, subDomain, edi
       case 'Finance':
         return (
           <div className="space-y-4">
-            {renderMultiSelect('financeSkills', financeSkills, 'Skills')}
-            {renderMultiSelect('erpSystems', erpSystems, 'ERP Systems')}
-            {renderMultiSelect('financeCertifications', financeCertifications, 'Certifications')}
-            {renderMultiSelect('financeIndustries', financeIndustries, 'Industries')}
+            {renderTextInput('financeSkills', 'Skills')}
+            {renderTextInput('erpSystems', 'ERP Systems')}
+            {renderTextInput('financeCertifications', 'Certifications')}
+            {renderTextInput('financeIndustries', 'Industries')}
           </div>
         );
 

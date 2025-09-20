@@ -17,7 +17,7 @@ export interface JobPostingFormData {
   primarySkills: string[];
   secondarySkills: string[];
   preferredQualifications: string;
-  location: string;
+  location: string[];
   gender: string[];
   language: string[];
   visibilitySettings: string;
@@ -107,9 +107,9 @@ export const useJobPostingStore = create<JobPostingState>((set, get) => ({
       };
 
       // Format location as required by the API (list of dictionaries with city information)
-      const formatLocationForAPI = (locationString: string) => {
-        if (!locationString) return '';
-        return JSON.stringify([{ city: locationString }]);
+      const formatLocationForAPI = (locationArray: string[]) => {
+        if (!locationArray || locationArray.length === 0) return '';
+        return JSON.stringify(locationArray.map(city => ({ city })));
       };
 
       // Get the first document file if available

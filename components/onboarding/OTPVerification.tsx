@@ -172,7 +172,7 @@ export default function OTPVerification({ data, updateData, nextStep }: OTPVerif
 
           <div className="flex items-center justify-between mt-3">
             <span className="text-sm text-gray-500">
-              {emailTimer > 0 ? `Expires in ${formatTime(emailTimer)}` : 'Code expired'}
+              {emailTimer > 0 ? `Expires in ${formatTime(emailTimer)}` : 'Did not receive OTP?'}
             </span>
 
             <button
@@ -210,7 +210,7 @@ export default function OTPVerification({ data, updateData, nextStep }: OTPVerif
 
           <div className="flex items-center justify-between mt-3">
             <span className="text-sm text-gray-500">
-            {mobileTimer > 0 ? `Expires in ${formatTime(mobileTimer)}` : 'Code expired'}
+            {mobileTimer > 0 ? `Expires in ${formatTime(mobileTimer)}` : 'Did not receive OTP?'}
             </span>
             <button
               onClick={handleResendMobile}

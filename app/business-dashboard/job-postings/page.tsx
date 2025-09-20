@@ -350,14 +350,15 @@ export default function JobPostingsPage() {
             <div className="flex justify-center items-center p-8">
               <div className="w-8 h-8 border-4 border-orange-600 border-t-transparent rounded-full animate-spin"></div>
               <span className="ml-2">
-                {!entityId ? 'Loading user session...' : 'Loading job postings...'}
+                {!entityId ? 'Loading user session...' : 'Loading opportunities...'}
               </span>
             </div>
           )}
           
           {error && entityId && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4">
-              {error}
+            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4 w-80">
+              {/* {error} */}
+              Not able to fetch opportunities
             </div>
           )}
           

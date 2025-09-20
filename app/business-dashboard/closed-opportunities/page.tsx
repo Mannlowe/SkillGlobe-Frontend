@@ -118,7 +118,7 @@ export default function ClosedOpportunitiesPage() {
               onClick={navigateBack}
               className="bg-gray-600 hover:bg-gray-700 text-white py-2 px-4 rounded-lg flex items-center transition-all duration-300"
             >
-              <ArrowLeft size={20} className="mr-1" /> Back to Job Postings
+              <ArrowLeft size={20} className="mr-1" /> Back to Opportunity Postings
             </button>
             
             <div className="text-sm text-gray-600">
@@ -137,8 +137,9 @@ export default function ClosedOpportunitiesPage() {
           )}
           
           {error && entityId && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4">
-              {error}
+            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4 w-96">
+              {/* {error} */}
+              Not able to fetch closed opportunities
             </div>
           )}
           

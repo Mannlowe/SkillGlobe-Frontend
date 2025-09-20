@@ -1181,7 +1181,7 @@ export default function JobPostingModal({ showModal, setShowModal, onSubmit, edi
         disabled={isSubmitting}
         className="bg-[#007BCA] border text-white font-semibold py-2 px-8 rounded-lg hover:bg-white hover:text-[#007BCA] hover:border-[#007BCA] hover:shadow-2xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed h-10"
       >
-        {isSubmitting ? 'Posting...' : 'Job Post'}
+        {isSubmitting ? 'Posting...' : 'Create'}
       </button>
     </div>
     

@@ -66,7 +66,7 @@ export const useJobPostingStore = create<JobPostingState>((set, get) => ({
       // Ensure we have at least one skill
       const allSkills = [...formData.primarySkills, ...formData.secondarySkills];
       if (allSkills.length === 0) {
-        throw new Error('Please select at least one skill');
+        throw new Error('Please select at least one primary skill');
       }
 
       // Map skill category to API expected values
@@ -106,6 +106,12 @@ export const useJobPostingStore = create<JobPostingState>((set, get) => ({
         return JSON.stringify(skills.map(skill => ({ skill })));
       };
 
+      // Format location as required by the API (list of dictionaries with city information)
+      const formatLocationForAPI = (locationString: string) => {
+        if (!locationString) return '';
+        return JSON.stringify([{ city: locationString }]);
+      };
+
       // Get the first document file if available
       const jobDescriptionFile = formData.documents.length > 0 ? formData.documents[0] : undefined;
 
@@ -121,7 +127,7 @@ export const useJobPostingStore = create<JobPostingState>((set, get) => ({
         experience_required: formData.experienceRequired,
         apply_opportunity: getApplyOpportunityValue(formData.visibilitySettings),
         country: 'India',
-        location: formData.location,
+        location: formatLocationForAPI(formData.location),
         min_remuneration: formData.minRemuneration || '0',
         application_deadline: formData.applicationDeadline,
         opportunity_closed: formData.opportunityClosed ? 1 : 0,

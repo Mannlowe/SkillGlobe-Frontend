@@ -22,6 +22,7 @@ import { useAuthStore } from '@/store/authStore';
 import { useToast } from '@/hooks/use-toast';
 import JobPostingModal, { JobFormState } from './job-postings/jobPostingModal';
 import { getJobPostingList, JobPosting as ApiJobPosting } from '@/app/api/job postings/jobpostingList';
+import { getCityList, getAuthData, type City } from '@/app/api/job postings/addjobPosting';
 import { useBusinessDashboardStore } from '@/store/dashboard/businessdashboardStore';
 import { getRecentProfiles, getProfileStatus, RecentProfile } from '@/app/api/Business Profile/recentProfiles';
 
@@ -61,6 +62,10 @@ export default function BusinessDashboardPage() {
   const [recentProfiles, setRecentProfiles] = useState<RecentProfile[]>([]);
   const [isLoadingProfiles, setIsLoadingProfiles] = useState(false);
   const [profilesError, setProfilesError] = useState<string | null>(null);
+  
+  // City list state
+  const [cityList, setCityList] = useState<City[]>([]);
+  const [cityListLoading, setCityListLoading] = useState(false);
 
   const appliedDate = new Date(); // or your actual date value
 
@@ -81,6 +86,29 @@ export default function BusinessDashboardPage() {
 
   // Get business name from entity details or fall back to user name
   const businessName = entity?.details?.name || 'Your Business';
+
+  // Fetch city list when component mounts
+  useEffect(() => {
+    const fetchCityList = async () => {
+      const authData = getAuthData();
+      if (!authData) {
+        console.log('No auth data available for city list');
+        return;
+      }
+
+      setCityListLoading(true);
+      try {
+        const cities = await getCityList(authData.apiKey, authData.apiSecret);
+        setCityList(cities);
+      } catch (error) {
+        console.error('Error fetching city list:', error);
+      } finally {
+        setCityListLoading(false);
+      }
+    };
+
+    fetchCityList();
+  }, []);
 
   // Fetch job postings, organization insights, and recent profiles from API
   useEffect(() => {
@@ -252,6 +280,70 @@ export default function BusinessDashboardPage() {
     }
   };
 
+  // Function to filter opportunities with current or future deadlines
+  const filterCurrentAndUpcomingOpportunities = (opportunities: ApiJobPosting[]): ApiJobPosting[] => {
+    const currentDate = new Date();
+    currentDate.setHours(0, 0, 0, 0); // Set to start of current day
+    
+    return opportunities.filter(opportunity => {
+      if (!opportunity.application_deadline) {
+        return true; // Include opportunities without deadline
+      }
+      
+      try {
+        const deadlineDate = new Date(opportunity.application_deadline);
+        deadlineDate.setHours(0, 0, 0, 0); // Set to start of deadline day
+        return deadlineDate >= currentDate; // Include current date and future dates
+      } catch (error) {
+        console.error('Error parsing deadline date:', error);
+        return true; // Include if date parsing fails
+      }
+    });
+  };
+
+  // Helper function to parse location from API format using city list
+  const parseLocationFromAPI = (locationData: any): string => {
+    if (!locationData) return 'Not specified';
+    
+    try {
+      let cityName = '';
+      
+      // If it's already a string, extract city name
+      if (typeof locationData === 'string') {
+        // Try to parse if it looks like JSON
+        if (locationData.startsWith('[') && locationData.endsWith(']')) {
+          const parsed = JSON.parse(locationData);
+          if (Array.isArray(parsed) && parsed.length > 0 && parsed[0].city) {
+            cityName = parsed[0].city;
+          }
+        } else {
+          cityName = locationData;
+        }
+      }
+      
+      // If it's an array of objects with city property
+      if (Array.isArray(locationData) && locationData.length > 0 && locationData[0].city) {
+        cityName = locationData[0].city;
+      }
+      
+      // If we have a city name, try to find it in the city list for consistent display
+      if (cityName && cityList.length > 0) {
+        const foundCity = cityList.find(city => 
+          city.name.toLowerCase() === cityName.toLowerCase()
+        );
+        if (foundCity) {
+          return foundCity.name; // Return the exact name from city list
+        }
+      }
+      
+      // Fallback to the parsed city name or 'Not specified'
+      return cityName || 'Not specified';
+    } catch (error) {
+      console.error('Error parsing location:', error);
+      return 'Not specified';
+    }
+  };
+
   // State for mobile sidebar toggle
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -361,36 +453,44 @@ export default function BusinessDashboardPage() {
                   </div>
                   <div className="p-6">
                     <div className="space-y-4">
-                      {apiJobPostings.length > 0 ? (
-                        apiJobPostings.slice(0, 5).map((opportunity: ApiJobPosting) => (
-                          <div key={opportunity.name} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                            <div className="flex-1">
-                              <div className="flex items-center space-x-3 mb-2">
-                                <h3 className="font-semibold text-gray-900">{opportunity.opportunity_title}</h3>
-                                <span className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusColor('active')}`}>
-                                  active
-                                </span>
+                      {(() => {
+                        const filteredOpportunities = filterCurrentAndUpcomingOpportunities(apiJobPostings);
+                        return filteredOpportunities.length > 0 ? (
+                          filteredOpportunities.slice(0, 5).map((opportunity: ApiJobPosting) => (
+                            <div key={opportunity.name} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                              <div className="flex-1">
+                                <div className="flex items-center space-x-3 mb-2">
+                                  <h3 className="font-semibold text-gray-900">{opportunity.opportunity_title}</h3>
+                                  <span className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusColor('active')}`}>
+                                    active
+                                  </span>
+                                </div>
+                                <div className="flex items-center space-x-4 text-sm text-gray-600">
+                                  <span>{opportunity.employment_type}</span>
+                                  <span>{opportunity.role_skill_category}</span>
+                                  {/* <span>{parseLocationFromAPI(opportunity.location)}</span> */}
+                                  <span>{opportunity.profiles_match_count || 0} applications</span>
+                                  {/* <span>Posted {opportunity.created_date ? formatDateDifference(opportunity.created_date) : 'recently'}</span> */}
+                                </div>
                               </div>
-                              <div className="flex items-center space-x-4 text-sm text-gray-600">
-                                <span>{opportunity.employment_type}</span>
-                                <span>{opportunity.profiles_match_count || 0} applications</span>
-                                {/* <span>Posted {opportunity.created_date ? formatDateDifference(opportunity.created_date) : 'recently'}</span> */}
+                              <div className="text-right">
+                                <p className="text-sm text-gray-500">Deadline</p>
+                                <p className="font-medium text-gray-900">{opportunity.application_deadline || 'No deadline'}</p>
                               </div>
                             </div>
-                            <div className="text-right">
-                              <p className="text-sm text-gray-500">Deadline</p>
-                              <p className="font-medium text-gray-900">{opportunity.application_deadline || 'No deadline'}</p>
+                          ))
+                        ) : (
+                          <div className="text-center py-8">
+                            <div className="text-gray-500 mb-2">No current opportunities found</div>
+                            <div className="text-sm text-gray-400">
+                              {apiJobPostings.length > 0 
+                                ? 'All opportunities have expired deadlines' 
+                                : 'Create your first job posting to get started'
+                              }
                             </div>
                           </div>
-                        ))
-                      ) : (
-                        <div className="text-center py-8">
-                          <div className="text-gray-500 mb-2">No opportunities found</div>
-                          <div className="text-sm text-gray-400">
-                            Create your first job posting to get started
-                          </div>
-                        </div>
-                      )}
+                        );
+                      })()}
                     </div>
                   </div>
                 </div>

@@ -136,13 +136,17 @@ export default function CertificateForm({
         authData.apiSecret
       );
       const updatedList = response.message?.data?.certificate_list || [];
-      setApiCertificates(updatedList);
-      setCertificateList?.(updatedList);
-      setEditMode(false);
-      setFlag1(false);
-      setActiveEntryId(updatedList[0]?.name || "");
-
-      console.log("Fetched certificate list:", updatedList);
+      if (
+        response.message?.status === "success" &&
+        (response.message?.data?.certificate_list?.length ?? 0) > 0
+      ) {
+        setApiCertificates(updatedList);
+        setCertificateList?.(updatedList);
+        setEditMode(false);
+        setFlag1(false);
+        setActiveEntryId(updatedList[0]?.name || "");
+      }
+      console.log("Fetched certificate list:", response);
     } catch (error) {
       console.error("Error fetching certificate list:", error);
     }

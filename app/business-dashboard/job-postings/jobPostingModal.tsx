@@ -91,6 +91,12 @@ export default function JobPostingModal({ showModal, setShowModal, onSubmit, edi
   const [cityList, setCityList] = useState<City[]>([]);
   const [cityListLoading, setCityListLoading] = useState(false);
   
+  // Date validation state
+  const [dateError, setDateError] = useState<string>('');
+  
+  // Primary skills validation state
+  const [primarySkillsError, setPrimarySkillsError] = useState<string>('');
+  
   const [newJob, setNewJob] = useState<JobFormState>({
     title: '',
     skillCategory: '',
@@ -248,6 +254,10 @@ export default function JobPostingModal({ showModal, setShowModal, onSubmit, edi
   
   const togglePrimarySkill = (skillId: string) => {
     console.log('Toggling primary skill ID:', skillId);
+    
+    // Clear primary skills error when user selects a skill
+    setPrimarySkillsError('');
+    
     setNewJob(prev => {
       if (prev.primarySkills.includes(skillId)) {
         const newSkills = prev.primarySkills.filter(s => s !== skillId);
@@ -471,6 +481,15 @@ export default function JobPostingModal({ showModal, setShowModal, onSubmit, edi
   const handleCreateJob = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    // Clear previous errors
+    setPrimarySkillsError('');
+    
+    // Validate primary skills locally
+    if (newJob.primarySkills.length === 0) {
+      setPrimarySkillsError('Please select at least one primary skill');
+      return;
+    }
+    
     try {
       const response = await submitJobPosting(newJob);
       
@@ -501,6 +520,9 @@ export default function JobPostingModal({ showModal, setShowModal, onSubmit, edi
           anticipatedApplications: '10',
           documents: []
         });
+        // Reset validation errors
+        setPrimarySkillsError('');
+        setDateError('');
       }
     } catch (error) {
       console.error('Error submitting job posting:', error);
@@ -527,7 +549,7 @@ export default function JobPostingModal({ showModal, setShowModal, onSubmit, edi
       {/* <label className="block text-sm font-medium text-gray-700 mb-1">
         Attach Documents
       </label> */}
-      <div className="flex items-center justify-center gap-4 mt-3">
+      {/* <div className="flex items-center justify-center gap-4 mt-3">
         <label className="relative inline-flex items-center justify-center px-6 py-3 overflow-hidden font-medium text-white transition duration-300 ease-out bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full shadow-lg cursor-pointer group hover:shadow-xl">
           <span className="absolute inset-0 w-full h-full bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-700 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></span>
           <svg xmlns="http://www.w3.org/2000/svg" className="relative z-10 mr-2" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -573,7 +595,7 @@ export default function JobPostingModal({ showModal, setShowModal, onSubmit, edi
             </div>
           </div>
         )}
-      </div>
+      </div> */}
     </div>
     <h4 className="text-md font-semibold text-blue-600 mb-2">Step 1: Basic Information</h4>
     
@@ -626,7 +648,7 @@ export default function JobPostingModal({ showModal, setShowModal, onSubmit, edi
         <option value="Contract2Perm">Contract2Perm</option>
         <option value="Internship">Internship</option>
         <option value="Project / Gig">Project / Gig</option>
-        <option value="Contractual / Freelance Work">Contractual / Freelance Work</option>
+        <option value="Contractual / Freelancer Work">Contractual / Freelancer Work</option>
       </select>
     </div>
     </div>
@@ -708,7 +730,7 @@ export default function JobPostingModal({ showModal, setShowModal, onSubmit, edi
       {/* Experience Required */}
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">
-          Experience Required
+          Experience Required <span className="text-gray-500 text-xs">(In Years)</span>
         </label>
         <input
           type="number"
@@ -718,6 +740,7 @@ export default function JobPostingModal({ showModal, setShowModal, onSubmit, edi
           className="w-full px-4 py-2 bg-gray-50 rounded-lg border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all"
           placeholder="Enter years of experience"
           min="0"
+          step="0.1"
         />
       </div>
       
@@ -729,12 +752,13 @@ export default function JobPostingModal({ showModal, setShowModal, onSubmit, edi
         <div className="relative">
           <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500">₹</span>
           <input
-            type="text"
+            type="number"
             name="minRemuneration"
             value={newJob.minRemuneration}
             onChange={handleInputChange}
             className="w-full pl-8 px-4 py-2 bg-gray-50 rounded-lg border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all"
             placeholder="e.g. 500000"
+            min="0"
           />
         </div>
       </div>
@@ -750,16 +774,36 @@ export default function JobPostingModal({ showModal, setShowModal, onSubmit, edi
           type="date"
           name="applicationDeadline"
           value={newJob.applicationDeadline}
+          min={new Date().toISOString().split('T')[0]} // Prevent past dates
           onChange={(e) => {
+            const selectedDate = e.target.value;
+            const currentDate = new Date().toISOString().split('T')[0];
+            
+            // Clear any previous date error
+            setDateError('');
+            
+            // Check if selected date is in the past
+            if (selectedDate && selectedDate < currentDate) {
+              setDateError('Application deadline cannot be in the past. Please select today or a future date.');
+              return;
+            }
+            
             // Direct update to ensure date format is preserved
             setNewJob(prev => ({
               ...prev,
-              applicationDeadline: e.target.value
+              applicationDeadline: selectedDate
             }));
           }}
-          className="w-full px-4 py-2 bg-gray-50 rounded-lg border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all"
+          className={`w-full px-4 py-2 bg-gray-50 rounded-lg border transition-all ${
+            dateError 
+              ? 'border-red-300 focus:ring-2 focus:ring-red-500 focus:border-red-500' 
+              : 'border-gray-200 focus:ring-2 focus:ring-blue-500 focus:bg-white'
+          }`}
           required
         />
+        {dateError && (
+          <p className="mt-1 text-sm text-red-600">{dateError}</p>
+        )}
       </div>
       
       {/* Number of Openings */}
@@ -901,6 +945,9 @@ export default function JobPostingModal({ showModal, setShowModal, onSubmit, edi
           )}
         </div>
       </div>
+      {primarySkillsError && (
+        <p className="mt-1 text-sm text-red-600">{primarySkillsError}</p>
+      )}
     </div>
     
     {/* Secondary Skills */}
@@ -1001,11 +1048,11 @@ export default function JobPostingModal({ showModal, setShowModal, onSubmit, edi
     </div>
     
     
-    <h4 className="text-md font-semibold text-blue-600 mt-6 mb-2">Step 3: Additional Filters</h4>
+    {/* <h4 className="text-md font-semibold text-blue-600 mt-6 mb-2">Step 3: Additional Filters</h4> */}
     
-    <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
+    {/* <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
       
-      {/* Language Requirement */}
+    
     <div>
       <label className="block text-sm font-medium text-gray-700 mb-1">
         Language Requirement
@@ -1081,12 +1128,12 @@ export default function JobPostingModal({ showModal, setShowModal, onSubmit, edi
         </div>
       </div>
     </div>
-    </div>
+    </div> */}
     
-    <h4 className="text-md font-semibold text-blue-600 mt-6 mb-2">Step 4: Visibility Settings</h4>
+    <h4 className="text-md font-semibold text-blue-600 mt-6 mb-2">Step 3: Visibility Settings</h4>
     
     {/* Visibility Settings */}
-    <div>
+    {/* <div>
       <label className="block text-sm font-medium text-gray-700 mb-1">
         Who can view or apply to this opportunity?
       </label>
@@ -1109,48 +1156,49 @@ export default function JobPostingModal({ showModal, setShowModal, onSubmit, edi
           <option value="all">All verified users</option>
         )}
       </select>
-    </div>
+    </div> */}
     
     {/* Anticipated Applications */}
     <div>
-      <label className="block text-sm font-medium text-gray-700 mb-1">
-        Anticipated Number of Applications
-      </label>
-      <input
-        type="number"
-        name="anticipatedApplications"
-        value={newJob.anticipatedApplications}
-        onChange={handleInputChange}
-        className="w-full px-4 py-2 bg-gray-50 rounded-lg border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all"
-        placeholder="Enter anticipated number of applications"
-        min="1"
-      />
-    </div>
+  <label className="block text-sm font-medium text-gray-700 mb-1">
+    Anticipated Number of Applications
+  </label>
+  <input
+    type="number"
+    name="anticipatedApplications"
+    value={newJob.anticipatedApplications}
+    onChange={handleInputChange}
+    min="1"
+    className="w-full px-4 py-2 bg-gray-50 rounded-lg border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all"
+    placeholder="Enter number"
+  />
+</div>
+
     
-    <div className="flex justify-center pt-4">
+    <div className="flex justify-center pt-4 min-h-[60px]">
       <button
         type="submit"
         disabled={isSubmitting}
-        className="bg-[#007BCA] border text-white font-semibold py-2 px-8 rounded-lg hover:bg-white hover:text-[#007BCA] hover:border-[#007BCA] hover:shadow-2xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        className="bg-[#007BCA] border text-white font-semibold py-2 px-8 rounded-lg hover:bg-white hover:text-[#007BCA] hover:border-[#007BCA] hover:shadow-2xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed h-10"
       >
-        {isSubmitting ? 'Posting...' : 'Job Post'}
+        {isSubmitting ? 'Posting...' : 'Create'}
       </button>
-      
-      {/* Error message */}
-      {submitError && (
-        <div className="mt-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded-lg">
-          <p className="text-sm font-medium">Error:</p>
-          <p className="text-sm">{submitError}</p>
-        </div>
-      )}
-      
-      {/* Success message */}
-      {submitSuccess && (
-        <div className="mt-4 p-3 bg-green-100 border border-green-400 text-green-700 rounded-lg">
-          <p className="text-sm">Job posting submitted successfully!</p>
-        </div>
-      )}
     </div>
+    
+    {/* Error message */}
+    {submitError && (
+      <div className="mt-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded-lg">
+        {/* <p className="text-sm font-medium">Error:</p> */}
+        <p className="text-sm">{submitError}</p>
+      </div>
+    )}
+    
+    {/* Success message */}
+    {submitSuccess && (
+      <div className="mt-4 p-3 bg-green-100 border border-green-400 text-green-700 rounded-lg">
+        <p className="text-sm">Job posting submitted successfully!</p>
+      </div>
+    )}
   </form>
       </div>
     </div>

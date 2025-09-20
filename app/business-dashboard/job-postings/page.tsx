@@ -7,10 +7,11 @@ import BusinessSidebar from '@/components/dashboard/BusinessSidebar';
 import BusinessDashboardHeader from '@/components/dashboard/BusinessDashboardHeader';
 import JobPostingModal, { JobFormState, DocumentFile } from './jobPostingModal';
 import JobPreviewModal, { JobPosting } from './jobPreviewModal';
+import { getJobPostingList, JobPosting as ApiJobPosting } from '@/app/api/job postings/jobpostingList';
+import { getCityList, getAuthData, type City } from '@/app/api/job postings/addjobPosting';
 import { useJobPostingListStore } from '@/store/job-postings/jobpostinglistStore';
-import { JobPosting as ApiJobPosting } from '@/app/api/job postings/jobpostingList';
-import { useAuthStore } from '@/store/authStore';
 import { useClosedOpportunitiesStore } from '@/store/job-postings/closedOpportunitiesStore';
+import { useAuthStore } from '@/store/authStore';
 
 // Using JobPosting interface imported from jobPreviewModal.tsx
 
@@ -64,6 +65,10 @@ export default function JobPostingsPage() {
   const [currentJob, setCurrentJob] = useState<JobPosting | null>(null);
   const [editMode, setEditMode] = useState(false);
   
+  // City list state
+  const [cityList, setCityList] = useState<City[]>([]);
+  const [cityListLoading, setCityListLoading] = useState(false);
+  
   // Use the job posting list store
   const { 
     jobPostings: apiJobPostings, 
@@ -88,6 +93,29 @@ export default function JobPostingsPage() {
     console.log('Using entity ID:', entityId);
   }, [entity, entityId]);
   
+  // Fetch city list when component mounts
+  useEffect(() => {
+    const fetchCityList = async () => {
+      const authData = getAuthData();
+      if (!authData) {
+        console.log('No auth data available for city list');
+        return;
+      }
+
+      setCityListLoading(true);
+      try {
+        const cities = await getCityList(authData.apiKey, authData.apiSecret);
+        setCityList(cities);
+      } catch (error) {
+        console.error('Error fetching city list:', error);
+      } finally {
+        setCityListLoading(false);
+      }
+    };
+
+    fetchCityList();
+  }, []);
+
   // Fetch job postings when component mounts and entity_id is available
   useEffect(() => {
     const fetchJobPostings = async () => {
@@ -108,6 +136,49 @@ export default function JobPostingsPage() {
     fetchJobPostings();
   }, [getJobPostings, entityId]);
   
+  // Helper function to parse location from API format using city list
+  const parseLocationFromAPI = (locationData: any): string => {
+    if (!locationData) return 'Not specified';
+    
+    try {
+      let cityName = '';
+      
+      // If it's already a string, extract city name
+      if (typeof locationData === 'string') {
+        // Try to parse if it looks like JSON
+        if (locationData.startsWith('[') && locationData.endsWith(']')) {
+          const parsed = JSON.parse(locationData);
+          if (Array.isArray(parsed) && parsed.length > 0 && parsed[0].city) {
+            cityName = parsed[0].city;
+          }
+        } else {
+          cityName = locationData;
+        }
+      }
+      
+      // If it's an array of objects with city property
+      if (Array.isArray(locationData) && locationData.length > 0 && locationData[0].city) {
+        cityName = locationData[0].city;
+      }
+      
+      // If we have a city name, try to find it in the city list for consistent display
+      if (cityName && cityList.length > 0) {
+        const foundCity = cityList.find(city => 
+          city.name.toLowerCase() === cityName.toLowerCase()
+        );
+        if (foundCity) {
+          return foundCity.name; // Return the exact name from city list
+        }
+      }
+      
+      // Fallback to the parsed city name or 'Not specified'
+      return cityName || 'Not specified';
+    } catch (error) {
+      console.error('Error parsing location:', error);
+      return 'Not specified';
+    }
+  };
+
   // Map API job postings to UI job postings format when apiJobPostings changes
   useEffect(() => {
     if (apiJobPostings && apiJobPostings.length > 0) {
@@ -118,7 +189,7 @@ export default function JobPostingsPage() {
         employmentType: job.employment_type,
         workMode: job.work_mode,
         experienceRequired: job.experience_required,
-        location: job.location || 'Not specified',
+        location: parseLocationFromAPI(job.location),
         postedDate: '2 days ago',
         status: 'Active', 
         applicantCount: job.profiles_match_count || 0
@@ -126,7 +197,7 @@ export default function JobPostingsPage() {
       
       setJobPostings(mappedJobPostings);
     }
-  }, [apiJobPostings]);
+  }, [apiJobPostings, cityList]);
   
   const handleCreateJob = (job: JobFormState) => {
     console.log('Creating new job:', job);
@@ -279,14 +350,15 @@ export default function JobPostingsPage() {
             <div className="flex justify-center items-center p-8">
               <div className="w-8 h-8 border-4 border-orange-600 border-t-transparent rounded-full animate-spin"></div>
               <span className="ml-2">
-                {!entityId ? 'Loading user session...' : 'Loading job postings...'}
+                {!entityId ? 'Loading user session...' : 'Loading opportunities...'}
               </span>
             </div>
           )}
           
           {error && entityId && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4">
-              {error}
+            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4 w-80">
+              {/* {error} */}
+              Not able to fetch opportunities
             </div>
           )}
           
@@ -311,8 +383,8 @@ export default function JobPostingsPage() {
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Employment Type</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Work Mode</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Experience</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Location</th>
-                    <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                    {/* <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Location</th> */}
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
@@ -351,9 +423,9 @@ export default function JobPostingsPage() {
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         {job.experienceRequired || 'Not specified'}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
+                      {/* <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm text-gray-900">{job.location}</div>
-                      </td>
+                      </td> */}
                       <td className="px-6 py-4 ml-5 whitespace-nowrap text-sm font-medium flex items-center space-x-2">
                         {/* <button 
                           onClick={() => handleEditJob(job)} 
@@ -361,7 +433,7 @@ export default function JobPostingsPage() {
                         >
                           Edit
                         </button> */}
-                        <button 
+                        {/* <button 
                           onClick={() => handlePreviewJob(job)} 
                           className="text-blue-600 hover:text-blue-900 p-2 rounded hover:bg-blue-50 transition-colors"
                           title="Preview Opportunity"
@@ -371,7 +443,7 @@ export default function JobPostingsPage() {
                             alt="Preview Opportunity" 
                             className="w-12 h-12"
                           />
-                        </button>
+                        </button> */}
                         <button 
                           onClick={() => handleCloseOpportunity(job)} 
                           className="text-red-600 hover:text-red-900 p-2 rounded hover:bg-red-50 transition-colors"

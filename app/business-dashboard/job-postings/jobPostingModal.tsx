@@ -648,11 +648,7 @@ export default function JobPostingModal({ showModal, setShowModal, onSubmit, edi
         <option value="Contract2Perm">Contract2Perm</option>
         <option value="Internship">Internship</option>
         <option value="Project / Gig">Project / Gig</option>
-<<<<<<< HEAD
         <option value="Contractual / Freelancer Work">Contractual / Freelancer Work</option>
-=======
-        <option value="Contractual / Freelance Work">Contractual / Freelance Work</option>
->>>>>>> 2a3a0df3cf6a9eaa43cdea457c32077fdaf0a8ed
       </select>
     </div>
     </div>
@@ -1164,7 +1160,6 @@ export default function JobPostingModal({ showModal, setShowModal, onSubmit, edi
     
     {/* Anticipated Applications */}
     <div>
-<<<<<<< HEAD
   <label className="block text-sm font-medium text-gray-700 mb-1">
     Anticipated Number of Applications
   </label>
@@ -1179,21 +1174,6 @@ export default function JobPostingModal({ showModal, setShowModal, onSubmit, edi
   />
 </div>
 
-=======
-      <label className="block text-sm font-medium text-gray-700 mb-1">
-        Anticipated Number of Applications
-      </label>
-      <input
-        type="number"
-        name="anticipatedApplications"
-        value={newJob.anticipatedApplications}
-        onChange={handleInputChange}
-        className="w-full px-4 py-2 bg-gray-50 rounded-lg border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all"
-        placeholder="Enter anticipated number of applications"
-        min="1"
-      />
-    </div>
->>>>>>> 2a3a0df3cf6a9eaa43cdea457c32077fdaf0a8ed
     
     <div className="flex justify-center pt-4 min-h-[60px]">
       <button

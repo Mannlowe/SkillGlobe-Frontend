@@ -1217,86 +1217,100 @@ export default function ProfilesPage() {
         
         {/* Profiles Grid */}
         {!isLoading && !error && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {(profiles || []).map((profile) => (
-            <div
-              key={profile.id}
-              onClick={() => handleProfileSelect(profile.id)}
-              className={`bg-white rounded-xl shadow-sm border p-6 cursor-pointer transition-all hover:shadow-md ${
-                activeProfile === profile.id ? 'border-orange-500 ring-2 ring-orange-100' : 'border-gray-200'
-              }`}
-            >
-              <div className="flex items-start justify-between mb-4">
-                <div className="flex items-center space-x-3">
-                  <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
-                    activeProfile === profile.id ? 'bg-orange-100' : 'bg-gray-100'
-                  }`}>
-                    <User className={`w-6 h-6 ${
-                      activeProfile === profile.id ? 'text-orange-600' : 'text-gray-600'
-                    }`} />
+          <>
+            {profiles && profiles.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {profiles.map((profile) => (
+                <div
+                  key={profile.id}
+                  onClick={() => handleProfileSelect(profile.id)}
+                  className={`bg-white rounded-xl shadow-sm border p-6 cursor-pointer transition-all hover:shadow-md ${
+                    activeProfile === profile.id ? 'border-orange-500 ring-2 ring-orange-100' : 'border-gray-200'
+                  }`}
+                >
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="flex items-center space-x-3">
+                      <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
+                        activeProfile === profile.id ? 'bg-orange-100' : 'bg-gray-100'
+                      }`}>
+                        <User className={`w-6 h-6 ${
+                          activeProfile === profile.id ? 'text-orange-600' : 'text-gray-600'
+                        }`} />
+                      </div>
+                      <div>
+                        <h3 className="font-semibold text-gray-900">{profile.name}</h3>
+                        {/* <p className="text-sm text-gray-600">{profile.type}</p> */}
+                      </div>
+                    </div>
+                    <div className="flex items-center space-x-1">
+                      {profile.isActive && (
+                        <span className="px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded-full mr-2">
+                          Active
+                        </span>
+                      )}
+                      <button 
+                        onClick={(e) => handleEditProfile(e, profile.id)}
+                        className="p-1.5 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
+                      >
+                        <Pencil className="w-4 h-4" />
+                      </button>
+                      <button 
+                        onClick={(e) => handleDeleteClick(e, profile.id)}
+                        className="p-1.5 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
                   </div>
-                  <div>
-                    <h3 className="font-semibold text-gray-900">{profile.name}</h3>
-                    {/* <p className="text-sm text-gray-600">{profile.type}</p> */}
+
+                  <div className="space-y-3">
+                    {/* <div>
+                      <div className="flex justify-between text-sm mb-1">
+                        <span className="text-gray-600">Completeness</span>
+                        <span className="font-medium">{profile.completeness}%</span>
+                      </div>
+                      <div className="w-full bg-gray-200 rounded-full h-2">
+                        <div 
+                          className="bg-orange-500 h-2 rounded-full" 
+                          style={{ width: `${profile.completeness}%` }}
+                        ></div>
+                      </div>
+                    </div> */}
+
+                    {/* Resume Preview Section */}
+                    {renderResumePreview(profile)}
+
+                    {/* <div className="flex items-center justify-between pt-3 border-t border-gray-100">
+                      <div className="flex items-center space-x-1 text-sm text-gray-600">
+                        <Eye className="w-4 h-4" />
+                        <span>{profile.views} views</span>
+                      </div>
+                      <div className="flex space-x-2">
+                        <button className="p-2 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100">
+                          <Settings className="w-4 h-4" />
+                        </button>
+                        <button className="p-2 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100">
+                          <Share2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div> */}
                   </div>
                 </div>
-                <div className="flex items-center space-x-1">
-                  {profile.isActive && (
-                    <span className="px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded-full mr-2">
-                      Active
-                    </span>
-                  )}
-                  <button 
-                    onClick={(e) => handleEditProfile(e, profile.id)}
-                    className="p-1.5 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
-                  >
-                    <Pencil className="w-4 h-4" />
-                  </button>
-                  <button 
-                    onClick={(e) => handleDeleteClick(e, profile.id)}
-                    className="p-1.5 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                </div>
-              </div>
-
-              <div className="space-y-3">
-                {/* <div>
-                  <div className="flex justify-between text-sm mb-1">
-                    <span className="text-gray-600">Completeness</span>
-                    <span className="font-medium">{profile.completeness}%</span>
-                  </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div 
-                      className="bg-orange-500 h-2 rounded-full" 
-                      style={{ width: `${profile.completeness}%` }}
-                    ></div>
-                  </div>
-                </div> */}
-
-                {/* Resume Preview Section */}
-                {renderResumePreview(profile)}
-
-                {/* <div className="flex items-center justify-between pt-3 border-t border-gray-100">
-                  <div className="flex items-center space-x-1 text-sm text-gray-600">
-                    <Eye className="w-4 h-4" />
-                    <span>{profile.views} views</span>
-                  </div>
-                  <div className="flex space-x-2">
-                    <button className="p-2 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100">
-                      <Settings className="w-4 h-4" />
-                    </button>
-                    <button className="p-2 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100">
-                      <Share2 className="w-4 h-4" />
-                    </button>
-                  </div>
-                </div> */}
-              </div>
+              ))
+              }
             </div>
-          ))
-          }
-        </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center py-16 px-4">
+                <div className="bg-gray-50 rounded-full p-6 mb-6">
+                  <User className="w-12 h-12 text-gray-400" />
+                </div>
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">No Profile Found</h3>
+                <p className="text-gray-600 text-center mb-6 max-w-md">
+                  No profiles available. Please create your profile to get started with SkillGlobe.
+                </p>
+              </div>
+            )}
+          </>
         )}
 
       

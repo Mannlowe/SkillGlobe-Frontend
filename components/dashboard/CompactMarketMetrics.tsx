@@ -61,7 +61,7 @@ export default function CompactMarketMetrics({ onViewDetails }: CompactMarketMet
       </div>
 
       {/* Horizontal Metrics Grid - 5 Cards based on API data */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 h-[120px]">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 h-[120px]">
         {/* Total Matches */}
         <div className="bg-blue-50 rounded-lg p-3">
           <div className="flex items-center justify-between mb-1 mt-1">
@@ -119,7 +119,7 @@ export default function CompactMarketMetrics({ onViewDetails }: CompactMarketMet
         </div>
 
         {/* Response Rate - Always 0% */}
-        <div className="bg-indigo-50 rounded-lg p-3">
+        {/* <div className="bg-indigo-50 rounded-lg p-3">
           <div className="flex items-center justify-between mb-1 mt-1">
             <Brain className="text-indigo-500" size={16} />
             <span className="text-xs font-medium text-gray-600">
@@ -130,7 +130,7 @@ export default function CompactMarketMetrics({ onViewDetails }: CompactMarketMet
             0%
           </p>
           <p className="text-sm text-gray-700 font-medium mt-1">Response Rate</p>
-        </div>
+        </div> */}
       </div>
     </div>
   );

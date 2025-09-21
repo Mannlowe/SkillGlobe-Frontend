@@ -675,6 +675,7 @@ export default function ProfileForm({ onSave, onCancel, initialData = [], showFo
         preferred_city: editingEntry.preferredCity || '',
         preferred_country: editingEntry.preferredCountry || '',
         relevant_experience: editingEntry.relevantExperience || '',
+        total_experience_years: editingEntry.totalExperience || '',
         work_eligibility: editingEntry.workEligibility === 'Other' 
           ? editingEntry.customWorkEligibility || '' 
           : editingEntry.workEligibility || '',

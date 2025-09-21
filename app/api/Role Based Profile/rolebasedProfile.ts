@@ -24,6 +24,7 @@ export interface CreateUpdateRoleBasedProfileRequest {
   preferred_city?: string;
   preferred_country?: string;
   relevant_experience?: string;
+  total_experience_years?: string;
   work_eligibility?: string;
   primary_skills?: Array<{skill: string}>;
   secondary_skills?: Array<{skill: string}>;
@@ -136,6 +137,7 @@ export interface CreateUpdateRoleBasedProfileResponse {
       preferred_city?: string;
       preferred_country?: string;
       relevant_experience?: string;
+      total_experience_years?: string;
       work_eligibility?: string;
       primary_skills?: Array<{skill: string}>;
       secondary_skills?: Array<{skill: string}>;
@@ -167,8 +169,20 @@ export interface RoleBasedProfileData {
   certifications: string | null;
   resume: string | null;
   total_experience_years: string;
-  primary_skills?: Array<{skill: string; canonical_name?: string}>;
-  secondary_skills?: Array<{skill: string; canonical_name?: string}>;
+  primary_skills?: Array<{
+    skill: string; 
+    type_of_skill?: string;
+    skill_name?: string;
+    input_skill?: string | null;
+    canonical_name?: string;
+  }>;
+  secondary_skills?: Array<{
+    skill: string; 
+    type_of_skill?: string;
+    skill_name?: string;
+    input_skill?: string | null;
+    canonical_name?: string;
+  }>;
   [key: string]: any; // For domain-specific fields
 }
 

@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Eye, EyeOff, Mail, Lock, ArrowLeft } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
 
@@ -14,6 +14,7 @@ export default function AuthLoginPage() {
   const [rememberMe, setRememberMe] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   const [error, setError] = useState('');
 
@@ -32,15 +33,24 @@ export default function AuthLoginPage() {
       
       if (result.success) {
         console.log('Login successful, user role:', result.userRole);
-        // Redirect based on user role
-        if (result.userRole === 'Individual Seller') {
-          router.push('/individual-dashboard');
-        } else if (result.userRole === 'Business User') {
-          // Business Users go directly to job postings
-          router.push('/business-dashboard/job-postings');
+        
+        // Check if there's a redirect URL from the query parameters
+        const redirectUrl = searchParams.get('redirect');
+        
+        if (redirectUrl) {
+          // Redirect to the original URL they were trying to access
+          router.push(redirectUrl);
         } else {
-          // Business Admin and other roles go to main dashboard
-          router.push('/business-dashboard');
+          // Default redirect based on user role
+          if (result.userRole === 'Individual Seller') {
+            router.push('/individual-dashboard');
+          } else if (result.userRole === 'Business User') {
+            // Business Users go directly to job postings
+            router.push('/business-dashboard/job-postings');
+          } else {
+            // Business Admin and other roles go to main dashboard
+            router.push('/business-dashboard');
+          }
         }
       } else {
         setError('Login failed. Please check your credentials and try again.');

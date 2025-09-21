@@ -217,7 +217,7 @@ const mapRoleBasedProfileToProfile = (profile: RoleBasedProfileData, index: numb
     id: profile.name,
     role: profile.role || '',
     profileType: mapSpaceToProfileType(profile.space || ''),
-    subDomain: profile.subdomain || '',
+  
     employmentType: profile.employment_type || 'Permanent',
     natureOfWork: profile.nature_of_work || 'Full-time',
     workMode: profile.work_mode || 'No Preference',

@@ -140,6 +140,10 @@ export const useAuthStore = create<AuthState>()(
           localStorage.removeItem('user_data');
           localStorage.removeItem('auth_expires');
           
+          // Clear auth cookies for middleware
+          document.cookie = 'auth_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+          document.cookie = 'auth-storage=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+          
           // Use localStorage.clear() as a fallback to ensure everything is cleared
           // Uncomment if you want to clear ALL localStorage items (including non-user data)
           // localStorage.clear();

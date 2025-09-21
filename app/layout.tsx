@@ -2,6 +2,7 @@ import './globals.css';
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import { Toaster } from '@/components/ui/toaster';
+import AuthWrapper from '@/components/auth/AuthWrapper';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -44,9 +45,11 @@ export default function RootLayout({
         <link rel="apple-touch-icon" href="/icon-192x192.png" />
       </head>
       <body className={inter.className}>
-        <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-orange-50">
-          {children}
-        </div>
+        <AuthWrapper>
+          <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-orange-50">
+            {children}
+          </div>
+        </AuthWrapper>
         <Toaster />
       </body>
     </html>

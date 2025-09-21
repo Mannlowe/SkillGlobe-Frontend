@@ -31,6 +31,7 @@ interface ProfileFormProps {
 }
 
 export interface ProfileEntry {
+  subdomain: any;
   id: string;
   role: string;
   profileType: string; // Changed to required (removed optional '?')
@@ -140,7 +141,7 @@ export default function ProfileForm({ onSave, onCancel, initialData = [], showFo
       id: existingProfile.name,
       role: existingProfile.role,
       profileType: mapSpaceToProfileType(existingProfile.space),
-      subDomain: existingProfile.subdomain || '',
+  
       employmentType: existingProfile.employment_type,
       natureOfWork: existingProfile.nature_of_work,
       workMode: existingProfile.work_mode,
@@ -181,6 +182,7 @@ export default function ProfileForm({ onSave, onCancel, initialData = [], showFo
         id: `profile-${Date.now()}`,
         role: selectedTemplate.name + ' Profile',
         profileType: selectedTemplate.name,
+       
         employmentType: 'Permanent',
         natureOfWork: 'Full-time',
         workMode: 'No Preference',
@@ -192,7 +194,8 @@ export default function ProfileForm({ onSave, onCancel, initialData = [], showFo
         relevantExperience: '',
         primarySkills: selectedTemplate.sampleData?.skills?.slice(0, 3).map((skill: string) => ({ name: skill, canonical_name: skill })) || [],
         secondarySkills: selectedTemplate.sampleData?.skills?.slice(3).map((skill: string) => ({ name: skill, canonical_name: skill })) || [],
-        resume: null
+        resume: null,
+        subdomain: undefined
       };
       setEditingEntry(templateEntry);
       setShowEditForm(true);
@@ -474,6 +477,7 @@ export default function ProfileForm({ onSave, onCancel, initialData = [], showFo
         preferredCountry: '',
         totalExperience: '',
         relevantExperience: '',
+        subdomain: '',
         primarySkills: [],
         secondarySkills: [],
         resume: null
@@ -558,6 +562,7 @@ export default function ProfileForm({ onSave, onCancel, initialData = [], showFo
       relevantExperience: '',
       primarySkills: [],
       secondarySkills: [],
+      subdomain: '',
       resume: null
     });
     setShowEditForm(true);

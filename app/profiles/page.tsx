@@ -20,7 +20,7 @@ import { deleteRoleBasedProfile } from '@/app/api/Role Based Profile/rolebasedPr
 
 export default function ProfilesPage() {
   const { toast } = useToast();
-  
+
   // Store state
   const {
     profiles,
@@ -44,7 +44,7 @@ export default function ProfilesPage() {
     clearPreviewData,
     clearPreviewError
   } = useResumeTemplateStore();
-  
+
   // Local UI state
   const [isModalOpen, setIsModalOpen] = useState(false);
   // Define a type for our modal content
@@ -63,7 +63,7 @@ export default function ProfilesPage() {
   // Fetch data on component mount
   useEffect(() => {
     fetchRoleBasedProfiles();
-    
+
     // Cleanup on unmount
     return () => {
       resetStore();
@@ -94,7 +94,7 @@ export default function ProfilesPage() {
   const handleTemplateSelect = (template: ResumeTemplate) => {
     setSelectedTemplate(template);
     setShowTemplateSelector(false);
-    
+
     // Open ProfileForm with selected template
     setModalContent({
       component: ProfileForm,
@@ -131,12 +131,12 @@ export default function ProfilesPage() {
 
   const handleProfileFormSave = (profileData: ProfileEntry[]) => {
     console.log('Profile data saved:', profileData);
-    
+
     if (!profileData.length || !profiles) return;
-    
+
     const profileEntry = profileData[0];
     const existingProfileIndex = profiles.findIndex(p => p.id === profileEntry.id);
-    
+
     if (existingProfileIndex >= 0) {
       // Update the profile using the store action
       updateProfile(profileEntry.id, {
@@ -144,7 +144,7 @@ export default function ProfilesPage() {
         completeness: Math.min(profiles[existingProfileIndex].completeness + 5, 100),
         formData: profileEntry
       });
-      
+
       // Show toast notification
       setTimeout(() => {
         toast({
@@ -154,7 +154,7 @@ export default function ProfilesPage() {
       }, 100);
     } else {
       console.log('New profile creation should be handled by the store\'s createRoleBasedProfile function');
-      
+
       // Show toast notification
       setTimeout(() => {
         toast({
@@ -163,7 +163,7 @@ export default function ProfilesPage() {
         });
       }, 100);
     }
-    
+
     // Close the modal
     setIsModalOpen(false);
     setModalContent(null);
@@ -180,11 +180,11 @@ export default function ProfilesPage() {
   const handleProfileSelect = (profileId: string) => {
     handleSetActiveProfile(profileId);
   };
-  
+
   const handleEditProfile = (e: React.MouseEvent, profileId: string) => {
     e.stopPropagation(); // Prevent profile selection
     const profileToEdit = (profiles || []).find(p => p.id === profileId);
-    
+
     if (profileToEdit) {
       // Use the formData from the profile which already has the correct domain and subdomain
       const profileEntry: ProfileEntry = profileToEdit.formData ? {
@@ -212,7 +212,7 @@ export default function ProfilesPage() {
         primarySkills: [],
         secondarySkills: []
       };
-      
+
       // Directly show the form with the profile data
       setModalContent({
         component: ProfileForm,
@@ -227,13 +227,13 @@ export default function ProfilesPage() {
       setIsModalOpen(true);
     }
   };
-  
+
   const handleDeleteClick = (e: React.MouseEvent, profileId: string) => {
     e.stopPropagation(); // Prevent profile selection
     setProfileToDelete(profileId);
     setDeleteModalOpen(true);
   };
-  
+
   const confirmDeleteProfile = async () => {
     if (profileToDelete) {
       try {
@@ -251,7 +251,7 @@ export default function ProfilesPage() {
 
         // Refresh profiles list after successful deletion
         await fetchRoleBasedProfiles();
-        
+
         setDeleteModalOpen(false);
         setProfileToDelete(null);
         toast({
@@ -274,7 +274,7 @@ export default function ProfilesPage() {
       // Clear any previous preview data and errors
       clearPreviewData();
       clearPreviewError();
-      
+
       // Get auth data for entity_id
       const authData = getAuthData();
       if (!authData?.entityId) {
@@ -298,7 +298,7 @@ export default function ProfilesPage() {
       // Set the profile for preview and show modal
       setPreviewProfile(profile);
       setShowResumePreview(true);
-      
+
     } catch (error) {
       console.error('Error fetching profile preview:', error);
       toast({
@@ -328,7 +328,7 @@ export default function ProfilesPage() {
         },
         'Manufacturing': {
           'MF1': 'Production & Operations',
-          'MF2': 'Automotive & Engineering', 
+          'MF2': 'Automotive & Engineering',
           'MF3': 'Quality & Maintenance',
           'MF4': 'Supply Chain & Materials'
         },
@@ -351,7 +351,7 @@ export default function ProfilesPage() {
     const renderFieldArray = (fieldName: string, label: string) => {
       const values = (formData as any)[fieldName];
       if (!values || !Array.isArray(values) || values.length === 0) return null;
-      
+
       return (
         <div className="mb-3">
           <p><strong>{label}:</strong></p>
@@ -369,7 +369,7 @@ export default function ProfilesPage() {
     const renderSingleField = (fieldName: string, label: string) => {
       const value = (formData as any)[fieldName];
       if (!value) return null;
-      
+
       return (
         <div className="mb-2">
           <p><strong>{label}:</strong> {value}</p>
@@ -560,7 +560,7 @@ export default function ProfilesPage() {
 
     // Create HTML content for the resume
     const resumeHTML = generateResumeHTML(formData);
-    
+
     // Create a temporary element to render the resume
     const printWindow = window.open('', '_blank');
     if (printWindow) {
@@ -599,13 +599,13 @@ export default function ProfilesPage() {
         </html>
       `);
       printWindow.document.close();
-      
+
       // Wait for content to load then trigger print
       setTimeout(() => {
         printWindow.print();
         printWindow.close();
       }, 500);
-      
+
       toast({
         title: "Download Started",
         description: "Your resume is being downloaded...",
@@ -616,7 +616,7 @@ export default function ProfilesPage() {
   const generateResumeHTML = (formData: ProfileEntry): string => {
     // Get portfolio and role-based profile data from the store
     const { profilePreviewData } = useResumeTemplateStore.getState();
-    
+
     // If we have preview data, use it; otherwise, fall back to form data
     const portfolio = profilePreviewData?.portfolio || {
       first_name: '',
@@ -633,7 +633,7 @@ export default function ProfilesPage() {
       education: [],
       work_experience: []
     };
-    
+
     const role_based_profile = profilePreviewData?.role_based_profile || {
       name: formData.id || '',
       role: formData.role || 'Professional',
@@ -695,9 +695,8 @@ export default function ProfilesPage() {
             <div>
               ${portfolio.work_experience.map((exp: any) => `
                 <div style="border-left: 2px solid #3b82f6; padding-left: 15px; margin-bottom: 15px;">
-                  <h4 style="margin: 0; font-size: 15px;">${exp.position || 'Position'}</h4>
-                  <p style="margin: 3px 0; color: #555;">${exp.company || 'Company'}</p>
-                  <p style="margin: 3px 0; font-size: 13px; color: #777;">${exp.duration || 'Duration'}</p>
+                  <h4 style="margin: 0; font-size: 15px;">Designation: ${exp.designation || 'Position'}</h4>
+                  <p style="margin: 3px 0; color: #555;">Company: ${exp.company || 'Company'}</p>
                   ${exp.description ? `<p style="margin: 5px 0; font-size: 14px;">${exp.description}</p>` : ''}
                 </div>
               `).join('')}
@@ -786,26 +785,26 @@ export default function ProfilesPage() {
     if (!profile.template || !profile.formData) return null;
 
     const { template, formData } = profile;
-    
+
     return (
-      <div className="mt-4 bg-gray-50 rounded-lg p-4">
-        <div className="flex items-center justify-between mb-3">
-          <h4 className="font-medium text-gray-900">Resume Preview - {template}</h4>
+      <div className="mt-4 bg-white rounded-lg p-4 h-12">
+        <div className="flex items-end justify-end mb-3">
+          {/* <h4 className="font-medium text-gray-900">Resume Preview</h4> */}
           <div className="flex space-x-2">
             <button
               onClick={() => handlePreviewResume(profile)}
-              className="flex items-center px-3 py-1.5 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+              className="flex items-center px-3 py-1.5 text-sm bg-[#007BCA] text-white rounded-md hover:bg-white hover:text-[#007BCA] border hover:border-[#007BCA] transition-colors"
             >
               <Eye className="w-4 h-4 mr-1" />
-              Preview
+              Preview & Download
             </button>
-            <button
-              onClick={() => handleDownloadResume(profile)}
+            {/* <button
+            onClick={() => handleDownloadResume(profile)}
               className="flex items-center px-3 py-1.5 text-sm bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
             >
               <Download className="w-4 h-4 mr-1" />
               Download
-            </button>
+            </button> */}
           </div>
         </div>
       </div>
@@ -839,13 +838,13 @@ export default function ProfilesPage() {
     }
     return null;
   };
-  
+
   // Render delete confirmation modal
   const renderDeleteModal = () => {
     if (!deleteModalOpen) return null;
-    
+
     const profileName = (profiles || []).find(p => p.id === profileToDelete)?.name || 'this profile';
-    
+
     return (
       <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
         <div className="bg-white rounded-xl p-6 shadow-lg max-w-md w-full">
@@ -941,7 +940,7 @@ export default function ProfilesPage() {
     const { portfolio, role_based_profile } = profilePreviewData;
 
     return (
-      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 font-nunito">
         <div className="bg-white rounded-xl shadow-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
           <div className="flex items-center justify-between p-6 border-b">
             <h3 className="text-xl font-semibold text-gray-900">
@@ -966,9 +965,9 @@ export default function ProfilesPage() {
               </button>
             </div>
           </div>
-          
+
           <div className="p-6 font-nunito">
-            <div className="bg-white border rounded-lg p-8 min-h-[600px]" style={{ fontFamily: 'Arial, sans-serif' }}>
+            <div className="bg-white border rounded-lg p-8 min-h-[600px]">
               {/* Header Section */}
               <div className="border-b-2 border-gray-800 pb-4 mb-6">
                 <h1 className="text-3xl font-bold mb-2">
@@ -1033,13 +1032,22 @@ export default function ProfilesPage() {
               <div className="mb-6">
                 <h2 className="text-lg font-bold mb-3 uppercase">Experience</h2>
                 <div className="space-y-2">
-                  <p><strong>Total Experience:</strong> {role_based_profile.total_experience_years} years</p>
-                  <p><strong>Relevant Experience:</strong> {role_based_profile.relevant_experience} years</p>
+                  {role_based_profile.total_experience_years !== null && (
+                    <p>
+                      <strong>Total Experience:</strong> {role_based_profile.total_experience_years} years
+                    </p>
+                  )}
+                  {role_based_profile.relevant_experience !== null && (
+                    <p>
+                      <strong>Relevant Experience:</strong> {role_based_profile.relevant_experience} years
+                    </p>
+                  )}
+
                   <p><strong>Employment Type:</strong> {role_based_profile.employment_type}</p>
                   <p><strong>Work Mode:</strong> {role_based_profile.work_mode}</p>
                   <p><strong>Nature of Work:</strong> {role_based_profile.nature_of_work}</p>
                 </div>
-                
+
                 {/* Work Experience Details */}
                 {portfolio.work_experience && portfolio.work_experience.length > 0 && (
                   <div className="mt-4">
@@ -1047,16 +1055,32 @@ export default function ProfilesPage() {
                     <div className="space-y-3">
                       {portfolio.work_experience.map((exp: any, index: number) => (
                         <div key={index} className="border-l-2 border-blue-500 pl-4">
-                          <h4 className="font-medium">{exp.position || 'Position'}</h4>
-                          <p className="text-gray-600">{exp.company || 'Company'}</p>
-                          <p className="text-sm text-gray-500">{exp.duration || 'Duration'}</p>
-                          {exp.description && <p className="text-sm mt-1">{exp.description}</p>}
+                          <h4 className="font-medium">Designation : {exp.designation || 'designation'}</h4>
+                          <p className="text-gray-600">Company : {exp.company || 'Company'}</p>
+                          {/* <p className="text-sm text-gray-500">{exp.duration || 'Duration'}</p> */}
+                          {exp.description && <p className="text-sm mt-1">Description : {exp.description}</p>}
                         </div>
                       ))}
                     </div>
                   </div>
                 )}
               </div>
+
+              {portfolio.education && portfolio.education.length > 0 && (
+                <div className="mb-6 font-nunito">
+                  <h2 className="text-lg font-bold mb-3 uppercase">Education</h2>
+                  <div className="space-y-3">
+                    {portfolio.education.map((edu: any, index: number) => (
+                      <div key={index} className="border-l-2 border-green-500 pl-4">
+                        <p className="font-medium text-md">Stream: {edu.stream || 'Degree'}</p>
+                        <p className="text-md">University: {edu.university_board || 'Institution'}</p>
+                        <p className="text-md">Year of Completion: {edu.year_of_completion || 'Year'}</p>
+                        {edu.grade && <p className="text-md">Grade: {edu.grade}</p>}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               {/* Skills Section */}
               <div className="mb-6">
@@ -1074,7 +1098,7 @@ export default function ProfilesPage() {
                       </div>
                     </div>
                   )}
-                  
+
                   {role_based_profile.secondary_skills && role_based_profile.secondary_skills.length > 0 && (
                     <div>
                       <h3 className="font-semibold mb-2">Secondary Skills</h3>
@@ -1091,21 +1115,7 @@ export default function ProfilesPage() {
               </div>
 
               {/* Education Section */}
-              {portfolio.education && portfolio.education.length > 0 && (
-                <div className="mb-6 font-nunito">
-                  <h2 className="text-lg font-bold mb-3 uppercase">Education</h2>
-                  <div className="space-y-3">
-                    {portfolio.education.map((edu: any, index: number) => (
-                      <div key={index} className="border-l-2 border-green-500 pl-4">
-                        <p className="font-medium text-md">Stream: {edu.stream || 'Degree'}</p>
-                        <p className="text-md">University: {edu.university_board || 'Institution'}</p>
-                        <p className="text-md">Year of Completion: {edu.year_of_completion || 'Year'}</p>
-                        {edu.grade && <p className="text-md">Grade: {edu.grade}</p>}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
+
 
               {/* Certifications */}
               {role_based_profile.certifications && (
@@ -1150,8 +1160,8 @@ export default function ProfilesPage() {
             <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Professional Profiles</h1>
             <p className="text-gray-600 mt-2">Manage multiple professional profiles for different career paths</p>
           </div>
-          
-          <button 
+
+          <button
             onClick={handleCreateProfile}
             className=" flex items-center px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors"
           >
@@ -1167,7 +1177,7 @@ export default function ProfilesPage() {
             <span className="text-gray-600">Loading profiles...</span>
           </div>
         )}
-        
+
         {/* Error State */}
         {error && (
           <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
@@ -1189,57 +1199,54 @@ export default function ProfilesPage() {
             </button>
           </div>
         )}
-        
+
         {/* Profiles Grid */}
         {!isLoading && !error && (
           <>
             {profiles && profiles.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {profiles.map((profile) => (
-                <div
-                  key={profile.id}
-                  onClick={() => handleProfileSelect(profile.id)}
-                  className={`bg-white rounded-xl shadow-sm border p-6 cursor-pointer transition-all hover:shadow-md ${
-                    activeProfile === profile.id ? 'border-orange-500 ring-2 ring-orange-100' : 'border-gray-200'
-                  }`}
-                >
-                  <div className="flex items-start justify-between mb-4">
-                    <div className="flex items-center space-x-3">
-                      <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
-                        activeProfile === profile.id ? 'bg-orange-100' : 'bg-gray-100'
-                      }`}>
-                        <User className={`w-6 h-6 ${
-                          activeProfile === profile.id ? 'text-orange-600' : 'text-gray-600'
-                        }`} />
+                  <div
+                    key={profile.id}
+                    onClick={() => handleProfileSelect(profile.id)}
+                    className={`bg-white rounded-xl shadow-sm border p-6 cursor-pointer transition-all hover:shadow-md ${activeProfile === profile.id ? 'border-orange-500 ring-2 ring-orange-100' : 'border-gray-200'
+                      }`}
+                  >
+                    <div className="flex items-start justify-between mb-4">
+                      <div className="flex items-center space-x-3">
+                        <div className={`w-12 h-12 rounded-full flex items-center justify-center ${activeProfile === profile.id ? 'bg-orange-100' : 'bg-gray-100'
+                          }`}>
+                          <User className={`w-6 h-6 ${activeProfile === profile.id ? 'text-orange-600' : 'text-gray-600'
+                            }`} />
+                        </div>
+                        <div>
+                          <h3 className="font-semibold text-gray-900">{profile.name}</h3>
+                          {/* <p className="text-sm text-gray-600">{profile.subdomain}</p> */}
+                        </div>
                       </div>
-                      <div>
-                        <h3 className="font-semibold text-gray-900">{profile.name}</h3>
-                        {/* <p className="text-sm text-gray-600">{profile.type}</p> */}
+                      <div className="flex items-center space-x-1">
+                        {profile.isActive && (
+                          <span className="px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded-full mr-2">
+                            Active
+                          </span>
+                        )}
+                        <button
+                          onClick={(e) => handleEditProfile(e, profile.id)}
+                          className="p-1.5 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
+                        >
+                          <Pencil className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={(e) => handleDeleteClick(e, profile.id)}
+                          className="p-1.5 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
                       </div>
                     </div>
-                    <div className="flex items-center space-x-1">
-                      {profile.isActive && (
-                        <span className="px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded-full mr-2">
-                          Active
-                        </span>
-                      )}
-                      <button 
-                        onClick={(e) => handleEditProfile(e, profile.id)}
-                        className="p-1.5 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
-                      >
-                        <Pencil className="w-4 h-4" />
-                      </button>
-                      <button 
-                        onClick={(e) => handleDeleteClick(e, profile.id)}
-                        className="p-1.5 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </div>
 
-                  <div className="space-y-3">
-                    {/* <div>
+                    <div className="space-y-3">
+                      {/* <div>
                       <div className="flex justify-between text-sm mb-1">
                         <span className="text-gray-600">Completeness</span>
                         <span className="font-medium">{profile.completeness}%</span>
@@ -1252,10 +1259,11 @@ export default function ProfilesPage() {
                       </div>
                     </div> */}
 
-                    {/* Resume Preview Section */}
-                    {renderResumePreview(profile)}
+                      {/* Resume Preview Section */}
+                      {renderResumePreview(profile)}
 
-                    {/* <div className="flex items-center justify-between pt-3 border-t border-gray-100">
+
+                      {/* <div className="flex items-center justify-between pt-3 border-t border-gray-100">
                       <div className="flex items-center space-x-1 text-sm text-gray-600">
                         <Eye className="w-4 h-4" />
                         <span>{profile.views} views</span>
@@ -1269,11 +1277,11 @@ export default function ProfilesPage() {
                         </button>
                       </div>
                     </div> */}
+                    </div>
                   </div>
-                </div>
-              ))
-              }
-            </div>
+                ))
+                }
+              </div>
             ) : (
               <div className="flex flex-col items-center justify-center py-16 px-4">
                 <div className="bg-gray-50 rounded-full p-6 mb-6">
@@ -1288,7 +1296,7 @@ export default function ProfilesPage() {
           </>
         )}
 
-      
+
       </div>
     </ModernLayoutWrapper>
   );

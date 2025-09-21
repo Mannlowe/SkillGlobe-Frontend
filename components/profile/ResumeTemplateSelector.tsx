@@ -50,6 +50,7 @@ const resumeTemplates: ResumeTemplate[] = [
     id: 'modern',
     name: 'Modern Minimal',
     description: 'Clean, centered layout with emphasis on content hierarchy',
+   
     fields: {
       personalInfo: true,
       experience: true,

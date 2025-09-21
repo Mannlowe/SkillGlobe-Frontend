@@ -53,7 +53,7 @@ export const usePersonalInfoStore = create<PersonalInfoState>((set, get) => ({
         website: '',
         employment_status: '',
         total_experience: '',
-        notice_period: '',
+        last_working_day: '',
         professional_summary: ''
       };
       
@@ -100,7 +100,7 @@ export const usePersonalInfoStore = create<PersonalInfoState>((set, get) => ({
         website: '',
         employment_status: '',
         total_experience: '',
-        notice_period: '',
+        last_working_day: '',
         professional_summary: ''
       };
       
@@ -125,7 +125,7 @@ landmark: data.landmark || currentData.landmark || '',
         website: data.website || currentData.website || '',
         employment_status: data.employment_status || currentData.employment_status || '',
         total_experience: data.total_experience || currentData.total_experience || '',
-        notice_period: data.notice_period || currentData.notice_period || '',
+        last_working_day: data.last_working_day || currentData.last_working_day || '',
         professional_summary: data.professional_summary || currentData.professional_summary || ''
       };
       

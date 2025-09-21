@@ -313,7 +313,7 @@ export default function Portfolio({
                 employmentStatus: portfolioData.employment_status || "",
                 website: portfolioData.website || "",
                 totalExperience: portfolioData.total_experience || "",
-                noticePeriod: portfolioData.notice_period || "",
+                noticePeriod: portfolioData.last_working_day || "",
                 professionalSummary: portfolioData.professional_summary || "",
               };
 
@@ -620,7 +620,7 @@ export default function Portfolio({
           employmentStatus: portfolioData.employment_status || "",
           website: portfolioData.website || "",
           totalExperience: portfolioData.total_experience || "",
-          noticePeriod: portfolioData.notice_period || "",
+          noticePeriod: portfolioData.last_working_day || "",
           professionalSummary: portfolioData.professional_summary || "",
         };
 

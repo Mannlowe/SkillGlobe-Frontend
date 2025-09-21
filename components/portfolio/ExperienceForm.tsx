@@ -246,18 +246,18 @@ export default function ExperienceForm({
           setEditMode(false);
         } else {
           // If no entries, add a new empty one and show the form
-          setEditMode(true);
           const newEntry = createEmptyEntry();
           setExperienceEntries([newEntry]);
           setActiveEntryId(newEntry.id);
+          setEditMode(true);
         }
       })
       .catch((error) => {
         console.error("Error fetching experience list:", error);
-        setEditMode(true);
         const newEntry = createEmptyEntry();
         setExperienceEntries([newEntry]);
-        setActiveEntryId(newEntry.id); // If API fails, try to load from localStorage
+        setActiveEntryId(newEntry.id); 
+        setEditMode(true);
         // try {
         //   const savedEntries = localStorage.getItem("experienceEntries");
         //   if (savedEntries) {

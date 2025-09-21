@@ -27,7 +27,7 @@ export interface PersonalInfoData {
   website?: string;
   employment_status?: string;
   total_experience?: string;
-  notice_period?: string;
+  last_working_day?: string;
   professional_summary?: string;
   profile_picture?: File;
 }

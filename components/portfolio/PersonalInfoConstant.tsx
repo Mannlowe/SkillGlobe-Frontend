@@ -135,7 +135,7 @@ useEffect(() => {
         profilePicture: null,
         website: personalInfo.website || '',
         totalExperience: personalInfo.total_experience || '',
-        noticePeriod: personalInfo.notice_period || '',
+        noticePeriod: personalInfo.last_working_day || '',
         professionalSummary: personalInfo.professional_summary || '',
       });
     }
@@ -420,7 +420,7 @@ useEffect(() => {
       website: formData.website,
       employment_status: formData.employmentStatus,
       total_experience: formData.totalExperience,
-      notice_period: formData.noticePeriod,
+      last_working_day: formData.noticePeriod,
       professional_summary: formData.professionalSummary
     };
     

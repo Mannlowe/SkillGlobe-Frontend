@@ -81,7 +81,7 @@ export default function ExperienceForm({
   );
 
   const [activeEntryId, setActiveEntryId] = useState<string>("");
-  const [editMode, setEditMode] = useState(false);
+  const [editMode, setEditMode] = useState(true);
   const [validationErrors, setValidationErrors] = useState<{
     [key: string]: string;
   }>({});
@@ -243,33 +243,36 @@ export default function ExperienceForm({
           // const newEntry = createEmptyEntry();
           // setExperienceEntries(prev => [...prev, newEntry]);
           setActiveEntryId(mappedEntries[0].id);
-          setEditMode(false); // Show the form view when component mounts
+          setEditMode(false);
         } else {
           // If no entries, add a new empty one and show the form
+          setEditMode(true);
           const newEntry = createEmptyEntry();
           setExperienceEntries([newEntry]);
           setActiveEntryId(newEntry.id);
-          setEditMode(true);
         }
       })
       .catch((error) => {
         console.error("Error fetching experience list:", error);
-        // If API fails, try to load from localStorage
-        try {
-          const savedEntries = localStorage.getItem("experienceEntries");
-          if (savedEntries) {
-            const parsedEntries = JSON.parse(savedEntries);
-            setExperienceEntries(parsedEntries);
-            if (parsedEntries.length > 0 && !activeEntryId) {
-              setActiveEntryId(parsedEntries[0].id);
-            }
-          }
-        } catch (e) {
-          console.error(
-            "Error loading experience entries from localStorage:",
-            e
-          );
-        }
+        setEditMode(true);
+        const newEntry = createEmptyEntry();
+        setExperienceEntries([newEntry]);
+        setActiveEntryId(newEntry.id); // If API fails, try to load from localStorage
+        // try {
+        //   const savedEntries = localStorage.getItem("experienceEntries");
+        //   if (savedEntries) {
+        //     const parsedEntries = JSON.parse(savedEntries);
+        //     setExperienceEntries(parsedEntries);
+        //     if (parsedEntries.length > 0 && !activeEntryId) {
+        //       setActiveEntryId(parsedEntries[0].id);
+        //     }
+        //   }
+        // } catch (e) {
+        //   console.error(
+        //     "Error loading experience entries from localStorage:",
+        //     e
+        //   );
+        // }
       });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

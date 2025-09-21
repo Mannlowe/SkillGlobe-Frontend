@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { 
   MapPin, 
   Briefcase, 
@@ -18,7 +18,7 @@ import {
 import DomainFields from './DomainFields';
 import { useRoleBasedProfileStore } from '@/store/role-based-profile/rolebasedprofileStore';
 import { CreateUpdateRoleBasedProfileRequest } from '@/app/api/Role Based Profile/rolebasedProfile';
-import { getSkills, getAuthData, type Skill } from '@/app/api/job postings/addjobPosting';
+import { getSkills, getAuthData, getCityList, type Skill, type City } from '@/app/api/job postings/addjobPosting';
 import { ResumeTemplate } from './ResumeTemplateSelector';
 
 interface ProfileFormProps {
@@ -76,6 +76,8 @@ export interface ProfileEntry {
   ph_department?: string;
   ph_licenses?: string[];
   ph_languages?: string[];
+  workEligibility?: string;
+  customWorkEligibility?: string;
 }
 
 export default function ProfileForm({ onSave, onCancel, initialData = [], showFormDirectly = false, isEditing = false, selectedTemplate }: ProfileFormProps) {
@@ -209,6 +211,9 @@ export default function ProfileForm({ onSave, onCancel, initialData = [], showFo
   const [primarySkillsDropdownOpen, setPrimarySkillsDropdownOpen] = useState(false);
   const [secondarySkillsDropdownOpen, setSecondarySkillsDropdownOpen] = useState(false);
   
+  // City dropdown state
+  const [cityDropdownOpen, setCityDropdownOpen] = useState(false);
+  
   // Skills API state
   const [availableSkills, setAvailableSkills] = useState<Skill[]>([]);
   const [primarySkillsSearch, setPrimarySkillsSearch] = useState('');
@@ -217,10 +222,36 @@ export default function ProfileForm({ onSave, onCancel, initialData = [], showFo
   const [filteredPrimarySkills, setFilteredPrimarySkills] = useState<Skill[]>([]);
   const [filteredSecondarySkills, setFilteredSecondarySkills] = useState<Skill[]>([]);
   
+  // Cities API state
+  const [availableCities, setAvailableCities] = useState<City[]>([]);
+  const [cityListLoading, setCityListLoading] = useState(false);
+  
   // Refs for click outside handling
   const primarySkillsDropdownRef = useRef<HTMLDivElement>(null);
   const secondarySkillsDropdownRef = useRef<HTMLDivElement>(null);
+  const cityDropdownRef = useRef<HTMLDivElement>(null);
   
+  // Fetch cities from API
+  const fetchCityList = useCallback(async () => {
+    const authData = getAuthData();
+    if (!authData) {
+      console.error('No auth data available for city list API');
+      return [];
+    }
+
+    setCityListLoading(true);
+    try {
+      const cities = await getCityList(authData.apiKey, authData.apiSecret);
+      setAvailableCities(cities);
+      return cities;
+    } catch (error) {
+      console.error('Error fetching city list:', error);
+      return [];
+    } finally {
+      setCityListLoading(false);
+    }
+  }, []);
+
   // Fetch skills on component mount
   useEffect(() => {
     const fetchSkills = async () => {
@@ -241,7 +272,8 @@ export default function ProfileForm({ onSave, onCancel, initialData = [], showFo
     };
 
     fetchSkills();
-  }, []);
+    fetchCityList(); // Fetch cities when component mounts
+  }, [fetchCityList]);
 
   // Filter skills based on search terms
   useEffect(() => {
@@ -281,6 +313,13 @@ export default function ProfileForm({ onSave, onCancel, initialData = [], showFo
         !secondarySkillsDropdownRef.current.contains(event.target as Node)
       ) {
         setSecondarySkillsDropdownOpen(false);
+      }
+      
+      if (
+        cityDropdownRef.current && 
+        !cityDropdownRef.current.contains(event.target as Node)
+      ) {
+        setCityDropdownOpen(false);
       }
     }
     
@@ -447,6 +486,7 @@ export default function ProfileForm({ onSave, onCancel, initialData = [], showFo
   const workNatures = ['Full-time', 'Part-time'];
   const workModes = ['WFO', 'WFH', 'Hybrid', 'No Preference'];
   const profileTypes = ['IT', 'Manufacturing', 'Banking', 'Hospitality', 'Pharma & Healthcare', 'Others'];
+  const workEligibilities = ['Citizen', 'Permanent Resident', 'Work Permit', 'Green Card', 'Other'];
 
   // IT Subdomain options - using full names as expected by backend
   const itSubDomains = [
@@ -564,10 +604,16 @@ export default function ProfileForm({ onSave, onCancel, initialData = [], showFo
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     if (editingEntry) {
-      setEditingEntry({
+      const updatedEntry = {
         ...editingEntry,
         [name]: value
-      });
+      };
+      
+      if (name === 'workEligibility' && value !== 'Other') {
+        updatedEntry.customWorkEligibility = '';
+      }
+      
+      setEditingEntry(updatedEntry);
     }
   };
 
@@ -629,7 +675,9 @@ export default function ProfileForm({ onSave, onCancel, initialData = [], showFo
         preferred_city: editingEntry.preferredCity || '',
         preferred_country: editingEntry.preferredCountry || '',
         relevant_experience: editingEntry.relevantExperience || '',
-        work_eligibility: '',
+        work_eligibility: editingEntry.workEligibility === 'Other' 
+          ? editingEntry.customWorkEligibility || '' 
+          : editingEntry.workEligibility || '',
         primary_skills: editingEntry.primarySkills?.map(skill => ({ skill: skill.name })) || [],
         secondary_skills: editingEntry.secondarySkills?.map(skill => ({ skill: skill.name })) || [],
         
@@ -672,15 +720,8 @@ export default function ProfileForm({ onSave, onCancel, initialData = [], showFo
         
         if (response) {
           console.log('Profile created successfully');
-          // Add to local state
-          const newEntry = {
-            ...editingEntry,
-            id: response.message.data.name || editingEntry.id, // Use API response name if available
-            primarySkills: Array.isArray(editingEntry.primarySkills) ? [...editingEntry.primarySkills] : [],
-            secondarySkills: Array.isArray(editingEntry.secondarySkills) ? [...editingEntry.secondarySkills] : []
-          };
-          
-          setProfileEntries([...profileEntries, newEntry]);
+          // Note: The store's createRoleBasedProfile already refreshes the profile list
+          // so we don't need to add to local state here to avoid duplication
           
           // Show success message
           setSuccessMessage('Profile created successfully!');
@@ -1189,6 +1230,36 @@ export default function ProfileForm({ onSave, onCancel, initialData = [], showFo
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Work Eligibility
+                </label>
+                <select 
+                name="workEligibility" 
+                value={editingEntry?.workEligibility || ''}
+                onChange={handleInputChange}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                required
+                >
+                  <option value="">Select Work Eligibility</option>
+                  {workEligibilities.map(eligibility => (
+                    <option key={eligibility} value={eligibility}>{eligibility}</option>
+                  ))}
+                </select>
+                {editingEntry?.workEligibility === 'Other' && (
+                  <div className="mt-2">
+                    <input
+                      type="text"
+                      name="customWorkEligibility"
+                      value={editingEntry?.customWorkEligibility || ''}
+                      onChange={handleInputChange}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder="Please specify your work eligibility"
+                      required
+                    />
+                  </div>
+                )}
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
                   Minimum Earnings
                 </label>
                 <input
@@ -1221,14 +1292,53 @@ export default function ProfileForm({ onSave, onCancel, initialData = [], showFo
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Preferred City
                 </label>
-                <input
-                  type="text"
-                  name="preferredCity"
-                  value={editingEntry?.preferredCity || ''}
-                  onChange={handleInputChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="e.g. Bangalore"
-                />
+                <div className="relative" ref={cityDropdownRef}>
+                  <div 
+                    className="w-full px-4 py-2 bg-gray-50 rounded-lg border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all flex justify-between items-center cursor-pointer"
+                    onClick={() => !cityListLoading && setCityDropdownOpen(!cityDropdownOpen)}
+                  >
+                    <span className={!editingEntry?.preferredCity ? "text-gray-500" : ""}>
+                      {cityListLoading ? 'Loading cities...' : (editingEntry?.preferredCity || 'Select a city')}
+                    </span>
+                    {cityListLoading ? (
+                      <Loader2 className="h-4 w-4 animate-spin text-gray-400" />
+                    ) : (
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+                      </svg>
+                    )}
+                  </div>
+                  
+                  {cityDropdownOpen && !cityListLoading && (
+                    <div className="absolute z-10 mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-auto">
+                      <div 
+                        className="px-4 py-2 hover:bg-gray-100 cursor-pointer text-gray-500"
+                        onClick={() => {
+                          if (editingEntry) {
+                            setEditingEntry({ ...editingEntry, preferredCity: '' });
+                          }
+                          setCityDropdownOpen(false);
+                        }}
+                      >
+                        Select a city
+                      </div>
+                      {availableCities.map((city) => (
+                        <div
+                          key={city.name}
+                          className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
+                          onClick={() => {
+                            if (editingEntry) {
+                              setEditingEntry({ ...editingEntry, preferredCity: city.name });
+                            }
+                            setCityDropdownOpen(false);
+                          }}
+                        >
+                          {city.name}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
               
               <div>

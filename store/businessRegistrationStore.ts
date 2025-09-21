@@ -4,6 +4,7 @@ import {
   BusinessDetailsRequest,
   BusinessDetailsResponse
 } from '../app/api/registration/businessDetails';
+import { resendOtp } from '../app/api/registration/verifyOtp';
 import { useRegistrationStore } from './registration';
 
 export interface BusinessRegistrationState {
@@ -25,6 +26,8 @@ export interface BusinessRegistrationState {
   setRequestId: (requestId: string) => void;
   updateBusinessData: (data: Partial<BusinessRegistrationState>) => void;
   submitBusinessDetails: () => Promise<BusinessDetailsResponse>;
+  resendEmailOtp: () => Promise<void>;
+  resendPhoneOtp: () => Promise<void>;
   clearError: () => void;
   resetBusinessRegistration: () => void;
 }
@@ -98,6 +101,38 @@ export const useBusinessRegistrationStore = create<BusinessRegistrationState>((s
       
       // Re-throw the same error without wrapping it in a new Error object
       throw err;
+    }
+  },
+
+  resendEmailOtp: async () => {
+    const state = get();
+    
+    if (!state.emailVerificationId) {
+      throw new Error('Email verification ID not found. Please complete business details first.');
+    }
+
+    try {
+      await resendOtp(state.emailVerificationId);
+      console.log('Email OTP resent successfully for business registration');
+    } catch (error: any) {
+      console.error('Error resending email OTP for business:', error);
+      throw new Error(error.response?.data?.message || 'Failed to resend email OTP');
+    }
+  },
+
+  resendPhoneOtp: async () => {
+    const state = get();
+    
+    if (!state.phoneVerificationId) {
+      throw new Error('Phone verification ID not found. Please complete business details first.');
+    }
+
+    try {
+      await resendOtp(state.phoneVerificationId);
+      console.log('Phone OTP resent successfully for business registration');
+    } catch (error: any) {
+      console.error('Error resending phone OTP for business:', error);
+      throw new Error(error.response?.data?.message || 'Failed to resend phone OTP');
     }
   },
 

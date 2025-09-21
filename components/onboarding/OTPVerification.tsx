@@ -3,14 +3,16 @@
 import { useState, useEffect } from 'react';
 import { Mail, Phone, RefreshCw } from 'lucide-react';
 import { useRegistrationStore } from '@/store/registration';
+import { useBusinessRegistrationStore } from '@/store/businessRegistrationStore';
 
 interface OTPVerificationProps {
   data: any;
   updateData: (data: any) => void;
   nextStep: () => void;
+  userType?: string;
 }
 
-export default function OTPVerification({ data, updateData, nextStep }: OTPVerificationProps) {
+export default function OTPVerification({ data, updateData, nextStep, userType }: OTPVerificationProps) {
   const [emailTimer, setEmailTimer] = useState(90);
   const [mobileTimer, setMobileTimer] = useState(90);
   const [canResendEmail, setCanResendEmail] = useState(false);
@@ -23,8 +25,30 @@ export default function OTPVerification({ data, updateData, nextStep }: OTPVerif
     return `${minutes} min ${seconds < 10 ? '0' : ''}${seconds} sec`;
   };
 
-  // Get registration store state and actions
-  const { verifyOtpCodes, resendEmailOtp, resendPhoneOtp, clearError, isLoading, error: apiError, request_id } = useRegistrationStore();
+  // Get registration store state and actions based on user type
+  const individualStore = useRegistrationStore();
+  const businessStore = useBusinessRegistrationStore();
+  
+  const isBusinessRegistration = userType === 'business';
+  
+  // Use appropriate store based on registration type
+  const {
+    verifyOtpCodes,
+    resendEmailOtp,
+    resendPhoneOtp,
+    clearError,
+    isLoading,
+    error: apiError,
+    request_id
+  } = isBusinessRegistration ? {
+    verifyOtpCodes: individualStore.verifyOtpCodes, // Business uses same verification logic
+    resendEmailOtp: businessStore.resendEmailOtp,
+    resendPhoneOtp: businessStore.resendPhoneOtp,
+    clearError: businessStore.clearError,
+    isLoading: businessStore.isLoading,
+    error: businessStore.error,
+    request_id: individualStore.request_id // Business uses same request_id from individual store
+  } : individualStore;
 
   // Clear any previous errors when component mounts
   useEffect(() => {

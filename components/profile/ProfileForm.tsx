@@ -99,6 +99,26 @@ export default function ProfileForm({ onSave, onCancel, initialData = [], showFo
     rawProfiles
   } = useRoleBasedProfileStore();
 
+  // Helper function to ensure domain fields are in correct format
+  const ensureDomainFieldsFormat = (entry: ProfileEntry): ProfileEntry => {
+    if (!entry) return entry;
+    
+    const convertedEntry = { ...entry };
+    
+    // Convert any object arrays back to string arrays for UI compatibility
+    Object.keys(convertedEntry).forEach(key => {
+      const value = (convertedEntry as any)[key];
+      if (Array.isArray(value) && value.length > 0 && typeof value[0] === 'object') {
+        // Convert array of objects back to array of strings
+        (convertedEntry as any)[key] = value.map(item => 
+          typeof item === 'object' ? Object.values(item)[0] : item
+        );
+      }
+    });
+    
+    return convertedEntry;
+  };
+
   // Function to populate form with existing profile data for editing
   const populateFormWithProfileData = (profileName: string) => {
     if (!rawProfiles) return null;
@@ -237,7 +257,7 @@ export default function ProfileForm({ onSave, onCancel, initialData = [], showFo
     };
 
     console.log('Populated profile entry with domain fields:', profileEntry);
-    return profileEntry;
+    return ensureDomainFieldsFormat(profileEntry);
   };
 
   // Helper function to map space back to profile type
@@ -671,7 +691,7 @@ export default function ProfileForm({ onSave, onCancel, initialData = [], showFo
     }
     
     console.log('Final entryToEdit - profileType:', entryToEdit.profileType, 'subDomain:', entryToEdit.subDomain);
-    setEditingEntry(entryToEdit);
+    setEditingEntry(ensureDomainFieldsFormat(entryToEdit));
     setShowEditForm(true);
   };
 

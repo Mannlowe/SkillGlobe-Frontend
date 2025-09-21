@@ -140,18 +140,24 @@ const DomainFields: React.FC<DomainFieldsProps> = ({ profileType, subDomain, edi
             />
           </div>
           <div className="w-1/2 flex flex-wrap gap-2 p-3 border border-gray-300 rounded-md min-h-[42px] bg-gray-50">
-            {((editingEntry as any)?.[fieldName] || []).map((value: string) => (
-              <span key={value} className={`inline-flex items-center px-3 py-1 rounded-full text-sm ${colorClass}`}>
-                {value}
-                <button
-                  type="button"
-                  onClick={() => removeValue(value)}
-                  className="ml-2 hover:opacity-80"
-                >
-                  ×
-                </button>
-              </span>
-            ))}
+            {((editingEntry as any)?.[fieldName] || []).map((value: any, index: number) => {
+              // Handle both old string format and new object format from API
+              const displayValue = typeof value === 'string' ? value : (typeof value === 'object' && value ? Object.values(value)[0] : value);
+              const keyValue = typeof displayValue === 'string' ? displayValue : `${fieldName}-${index}`;
+              
+              return (
+                <span key={keyValue} className={`inline-flex items-center px-3 py-1 rounded-full text-sm ${colorClass}`}>
+                  {displayValue}
+                  <button
+                    type="button"
+                    onClick={() => removeValue(typeof value === 'string' ? value : displayValue)}
+                    className="ml-2 hover:opacity-80"
+                  >
+                    ×
+                  </button>
+                </span>
+              );
+            })}
           </div>
         </div>
       </div>

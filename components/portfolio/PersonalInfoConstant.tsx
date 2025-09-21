@@ -25,7 +25,7 @@ export const usePersonalInfoForm = ({ onSave, onCancel, initialData = {} }: Pers
     updatePersonalInfo 
   } = usePersonalInfoStore();
   
-  console.log('DEBUG - PersonalInfoForm - personalInfo from store:', personalInfo);
+  // console.log('DEBUG - PersonalInfoForm - personalInfo from store:', personalInfo);
 
   const [userName, setUserName] = useState('');
   const { user, isAuthenticated } = useAuthStore();

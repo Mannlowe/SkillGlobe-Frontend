@@ -1,4 +1,4 @@
-import axios from 'axios';
+import axios from "axios";
 
 // Base URL for API calls
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
@@ -33,13 +33,19 @@ export interface CertificateListResponse {
         certificate_type?: string;
         document_upload?: string | null;
         issuing_organisation?: string;
-      }>
-    }
+      }>;
+    };
   };
   exception?: string;
   exc_type?: string;
   exc?: string;
   _server_messages?: string;
+}
+export interface DeleteCertificateResponse {
+  message: {
+    status: string;
+    message: string;
+  };
 }
 
 export const addCertificate = async (
@@ -48,39 +54,92 @@ export const addCertificate = async (
   apiSecret: string
 ): Promise<AddCertificateResponse> => {
   try {
-    console.log('Adding certificate with entity ID:', certificateData.entity_id);
-    
+    console.log(
+      "Adding certificate with entity ID:",
+      certificateData.entity_id
+    );
+
     // Create FormData object
     const formData = new FormData();
-    formData.append('entity_id', certificateData.entity_id);
-    formData.append('document_name', certificateData.document_name);
-    formData.append('certificate_type', certificateData.certificate_type);
-    formData.append('document_upload', certificateData.document_upload);
-    
+    formData.append("entity_id", certificateData.entity_id);
+    formData.append("document_name", certificateData.document_name);
+    formData.append("certificate_type", certificateData.certificate_type);
+    formData.append("document_upload", certificateData.document_upload);
+
     // Add issuing organization if available
     if (certificateData.issuing_organisation) {
-      formData.append('issuing_organisation', certificateData.issuing_organisation);
+      formData.append(
+        "issuing_organisation",
+        certificateData.issuing_organisation
+      );
     }
-    
+
     // Create authorization header
     const authHeader = `token ${apiKey}:${apiSecret}`;
-    
+
     const response = await axios.post<AddCertificateResponse>(
       `${API_BASE_URL}/api/method/skillglobe_be.api.portfolio.certificate.add_certificates`,
       formData,
       {
         headers: {
-          'Authorization': authHeader,
-          'Accept': 'application/json',
+          Authorization: authHeader,
+          Accept: "application/json",
           // Don't set Content-Type when using FormData, axios will set it with the correct boundary
-        }
+        },
       }
     );
-    
-    console.log('Add certificate response:', response.data);
+
+    console.log("Add certificate response:", response.data);
     return response.data;
   } catch (error: any) {
-    console.error('Add certificate error:', error.response?.data || error.message || error);
+    console.error(
+      "Add certificate error:",
+      error.response?.data || error.message || error
+    );
+    throw error;
+  }
+};
+
+export const deleteCertificate = async (
+  name: string
+): Promise<DeleteCertificateResponse> => {
+  try {
+    const authData = getAuthData();
+    if (!authData) {
+      throw new Error("Authentication data not found. Please log in again.");
+    }
+
+    // Get entity ID from entity_data
+    let entityId = "";
+    const entityDataStr = localStorage.getItem("entity_data");
+    if (entityDataStr) {
+      const entityData = JSON.parse(entityDataStr);
+      if (entityData && entityData.details && entityData.details.entity_id) {
+        entityId = entityData.details.entity_id;
+      }
+    }
+
+    const response = await axios.delete<DeleteCertificateResponse>(
+      `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/method/skillglobe_be.api.portfolio.certificate.delete_certificate`,
+      {
+        data: {
+          entity_id: entityId,
+          name,
+        },
+        headers: {
+          Authorization: `token ${authData.apiKey}:${authData.apiSecret}`,
+          Accept: "application/json",
+        },
+      }
+    );
+
+    console.log("response:", response.data);
+    return response.data;
+  } catch (error: any) {
+    console.error(
+      "certificate error:",
+      error.response?.data || error.message || error
+    );
     throw error;
   }
 };
@@ -91,7 +150,7 @@ export const getCertificateList = async (
   apiSecret: string
 ): Promise<CertificateListResponse> => {
   try {
-    console.log('Getting certificate list for entity ID:', entityId);
+    console.log("Getting certificate list for entity ID:", entityId);
 
     // Authorization header
     const authHeader = `token ${apiKey}:${apiSecret}`;
@@ -101,52 +160,60 @@ export const getCertificateList = async (
 
     const response = await axios.get<CertificateListResponse>(url, {
       headers: {
-        'Authorization': authHeader,
-        'Accept': 'application/json'
-      }
+        Authorization: authHeader,
+        Accept: "application/json",
+      },
     });
 
-    console.log('Get certificate list response:', response.data);
+    // console.log("Get certificate list response:", response.data);
+
     return response.data;
   } catch (error: any) {
-    console.error('Get certificate list error:', error.response?.data || error.message || error);
+    console.error(
+      "Get certificate list error:",
+      error.response?.data || error.message || error
+    );
     throw error;
   }
 };
 
 export const getAuthData = () => {
-  if (typeof window === 'undefined') {
+  if (typeof window === "undefined") {
     return null;
   }
-  
+
   try {
     // Get auth data from individual localStorage items
-    const apiKey = localStorage.getItem('auth_api_key');
-    const apiSecret = localStorage.getItem('auth_api_secret');
-    
+    const apiKey = localStorage.getItem("auth_api_key");
+    const apiSecret = localStorage.getItem("auth_api_secret");
+
     // Get entity ID from entity_data
-    let entityId = '';
-    const entityDataStr = localStorage.getItem('entity_data');
+    let entityId = "";
+    const entityDataStr = localStorage.getItem("entity_data");
     if (entityDataStr) {
       const entityData = JSON.parse(entityDataStr);
       if (entityData && entityData.details && entityData.details.entity_id) {
         entityId = entityData.details.entity_id;
       }
     }
-    
+
     // Check if we have all required data
     if (!apiKey || !apiSecret || !entityId) {
-      console.log('Missing auth data:', { hasApiKey: !!apiKey, hasApiSecret: !!apiSecret, hasEntityId: !!entityId });
+      console.log("Missing auth data:", {
+        hasApiKey: !!apiKey,
+        hasApiSecret: !!apiSecret,
+        hasEntityId: !!entityId,
+      });
       return null;
     }
-    
+
     return {
       apiKey,
       apiSecret,
-      entityId
+      entityId,
     };
   } catch (error) {
-    console.error('Error getting auth data from localStorage:', error);
+    console.error("Error getting auth data from localStorage:", error);
     return null;
   }
 };

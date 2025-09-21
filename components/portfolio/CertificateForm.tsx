@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import {
   addCertificate,
+  deleteCertificate,
   getAuthData,
   getCertificateList,
 } from "@/app/api/portfolio/addCertificate";
@@ -405,7 +406,7 @@ export default function CertificateForm({
     // You could open a modal or set some state to edit this certificate
   };
 
-  const deleteApiCertificate = (cert: any) => {
+  const deleteApiCertificate = async (cert: any) => {
     // Here you would implement delete functionality for API certificates
     console.log("Delete certificate:", cert);
     // You could show a confirmation dialog and then delete the certificate
@@ -415,7 +416,11 @@ export default function CertificateForm({
       )
     ) {
       // Remove from API certificates list
-      setApiCertificates((prev) => prev.filter((c) => c.id !== cert.id));
+      const res = await deleteCertificate(cert.name)
+     if(res.message.status==="success" && res.message.message==="Certificate deleted successfully"){
+          fetchCertificateList();        
+       // setApiCertificates((prev) => prev.filter((c) => c.id !== cert.id));
+      }
     }
   };
 

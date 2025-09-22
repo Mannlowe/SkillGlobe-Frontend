@@ -413,9 +413,6 @@ export default function JobAppliedUsersPage() {
                             )}
                             <div className="mt-3">
                               <div className="flex items-center gap-2">
-                                <span className="text-sm text-gray-500">
-                                  Key Skills:
-                                </span>
                                 <div className="flex flex-wrap gap-1">
                                   {applicant.skills
                                     .slice(0, 4)

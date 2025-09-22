@@ -363,7 +363,6 @@ export default function JobAppliedUsersPage() {
                                 </div>
                               )}
                             </div>
-<<<<<<< HEAD
                             <div className="flex flex-wrap gap-1 mt-2">
                               {applicant.skills
                                 .slice(0, 4)
@@ -380,76 +379,6 @@ export default function JobAppliedUsersPage() {
                                   +{applicant.skills.length - 4} more
                                 </span>
                               )}
-=======
-
-                            {/* Additional Information for Pending Applicants */}
-                            {applicant.status === "pending" && (
-                              <div className="grid grid-cols-2 gap-4 mt-3 text-sm">
-                                <div>
-                                  <span className="text-gray-500">
-                                    Current Role:
-                                  </span>
-                                  <span className="ml-2 text-gray-900">
-                                    {applicant.currentRole &&
-                                    applicant.currentRole.trim() !== ""
-                                      ? applicant.currentRole
-                                      : "-"}
-                                  </span>
-                                </div>
-                                <div>
-                                  <span className="text-gray-500">Domain:</span>
-                                  <span className="ml-2 text-gray-900">
-                                    {applicant.domain &&
-                                    applicant.domain.trim() !== ""
-                                      ? applicant.domain
-                                      : "-"}
-                                  </span>
-                                </div>
-                                <div>
-                                  <span className="text-gray-500">
-                                    Work Mode:
-                                  </span>
-                                  <span className="ml-2 text-gray-900">
-                                    {applicant.workModePreference &&
-                                    applicant.workModePreference.trim() !== ""
-                                      ? applicant.workModePreference
-                                      : "-"}
-                                  </span>
-                                </div>
-                                <div>
-                                  <span className="text-gray-500">
-                                    Education:
-                                  </span>
-                                  <span className="ml-2 text-gray-900">
-                                    {applicant.higherEducation &&
-                                    applicant.higherEducation.trim() !== ""
-                                      ? applicant.higherEducation
-                                      : "-"}
-                                  </span>
-                                </div>
-                              </div>
-                            )}
-                            <div className="mt-3">
-                              <div className="flex items-center gap-2">
-                                <div className="flex flex-wrap gap-1">
-                                  {applicant.skills
-                                    .slice(0, 4)
-                                    .map((skill, index) => (
-                                      <span
-                                        key={index}
-                                        className="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded"
-                                      >
-                                        {skill}
-                                      </span>
-                                    ))}
-                                  {applicant.skills.length > 4 && (
-                                    <span className="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded">
-                                      +{applicant.skills.length - 4} more
-                                    </span>
-                                  )}
-                                </div>
-                              </div>
->>>>>>> 24ed3c3a0b63de4d966d238c4c7ebfa4589cbc2b
                             </div>
                           </div>
                         </div>
@@ -490,9 +419,7 @@ export default function JobAppliedUsersPage() {
                                 >
                                   <Star size={16} />
                                 </button>
-<<<<<<< HEAD
-=======
-                                <button
+                                {/* <button
                                   onClick={() =>
                                     handleStatusChange(applicant.id, "rejected")
                                   }
@@ -500,8 +427,7 @@ export default function JobAppliedUsersPage() {
                                   title="Reject"
                                 >
                                   <XCircle size={16} />
-                                </button>
->>>>>>> 24ed3c3a0b63de4d966d238c4c7ebfa4589cbc2b
+                                </button> */}
                               </>
                             )}
 

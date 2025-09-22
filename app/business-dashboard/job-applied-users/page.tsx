@@ -398,6 +398,17 @@ export default function JobAppliedUsersPage() {
                                       : "-"}
                                   </span>
                                 </div>
+                                <div>
+                                  <span className="text-gray-500">
+                                    Education:
+                                  </span>
+                                  <span className="ml-2 text-gray-900">
+                                    {applicant.higherEducation &&
+                                    applicant.higherEducation.trim() !== ""
+                                      ? applicant.higherEducation
+                                      : "-"}
+                                  </span>
+                                </div>
                               </div>
                             )}
                             <div className="mt-3">

@@ -50,6 +50,7 @@ export interface ProfileData {
   country_code: string | null;
   primary_skills: Array<string | { skill_name?: string; skill?: string }>;
   secondary_skills: Array<string | { skill_name?: string; skill?: string }>;
+  latest_education_level: string | null; // Latest education level
 
   // Optional backend status
   status?: string; // shortlisted, rejected, etc.

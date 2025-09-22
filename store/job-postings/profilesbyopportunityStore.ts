@@ -32,6 +32,7 @@ export interface Applicant {
   domain?: string; // rbp_space
   workModePreference?: string; // rbp_work_mode
   primarySkills?: string[]; // Separate primary skills
+  higherEducation?: string; // latest_education_level
 }
 
 // Utility function to convert API profile data to Applicant format
@@ -134,6 +135,7 @@ const mapProfileDataToApplicant = (profile: ProfileData): Applicant => {
     domain: profile.rbp_space || undefined,
     workModePreference: profile.rbp_work_mode || undefined,
     primarySkills: primarySkills,
+    higherEducation: profile.latest_education_level || undefined,
   };
 };
 

@@ -760,11 +760,9 @@ export default function JobAppliedUsersPage() {
                             {edu.stream || "-"}
                           </p>
                           <p className="text-gray-600">
-                            {edu.university_board &&
-                            edu.university_board !== "undefined"
-                              ? `${edu.university_board} • `
-                              : ""}
-                            Completed: {edu.year_of_completion || "-"}
+                            {`${edu.university_board || ""} - ${
+                              edu.year_of_completion || "-"
+                            }`}
                           </p>
                         </div>
                       ))

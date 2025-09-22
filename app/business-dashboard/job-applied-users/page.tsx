@@ -337,7 +337,7 @@ export default function JobAppliedUsersPage() {
                                 <Phone size={14} /> {applicant.phone}
                               </span>
                               <span className="flex items-center gap-1">
-                                <MapPin size={14} /> {applicant.location}
+                                <MapPin size={14} /> {applicant.location || "-"}
                               </span>
                             </div>
                             <div className="flex items-center gap-2 mt-2">
@@ -363,6 +363,56 @@ export default function JobAppliedUsersPage() {
                                 </div>
                               )}
                             </div>
+
+                            {/* Additional Information for Pending Applicants */}
+                            {applicant.status === "pending" && (
+                              <div className="grid grid-cols-2 gap-4 mt-3 text-sm">
+                                <div>
+                                  <span className="text-gray-500">
+                                    Current Role:
+                                  </span>
+                                  <span className="ml-2 text-gray-900">
+                                    {applicant.currentRole &&
+                                    applicant.currentRole.trim() !== ""
+                                      ? applicant.currentRole
+                                      : "-"}
+                                  </span>
+                                </div>
+                                <div>
+                                  <span className="text-gray-500">Domain:</span>
+                                  <span className="ml-2 text-gray-900">
+                                    {applicant.domain &&
+                                    applicant.domain.trim() !== ""
+                                      ? applicant.domain
+                                      : "-"}
+                                  </span>
+                                </div>
+                                <div>
+                                  <span className="text-gray-500">
+                                    Work Mode:
+                                  </span>
+                                  <span className="ml-2 text-gray-900">
+                                    {applicant.workModePreference &&
+                                    applicant.workModePreference.trim() !== ""
+                                      ? applicant.workModePreference
+                                      : "-"}
+                                  </span>
+                                </div>
+                                <div>
+                                  <span className="text-gray-500">
+                                    Key Skills:
+                                  </span>
+                                  <span className="ml-2 text-gray-900">
+                                    {applicant.primarySkills &&
+                                    applicant.primarySkills.length > 0
+                                      ? applicant.primarySkills
+                                          .slice(0, 3)
+                                          .join(", ")
+                                      : "-"}
+                                  </span>
+                                </div>
+                              </div>
+                            )}
                             <div className="flex flex-wrap gap-1 mt-2">
                               {applicant.skills
                                 .slice(0, 4)

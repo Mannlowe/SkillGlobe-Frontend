@@ -748,7 +748,7 @@ export default function JobAppliedUsersPage() {
                               {exp.company || "-"}
                             </p>
                             <p className="text-sm text-gray-500 mt-1">
-                              {exp.duration || "-"}
+                              {exp.duration || "-"} Years
                             </p>
                           </div>
                         )

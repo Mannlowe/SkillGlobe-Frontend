@@ -79,18 +79,20 @@ export default function JobAppliedUsersPage() {
     };
   }, [jobId, fetchProfilesByOpportunity, resetStore]);
 
-
-  const handleStatusChange = async (applicantId: string, newStatus: Applicant['status']) => {
+  const handleStatusChange = async (
+    applicantId: string,
+    newStatus: Applicant["status"]
+  ) => {
     try {
       await updateApplicantStatus(applicantId, newStatus);
-      
+
       // Show success message for "Show Interest" action
-      if (newStatus === 'interested') {
-        console.log('Successfully showed interest in profile');
+      if (newStatus === "interested") {
+        console.log("Successfully showed interest in profile");
         // You can add a toast notification here if needed
       }
     } catch (error) {
-      console.error('Error updating status:', error);
+      console.error("Error updating status:", error);
       // You can add error handling/toast notification here if needed
     }
   };
@@ -335,7 +337,7 @@ export default function JobAppliedUsersPage() {
                                 <Phone size={14} /> {applicant.phone}
                               </span>
                               <span className="flex items-center gap-1">
-                                <MapPin size={14} /> {applicant.location}
+                                <MapPin size={14} /> {applicant.location || "-"}
                               </span>
                             </div>
                             <div className="flex items-center gap-2 mt-2">
@@ -361,22 +363,74 @@ export default function JobAppliedUsersPage() {
                                 </div>
                               )}
                             </div>
-                            <div className="flex flex-wrap gap-1 mt-2">
-                              {applicant.skills
-                                .slice(0, 4)
-                                .map((skill, index) => (
-                                  <span
-                                    key={index}
-                                    className="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded"
-                                  >
-                                    {skill}
+
+                            {/* Additional Information for Pending Applicants */}
+                            {applicant.status === "pending" && (
+                              <div className="grid grid-cols-2 gap-4 mt-3 text-sm">
+                                <div>
+                                  <span className="text-gray-500">
+                                    Current Role:
                                   </span>
-                                ))}
-                              {applicant.skills.length > 4 && (
-                                <span className="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded">
-                                  +{applicant.skills.length - 4} more
-                                </span>
-                              )}
+                                  <span className="ml-2 text-gray-900">
+                                    {applicant.currentRole &&
+                                    applicant.currentRole.trim() !== ""
+                                      ? applicant.currentRole
+                                      : "-"}
+                                  </span>
+                                </div>
+                                <div>
+                                  <span className="text-gray-500">Domain:</span>
+                                  <span className="ml-2 text-gray-900">
+                                    {applicant.domain &&
+                                    applicant.domain.trim() !== ""
+                                      ? applicant.domain
+                                      : "-"}
+                                  </span>
+                                </div>
+                                <div>
+                                  <span className="text-gray-500">
+                                    Work Mode:
+                                  </span>
+                                  <span className="ml-2 text-gray-900">
+                                    {applicant.workModePreference &&
+                                    applicant.workModePreference.trim() !== ""
+                                      ? applicant.workModePreference
+                                      : "-"}
+                                  </span>
+                                </div>
+                                <div>
+                                  <span className="text-gray-500">
+                                    Education:
+                                  </span>
+                                  <span className="ml-2 text-gray-900">
+                                    {applicant.higherEducation &&
+                                    applicant.higherEducation.trim() !== ""
+                                      ? applicant.higherEducation
+                                      : "-"}
+                                  </span>
+                                </div>
+                              </div>
+                            )}
+                            <div className="mt-3">
+                              <div className="flex items-center gap-2">
+                                <div className="flex flex-wrap gap-1">
+                                  {applicant.skills
+                                    .slice(0, 4)
+                                    .map((skill, index) => (
+                                      <span
+                                        key={index}
+                                        className="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded"
+                                      >
+                                        {skill}
+                                      </span>
+                                    ))}
+                                  {applicant.skills.length > 4 && (
+                                    <span className="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded">
+                                      +{applicant.skills.length - 4} more
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
                             </div>
                           </div>
                         </div>
@@ -392,15 +446,16 @@ export default function JobAppliedUsersPage() {
                           </span>
 
                           <div className="flex gap-2">
-                            {applicant.status !== 'pending' && applicant.status !== 'interested' && (
-                              <button
-                                onClick={() => handleViewProfile(applicant)}
-                                className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                                title="View Profile"
-                              >
-                                <Eye size={16} />
-                              </button>
-                            )}
+                            {applicant.status !== "pending" &&
+                              applicant.status !== "interested" && (
+                                <button
+                                  onClick={() => handleViewProfile(applicant)}
+                                  className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                                  title="View Profile"
+                                >
+                                  <Eye size={16} />
+                                </button>
+                              )}
 
                             {applicant.status === "pending" && (
                               <>
@@ -416,18 +471,6 @@ export default function JobAppliedUsersPage() {
                                 >
                                   <Star size={16} />
                                 </button>
-                                <button
-                                  onClick={() =>
-                                    handleStatusChange(
-                                      applicant.id,
-                                      "shortlisted"
-                                    )
-                                  }
-                                  className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
-                                  title="Shortlist"
-                                >
-                                  <CheckCircle size={16} />
-                                </button> */}
                                 <button
                                   onClick={() =>
                                     handleStatusChange(applicant.id, "rejected")
@@ -455,9 +498,11 @@ export default function JobAppliedUsersPage() {
                       </div>
 
                       <div className="mt-3 ml-4 flex items-center gap-3 text-sm text-gray-600">
-                        <span>
-                          Applied On: {formatDate(applicant.appliedDate)}
-                        </span>
+                        {applicant.status !== "pending" && (
+                          <span>
+                            Applied On: {formatDate(applicant.appliedDate)}
+                          </span>
+                        )}
 
                         {/* <button className="px-3 py-1 bg-blue-600 text-white rounded-md hover:bg-blue-700">
                           View Resume

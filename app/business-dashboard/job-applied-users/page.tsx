@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useState, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   ArrowLeft,
   Search,
@@ -19,19 +19,27 @@ import {
   Clock,
   Star,
   Loader2,
-  AlertCircle
-} from 'lucide-react';
-import BusinessSidebar from '@/components/dashboard/BusinessSidebar';
-import BusinessDashboardHeader from '@/components/dashboard/BusinessDashboardHeader';
-import { useProfilesByOpportunityStore, type Applicant, type JobDetails } from '@/store/job-postings/profilesbyopportunityStore';
-import { getResumeForBuyer, getAuthData, type ResumeData } from '@/app/api/job postings/resumeagainstopportunity';
-import { formatDate } from '@/utils/dateformat';
+  AlertCircle,
+} from "lucide-react";
+import BusinessSidebar from "@/components/dashboard/BusinessSidebar";
+import BusinessDashboardHeader from "@/components/dashboard/BusinessDashboardHeader";
+import {
+  useProfilesByOpportunityStore,
+  type Applicant,
+  type JobDetails,
+} from "@/store/job-postings/profilesbyopportunityStore";
+import {
+  getResumeForBuyer,
+  getAuthData,
+  type ResumeData,
+} from "@/app/api/job postings/resumeagainstopportunity";
+import { formatDate } from "@/utils/dateformat";
 // Interfaces are now imported from the store
 
 export default function JobAppliedUsersPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const jobId = searchParams.get('jobId');
+  const jobId = searchParams.get("jobId");
 
   // Store state
   const {
@@ -43,15 +51,19 @@ export default function JobAppliedUsersPage() {
     fetchProfilesByOpportunity,
     updateApplicantStatus,
     clearError,
-    resetStore
+    resetStore,
   } = useProfilesByOpportunityStore();
 
   // Local UI state
-  const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState<string>('all');
-  const [selectedApplicant, setSelectedApplicant] = useState<Applicant | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [selectedApplicant, setSelectedApplicant] = useState<Applicant | null>(
+    null
+  );
   const [showProfileModal, setShowProfileModal] = useState(false);
-  const [detailedProfile, setDetailedProfile] = useState<ResumeData | null>(null);
+  const [detailedProfile, setDetailedProfile] = useState<ResumeData | null>(
+    null
+  );
   const [profileLoading, setProfileLoading] = useState(false);
   const [profileError, setProfileError] = useState<string | null>(null);
 
@@ -88,14 +100,14 @@ export default function JobAppliedUsersPage() {
     setShowProfileModal(true);
     setDetailedProfile(null);
     setProfileError(null);
-    
+
     if (applicant.roleBasedProfile) {
       setProfileLoading(true);
       try {
         // Get authentication data
         const authData = getAuthData();
         if (!authData) {
-          throw new Error('Authentication data not found. Please login again.');
+          throw new Error("Authentication data not found. Please login again.");
         }
 
         const response = await getResumeForBuyer(
@@ -105,56 +117,71 @@ export default function JobAppliedUsersPage() {
         );
         setDetailedProfile(response.message.data);
       } catch (error: any) {
-        console.error('Error fetching detailed profile:', error);
-        setProfileError('Failed to load detailed profile information');
+        console.error("Error fetching detailed profile:", error);
+        setProfileError("Failed to load detailed profile information");
       } finally {
         setProfileLoading(false);
       }
     } else {
-      setProfileError('Role based profile ID not available');
+      setProfileError("Role based profile ID not available");
     }
   };
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'pending': return 'bg-yellow-100 text-yellow-800';
-      case 'shortlisted': return 'bg-blue-100 text-blue-800';
-      case 'rejected': return 'bg-red-100 text-red-800';
-      case 'hired': return 'bg-green-100 text-green-800';
-      case 'interested': return 'bg-purple-100 text-purple-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case "pending":
+        return "bg-yellow-100 text-yellow-800";
+      case "shortlisted":
+        return "bg-blue-100 text-blue-800";
+      case "rejected":
+        return "bg-red-100 text-red-800";
+      case "hired":
+        return "bg-green-100 text-green-800";
+      case "interested":
+        return "bg-purple-100 text-purple-800";
+      default:
+        return "bg-gray-100 text-gray-800";
     }
   };
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case 'pending': return <Clock size={14} />;
-      case 'shortlisted': return <Star size={14} />;
-      case 'rejected': return <XCircle size={14} />;
-      case 'hired': return <CheckCircle size={14} />;
-      case 'interested': return <Star size={14} />;
-      default: return <Clock size={14} />;
+      case "pending":
+        return <Clock size={14} />;
+      case "shortlisted":
+        return <Star size={14} />;
+      case "rejected":
+        return <XCircle size={14} />;
+      case "hired":
+        return <CheckCircle size={14} />;
+      case "interested":
+        return <Star size={14} />;
+      default:
+        return <Clock size={14} />;
     }
   };
 
-  const filteredApplicants = (applicants || []).filter(applicant => {
-    const matchesSearch = applicant.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+  const filteredApplicants = (applicants || []).filter((applicant) => {
+    const matchesSearch =
+      applicant.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       applicant.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      applicant.skills.some(skill => skill.toLowerCase().includes(searchTerm.toLowerCase()));
+      applicant.skills.some((skill) =>
+        skill.toLowerCase().includes(searchTerm.toLowerCase())
+      );
 
     const matchesStatus =
-      statusFilter === 'all' ||
-      applicant.status === statusFilter;
+      statusFilter === "all" || applicant.status === statusFilter;
 
     return matchesSearch && matchesStatus;
   });
 
   const statusCounts = {
     all: applicants?.length || 0,
-    pending: applicants?.filter(a => a.status === 'pending').length || 0,
-    shortlisted: applicants?.filter(a => a.status === 'shortlisted').length || 0,
-    rejected: applicants?.filter(a => a.status === 'rejected').length || 0,
-    hired: applicants?.filter(a => a.status === 'hired').length || 0,
+    pending: applicants?.filter((a) => a.status === "pending").length || 0,
+    shortlisted:
+      applicants?.filter((a) => a.status === "shortlisted").length || 0,
+    rejected: applicants?.filter((a) => a.status === "rejected").length || 0,
+    hired: applicants?.filter((a) => a.status === "hired").length || 0,
   };
 
   return (
@@ -178,13 +205,16 @@ export default function JobAppliedUsersPage() {
               <div className="bg-white rounded-xl shadow-sm p-6 mb-6">
                 <div className="flex justify-between items-start">
                   <div>
-                    <h1 className="text-2xl font-bold text-gray-900 mb-2">{jobDetails.title}</h1>
+                    <h1 className="text-2xl font-bold text-gray-900 mb-2">
+                      {jobDetails.title}
+                    </h1>
                     <div className="flex flex-wrap gap-4 text-sm text-gray-600">
                       <span className="flex items-center gap-1">
                         <MapPin size={16} /> {jobDetails.location}
                       </span>
                       <span className="flex items-center gap-1">
-                        <Calendar size={16} /> Posted {formatDate(jobDetails.postedDate)}
+                        <Calendar size={16} /> Posted{" "}
+                        {formatDate(jobDetails.postedDate)}
                       </span>
                       <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs">
                         {jobDetails.employmentType}
@@ -195,8 +225,12 @@ export default function JobAppliedUsersPage() {
                     </div>
                   </div>
                   <div className="text-right">
-                    <div className="text-2xl font-bold text-blue-600">{totalProfiles}</div>
-                    <div className="text-sm text-gray-600">Total Applicants</div>
+                    <div className="text-2xl font-bold text-blue-600">
+                      {totalProfiles}
+                    </div>
+                    <div className="text-sm text-gray-600">
+                      Total Applicants
+                    </div>
                   </div>
                 </div>
               </div>
@@ -222,12 +256,14 @@ export default function JobAppliedUsersPage() {
                     <button
                       key={status}
                       onClick={() => setStatusFilter(status)}
-                      className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${statusFilter === status
-                          ? 'bg-blue-500 text-white'
-                          : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                        }`}
+                      className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+                        statusFilter === status
+                          ? "bg-blue-500 text-white"
+                          : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                      }`}
                     >
-                      {status.charAt(0).toUpperCase() + status.slice(1)} ({count})
+                      {status.charAt(0).toUpperCase() + status.slice(1)} (
+                      {count})
                     </button>
                   ))}
                 </div>
@@ -239,7 +275,10 @@ export default function JobAppliedUsersPage() {
               {/* Loading State */}
               {isLoading && (
                 <div className="flex items-center justify-center py-12">
-                  <Loader2 className="animate-spin text-blue-500 mr-2" size={24} />
+                  <Loader2
+                    className="animate-spin text-blue-500 mr-2"
+                    size={24}
+                  />
                   <span className="text-gray-600">Loading applicants...</span>
                 </div>
               )}
@@ -250,8 +289,12 @@ export default function JobAppliedUsersPage() {
                   <div className="bg-gray-100 rounded-full p-4 mb-4">
                     <User className="text-gray-400" size={32} />
                   </div>
-                  <h3 className="text-lg font-medium text-gray-900 mb-1">No Applicants Found</h3>
-                  <p className="text-gray-500 text-center max-w-md mb-4">There are currently no applicants for this opportunity.</p>
+                  <h3 className="text-lg font-medium text-gray-900 mb-1">
+                    No Applicants Found
+                  </h3>
+                  <p className="text-gray-500 text-center max-w-md mb-4">
+                    There are currently no applicants for this opportunity.
+                  </p>
                 </div>
               )}
 
@@ -260,7 +303,9 @@ export default function JobAppliedUsersPage() {
                 <div className="text-center py-8">
                   <div className="text-gray-500 mb-2">No applicants found</div>
                   <div className="text-sm text-gray-400">
-                    {searchTerm ? 'Try adjusting your search criteria' : 'No applications received yet'}
+                    {searchTerm
+                      ? "Try adjusting your search criteria"
+                      : "No applications received yet"}
                   </div>
                 </div>
               )}
@@ -269,14 +314,19 @@ export default function JobAppliedUsersPage() {
               {!isLoading && !error && filteredApplicants.length > 0 && (
                 <div className="space-y-4 pb-8">
                   {filteredApplicants.map((applicant) => (
-                    <div key={applicant.id} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                    <div
+                      key={applicant.id}
+                      className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow"
+                    >
                       <div className="flex items-center justify-between">
                         <div className="flex items-center space-x-4">
                           <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
                             <User className="w-6 h-6 text-blue-600" />
                           </div>
                           <div>
-                            <h3 className="font-semibold text-gray-900">{applicant.name}</h3>
+                            <h3 className="font-semibold text-gray-900">
+                              {applicant.name}
+                            </h3>
                             <div className="flex items-center gap-4 text-sm text-gray-600 mt-1">
                               <span className="flex items-center gap-1">
                                 <Mail size={14} /> {applicant.email}
@@ -289,25 +339,39 @@ export default function JobAppliedUsersPage() {
                               </span>
                             </div>
                             <div className="flex items-center gap-2 mt-2">
-                              <span className="text-sm text-gray-600">Experience: {applicant.experience}</span>
+                              <span className="text-sm text-gray-600">
+                                Experience: {applicant.experience}
+                              </span>
                               {applicant.rating && (
                                 <div className="flex items-center gap-1">
-                                  <Star size={14} className="text-yellow-500 fill-current" />
-                                  <span className="text-sm text-gray-600">{applicant.rating.toFixed(1)}</span>
+                                  <Star
+                                    size={14}
+                                    className="text-yellow-500 fill-current"
+                                  />
+                                  <span className="text-sm text-gray-600">
+                                    {applicant.rating.toFixed(1)}
+                                  </span>
                                 </div>
                               )}
                               {applicant.matchScore && (
                                 <div className="flex items-center gap-1">
-                                  <span className="text-sm text-blue-600 font-medium">{applicant.matchScore}% match</span>
+                                  <span className="text-sm text-blue-600 font-medium">
+                                    {applicant.matchScore}% match
+                                  </span>
                                 </div>
                               )}
                             </div>
                             <div className="flex flex-wrap gap-1 mt-2">
-                              {applicant.skills.slice(0, 4).map((skill, index) => (
-                                <span key={index} className="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded">
-                                  {skill}
-                                </span>
-                              ))}
+                              {applicant.skills
+                                .slice(0, 4)
+                                .map((skill, index) => (
+                                  <span
+                                    key={index}
+                                    className="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded"
+                                  >
+                                    {skill}
+                                  </span>
+                                ))}
                               {applicant.skills.length > 4 && (
                                 <span className="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded">
                                   +{applicant.skills.length - 4} more
@@ -318,8 +382,13 @@ export default function JobAppliedUsersPage() {
                         </div>
 
                         <div className="flex items-center gap-3">
-                          <span className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(applicant.status.toLowerCase())}`}>
-                            {applicant.status.charAt(0).toUpperCase() + applicant.status.slice(1)}
+                          <span
+                            className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(
+                              applicant.status.toLowerCase()
+                            )}`}
+                          >
+                            {applicant.status.charAt(0).toUpperCase() +
+                              applicant.status.slice(1)}
                           </span>
 
                           <div className="flex gap-2">
@@ -333,24 +402,36 @@ export default function JobAppliedUsersPage() {
                               </button>
                             )}
 
-                            {applicant.status === 'pending' && (
+                            {applicant.status === "pending" && (
                               <>
                                 <button
-                                  onClick={() => handleStatusChange(applicant.id, 'interested')}
+                                  onClick={() =>
+                                    handleStatusChange(
+                                      applicant.id,
+                                      "interested"
+                                    )
+                                  }
                                   className="p-2 text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
                                   title="Show Interest"
                                 >
                                   <Star size={16} />
                                 </button>
-                                {/* <button
-                                  onClick={() => handleStatusChange(applicant.id, 'shortlisted')}
+                                <button
+                                  onClick={() =>
+                                    handleStatusChange(
+                                      applicant.id,
+                                      "shortlisted"
+                                    )
+                                  }
                                   className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
                                   title="Shortlist"
                                 >
                                   <CheckCircle size={16} />
                                 </button> */}
                                 <button
-                                  onClick={() => handleStatusChange(applicant.id, 'rejected')}
+                                  onClick={() =>
+                                    handleStatusChange(applicant.id, "rejected")
+                                  }
                                   className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                                   title="Reject"
                                 >
@@ -359,9 +440,11 @@ export default function JobAppliedUsersPage() {
                               </>
                             )}
 
-                            {applicant.status === 'shortlisted' && (
+                            {applicant.status === "shortlisted" && (
                               <button
-                                onClick={() => handleStatusChange(applicant.id, 'hired')}
+                                onClick={() =>
+                                  handleStatusChange(applicant.id, "hired")
+                                }
                                 className="px-3 py-1 bg-green-500 text-white text-sm rounded-lg hover:bg-green-600 transition-colors"
                               >
                                 Hire
@@ -380,7 +463,6 @@ export default function JobAppliedUsersPage() {
                           View Resume
                         </button> */}
                       </div>
-
                     </div>
                   ))}
                 </div>
@@ -396,7 +478,9 @@ export default function JobAppliedUsersPage() {
           <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-start mb-6">
               <h3 className="text-2xl font-semibold text-gray-900">
-                {detailedProfile ? `${detailedProfile.portfolio.first_name} ${detailedProfile.portfolio.last_name}` : selectedApplicant.name}
+                {detailedProfile
+                  ? `${detailedProfile.portfolio.first_name} ${detailedProfile.portfolio.last_name}`
+                  : selectedApplicant.name}
               </h3>
               <button
                 onClick={() => setShowProfileModal(false)}
@@ -424,161 +508,281 @@ export default function JobAppliedUsersPage() {
               <div className="space-y-6">
                 {/* Personal Information */}
                 <div className="bg-gray-50 p-4 rounded-lg">
-                  <h4 className="text-lg font-semibold text-gray-900 mb-3">Personal Information</h4>
+                  <h4 className="text-lg font-semibold text-gray-900 mb-3">
+                    Personal Information
+                  </h4>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="text-sm font-medium text-gray-700">Email</label>
-                      <p className="text-gray-900">{detailedProfile.portfolio.email || 'Not provided'}</p>
+                      <label className="text-sm font-medium text-gray-700">
+                        Email
+                      </label>
+                      <p className="text-gray-900">
+                        {detailedProfile.portfolio.email || "-"}
+                      </p>
                     </div>
                     <div>
-                      <label className="text-sm font-medium text-gray-700">Mobile</label>
-                      <p className="text-gray-900">{detailedProfile.portfolio.mobile_no || 'Not provided'}</p>
+                      <label className="text-sm font-medium text-gray-700">
+                        Mobile
+                      </label>
+                      <p className="text-gray-900">
+                        {detailedProfile.portfolio.mobile_no || "-"}
+                      </p>
                     </div>
                     <div>
-                      <label className="text-sm font-medium text-gray-700">Location</label>
-                      <p className="text-gray-900">{detailedProfile.portfolio.city}, {detailedProfile.portfolio.country}</p>
+                      <label className="text-sm font-medium text-gray-700">
+                        Location
+                      </label>
+                      <p className="text-gray-900">
+                        {detailedProfile.portfolio.city &&
+                        detailedProfile.portfolio.country
+                          ? `${detailedProfile.portfolio.city}, ${detailedProfile.portfolio.country}`
+                          : detailedProfile.portfolio.city ||
+                            detailedProfile.portfolio.country ||
+                            "-"}
+                      </p>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-700">
+                        LinkedIn
+                      </label>
+                      <p className="text-gray-900">
+                        {detailedProfile.portfolio.linkedin_profile ? (
+                          <a
+                            href={detailedProfile.portfolio.linkedin_profile}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-blue-600 hover:text-blue-800 underline"
+                          >
+                            {detailedProfile.portfolio.linkedin_profile}
+                          </a>
+                        ) : (
+                          "-"
+                        )}
+                      </p>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-700">
+                        GitHub
+                      </label>
+                      <p className="text-gray-900">
+                        {detailedProfile.portfolio.github_profile ? (
+                          <a
+                            href={detailedProfile.portfolio.github_profile}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-blue-600 hover:text-blue-800 underline"
+                          >
+                            {detailedProfile.portfolio.github_profile}
+                          </a>
+                        ) : (
+                          "-"
+                        )}
+                      </p>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-700">
+                        Website
+                      </label>
+                      <p className="text-gray-900">
+                        {detailedProfile.portfolio.website ? (
+                          <a
+                            href={detailedProfile.portfolio.website}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-blue-600 hover:text-blue-800 underline"
+                          >
+                            {detailedProfile.portfolio.website}
+                          </a>
+                        ) : (
+                          "-"
+                        )}
+                      </p>
                     </div>
                   </div>
                 </div>
 
                 {/* Professional Summary */}
-                {detailedProfile.portfolio.professional_summary && (
-                  <div>
-                    <h4 className="text-lg font-semibold text-gray-900 mb-3">Professional Summary</h4>
-                    <p className="text-gray-700 p-3 bg-gray-50 rounded-lg">
-                      {detailedProfile.portfolio.professional_summary}
-                    </p>
-                  </div>
-                )}
+                <div>
+                  <h4 className="text-lg font-semibold text-gray-900 mb-3">
+                    Professional Summary
+                  </h4>
+                  <p className="text-gray-700 p-3 bg-gray-50 rounded-lg">
+                    {detailedProfile.portfolio.professional_summary || "-"}
+                  </p>
+                </div>
 
                 {/* Role Information */}
                 <div className="bg-blue-50 p-4 rounded-lg">
-                  <h4 className="text-lg font-semibold text-gray-900 mb-3">Role Information</h4>
+                  <h4 className="text-lg font-semibold text-gray-900 mb-3">
+                    Role Information
+                  </h4>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="text-sm font-medium text-gray-700">Role</label>
-                      <p className="text-gray-900">{detailedProfile.role_based_profile.role}</p>
+                      <label className="text-sm font-medium text-gray-700">
+                        Role
+                      </label>
+                      <p className="text-gray-900">
+                        {detailedProfile.role_based_profile.role || "-"}
+                      </p>
                     </div>
                     <div>
-                      <label className="text-sm font-medium text-gray-700">Space/Domain</label>
-                      <p className="text-gray-900">{detailedProfile.role_based_profile.space}</p>
+                      <label className="text-sm font-medium text-gray-700">
+                        Space/Domain
+                      </label>
+                      <p className="text-gray-900">
+                        {detailedProfile.role_based_profile.space || "-"}
+                      </p>
                     </div>
                     <div>
-                      <label className="text-sm font-medium text-gray-700">Employment Type</label>
-                      <p className="text-gray-900">{detailedProfile.role_based_profile.employment_type}</p>
+                      <label className="text-sm font-medium text-gray-700">
+                        Employment Type
+                      </label>
+                      <p className="text-gray-900">
+                        {detailedProfile.role_based_profile.employment_type ||
+                          "-"}
+                      </p>
                     </div>
                     <div>
-                      <label className="text-sm font-medium text-gray-700">Work Mode</label>
-                      <p className="text-gray-900">{detailedProfile.role_based_profile.work_mode}</p>
+                      <label className="text-sm font-medium text-gray-700">
+                        Work Mode
+                      </label>
+                      <p className="text-gray-900">
+                        {detailedProfile.role_based_profile.work_mode || "-"}
+                      </p>
                     </div>
-                    {detailedProfile.role_based_profile.relevant_experience > 0 && (
-                      <div>
-                        <label className="text-sm font-medium text-gray-700">Relevant Experience</label>
-                        <p className="text-gray-900">{detailedProfile.role_based_profile.relevant_experience} years</p>
-                      </div>
-                    )}
-                    {Number(detailedProfile.role_based_profile.total_experience_years) > 0 && (
-                      <div>
-                        <label className="text-sm font-medium text-gray-700">Total Experience</label>
-                        <p className="text-gray-900">{detailedProfile.role_based_profile.total_experience_years} years</p>
-                      </div>
-                    )}
+                    <div>
+                      <label className="text-sm font-medium text-gray-700">
+                        Relevant Experience
+                      </label>
+                      <p className="text-gray-900">
+                        {detailedProfile.role_based_profile
+                          .relevant_experience > 0
+                          ? `${detailedProfile.role_based_profile.relevant_experience} years`
+                          : "-"}
+                      </p>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-700">
+                        Total Experience
+                      </label>
+                      <p className="text-gray-900">
+                        {detailedProfile.role_based_profile
+                          .total_experience_years
+                          ? `${detailedProfile.role_based_profile.total_experience_years} years`
+                          : "-"}
+                      </p>
+                    </div>
                   </div>
                 </div>
 
                 {/* Skills */}
                 <div>
-                  <h4 className="text-lg font-semibold text-gray-900 mb-3">Skills</h4>
+                  <h4 className="text-lg font-semibold text-gray-900 mb-3">
+                    Skills
+                  </h4>
                   <div className="space-y-3">
-                    {detailedProfile.role_based_profile.primary_skills.length > 0 && (
-                      <div>
-                        <label className="text-sm font-medium text-gray-700 mb-2 block">Primary Skills</label>
-                        <div className="flex flex-wrap gap-2">
-                          {detailedProfile.role_based_profile.primary_skills.map((skill, index) => (
-                            <span key={index} className="px-3 py-1 bg-blue-100 text-blue-800 text-sm rounded-full">
-                              {skill.skill_name}
-                            </span>
-                          ))}
-                        </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-700 mb-2 block">
+                        Primary Skills
+                      </label>
+                      <div className="flex flex-wrap gap-2">
+                        {detailedProfile.role_based_profile.primary_skills
+                          .length > 0 ? (
+                          detailedProfile.role_based_profile.primary_skills.map(
+                            (skill, index) => (
+                              <span
+                                key={index}
+                                className="px-3 py-1 bg-blue-100 text-blue-800 text-sm rounded-full"
+                              >
+                                {skill.skill_name}
+                              </span>
+                            )
+                          )
+                        ) : (
+                          <span className="text-gray-500">-</span>
+                        )}
                       </div>
-                    )}
-                    {detailedProfile.role_based_profile.secondary_skills.length > 0 && (
-                      <div>
-                        <label className="text-sm font-medium text-gray-700 mb-2 block">Secondary Skills</label>
-                        <div className="flex flex-wrap gap-2">
-                          {detailedProfile.role_based_profile.secondary_skills.map((skill, index) => (
-                            <span key={index} className="px-3 py-1 bg-green-100 text-green-800 text-sm rounded-full">
-                              {skill.skill_name}
-                            </span>
-                          ))}
-                        </div>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-700 mb-2 block">
+                        Secondary Skills
+                      </label>
+                      <div className="flex flex-wrap gap-2">
+                        {detailedProfile.role_based_profile.secondary_skills
+                          .length > 0 ? (
+                          detailedProfile.role_based_profile.secondary_skills.map(
+                            (skill, index) => (
+                              <span
+                                key={index}
+                                className="px-3 py-1 bg-green-100 text-green-800 text-sm rounded-full"
+                              >
+                                {skill.skill_name}
+                              </span>
+                            )
+                          )
+                        ) : (
+                          <span className="text-gray-500">-</span>
+                        )}
                       </div>
-                    )}
+                    </div>
                   </div>
                 </div>
 
                 {/* Work Experience */}
-                {detailedProfile.portfolio.work_experience.length > 0 && (
-                  <div>
-                    <h4 className="text-lg font-semibold text-gray-900 mb-3">Work Experience</h4>
-                    <div className="space-y-3">
-                      {detailedProfile.portfolio.work_experience.map((exp, index) => (
-                        <div key={index} className="p-3 bg-gray-50 rounded-lg">
-                          <p className="font-medium text-gray-900">{exp.designation}</p>
-                          <p className="text-gray-600">{exp.company}</p>
-                        </div>
-                      ))}
-                    </div>
+                <div>
+                  <h4 className="text-lg font-semibold text-gray-900 mb-3">
+                    Work Experience
+                  </h4>
+                  <div className="space-y-3">
+                    {detailedProfile.portfolio.work_experience.length > 0 ? (
+                      detailedProfile.portfolio.work_experience.map(
+                        (exp, index) => (
+                          <div
+                            key={index}
+                            className="p-3 bg-gray-50 rounded-lg"
+                          >
+                            <p className="font-medium text-gray-900">
+                              {exp.designation || "-"}
+                            </p>
+                            <p className="text-gray-600">
+                              {exp.company || "-"}
+                            </p>
+                            <p className="text-sm text-gray-500 mt-1">
+                              {exp.duration || "-"}
+                            </p>
+                          </div>
+                        )
+                      )
+                    ) : (
+                      <p className="text-gray-500">-</p>
+                    )}
                   </div>
-                )}
+                </div>
 
                 {/* Education */}
-                {detailedProfile.portfolio.education.length > 0 && (
-                  <div>
-                    <h4 className="text-lg font-semibold text-gray-900 mb-3">Education</h4>
-                    <div className="space-y-3">
-                      {detailedProfile.portfolio.education.map((edu, index) => (
+                <div>
+                  <h4 className="text-lg font-semibold text-gray-900 mb-3">
+                    Education
+                  </h4>
+                  <div className="space-y-3">
+                    {detailedProfile.portfolio.education.length > 0 ? (
+                      detailedProfile.portfolio.education.map((edu, index) => (
                         <div key={index} className="p-3 bg-gray-50 rounded-lg">
-                          <p className="font-medium text-gray-900">{edu.stream}</p>
+                          <p className="font-medium text-gray-900">
+                            {edu.education_level || "-"}
+                          </p>
+                          <p className="text-sm text-gray-500 mt-1">
+                            {edu.stream || "-"}
+                          </p>
                           <p className="text-gray-600">
-                            {edu.university_board && `${edu.university_board} • `}
-                            Completed: {edu.year_of_completion}
+                            {`${edu.university_board || ""} - ${
+                              edu.year_of_completion || "-"
+                            }`}
                           </p>
                         </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Social Profiles */}
-                <div>
-                  <h4 className="text-lg font-semibold text-gray-900 mb-3">Social Profiles</h4>
-                  <div className="grid grid-cols-2 gap-4">
-                    {detailedProfile.portfolio.linkedin_profile && (
-                      <div>
-                        <label className="text-sm font-medium text-gray-700">LinkedIn</label>
-                        <a 
-                          href={detailedProfile.portfolio.linkedin_profile} 
-                          target="_blank" 
-                          rel="noopener noreferrer"
-                          className="text-blue-600 hover:text-blue-800 block truncate"
-                        >
-                          {detailedProfile.portfolio.linkedin_profile}
-                        </a>
-                      </div>
-                    )}
-                    {detailedProfile.portfolio.facebook_profile && (
-                      <div>
-                        <label className="text-sm font-medium text-gray-700">Facebook</label>
-                        <a 
-                          href={detailedProfile.portfolio.facebook_profile} 
-                          target="_blank" 
-                          rel="noopener noreferrer"
-                          className="text-blue-600 hover:text-blue-800 block truncate"
-                        >
-                          {detailedProfile.portfolio.facebook_profile}
-                        </a>
-                      </div>
+                      ))
+                    ) : (
+                      <p className="text-gray-500">-</p>
                     )}
                   </div>
                 </div>

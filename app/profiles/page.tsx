@@ -198,7 +198,7 @@ export default function ProfilesPage() {
         id: profileToEdit.id,
         role: profileToEdit.name,
         profileType: profileToEdit.space || 'General',
-        subDomain: '',
+        subDomain: (profileToEdit as any).subdomain || '',
         employmentType: profileToEdit.employmentType || 'Permanent',
         natureOfWork: 'Full-time',
         workMode: profileToEdit.workMode || 'No Preference',

@@ -398,37 +398,31 @@ export default function JobAppliedUsersPage() {
                                       : "-"}
                                   </span>
                                 </div>
-                                <div>
-                                  <span className="text-gray-500">
-                                    Key Skills:
-                                  </span>
-                                  <span className="ml-2 text-gray-900">
-                                    {applicant.primarySkills &&
-                                    applicant.primarySkills.length > 0
-                                      ? applicant.primarySkills
-                                          .slice(0, 3)
-                                          .join(", ")
-                                      : "-"}
-                                  </span>
-                                </div>
                               </div>
                             )}
-                            <div className="flex flex-wrap gap-1 mt-2">
-                              {applicant.skills
-                                .slice(0, 4)
-                                .map((skill, index) => (
-                                  <span
-                                    key={index}
-                                    className="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded"
-                                  >
-                                    {skill}
-                                  </span>
-                                ))}
-                              {applicant.skills.length > 4 && (
-                                <span className="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded">
-                                  +{applicant.skills.length - 4} more
+                            <div className="mt-3">
+                              <div className="flex items-center gap-2">
+                                <span className="text-sm text-gray-500">
+                                  Key Skills:
                                 </span>
-                              )}
+                                <div className="flex flex-wrap gap-1">
+                                  {applicant.skills
+                                    .slice(0, 4)
+                                    .map((skill, index) => (
+                                      <span
+                                        key={index}
+                                        className="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded"
+                                      >
+                                        {skill}
+                                      </span>
+                                    ))}
+                                  {applicant.skills.length > 4 && (
+                                    <span className="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded">
+                                      +{applicant.skills.length - 4} more
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
                             </div>
                           </div>
                         </div>

@@ -490,9 +490,11 @@ export default function JobAppliedUsersPage() {
                       </div>
 
                       <div className="mt-3 ml-4 flex items-center gap-3 text-sm text-gray-600">
-                        <span>
-                          Applied On: {formatDate(applicant.appliedDate)}
-                        </span>
+                        {applicant.status !== "pending" && (
+                          <span>
+                            Applied On: {formatDate(applicant.appliedDate)}
+                          </span>
+                        )}
 
                         {/* <button className="px-3 py-1 bg-blue-600 text-white rounded-md hover:bg-blue-700">
                           View Resume

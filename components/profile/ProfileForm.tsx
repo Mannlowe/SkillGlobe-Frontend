@@ -126,6 +126,7 @@ export default function ProfileForm({ onSave, onCancel, initialData = [], showFo
     
     const existingProfile = rawProfiles.find(profile => profile.name === profileName);
     if (!existingProfile) return null;
+    
 
     // Helper function to map API field names to frontend field names
     const mapDomainSpecificFields = (profileData: any) => {
@@ -160,6 +161,13 @@ export default function ProfileForm({ onSave, onCancel, initialData = [], showFo
       if (profileData.incident_handling) mappedFields.it_incident_exp = convertFromApiFormat(profileData.incident_handling);
       if (profileData.security_clearance) mappedFields.it_security_clearance = profileData.security_clearance;
       if (profileData.network_expertise) mappedFields.it_network_exp = convertFromApiFormat(profileData.network_expertise);
+      
+      // Add missing IT field mappings for API → UI
+      if (profileData.github__portfolio) mappedFields.githubPortfolio = profileData.github__portfolio;
+      if (profileData.certifications) {
+        mappedFields.itCertifications = convertFromApiFormat(profileData.certifications);
+      }
+      if (profileData.notice_period) mappedFields.noticePeriod = profileData.notice_period;
       
       // Manufacturing Domain field mappings
       if (profileData.production_area) mappedFields.mf_production_area = convertFromApiFormat(profileData.production_area);
@@ -239,7 +247,8 @@ export default function ProfileForm({ onSave, onCancel, initialData = [], showFo
       id: existingProfile.name,
       role: existingProfile.role,
       profileType: mapSpaceToProfileType(existingProfile.space),
-  
+      subDomain: existingProfile.subdomain || '',
+      subdomain: existingProfile.subdomain || '',
       employmentType: existingProfile.employment_type,
       natureOfWork: existingProfile.nature_of_work,
       workMode: existingProfile.work_mode,
@@ -249,6 +258,7 @@ export default function ProfileForm({ onSave, onCancel, initialData = [], showFo
       preferredCountry: existingProfile.preferred_country,
       totalExperience: existingProfile.total_experience_years || '',
       relevantExperience: existingProfile.relevant_experience?.toString() || '',
+      workEligibility: existingProfile.work_eligibility || '',
       primarySkills: existingProfile.primary_skills ? existingProfile.primary_skills.map((s: {skill: string; canonical_name?: string}) => ({ name: s.skill, canonical_name: s.canonical_name || s.skill })) : [],
       secondarySkills: existingProfile.secondary_skills ? existingProfile.secondary_skills.map((s: {skill: string; canonical_name?: string}) => ({ name: s.skill, canonical_name: s.canonical_name || s.skill })) : [],
       resume: null,
@@ -257,7 +267,6 @@ export default function ProfileForm({ onSave, onCancel, initialData = [], showFo
       ...mapDomainSpecificFields(existingProfile as any)
     };
 
-    console.log('Populated profile entry with domain fields:', profileEntry);
     return ensureDomainFieldsFormat(profileEntry);
   };
 
@@ -267,7 +276,7 @@ export default function ProfileForm({ onSave, onCancel, initialData = [], showFo
       'Information Technology (IT)': 'IT',
       'Manufacturing & Industrials': 'Manufacturing',
       'Banking & Financial Services': 'Banking',
-      'Hospitality & Services': 'Hospitality',
+      'Hospitality & Services (HS)': 'Hospitality',
       'Pharmaceuticals & Healthcare': 'Pharma & Healthcare'
     };
     return mapping[space] || 'Others';
@@ -526,12 +535,12 @@ export default function ProfileForm({ onSave, onCancel, initialData = [], showFo
       const entryWithSkills = {
         ...initialEntry,
         profileType: initialEntry.profileType || '', // Ensure profileType is always initialized
-        subDomain: initialEntry.subDomain || '', // Ensure subDomain is always initialized
+        subDomain: initialEntry.subDomain || initialEntry.subdomain || '', // Handle both field names
+        subdomain: initialEntry.subdomain || initialEntry.subDomain || '', // Handle both field names
         primarySkills: Array.isArray(initialEntry.primarySkills) ? [...initialEntry.primarySkills] : [],
         secondarySkills: Array.isArray(initialEntry.secondarySkills) ? [...initialEntry.secondarySkills] : []
       };
       
-      console.log('Setting editingEntry with initial data:', entryWithSkills);
       
       // Set the initial entry
       setEditingEntry(entryWithSkills);
@@ -589,6 +598,12 @@ export default function ProfileForm({ onSave, onCancel, initialData = [], showFo
   const workModes = ['WFO', 'WFH', 'Hybrid', 'No Preference'];
   const profileTypes = ['IT', 'Manufacturing', 'Banking', 'Hospitality', 'Pharma & Healthcare', 'Others'];
   const workEligibilities = ['Citizen', 'Permanent Resident', 'Work Permit', 'Green Card', 'Other'];
+  const countries = ['India',];
+  const currencies = [
+    'INR', 'USD', 'EUR', 'GBP', 'CAD', 'AUD', 'SGD', 'AED', 'CHF', 'SEK', 
+    'JPY', 'KRW', 'CNY', 'BRL', 'MXN', 'ZAR', 'ILS', 'PLN', 'CZK', 'HUF',
+    'RON', 'BGN', 'HRK', 'DKK', 'NOK', 'ISK', 'RUB', 'UAH', 'TRY'
+  ];
 
   // IT Subdomain options - using full names as expected by backend
   const itSubDomains = [
@@ -689,14 +704,14 @@ export default function ProfileForm({ onSave, onCancel, initialData = [], showFo
         ...entry,
         profileType: entry.profileType || '',
         subDomain: entry.subDomain || '',
+        subdomain: entry.subDomain || entry.subdomain || '',
         primarySkills: Array.isArray(entry.primarySkills) ? [...entry.primarySkills] : [],
         secondarySkills: Array.isArray(entry.secondarySkills) ? [...entry.secondarySkills] : []
       };
-      console.log('Using local data for editing:', JSON.stringify(entryToEdit));
     }
     
-    console.log('Final entryToEdit - profileType:', entryToEdit.profileType, 'subDomain:', entryToEdit.subDomain);
-    setEditingEntry(ensureDomainFieldsFormat(entryToEdit));
+    const finalEntry = ensureDomainFieldsFormat(entryToEdit);
+    setEditingEntry(finalEntry);
     setShowEditForm(true);
   };
 
@@ -711,10 +726,6 @@ export default function ProfileForm({ onSave, onCancel, initialData = [], showFo
         ...editingEntry,
         [name]: value
       };
-      
-      if (name === 'workEligibility' && value !== 'Other') {
-        updatedEntry.customWorkEligibility = '';
-      }
       
       setEditingEntry(updatedEntry);
     }
@@ -774,14 +785,12 @@ export default function ProfileForm({ onSave, onCancel, initialData = [], showFo
         work_mode: editingEntry.workMode,
         employment_type: editingEntry.employmentType,
         minimum_earnings: editingEntry.minimumEarnings || '',
-        currency: editingEntry.currency ? parseInt(editingEntry.currency) : undefined,
+        currency: editingEntry.currency || '',
         preferred_city: editingEntry.preferredCity || '',
         preferred_country: editingEntry.preferredCountry || '',
         relevant_experience: editingEntry.relevantExperience || '',
         total_experience_years: editingEntry.totalExperience || '',
-        work_eligibility: editingEntry.workEligibility === 'Other' 
-          ? editingEntry.customWorkEligibility || '' 
-          : editingEntry.workEligibility || '',
+        work_eligibility: editingEntry.workEligibility || '',
         primary_skills: editingEntry.primarySkills?.map(skill => ({ skill: skill.name })) || [],
         secondary_skills: editingEntry.secondarySkills?.map(skill => ({ skill: skill.name })) || [],
         
@@ -858,7 +867,7 @@ export default function ProfileForm({ onSave, onCancel, initialData = [], showFo
       'IT': 'Information Technology (IT)',
       'Manufacturing': 'Manufacturing & Industrials',
       'Banking': 'Banking & Financial Services',
-      'Hospitality': 'Hospitality & Services',
+      'Hospitality': 'Hospitality & Services (HS)',
       'Pharma & Healthcare': 'Pharmaceuticals & Healthcare',
       'Others': 'Others'
     };
@@ -890,6 +899,11 @@ export default function ProfileForm({ onSave, onCancel, initialData = [], showFo
       if (entry.it_incident_exp) fields.incident_handling = convertToApiFormat(entry.it_incident_exp, 'incident_handling');
       if (entry.it_security_clearance) fields.security_clearance = entry.it_security_clearance;
       if (entry.it_network_exp) fields.network_expertise = convertToApiFormat(entry.it_network_exp, 'network_expertise');
+      
+      // Add missing IT fields
+      if ((entry as any).githubPortfolio) fields.github__portfolio = (entry as any).githubPortfolio;
+      if ((entry as any).itCertifications) fields.certifications = convertToApiFormat((entry as any).itCertifications, 'certifications');
+      if ((entry as any).noticePeriod) fields.notice_period = (entry as any).noticePeriod;
     }
     
     // Manufacturing fields
@@ -998,7 +1012,42 @@ export default function ProfileForm({ onSave, onCancel, initialData = [], showFo
       
       // If we have initial data and no editing entry yet, set it
       if (initialData.length > 0 && !editingEntry) {
-        setEditingEntry(initialData[0]);
+        // Workaround: Fetch missing certifications from rawProfiles if available
+        let enhancedInitialData = initialData[0];
+        if (rawProfiles && initialData[0].id) {
+          const rawProfile = rawProfiles.find(p => p.name === initialData[0].id);
+          if (rawProfile && rawProfile.certifications) {
+            enhancedInitialData = {
+              ...initialData[0],
+              certifications: rawProfile.certifications
+            };
+          }
+        }
+        
+        // Apply domain field mapping to ensure all fields are properly mapped
+        const mappedDomainFields = mapDomainSpecificFields(enhancedInitialData as any);
+        
+        const processedEntry = {
+          ...enhancedInitialData,
+          ...mappedDomainFields
+        };
+        
+        // Ensure itCertifications is properly mapped from certifications
+        if (!processedEntry.itCertifications && processedEntry.certifications) {
+          processedEntry.itCertifications = Array.isArray(processedEntry.certifications) 
+            ? processedEntry.certifications.map((item: any) => Object.values(item)[0] as string)
+            : [];
+        }
+        
+        // Ensure workEligibility is properly mapped from work_eligibility
+        if (!processedEntry.workEligibility && rawProfiles && initialData[0].id) {
+          const rawProfile = rawProfiles.find(p => p.name === initialData[0].id);
+          if (rawProfile && rawProfile.work_eligibility) {
+            processedEntry.workEligibility = rawProfile.work_eligibility;
+          }
+        }
+        
+        setEditingEntry(processedEntry);
       }
     }
   }, [isEditing, initialData, editingEntry]);
@@ -1432,19 +1481,6 @@ export default function ProfileForm({ onSave, onCancel, initialData = [], showFo
                     <option key={eligibility} value={eligibility}>{eligibility}</option>
                   ))}
                 </select>
-                {editingEntry?.workEligibility === 'Other' && (
-                  <div className="mt-2">
-                    <input
-                      type="text"
-                      name="customWorkEligibility"
-                      value={editingEntry?.customWorkEligibility || ''}
-                      onChange={handleInputChange}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      placeholder="Please specify your work eligibility"
-                      required
-                    />
-                  </div>
-                )}
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -1464,18 +1500,37 @@ export default function ProfileForm({ onSave, onCancel, initialData = [], showFo
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Currency
                 </label>
-                <input
-                  type="text"
+                <select
                   name="currency"
                   value={editingEntry?.currency || ''}
                   onChange={handleInputChange}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="e.g. INR, USD"
-                />
+                >
+                  <option value="">Select Currency</option>
+                  {currencies.map(currency => (
+                    <option key={currency} value={currency}>{currency}</option>
+                  ))}
+                </select>
               </div>
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Preferred Country
+                </label>
+                <select
+                  name="preferredCountry"
+                  value={editingEntry?.preferredCountry || ''}
+                  onChange={handleInputChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="">Select Country</option>
+                  {countries.map(country => (
+                    <option key={country} value={country}>{country}</option>
+                  ))}
+                </select>
+              </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Preferred City
@@ -1527,20 +1582,6 @@ export default function ProfileForm({ onSave, onCancel, initialData = [], showFo
                     </div>
                   )}
                 </div>
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Preferred Country
-                </label>
-                <input
-                  type="text"
-                  name="preferredCountry"
-                  value={editingEntry?.preferredCountry || ''}
-                  onChange={handleInputChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="e.g. India"
-                />
               </div>
             </div>
             

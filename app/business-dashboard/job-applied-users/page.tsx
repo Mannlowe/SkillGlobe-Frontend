@@ -532,6 +532,63 @@ export default function JobAppliedUsersPage() {
                             "-"}
                       </p>
                     </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-700">
+                        LinkedIn
+                      </label>
+                      <p className="text-gray-900">
+                        {detailedProfile.portfolio.linkedin_profile ? (
+                          <a
+                            href={detailedProfile.portfolio.linkedin_profile}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-blue-600 hover:text-blue-800 underline"
+                          >
+                            {detailedProfile.portfolio.linkedin_profile}
+                          </a>
+                        ) : (
+                          "-"
+                        )}
+                      </p>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-700">
+                        GitHub
+                      </label>
+                      <p className="text-gray-900">
+                        {detailedProfile.portfolio.github_profile ? (
+                          <a
+                            href={detailedProfile.portfolio.github_profile}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-blue-600 hover:text-blue-800 underline"
+                          >
+                            {detailedProfile.portfolio.github_profile}
+                          </a>
+                        ) : (
+                          "-"
+                        )}
+                      </p>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-700">
+                        Website
+                      </label>
+                      <p className="text-gray-900">
+                        {detailedProfile.portfolio.website ? (
+                          <a
+                            href={detailedProfile.portfolio.website}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-blue-600 hover:text-blue-800 underline"
+                          >
+                            {detailedProfile.portfolio.website}
+                          </a>
+                        ) : (
+                          "-"
+                        )}
+                      </p>
+                    </div>
                   </div>
                 </div>
 

@@ -1,47 +1,49 @@
 // Resume API functions for job applicants
-import axios from 'axios';
+import axios from "axios";
 
 // Base URL for API calls
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://skillglobedev.m.frappe.cloud';
+const API_BASE_URL =
+  process.env.NEXT_PUBLIC_API_BASE_URL ||
+  "https://skillglobedev.m.frappe.cloud";
 
 /**
  * Get authentication data from local storage
  * @returns Object containing entity ID, API key, and API secret
  */
 export const getAuthData = () => {
-  if (typeof window !== 'undefined') {
+  if (typeof window !== "undefined") {
     try {
       // Get entity data from localStorage
-      const entityDataStr = localStorage.getItem('entity_data');
+      const entityDataStr = localStorage.getItem("entity_data");
       const entityData = entityDataStr ? JSON.parse(entityDataStr) : {};
-      
+
       // Get API credentials from localStorage
-      const apiKey = localStorage.getItem('auth_api_key');
-      const apiSecret = localStorage.getItem('auth_api_secret');
-      
+      const apiKey = localStorage.getItem("auth_api_key");
+      const apiSecret = localStorage.getItem("auth_api_secret");
+
       // If we don't have the API credentials in localStorage, try to get them from auth-storage
       if (!apiKey || !apiSecret) {
-        const authString = localStorage.getItem('auth-storage');
-        
+        const authString = localStorage.getItem("auth-storage");
+
         if (authString) {
           const authStorage = JSON.parse(authString);
           const state = authStorage.state;
-          
+
           return {
             entityId: entityData.entity_id || state?.entityId,
             apiKey: state?.apiKey,
-            apiSecret: state?.apiSecret
+            apiSecret: state?.apiSecret,
           };
         }
       }
-      
+
       return {
         entityId: entityData.entity_id,
         apiKey,
-        apiSecret
+        apiSecret,
       };
     } catch (error) {
-      console.error('Error getting auth data:', error);
+      console.error("Error getting auth data:", error);
       return null;
     }
   }
@@ -85,6 +87,8 @@ export interface Portfolio {
   facebook_profile: string;
   twitter_handle: string;
   instagram_handle: string;
+  github_profile?: string;
+  website?: string;
   professional_summary: string;
   education: Education[];
   work_experience: WorkExperience[];
@@ -130,25 +134,28 @@ export const getResumeForBuyer = async (
   apiSecret: string
 ): Promise<ResumeResponse> => {
   try {
-    console.log('Fetching resume for role based profile:', roleBasedProfile);
-    
+    console.log("Fetching resume for role based profile:", roleBasedProfile);
+
     // Authorization header
     const authHeader = `token ${apiKey}:${apiSecret}`;
-    
+
     const response = await axios.get<ResumeResponse>(
       `${API_BASE_URL}/api/method/skillglobe_be.api.opportunity_posting.dashboard.resume_for_buyer?role_based_profile=${roleBasedProfile}`,
       {
         headers: {
-          'Accept': 'application/json',
-          'Authorization': authHeader
-        }
+          Accept: "application/json",
+          Authorization: authHeader,
+        },
       }
     );
-    
-    console.log('Resume response:', response.data);
+
+    console.log("Resume response:", response.data);
     return response.data;
   } catch (error: any) {
-    console.error('Resume fetch error:', error.response?.data || error.message || error);
+    console.error(
+      "Resume fetch error:",
+      error.response?.data || error.message || error
+    );
     throw error;
   }
 };

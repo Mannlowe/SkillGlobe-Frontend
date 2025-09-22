@@ -1039,6 +1039,14 @@ export default function ProfileForm({ onSave, onCancel, initialData = [], showFo
             : [];
         }
         
+        // Ensure workEligibility is properly mapped from work_eligibility
+        if (!processedEntry.workEligibility && rawProfiles && initialData[0].id) {
+          const rawProfile = rawProfiles.find(p => p.name === initialData[0].id);
+          if (rawProfile && rawProfile.work_eligibility) {
+            processedEntry.workEligibility = rawProfile.work_eligibility;
+          }
+        }
+        
         setEditingEntry(processedEntry);
       }
     }

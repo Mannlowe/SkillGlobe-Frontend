@@ -68,8 +68,19 @@ export default function JobAppliedUsersPage() {
   }, [jobId, fetchProfilesByOpportunity, resetStore]);
 
 
-  const handleStatusChange = (applicantId: string, newStatus: Applicant['status']) => {
-    updateApplicantStatus(applicantId, newStatus);
+  const handleStatusChange = async (applicantId: string, newStatus: Applicant['status']) => {
+    try {
+      await updateApplicantStatus(applicantId, newStatus);
+      
+      // Show success message for "Show Interest" action
+      if (newStatus === 'interested') {
+        console.log('Successfully showed interest in profile');
+        // You can add a toast notification here if needed
+      }
+    } catch (error) {
+      console.error('Error updating status:', error);
+      // You can add error handling/toast notification here if needed
+    }
   };
 
   const handleViewProfile = async (applicant: Applicant) => {
@@ -312,7 +323,7 @@ export default function JobAppliedUsersPage() {
                           </span>
 
                           <div className="flex gap-2">
-                            {applicant.status !== 'pending' && (
+                            {applicant.status !== 'pending' && applicant.status !== 'interested' && (
                               <button
                                 onClick={() => handleViewProfile(applicant)}
                                 className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
@@ -331,13 +342,13 @@ export default function JobAppliedUsersPage() {
                                 >
                                   <Star size={16} />
                                 </button>
-                                <button
+                                {/* <button
                                   onClick={() => handleStatusChange(applicant.id, 'shortlisted')}
                                   className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
                                   title="Shortlist"
                                 >
                                   <CheckCircle size={16} />
-                                </button>
+                                </button> */}
                                 <button
                                   onClick={() => handleStatusChange(applicant.id, 'rejected')}
                                   className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"

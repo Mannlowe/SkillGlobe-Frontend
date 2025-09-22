@@ -760,10 +760,10 @@ export default function JobAppliedUsersPage() {
                       detailedProfile.portfolio.education.map((edu, index) => (
                         <div key={index} className="p-3 bg-gray-50 rounded-lg">
                           <p className="font-medium text-gray-900">
-                            {edu.stream || "-"}
+                            {edu.education_level || "-"}
                           </p>
                           <p className="text-sm text-gray-500 mt-1">
-                            {edu.education_level || "-"}
+                            {edu.stream || "-"}
                           </p>
                           <p className="text-gray-600">
                             {`${edu.university_board || ""} - ${

@@ -66,6 +66,7 @@ export interface Education {
 export interface WorkExperience {
   designation: string;
   company: string;
+  duration?: string;
 }
 
 // Interface for skills

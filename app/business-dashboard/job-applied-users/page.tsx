@@ -762,6 +762,9 @@ export default function JobAppliedUsersPage() {
                           <p className="font-medium text-gray-900">
                             {edu.stream || "-"}
                           </p>
+                          <p className="text-sm text-gray-500 mt-1">
+                            {edu.education_level || "-"}
+                          </p>
                           <p className="text-gray-600">
                             {`${edu.university_board || ""} - ${
                               edu.year_of_completion || "-"

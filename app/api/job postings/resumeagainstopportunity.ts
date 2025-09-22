@@ -60,6 +60,7 @@ export interface Education {
   university_board: string | null;
   year_of_completion: number;
   stream: string;
+  education_level?: string;
 }
 
 // Interface for work experience

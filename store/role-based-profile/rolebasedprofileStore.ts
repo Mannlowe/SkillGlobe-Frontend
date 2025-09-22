@@ -61,7 +61,7 @@ const mapSpaceToProfileType = (space: string): string => {
     'Information Technology (IT)': 'IT',
     'Manufacturing & Industrials': 'Manufacturing',
     'Banking & Financial Services': 'Banking',
-    'Hospitality & Services': 'Hospitality',
+    'Hospitality & Services (HS)': 'Hospitality',
     'Pharmaceuticals & Healthcare': 'Pharma & Healthcare'
   };
   return mapping[space] || 'Others';

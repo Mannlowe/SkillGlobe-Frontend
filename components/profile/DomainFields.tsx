@@ -1236,6 +1236,7 @@ const DomainFields: React.FC<DomainFieldsProps> = ({ profileType, subDomain, edi
               'Enter certification and press Enter (e.g., AWS Certified, Azure Fundamentals, Google Cloud)',
               'bg-blue-100 text-blue-800'
             )}
+            {/*
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">GitHub / Portfolio</label>
@@ -1247,9 +1248,10 @@ const DomainFields: React.FC<DomainFieldsProps> = ({ profileType, subDomain, edi
                   placeholder="Enter GitHub or portfolio URL"
                 />
               </div>
+              
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Notice Period <span className='text-gray-500'>(in days)</span></label>
-                {/* <select
+                <select
                   value={editingEntry?.noticePeriod || ''}
                   onChange={(e) => setEditingEntry((prev: ProfileEntry | null) => prev ? { ...prev, noticePeriod: e.target.value } : null)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -1258,7 +1260,7 @@ const DomainFields: React.FC<DomainFieldsProps> = ({ profileType, subDomain, edi
                   {noticePeriods.map(period => (
                     <option key={period} value={period}>{period}</option>
                   ))}
-                </select> */}
+                </select> 
                 <input
                   type="number"
                   value={editingEntry?.noticePeriod || ''}
@@ -1266,8 +1268,10 @@ const DomainFields: React.FC<DomainFieldsProps> = ({ profileType, subDomain, edi
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   placeholder="Enter notice period"
                 />
+                
               </div>
             </div>
+              */}
             {subDomain && (
               <div className="mt-6">
                 <h5 className="text-md font-medium text-gray-900 mb-4">

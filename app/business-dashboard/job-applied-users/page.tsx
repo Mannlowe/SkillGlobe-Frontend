@@ -367,13 +367,13 @@ export default function JobAppliedUsersPage() {
                                 .map((skill, index) => (
                                   <span
                                     key={index}
-                                    className="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded"
+                                    className="px-2 py-1 bg-green-100 text-gray-700 text-xs rounded-xl"
                                   >
                                     {skill}
                                   </span>
                                 ))}
                               {applicant.skills.length > 4 && (
-                                <span className="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded">
+                                <span className="px-2 py-1 bg-green-100 text-gray-700 text-xs rounded">
                                   +{applicant.skills.length - 4} more
                                 </span>
                               )}
@@ -415,27 +415,6 @@ export default function JobAppliedUsersPage() {
                                   title="Show Interest"
                                 >
                                   <Star size={16} />
-                                </button>
-                                <button
-                                  onClick={() =>
-                                    handleStatusChange(
-                                      applicant.id,
-                                      "shortlisted"
-                                    )
-                                  }
-                                  className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
-                                  title="Shortlist"
-                                >
-                                  <CheckCircle size={16} />
-                                </button> */}
-                                <button
-                                  onClick={() =>
-                                    handleStatusChange(applicant.id, "rejected")
-                                  }
-                                  className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                                  title="Reject"
-                                >
-                                  <XCircle size={16} />
                                 </button>
                               </>
                             )}

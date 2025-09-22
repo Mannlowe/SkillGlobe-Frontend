@@ -67,6 +67,22 @@ export interface ProfilesByOpportunityResponse {
   };
 }
 
+// Interface for mark as preferred request
+export interface MarkAsPreferredRequest {
+  entity_id: string;
+  opportunity_match_id: string;
+}
+
+// Interface for mark as preferred response
+export interface MarkAsPreferredResponse {
+  message: {
+    status: string;
+    message: string;
+    data?: any;
+    timestamp: string;
+  };
+}
+
 /**
  * Get authentication data from local storage
  * @returns Object containing entity ID, API key, and API secret
@@ -198,4 +214,87 @@ export const getProfilesByOpportunity = async (
     console.error('Profiles by opportunity error:', error.response?.data || error.message || error);
     throw error;
   }
+};
+
+/**
+ * Mark a profile as preferred (Show Interest functionality)
+ * @param entityId - The entity ID of the business
+ * @param opportunityMatchId - The opportunity match ID to mark as preferred
+ * @param apiKey - API key for authentication
+ * @param apiSecret - API secret for authentication
+ * @returns Promise<MarkAsPreferredResponse>
+ */
+export const markAsPreferred = async (
+  entityId: string,
+  opportunityMatchId: string,
+  apiKey: string,
+  apiSecret: string
+): Promise<MarkAsPreferredResponse> => {
+  try {
+    // Validate required parameters
+    if (!entityId) {
+      console.error('Entity ID is missing or empty');
+      throw new Error('Entity ID is required but was not provided');
+    }
+    
+    if (!opportunityMatchId) {
+      console.error('Opportunity Match ID is missing or empty');
+      throw new Error('Opportunity Match ID is required but was not provided');
+    }
+    
+    if (!apiKey || !apiSecret) {
+      console.error('API credentials are missing');
+      throw new Error('API key and secret are required for authentication');
+    }
+    
+    console.log('Marking profile as preferred:', { entityId, opportunityMatchId });
+
+    // Authorization header
+    const authHeader = `token ${apiKey}:${apiSecret}`;
+
+    // API endpoint
+    const url = `${API_BASE_URL}/api/method/skillglobe_be.api.opportunity_match.form.mark_as_preferred`;
+
+    // Request payload
+    const payload: MarkAsPreferredRequest = {
+      entity_id: entityId,
+      opportunity_match_id: opportunityMatchId
+    };
+
+    const response = await axios.post<MarkAsPreferredResponse>(url, payload, {
+      headers: {
+        'Authorization': authHeader,
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      }
+    });
+
+    console.log('Mark as preferred response:', response.data);
+    return response.data;
+  } catch (error: any) {
+    console.error('Mark as preferred error:', error.response?.data || error.message || error);
+    throw error;
+  }
+};
+
+/**
+ * Convenience function to mark as preferred using stored auth data
+ * @param opportunityMatchId - The opportunity match ID to mark as preferred
+ * @returns Promise<MarkAsPreferredResponse>
+ */
+export const markAsPreferredWithStoredAuth = async (
+  opportunityMatchId: string
+): Promise<MarkAsPreferredResponse> => {
+  const authData = getAuthData();
+  
+  if (!authData) {
+    throw new Error('Authentication data not found. Please login again.');
+  }
+  
+  return markAsPreferred(
+    authData.entityId,
+    opportunityMatchId,
+    authData.apiKey,
+    authData.apiSecret
+  );
 };

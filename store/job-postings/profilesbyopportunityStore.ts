@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { getProfilesByOpportunity, getAuthData, ProfilesByOpportunityResponse, ProfileData } from '@/app/api/job postings/profilesbyOpportunity';
+import { getProfilesByOpportunity, getAuthData, ProfilesByOpportunityResponse, ProfileData, markAsPreferredWithStoredAuth } from '@/app/api/job postings/profilesbyOpportunity';
 
 // Interface for transformed applicant data for UI
 export interface Applicant {
@@ -126,7 +126,7 @@ interface ProfilesByOpportunityState {
   
   // Actions
   fetchProfilesByOpportunity: (opportunityPostingId: string) => Promise<void>;
-  updateApplicantStatus: (applicantId: string, newStatus: Applicant['status']) => void;
+  updateApplicantStatus: (applicantId: string, newStatus: Applicant['status']) => Promise<void>;
   setJobDetails: (jobDetails: JobDetails) => void;
   clearError: () => void;
   resetStore: () => void;
@@ -241,15 +241,42 @@ export const useProfilesByOpportunityStore = create<ProfilesByOpportunityState>(
   },
 
   // Update applicant status
-  updateApplicantStatus: (applicantId: string, newStatus: Applicant['status']) => {
-    const { applicants } = get();
-    if (applicants) {
-      const updatedApplicants = applicants.map(applicant =>
-        applicant.id === applicantId
-          ? { ...applicant, status: newStatus }
-          : applicant
-      );
-      set({ applicants: updatedApplicants });
+  updateApplicantStatus: async (applicantId: string, newStatus: Applicant['status']) => {
+    try {
+      // If the new status is 'interested', call the mark as preferred API
+      if (newStatus === 'interested') {
+        console.log('Marking profile as preferred:', applicantId);
+        await markAsPreferredWithStoredAuth(applicantId);
+        console.log('Successfully marked profile as preferred');
+      }
+      
+      // Update the local state regardless of API call result
+      const { applicants } = get();
+      if (applicants) {
+        const updatedApplicants = applicants.map(applicant =>
+          applicant.id === applicantId
+            ? { ...applicant, status: newStatus }
+            : applicant
+        );
+        set({ applicants: updatedApplicants });
+      }
+    } catch (error: any) {
+      console.error('Error updating applicant status:', error);
+      
+      // Still update local state even if API call fails
+      const { applicants } = get();
+      if (applicants) {
+        const updatedApplicants = applicants.map(applicant =>
+          applicant.id === applicantId
+            ? { ...applicant, status: newStatus }
+            : applicant
+        );
+        set({ applicants: updatedApplicants });
+      }
+      
+      // You might want to show a toast notification here about the API failure
+      // For now, we'll just log the error
+      console.warn('API call failed but local state was updated');
     }
   },
 

@@ -126,6 +126,7 @@ export default function ProfileForm({ onSave, onCancel, initialData = [], showFo
     
     const existingProfile = rawProfiles.find(profile => profile.name === profileName);
     if (!existingProfile) return null;
+    
 
     // Helper function to map API field names to frontend field names
     const mapDomainSpecificFields = (profileData: any) => {
@@ -239,7 +240,8 @@ export default function ProfileForm({ onSave, onCancel, initialData = [], showFo
       id: existingProfile.name,
       role: existingProfile.role,
       profileType: mapSpaceToProfileType(existingProfile.space),
-  
+      subDomain: existingProfile.subdomain || '',
+      subdomain: existingProfile.subdomain || '',
       employmentType: existingProfile.employment_type,
       natureOfWork: existingProfile.nature_of_work,
       workMode: existingProfile.work_mode,
@@ -257,7 +259,6 @@ export default function ProfileForm({ onSave, onCancel, initialData = [], showFo
       ...mapDomainSpecificFields(existingProfile as any)
     };
 
-    console.log('Populated profile entry with domain fields:', profileEntry);
     return ensureDomainFieldsFormat(profileEntry);
   };
 
@@ -526,12 +527,12 @@ export default function ProfileForm({ onSave, onCancel, initialData = [], showFo
       const entryWithSkills = {
         ...initialEntry,
         profileType: initialEntry.profileType || '', // Ensure profileType is always initialized
-        subDomain: initialEntry.subDomain || '', // Ensure subDomain is always initialized
+        subDomain: initialEntry.subDomain || initialEntry.subdomain || '', // Handle both field names
+        subdomain: initialEntry.subdomain || initialEntry.subDomain || '', // Handle both field names
         primarySkills: Array.isArray(initialEntry.primarySkills) ? [...initialEntry.primarySkills] : [],
         secondarySkills: Array.isArray(initialEntry.secondarySkills) ? [...initialEntry.secondarySkills] : []
       };
       
-      console.log('Setting editingEntry with initial data:', entryWithSkills);
       
       // Set the initial entry
       setEditingEntry(entryWithSkills);
@@ -689,14 +690,14 @@ export default function ProfileForm({ onSave, onCancel, initialData = [], showFo
         ...entry,
         profileType: entry.profileType || '',
         subDomain: entry.subDomain || '',
+        subdomain: entry.subDomain || entry.subdomain || '',
         primarySkills: Array.isArray(entry.primarySkills) ? [...entry.primarySkills] : [],
         secondarySkills: Array.isArray(entry.secondarySkills) ? [...entry.secondarySkills] : []
       };
-      console.log('Using local data for editing:', JSON.stringify(entryToEdit));
     }
     
-    console.log('Final entryToEdit - profileType:', entryToEdit.profileType, 'subDomain:', entryToEdit.subDomain);
-    setEditingEntry(ensureDomainFieldsFormat(entryToEdit));
+    const finalEntry = ensureDomainFieldsFormat(entryToEdit);
+    setEditingEntry(finalEntry);
     setShowEditForm(true);
   };
 

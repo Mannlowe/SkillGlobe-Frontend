@@ -45,6 +45,7 @@ export interface Profile {
   template: string | null;
   formData: any;
   space?: string;
+  subdomain?: string;
   role?: string;
   workMode?: string;
   employmentType?: string;
@@ -217,7 +218,8 @@ const mapRoleBasedProfileToProfile = (profile: RoleBasedProfileData, index: numb
     id: profile.name,
     role: profile.role || '',
     profileType: mapSpaceToProfileType(profile.space || ''),
-  
+    subDomain: profile.subdomain || '',
+    subdomain: profile.subdomain || '',
     employmentType: profile.employment_type || 'Permanent',
     natureOfWork: profile.nature_of_work || 'Full-time',
     workMode: profile.work_mode || 'No Preference',
@@ -249,6 +251,7 @@ const mapRoleBasedProfileToProfile = (profile: RoleBasedProfileData, index: numb
     template: template,
     formData: formData,
     space: profile.space,
+    subdomain: profile.subdomain || undefined,
     role: profile.role,
     workMode: profile.work_mode,
     employmentType: profile.employment_type,

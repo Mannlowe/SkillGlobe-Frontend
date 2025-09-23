@@ -1187,13 +1187,13 @@ const DomainFields: React.FC<DomainFieldsProps> = ({ profileType, subDomain, edi
       case 'PH4':
         return (
           <div className="space-y-4">
-            {renderEnhancedMultiValueInput(
+            {/* {renderEnhancedMultiValueInput(
               'ph_department',
               'Department',
               'Enter department and press Enter (e.g., Nursing, Surgery, Radiology, Pharmacy)',
               'bg-blue-100 text-blue-800',
               true
-            )}
+            )} */}
 
             {renderEnhancedMultiValueInput(
               'ph_shift_preference',

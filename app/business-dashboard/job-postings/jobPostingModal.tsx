@@ -78,6 +78,9 @@ export default function JobPostingModal({ showModal, setShowModal, onSubmit, edi
   const languageDropdownRef = useRef<HTMLDivElement>(null);
   const locationDropdownRef = useRef<HTMLDivElement>(null);
   
+  // Ref to prevent overlapping API calls
+  const isApiCallInProgress = useRef<boolean>(false);
+  
   // Skills API state
   const [availableSkills, setAvailableSkills] = useState<Skill[]>([]);
   const [primarySkillsSearch, setPrimarySkillsSearch] = useState('');
@@ -192,15 +195,28 @@ export default function JobPostingModal({ showModal, setShowModal, onSubmit, edi
   
   // Function to fetch profile count based on current filters
   const fetchProfileCount = useCallback(async () => {
+    // Prevent overlapping API calls
+    if (isApiCallInProgress.current) {
+      console.log('API call already in progress, skipping...');
+      return;
+    }
+    
+    // Ensure availableSkills is loaded before making API calls with skills
+    if ((newJob.primarySkills.length > 0 || newJob.secondarySkills.length > 0) && availableSkills.length === 0) {
+      console.log('Skills not loaded yet, skipping API call...');
+      return;
+    }
+    
+    isApiCallInProgress.current = true;
     setIsLoadingCount(true);
     try {
       // Build filter parameters object with only defined values
       const filterParams: Record<string, string | number> = {};
       
-      // Add city if selected (location array)
+      // Add multiple cities if selected (comma-separated)
       if (newJob.location.length > 0) {
-        filterParams.city = newJob.location[0];
-        console.log('Adding city filter:', newJob.location[0]);
+        filterParams.city = newJob.location.join(',');
+        console.log('Adding city filter:', filterParams.city);
       }
       
       // Add work mode if selected
@@ -231,16 +247,33 @@ export default function JobPostingModal({ showModal, setShowModal, onSubmit, edi
         }
       }
       
-      // Add primary skill if selected
+      // Combine primary and secondary skills with canonical names
+      const allSelectedSkills: string[] = [];
+      
+      // Add primary skills with canonical names
       if (newJob.primarySkills.length > 0) {
-        filterParams.skills = newJob.primarySkills[0];
-        console.log('Adding skills filter:', newJob.primarySkills[0]);
+        const primarySkillCanonicalNames = newJob.primarySkills.map(skillName => {
+          const skill = availableSkills.find(s => s.name === skillName);
+          return skill?.canonical_name || skillName;
+        });
+        allSelectedSkills.push(...primarySkillCanonicalNames);
+        console.log('Adding primary skills with canonical names:', primarySkillCanonicalNames);
       }
       
-      // Add secondary skills if selected (you can modify this logic as needed)
-      if (newJob.secondarySkills.length > 0 && newJob.primarySkills.length === 0) {
-        filterParams.skills = newJob.secondarySkills[0];
-        console.log('Adding secondary skills filter:', newJob.secondarySkills[0]);
+      // Add secondary skills with canonical names
+      if (newJob.secondarySkills.length > 0) {
+        const secondarySkillCanonicalNames = newJob.secondarySkills.map(skillName => {
+          const skill = availableSkills.find(s => s.name === skillName);
+          return skill?.canonical_name || skillName;
+        });
+        allSelectedSkills.push(...secondarySkillCanonicalNames);
+        console.log('Adding secondary skills with canonical names:', secondarySkillCanonicalNames);
+      }
+      
+      // Add combined skills as comma-separated string
+      if (allSelectedSkills.length > 0) {
+        filterParams.skills = allSelectedSkills.join(',');
+        console.log('Adding combined skills filter:', filterParams.skills);
       }
       
       console.log('Final filter parameters:', filterParams);
@@ -255,6 +288,7 @@ export default function JobPostingModal({ showModal, setShowModal, onSubmit, edi
       setProfileCount(0); // Set to 0 on error
     } finally {
       setIsLoadingCount(false);
+      isApiCallInProgress.current = false; // Reset the flag
     }
   }, [newJob.location, newJob.workMode, newJob.experienceRequired, newJob.primarySkills, newJob.secondarySkills]);
 
@@ -275,40 +309,38 @@ export default function JobPostingModal({ showModal, setShowModal, onSubmit, edi
       setFilteredCities(cities);
       
       // Fetch initial profile count without filters
-      fetchProfileCount();
+      setIsLoadingCount(true);
+      try {
+        const count = await getProfileCount({});
+        setProfileCount(count);
+      } catch (error) {
+        console.error('Error fetching initial profile count:', error);
+        setProfileCount(0);
+      } finally {
+        setIsLoadingCount(false);
+      }
     };
     
     if (showModal) {
       loadInitialData();
     }
-  }, [showModal, fetchSkills, fetchApplyOpportunities, fetchCityList, fetchProfileCount]);
+  }, [showModal, fetchSkills, fetchApplyOpportunities, fetchCityList]);
   
-  // Update profile count when relevant filters change
+  // Debounced profile count update when relevant filters change
   useEffect(() => {
-    if (showModal) {
-      // Small delay to ensure the component is fully mounted
-      const timer = setTimeout(() => {
-        fetchProfileCount();
-      }, 300);
-      return () => clearTimeout(timer);
+    if (!showModal) {
+      // Reset API call flag when modal closes
+      isApiCallInProgress.current = false;
+      return;
     }
-  }, [newJob.location, newJob.workMode, newJob.experienceRequired, newJob.primarySkills, newJob.secondarySkills, fetchProfileCount, showModal]);
-  
-  // Initial fetch when modal opens
-  useEffect(() => {
-    if (showModal) {
-      // Fetch the initial count without any filters
-      setIsLoadingCount(true);
-      getProfileCount({}).then(count => {
-        setProfileCount(count);
-        setIsLoadingCount(false);
-      }).catch(error => {
-        console.error('Error fetching initial profile count:', error);
-        setProfileCount(0); // Set to 0 on error
-        setIsLoadingCount(false);
-      });
-    }
-  }, [showModal]);
+    
+    // Debounce the API call to prevent continuous requests
+    const debounceTimer = setTimeout(() => {
+      fetchProfileCount();
+    }, 500); // 500ms debounce delay
+    
+    return () => clearTimeout(debounceTimer);
+  }, [newJob.location, newJob.workMode, newJob.experienceRequired, newJob.primarySkills, newJob.secondarySkills, showModal]);
 
   // Filter skills based on search terms
   useEffect(() => {
@@ -701,7 +733,7 @@ export default function JobPostingModal({ showModal, setShowModal, onSubmit, edi
         bg-gradient-to-r from-orange-600 to-red-500 
         text-white font-bold shadow-lg 
         shadow-red-500/40 animate-pulse">
-        Profile Matches : {profileCount}
+        Relevant Profiles : {profileCount}
       </span>
     )}
 

@@ -47,10 +47,10 @@ export const getAuthData = () => {
 
 // Interface for profile count parameters
 export interface ProfileCountParams {
-  city?: string;
+  city?: string; // Now supports comma-separated cities: "Agra,Agartala"
   work_mode?: string;
   min_experience?: string | number;
-  skills?: string;
+  skills?: string; // Now supports comma-separated skills: "5s,sap"
 }
 
 // Interface for profile count API response

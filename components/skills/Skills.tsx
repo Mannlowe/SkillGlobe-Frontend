@@ -42,7 +42,7 @@ export default function Skills({
   const [searchError2, setSearchError2] = useState<string | null>(null);
   const [showDropdown, setShowDropdown] = useState(false);
   const [allSkills, setAllSkills] = useState<Skill[]>([]);
-  const [aiSearchQuery, setAiSearchQuery] = useState("");
+  const [aiResultMsg, setAiResultMsg] = useState<string>("");
   const [isAiSearching, setIsAiSearching] = useState(false);
   const [aiResult, setAiResult] = useState<Skill[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -287,6 +287,7 @@ export default function Skills({
     try {
       setIsAiSearching(true);
       setAiResult([]); // Clear previous results
+      setAiResultMsg(""); // Clear previous results
 
       const result = await createGlobalSkillAPI({
         gr: 1,
@@ -300,6 +301,7 @@ export default function Skills({
             name: result.message.data?.skill_id ?? "",
           },
         ]);
+        setAiResultMsg("Suggested skills");
         toast.success(`Found skills`);
         console.log([
           {
@@ -309,6 +311,7 @@ export default function Skills({
         ]);
         console.log("✅ Skill created:", result.message.data);
       } else {
+        setAiResultMsg(result.message.message);
         console.warn("⚠️ Info:", result.message.message);
         toast.success(`This skill is already in your list`);
       }
@@ -316,71 +319,11 @@ export default function Skills({
       console.error("❌ Error creating skill:", err);
       toast.error("AI search failed. Please try again.");
       setAiResult([]);
+      setAiResultMsg("");
     } finally {
       setIsAiSearching(false);
     }
   };
-
-  // const handleAiSearch = async () => {
-  //   if (!aiSearchQuery.trim()) return;
-
-  //   try {
-  //     setIsAiSearching(true);
-  //     // setAiResult(null); // Clear previous results
-
-  //     // Use mock implementation for static export compatibility
-  //     const data = await mockClassifySkill(aiSearchQuery.trim());
-
-  //     if (data.success && data.result) {
-  //       const result = data.result;
-  //       const enteredValue = result["entered value"];
-  //       const canonicalName = result["recognised canonical Name"];
-  //       const aliases = result.aliases || [];
-
-  //       // Store the result for display
-  //       // setAiResult({
-  //       //   enteredValue,
-  //       //   canonicalName,
-  //       //   aliases,
-  //       // });
-
-  //       if (canonicalName) {
-  //         // Create skill data object
-  //         const skillData: SkillData = {
-  //           name: canonicalName,
-  //           canonical_name: canonicalName,
-  //         };
-
-  //         // Add the skill if it doesn't already exist
-  //         if (
-  //           !selectedSkills.some(
-  //             (s) => s.name.toLowerCase() === canonicalName.toLowerCase()
-  //           )
-  //         ) {
-  //           setSelectedSkills((prev) => [...prev, skillData]);
-  //           toast.success(`Added skill: ${canonicalName}`);
-  //         } else {
-  //           toast.success(`Skill "${canonicalName}" is already in your list`);
-  //         }
-
-  //         // Don't clear the search query so user can see what they entered
-  //         // setAiSearchQuery('');
-  //       } else {
-  //         toast.error(
-  //           "Could not identify a specific skill from your description"
-  //         );
-  //       }
-  //     } else {
-  //       toast.error("Could not process your skill description");
-  //     }
-  //   } catch (error: any) {
-  //     console.error("AI search error:", error);
-  //     toast.error("AI search failed. Please try again.");
-  //     // setAiResult(null);
-  //   } finally {
-  //     setIsAiSearching(false);
-  //   }
-  // };
 
   // Fetch all skills when input is clicked
   const fetchAllSkills = async () => {
@@ -562,7 +505,8 @@ export default function Skills({
 
         {/* Skills Dropdown */}
         {showDropdown && (
-          <div className="skills-dropdown w-1/2 absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-xl shadow-lg z-50 max-h-80 overflow-hidden">
+          // <div className="skills-dropdown w-1/2 absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-xl shadow-lg z-50 max-h-80 overflow-hidden">
+          <div className="skills-dropdown w-1/2 absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-xl shadow-lg z-50 max-h-100 overflow-auto">
             <div className="max-h-60 overflow-y-auto">
               {searchError ? (
                 <div className="p-4 text-center">
@@ -641,10 +585,14 @@ export default function Skills({
 
             {/* AI Search Bar inside dropdown */}
             <div className="border-t border-gray-200 p-4">
+              {/* <div className="py-2">
+                len {aiResult.length} {aiResult[0]?.canonical_name}
+              </div> */}
+
               <div className="flex flex-col space-y-2">
                 <div className="flex items-center bg-gray-50 rounded-full border border-gray-200 p-2 focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-blue-500 transition-all">
                   {/* <input
-                    type="text"
+                    type="text"    
                     value={aiSearchQuery}
                     onChange={(e) => setAiSearchQuery(e.target.value)}
                     onKeyDown={(e) => {
@@ -663,7 +611,7 @@ export default function Skills({
                     {isAiSearching ? (
                       <div className="animate-spin rounded-full h-auto w-auto border-2 border-t-transparent border-white"></div>
                     ) : (
-                      "Search AI Suggestions"
+                      "AI Search"
                     )}
                   </button>
                 </div>
@@ -671,6 +619,7 @@ export default function Skills({
                 {/* AI Result Display */}
 
                 <div className="max-h-60 overflow-y-auto">
+                  {aiResultMsg !== "" && <div>{aiResultMsg}</div>}
                   {aiResult?.length > 0 && (
                     <div className="py-2">
                       {aiResult?.map((skill) => {
@@ -717,15 +666,6 @@ export default function Skills({
                             )}
                           </button>
                         );
-                        // return (
-                        //   <div
-                        //     key={skill.name}
-                        //     className="px-3 py-2 hover:bg-gray-100 cursor-pointer"
-                        //     // onClick={() => handleSelectSkill(skill)}
-                        //   >
-                        //     {skill.canonical_name}
-                        //   </div>
-                        // );
                       })}
                     </div>
                   )}

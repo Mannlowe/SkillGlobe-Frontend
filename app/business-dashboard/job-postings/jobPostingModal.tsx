@@ -4,6 +4,7 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { X } from 'lucide-react';
 import { useJobPostingStore, JobPostingFormData } from '@/store/job-postings/addjobpostingStore';
 import { getSkills, getApplyOpportunities, getCityList, getAuthData, type Skill, type City } from '@/app/api/job postings/addjobPosting';
+import { getProfileCount } from '@/app/api/job postings/jobfilterElasticSearch';
 
 // Define document type interface
 export interface DocumentFile {
@@ -77,6 +78,9 @@ export default function JobPostingModal({ showModal, setShowModal, onSubmit, edi
   const languageDropdownRef = useRef<HTMLDivElement>(null);
   const locationDropdownRef = useRef<HTMLDivElement>(null);
   
+  // Ref to prevent overlapping API calls
+  const isApiCallInProgress = useRef<boolean>(false);
+  
   // Skills API state
   const [availableSkills, setAvailableSkills] = useState<Skill[]>([]);
   const [primarySkillsSearch, setPrimarySkillsSearch] = useState('');
@@ -101,12 +105,16 @@ export default function JobPostingModal({ showModal, setShowModal, onSubmit, edi
   // Primary skills validation state
   const [primarySkillsError, setPrimarySkillsError] = useState<string>('');
   
+  // Profile count state
+  const [profileCount, setProfileCount] = useState<number>(0);
+  const [isLoadingCount, setIsLoadingCount] = useState<boolean>(false);
+  
   const [newJob, setNewJob] = useState<JobFormState>({
     title: '',
     skillCategory: '',
     opportunityType: 'Permanent',
     employmentType: 'Full-Time',
-    workMode: 'WFO',
+    workMode: '',
     experienceRequired: '0-2 years',
     minRemuneration: '',
     applicationDeadline: '',
@@ -184,6 +192,105 @@ export default function JobPostingModal({ showModal, setShowModal, onSubmit, edi
       setCityListLoading(false);
     }
   }, []);
+  
+  // Function to fetch profile count based on current filters
+  const fetchProfileCount = useCallback(async () => {
+    // Prevent overlapping API calls
+    if (isApiCallInProgress.current) {
+      console.log('API call already in progress, skipping...');
+      return;
+    }
+    
+    // Ensure availableSkills is loaded before making API calls with skills
+    if ((newJob.primarySkills.length > 0 || newJob.secondarySkills.length > 0) && availableSkills.length === 0) {
+      console.log('Skills not loaded yet, skipping API call...');
+      return;
+    }
+    
+    isApiCallInProgress.current = true;
+    setIsLoadingCount(true);
+    try {
+      // Build filter parameters object with only defined values
+      const filterParams: Record<string, string | number> = {};
+      
+      // Add multiple cities if selected (comma-separated)
+      if (newJob.location.length > 0) {
+        filterParams.city = newJob.location.join(',');
+        console.log('Adding city filter:', filterParams.city);
+      }
+      
+      // Add work mode if selected
+      if (newJob.workMode) {
+        filterParams.work_mode = newJob.workMode;
+        console.log('Adding work_mode filter:', newJob.workMode);
+      }
+      
+      // Handle experienceRequired - extract numeric value
+      if (newJob.experienceRequired && newJob.experienceRequired !== '0-2 years') {
+        let min_experience;
+        if (typeof newJob.experienceRequired === 'string') {
+          // Check if it's in the format '0-2 years' or just a number
+          if (newJob.experienceRequired.includes('-')) {
+            min_experience = newJob.experienceRequired.split('-')[0].trim();
+          } else {
+            // It might be just a number
+            min_experience = newJob.experienceRequired.trim();
+          }
+        } else {
+          min_experience = newJob.experienceRequired;
+        }
+        
+        // Only add if it's a valid number and not 0
+        if (min_experience && min_experience !== '0') {
+          filterParams.min_experience = min_experience;
+          console.log('Adding min_experience filter:', min_experience);
+        }
+      }
+      
+      // Combine primary and secondary skills with canonical names
+      const allSelectedSkills: string[] = [];
+      
+      // Add primary skills with canonical names
+      if (newJob.primarySkills.length > 0) {
+        const primarySkillCanonicalNames = newJob.primarySkills.map(skillName => {
+          const skill = availableSkills.find(s => s.name === skillName);
+          return skill?.canonical_name || skillName;
+        });
+        allSelectedSkills.push(...primarySkillCanonicalNames);
+        console.log('Adding primary skills with canonical names:', primarySkillCanonicalNames);
+      }
+      
+      // Add secondary skills with canonical names
+      if (newJob.secondarySkills.length > 0) {
+        const secondarySkillCanonicalNames = newJob.secondarySkills.map(skillName => {
+          const skill = availableSkills.find(s => s.name === skillName);
+          return skill?.canonical_name || skillName;
+        });
+        allSelectedSkills.push(...secondarySkillCanonicalNames);
+        console.log('Adding secondary skills with canonical names:', secondarySkillCanonicalNames);
+      }
+      
+      // Add combined skills as comma-separated string
+      if (allSelectedSkills.length > 0) {
+        filterParams.skills = allSelectedSkills.join(',');
+        console.log('Adding combined skills filter:', filterParams.skills);
+      }
+      
+      console.log('Final filter parameters:', filterParams);
+      
+      // Call the API with the filter parameters (empty object if no filters)
+      const count = await getProfileCount(filterParams);
+      console.log('API response count:', count);
+      
+      setProfileCount(count);
+    } catch (error) {
+      console.error('Error fetching profile count:', error);
+      setProfileCount(0); // Set to 0 on error
+    } finally {
+      setIsLoadingCount(false);
+      isApiCallInProgress.current = false; // Reset the flag
+    }
+  }, [newJob.location, newJob.workMode, newJob.experienceRequired, newJob.primarySkills, newJob.secondarySkills]);
 
   // Load initial data on component mount
   useEffect(() => {
@@ -200,12 +307,40 @@ export default function JobPostingModal({ showModal, setShowModal, onSubmit, edi
       setApplyOpportunities(opportunities);
       setCityList(cities);
       setFilteredCities(cities);
+      
+      // Fetch initial profile count without filters
+      setIsLoadingCount(true);
+      try {
+        const count = await getProfileCount({});
+        setProfileCount(count);
+      } catch (error) {
+        console.error('Error fetching initial profile count:', error);
+        setProfileCount(0);
+      } finally {
+        setIsLoadingCount(false);
+      }
     };
     
     if (showModal) {
       loadInitialData();
     }
   }, [showModal, fetchSkills, fetchApplyOpportunities, fetchCityList]);
+  
+  // Debounced profile count update when relevant filters change
+  useEffect(() => {
+    if (!showModal) {
+      // Reset API call flag when modal closes
+      isApiCallInProgress.current = false;
+      return;
+    }
+    
+    // Debounce the API call to prevent continuous requests
+    const debounceTimer = setTimeout(() => {
+      fetchProfileCount();
+    }, 500); // 500ms debounce delay
+    
+    return () => clearTimeout(debounceTimer);
+  }, [newJob.location, newJob.workMode, newJob.experienceRequired, newJob.primarySkills, newJob.secondarySkills, showModal]);
 
   // Filter skills based on search terms
   useEffect(() => {
@@ -375,7 +510,7 @@ export default function JobPostingModal({ showModal, setShowModal, onSubmit, edi
         skillCategory: editData.skillCategory || '',
         opportunityType: 'Permanent', // Default value if not in editData
         employmentType: editData.employmentType || 'Full-Time',
-        workMode: editData.workMode || 'WFO',
+        workMode: editData.workMode || '',
         experienceRequired: editData.experienceRequired || '0-2 years',
         minRemuneration: editData.salary || '',
         applicationDeadline: formattedDeadline,
@@ -552,7 +687,7 @@ export default function JobPostingModal({ showModal, setShowModal, onSubmit, edi
           skillCategory: '',
           opportunityType: 'Permanent',
           employmentType: 'Full-Time',
-          workMode: 'WFO',
+          workMode: '',
           experienceRequired: '0-2 years',
           minRemuneration: '',
           applicationDeadline: '',
@@ -582,16 +717,35 @@ export default function JobPostingModal({ showModal, setShowModal, onSubmit, edi
   
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-xl shadow-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-        <div className="flex items-center justify-between border-b border-gray-200 p-4">
-          <h3 className="text-lg font-semibold text-gray-900">New Opportunity Posting</h3>
-          <button 
-            onClick={() => setShowModal(false)}
-            className="p-1 rounded-md hover:bg-gray-100"
-          >
+      <div className="bg-white rounded-xl shadow-lg max-w-3xl w-full max-h-[90vh] overflow-y-auto">
+      <div className="flex items-center justify-between border-b border-gray-200 p-4">
+  {/* Left Side */}
+  <h3 className="text-lg font-semibold text-gray-900">
+    New Opportunity Posting
+  </h3>
+
+  {/* Right Side (Badge + Close Button) */}
+  <div className="flex items-center gap-3">
+    {isLoadingCount ? (
+      <span className="text-sm text-gray-500 animate-pulse">Loading count...</span>
+    ) : (
+      <span className="text-sm px-3 py-1 rounded-full 
+        bg-gradient-to-r from-orange-600 to-red-500 
+        text-white font-bold shadow-lg 
+        shadow-red-500/40 animate-pulse">
+        Relevant Profiles : {profileCount}
+      </span>
+    )}
+
+    <button 
+      onClick={() => setShowModal(false)}
+      className="p-1 rounded-md hover:bg-gray-100"
+    >
       <X size={20} />
     </button>
   </div>
+</div>
+
   
   <form onSubmit={handleCreateJob} className="p-6 space-y-6 font-rubik">
   <div>

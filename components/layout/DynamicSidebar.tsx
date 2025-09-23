@@ -2,11 +2,11 @@
 
 import React, { useEffect, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
-import { 
-  AlertCircle, 
-  CheckCircle, 
-  TrendingUp, 
-  Clock, 
+import {
+  AlertCircle,
+  CheckCircle,
+  TrendingUp,
+  Clock,
   Target,
   Zap,
   Star,
@@ -63,7 +63,7 @@ export default function DynamicSidebar({ isOpen, onClose, isMobile = false }: Dy
   const [userName, setUserName] = useState('User');
   const { user, isAuthenticated } = useAuthStore();
   const [isBoostHovered, setIsBoostHovered] = useState(false);
-  
+
   const [contextualData, setContextualData] = useState<{
     profileHealth: number;
     todos: ContextualAction[];
@@ -96,11 +96,11 @@ export default function DynamicSidebar({ isOpen, onClose, isMobile = false }: Dy
 
   const loadContextualData = async (path: string) => {
     setContextualData(prev => ({ ...prev, loading: true }));
-    
+
     try {
       // Generate context-specific data based on current page
       const contextActions = getContextualContent(path);
-      
+
       setContextualData(prev => ({
         ...prev,
         ...contextActions,
@@ -113,8 +113,8 @@ export default function DynamicSidebar({ isOpen, onClose, isMobile = false }: Dy
   };
 
   useEffect(() => {
-    if (isAuthenticated && user && window.location.pathname.includes('individual-dashboard')) {
-      setUserName(user.full_name || user.name);
+    if (isAuthenticated && user) {
+      setUserName(user.full_name || user.name || 'User');
     }
   }, [isAuthenticated, user]);
 
@@ -147,7 +147,7 @@ export default function DynamicSidebar({ isOpen, onClose, isMobile = false }: Dy
         ]
       };
     }
-    
+
     if (path.includes('opportunities')) {
       return {
         profileHealth: 92,
@@ -290,7 +290,7 @@ export default function DynamicSidebar({ isOpen, onClose, isMobile = false }: Dy
     <>
       {/* Mobile backdrop */}
       {isMobile && isOpen && (
-        <div 
+        <div
           className="fixed inset-0 bg-black/50 z-40 lg:hidden"
           onClick={onClose}
         />
@@ -309,21 +309,27 @@ export default function DynamicSidebar({ isOpen, onClose, isMobile = false }: Dy
           <div className="px-4 py-3 border-b border-gray-200">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-md text-gray-800 font-semibold">Welcome back, {userName}</p>
-                <div className="flex items-center gap-2">
+                <p className="text-lg font-semibold inline-block px-4 py-2 
+  text-white rounded-lg shadow-lg 
+  bg-gradient-to-r from-blue-600 to-indigo-700 
+  border border-white/30 animate-pulse">
+                  Welcome back, {userName}
+                </p>
+
+                {/* <div className="flex items-center gap-2">
                   <h2 className="text-lg font-semibold text-gray-900">Profile Health</h2>
                   <span className="text-xl">
                     {contextualData.profileHealth <= 30 ? '😞' : 
                      contextualData.profileHealth <= 60 ? '🙂' : 
                      contextualData.profileHealth <= 95 ? '😊' : '🤩'}
                   </span>
-                </div>
-                <div className="flex items-center space-x-2 mt-1">
+                </div> */}
+                {/* <div className="flex items-center space-x-2 mt-1">
                   <Progress value={contextualData.profileHealth} className="h-2 w-28" />
                   <span className="text-sm font-medium text-gray-700">
                     {contextualData.profileHealth}%
                   </span>
-                </div>
+                </div> */}
               </div>
               {isMobile && (
                 <Button
@@ -352,7 +358,7 @@ export default function DynamicSidebar({ isOpen, onClose, isMobile = false }: Dy
               </div>
 
               {/* Boost Your Chances Section */}
-              <div 
+              <div
                 className="relative"
                 onMouseEnter={() => setIsBoostHovered(true)}
                 onMouseLeave={() => setIsBoostHovered(false)}

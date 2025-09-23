@@ -37,6 +37,9 @@ export default function CompanyProfilePage() {
   const businessNameFromStore = useBusinessRegistrationStore(state => state.businessName);
   const [businessName, setBusinessName] = useState<string>('');
   
+  // Check if current user is Business User (read-only access)
+  const isBusinessUser = entity?.role === 'Business User';
+  
   // Effect to set business name once auth data is available
   useEffect(() => {
     // Get name from entity if available
@@ -141,7 +144,7 @@ export default function CompanyProfilePage() {
             businessName: profile.business_name || '',
             aboutCompany: profile.about_company || '',
             website: profile.website || '',
-            headquarters: profile.headquarters_address || '',
+            businessAddress: profile.headquarters_address || '',
             industrySector: profile.industry || '',
             organizationSize: profile.number_of_employees || '',
             taxId: profile.tax_id || '',
@@ -366,9 +369,20 @@ export default function CompanyProfilePage() {
                 <h1 className="text-2xl font-bold text-gray-900 mb-2">
                   Organization Profile
                 </h1>
-                <p className="text-gray-600">
-                  Manage your organization&apos;s information and presence on SkillGlobe
-                </p>
+                {isBusinessUser ? (
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
+                    <div className="flex items-center">
+                      <Lock className="text-blue-600 mr-2" size={16} />
+                      <p className="text-blue-800 text-sm font-medium">
+                        Read-Only Access: You can view the organization profile but cannot make changes. Contact your Business Admin to update this information.
+                      </p>
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-gray-600">
+                    Manage your organization&apos;s information and presence on SkillGlobe
+                  </p>
+                )}
               </div>
 
               {loadingProfile && (
@@ -411,11 +425,15 @@ export default function CompanyProfilePage() {
                     </label>
                     <div className="relative">
                       <Globe className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+                      {isBusinessUser && (
+                        <Lock className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
+                      )}
                       <input
                         type="url"
                         value={data.website || ''}
-                        onChange={(e) => updateData({ website: e.target.value })}
-                        className={`w-full pl-10 pr-4 py-3 bg-gray-50 rounded-xl border-0 focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all ${
+                        onChange={(e) => !isBusinessUser && updateData({ website: e.target.value })}
+                        readOnly={isBusinessUser}
+                        className={`w-full pl-10 ${isBusinessUser ? 'pr-10' : 'pr-4'} py-3 ${isBusinessUser ? 'bg-gray-100 cursor-not-allowed' : 'bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:bg-white'} rounded-xl border-0 transition-all ${
                           errors.website ? 'ring-2 ring-red-500' : ''
                         }`}
                         placeholder="https://yourcompany.com"
@@ -431,11 +449,15 @@ export default function CompanyProfilePage() {
                     </label>
                     <div className="relative">
                       <FileText className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+                      {isBusinessUser && (
+                        <Lock className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
+                      )}
                       <input
                         type="text"
                         value={data.taxId || ''}
-                        onChange={(e) => updateData({ taxId: e.target.value })}
-                        className={`w-full pl-10 pr-4 py-3 bg-gray-50 rounded-xl border-0 focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all ${
+                        onChange={(e) => !isBusinessUser && updateData({ taxId: e.target.value })}
+                        readOnly={isBusinessUser}
+                        className={`w-full pl-10 ${isBusinessUser ? 'pr-10' : 'pr-4'} py-3 ${isBusinessUser ? 'bg-gray-100 cursor-not-allowed' : 'bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:bg-white'} rounded-xl border-0 transition-all ${
                           errors.taxId ? 'ring-2 ring-red-500' : ''
                         }`}
                         placeholder="ID Number"
@@ -449,13 +471,19 @@ export default function CompanyProfilePage() {
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       Social/External Links
                     </label>
-                    <input
-                      type="url"
-                      value={data.socialLinks || ''}
-                      onChange={(e) => updateData({ socialLinks: e.target.value })}
-                      className="w-full px-4 py-3 bg-gray-50 rounded-xl border-0 focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all"
-                      placeholder="LinkedIn, Facebook, etc."
-                    />
+                    <div className="relative">
+                      {isBusinessUser && (
+                        <Lock className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
+                      )}
+                      <input
+                        type="url"
+                        value={data.socialLinks || ''}
+                        onChange={(e) => !isBusinessUser && updateData({ socialLinks: e.target.value })}
+                        readOnly={isBusinessUser}
+                        className={`w-full ${isBusinessUser ? 'pr-10' : 'pr-4'} px-4 py-3 ${isBusinessUser ? 'bg-gray-100 cursor-not-allowed' : 'bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:bg-white'} rounded-xl border-0 transition-all`}
+                        placeholder="LinkedIn, Facebook, etc."
+                      />
+                    </div>
                   </div>
 
                   {/* Industry Sector */}
@@ -465,11 +493,14 @@ export default function CompanyProfilePage() {
                     </label>
                     <div className="relative">
                       <Briefcase className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+                      {isBusinessUser && (
+                        <Lock className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
+                      )}
                       <select
                         value={data.industrySector || ''}
-                        onChange={(e) => updateData({ industrySector: e.target.value })}
-                        disabled={loadingIndustries}
-                        className={`w-full pl-10 pr-4 py-3 bg-gray-50 rounded-xl border-0 focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all appearance-none h-12 ${
+                        onChange={(e) => !isBusinessUser && updateData({ industrySector: e.target.value })}
+                        disabled={loadingIndustries || isBusinessUser}
+                        className={`w-full pl-10 ${isBusinessUser ? 'pr-10' : 'pr-4'} py-3 ${isBusinessUser ? 'bg-gray-100 cursor-not-allowed' : 'bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:bg-white'} rounded-xl border-0 transition-all appearance-none h-12 ${
                           errors.industrySector ? 'ring-2 ring-red-500' : ''
                         } ${loadingIndustries ? 'opacity-50 cursor-not-allowed' : ''}`}
                         style={{ maxHeight: '100px' }}
@@ -492,10 +523,14 @@ export default function CompanyProfilePage() {
                     </label>
                     <div className="relative">
                       <Users className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+                      {isBusinessUser && (
+                        <Lock className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
+                      )}
                       <select
                         value={data.organizationSize || ''}
-                        onChange={(e) => updateData({ organizationSize: e.target.value })}
-                        className={`w-full pl-10 pr-4 py-3 bg-gray-50 rounded-xl border-0 focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all appearance-none ${
+                        onChange={(e) => !isBusinessUser && updateData({ organizationSize: e.target.value })}
+                        disabled={isBusinessUser}
+                        className={`w-full pl-10 ${isBusinessUser ? 'pr-10' : 'pr-4'} py-3 ${isBusinessUser ? 'bg-gray-100 cursor-not-allowed' : 'bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:bg-white'} rounded-xl border-0 transition-all appearance-none ${
                           errors.organizationSize ? 'ring-2 ring-red-500' : ''
                         }`}
                       >
@@ -515,10 +550,14 @@ export default function CompanyProfilePage() {
                     </label>
                     <div className="relative">
                       <MapPin className="absolute left-3 top-3 text-gray-400" size={18} />
+                      {isBusinessUser && (
+                        <Lock className="absolute right-3 top-3 text-gray-400" size={16} />
+                      )}
                       <textarea
                         value={data.businessAddress || ''}
-                        onChange={(e) => updateData({ businessAddress: e.target.value })}
-                        className={`w-full pl-10 pr-4 py-3 bg-gray-50 rounded-xl border-0 focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all resize-none ${
+                        onChange={(e) => !isBusinessUser && updateData({ businessAddress: e.target.value })}
+                        readOnly={isBusinessUser}
+                        className={`w-full pl-10 ${isBusinessUser ? 'pr-10' : 'pr-4'} py-3 ${isBusinessUser ? 'bg-gray-100 cursor-not-allowed' : 'bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:bg-white'} rounded-xl border-0 transition-all resize-none ${
                           errors.businessAddress ? 'ring-2 ring-red-500' : ''
                         }`}
                         placeholder="Official office or operational address"
@@ -533,13 +572,19 @@ export default function CompanyProfilePage() {
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       Organization Description
                     </label>
-                    <textarea
-                      value={data.businessDescription || ''}
-                      onChange={(e) => updateData({ businessDescription: e.target.value })}
-                      className="w-full px-4 py-3 bg-gray-50 rounded-xl border-0 focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all resize-none"
-                      placeholder="Short company overview"
-                      rows={2}
-                    />
+                    <div className="relative">
+                      {isBusinessUser && (
+                        <Lock className="absolute right-3 top-3 text-gray-400" size={16} />
+                      )}
+                      <textarea
+                        value={data.businessDescription || ''}
+                        onChange={(e) => !isBusinessUser && updateData({ businessDescription: e.target.value })}
+                        readOnly={isBusinessUser}
+                        className={`w-full ${isBusinessUser ? 'pr-10' : 'pr-4'} px-4 py-3 ${isBusinessUser ? 'bg-gray-100 cursor-not-allowed' : 'bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:bg-white'} rounded-xl border-0 transition-all resize-none`}
+                        placeholder="Short company overview"
+                        rows={2}
+                      />
+                    </div>
                   </div>
                 </div>
 
@@ -549,19 +594,27 @@ export default function CompanyProfilePage() {
                     Organization Logo
                   </label>
                   {!logo && !data.logo && !logoUrl ? (
-                    <label className="block">
-                      <div className="border-2 border-dashed border-gray-300 rounded-xl p-4 text-center hover:border-blue-500 transition-colors cursor-pointer">
-                        <Upload className="mx-auto text-gray-400 mb-2" size={20} />
-                        <p className="text-sm font-medium text-gray-900">Upload organization logo</p>
-                        <p className="text-xs text-gray-500 mt-1">PNG, JPG (max 2MB)</p>
+                    isBusinessUser ? (
+                      <div className="border-2 border-dashed border-gray-200 rounded-xl p-4 text-center bg-gray-50">
+                        <Lock className="mx-auto text-gray-400 mb-2" size={20} />
+                        <p className="text-sm font-medium text-gray-500">No logo uploaded</p>
+                        <p className="text-xs text-gray-400 mt-1">Contact Business Admin to upload logo</p>
                       </div>
-                      <input
-                        type="file"
-                        accept="image/png,image/jpeg"
-                        onChange={handleLogoUpload}
-                        className="hidden"
-                      />
-                    </label>
+                    ) : (
+                      <label className="block">
+                        <div className="border-2 border-dashed border-gray-300 rounded-xl p-4 text-center hover:border-blue-500 transition-colors cursor-pointer">
+                          <Upload className="mx-auto text-gray-400 mb-2" size={20} />
+                          <p className="text-sm font-medium text-gray-900">Upload organization logo</p>
+                          <p className="text-xs text-gray-500 mt-1">PNG, JPG (max 2MB)</p>
+                        </div>
+                        <input
+                          type="file"
+                          accept="image/png,image/jpeg"
+                          onChange={handleLogoUpload}
+                          className="hidden"
+                        />
+                      </label>
+                    )
                   ) : (
                     <div className="space-y-3">
                       {/* Show uploaded logo image */}
@@ -585,19 +638,31 @@ export default function CompanyProfilePage() {
                         <p className="text-xs text-green-700">Logo uploaded successfully</p>
                       </div>
                       
-                      {/* Option to upload new logo */}
-                      <label className="block">
-                        <div className="border border-gray-300 rounded-xl p-3 text-center hover:border-blue-500 transition-colors cursor-pointer bg-white">
-                          <Upload className="mx-auto text-gray-400 mb-1" size={16} />
-                          <p className="text-xs font-medium text-gray-700">Upload new logo</p>
+                      {/* Option to upload new logo - only for Business Admin */}
+                      {!isBusinessUser && (
+                        <label className="block">
+                          <div className="border border-gray-300 rounded-xl p-3 text-center hover:border-blue-500 transition-colors cursor-pointer bg-white">
+                            <Upload className="mx-auto text-gray-400 mb-1" size={16} />
+                            <p className="text-xs font-medium text-gray-700">Upload new logo</p>
+                          </div>
+                          <input
+                            type="file"
+                            accept="image/png,image/jpeg"
+                            onChange={handleLogoUpload}
+                            className="hidden"
+                          />
+                        </label>
+                      )}
+                      
+                      {/* Read-only message for Business User */}
+                      {isBusinessUser && (
+                        <div className="bg-blue-50 p-3 rounded-xl border border-blue-200">
+                          <div className="flex items-center">
+                            <Lock className="text-blue-600 mr-2" size={14} />
+                            <p className="text-xs text-blue-700">Contact Business Admin to change logo</p>
+                          </div>
                         </div>
-                        <input
-                          type="file"
-                          accept="image/png,image/jpeg"
-                          onChange={handleLogoUpload}
-                          className="hidden"
-                        />
-                      </label>
+                      )}
                     </div>
                   )}
                 </div>
@@ -607,28 +672,35 @@ export default function CompanyProfilePage() {
 
                 {/* Save Button */}
                 <div className="pt-4 flex items-center justify-center">
-                  <button
-                    type="submit"
-                    disabled={isSaving}
-                    className={`w-40 flex items-center justify-center bg-blue-500 text-white font-semibold py-3 px-6 rounded-xl hover:bg-blue-600 transition-all duration-300 ${
-                      isSaving ? 'opacity-70 cursor-not-allowed' : ''
-                    }`}
-                  >
-                    {isSaving ? (
-                      <>
-                        <svg className="animate-spin -ml-1 mr-1 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                        </svg>
-                        Saving
-                      </>
-                    ) : (
-                      <>
-                        <Save className="mr-2" size={18} />
-                        Save
-                      </>
-                    )}
-                  </button>
+                  {isBusinessUser ? (
+                    <div className="w-40 flex items-center justify-center bg-gray-300 text-gray-500 font-semibold py-3 px-6 rounded-xl cursor-not-allowed">
+                      <Lock className="mr-2" size={18} />
+                      Save
+                    </div>
+                  ) : (
+                    <button
+                      type="submit"
+                      disabled={isSaving}
+                      className={`w-40 flex items-center justify-center bg-blue-500 text-white font-semibold py-3 px-6 rounded-xl hover:bg-blue-600 transition-all duration-300 ${
+                        isSaving ? 'opacity-70 cursor-not-allowed' : ''
+                      }`}
+                    >
+                      {isSaving ? (
+                        <>
+                          <svg className="animate-spin -ml-1 mr-1 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                          </svg>
+                          Saving
+                        </>
+                      ) : (
+                        <>
+                          <Save className="mr-2" size={18} />
+                          Save
+                        </>
+                      )}
+                    </button>
+                  )}
                 </div>
               </form>
             </div>

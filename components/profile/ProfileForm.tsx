@@ -270,7 +270,7 @@ export default function ProfileForm({ onSave, onCancel, initialData = [], showFo
       if (profileData.publications__papers) mappedFields.ph_publications = profileData.publications__papers;
       if (profileData.lab_tools__platforms) mappedFields.ph_lab_tools = convertFromApiFormat(profileData.lab_tools__platforms);
       if (profileData.medical_licenses) mappedFields.ph_licenses = convertFromApiFormat(profileData.medical_licenses);
-      if (profileData.languages_known) mappedFields.ph_languages = convertFromApiFormat(profileData.languages_known);
+      if (profileData.languages_known) mappedFields.ph_languages = convertFromApiFormat(profileData.languages_known, 'ph_languages_known');
       
       return mappedFields;
     };
@@ -1014,7 +1014,7 @@ export default function ProfileForm({ onSave, onCancel, initialData = [], showFo
       if (entry.ph_lab_tools) fields.lab_tools__platforms = convertToApiFormat(entry.ph_lab_tools, 'lab_tools__platforms');
       if (entry.ph_department) fields.department = entry.ph_department;
       if (entry.ph_licenses) fields.medical_licenses = convertToApiFormat(entry.ph_licenses, 'medical_licenses');
-      if (entry.ph_languages) fields.languages_known = convertToApiFormat(entry.ph_languages, 'languages_known');
+      if (entry.ph_languages) fields.languages_known = convertToApiFormat(entry.ph_languages, 'ph_languages_known');
       // Note: ph4_shift_preference uses different field name for Healthcare Services subdomain
       if (entry.ph_shift_preference) fields.ph4_shift_preference = convertToApiFormat(Array.isArray(entry.ph_shift_preference) ? entry.ph_shift_preference : [entry.ph_shift_preference], 'shift_preference');
     }

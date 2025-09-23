@@ -106,14 +106,37 @@ export default function ProfileForm({ onSave, onCancel, initialData = [], showFo
     
     const convertedEntry = { ...entry };
     
+    // Fields that should NOT be normalized (maintain their object structure)
+    const skipFields = ['primarySkills', 'secondarySkills'];
+    
     // Convert any object arrays back to string arrays for UI compatibility
     Object.keys(convertedEntry).forEach(key => {
+      // Skip skills fields - they should maintain their object structure
+      if (skipFields.includes(key)) {
+        return;
+      }
+      
       const value = (convertedEntry as any)[key];
-      if (Array.isArray(value) && value.length > 0 && typeof value[0] === 'object') {
-        // Convert array of objects back to array of strings
-        (convertedEntry as any)[key] = value.map(item => 
-          typeof item === 'object' ? Object.values(item)[0] : item
-        );
+      if (Array.isArray(value) && value.length > 0) {
+        // Convert array of mixed objects/strings to pure string array
+        (convertedEntry as any)[key] = value.map(item => {
+          if (typeof item === 'string') {
+            return item;
+          } else if (typeof item === 'object' && item !== null) {
+            // Handle deeply nested objects by recursively extracting the final string value
+            let extractedValue = item;
+            while (typeof extractedValue === 'object' && extractedValue !== null) {
+              const values = Object.values(extractedValue);
+              if (values.length > 0) {
+                extractedValue = values[0];
+              } else {
+                break;
+              }
+            }
+            return extractedValue;
+          }
+          return item;
+        }).filter(item => typeof item === 'string' && item.trim() !== ''); // Only keep valid strings
       }
     });
     
@@ -133,10 +156,20 @@ export default function ProfileForm({ onSave, onCancel, initialData = [], showFo
       const mappedFields: any = {};
       
       // Helper function to convert API format back to array
-      const convertFromApiFormat = (apiData: any, fallbackString?: string): string[] => {
+      const convertFromApiFormat = (apiData: any, expectedFieldName?: string, fallbackString?: string): string[] => {
         if (Array.isArray(apiData)) {
           // Extract values from array of objects
-          return apiData.map(item => Object.values(item)[0] as string);
+          return apiData.map(item => {
+            if (typeof item === 'object' && item !== null) {
+              // If we know the expected field name, use it first
+              if (expectedFieldName && item[expectedFieldName]) {
+                return item[expectedFieldName] as string;
+              }
+              // Otherwise, fall back to first value
+              return Object.values(item)[0] as string;
+            }
+            return item as string;
+          }).filter(val => val && typeof val === 'string');
         } else if (typeof apiData === 'string') {
           // Fallback for old string format
           return apiData.split(', ').filter(item => item.trim() !== '');
@@ -154,7 +187,7 @@ export default function ProfileForm({ onSave, onCancel, initialData = [], showFo
       if (profileData.tools_platforms) mappedFields.it_tools_used = convertFromApiFormat(profileData.tools_platforms);
       if (profileData.tools_used) mappedFields.it_tools = convertFromApiFormat(profileData.tools_used);
       if (profileData.research__papers) mappedFields.it_research = profileData.research__papers;
-      if (profileData.data_domain_focus) mappedFields.it_data_domain_exp = convertFromApiFormat(profileData.data_domain_focus);
+      if (profileData.data_domain_focus) mappedFields.it_data_domain_exp = convertFromApiFormat(profileData.data_domain_focus, 'data_domain_focus');
       if (profileData.major_projects) mappedFields.it_data_projects = profileData.major_projects;
       if (profileData.compliance) mappedFields.it_compliance = convertFromApiFormat(profileData.compliance);
       if (profileData.security_tools_used) mappedFields.it_security_tools = convertFromApiFormat(profileData.security_tools_used);
@@ -172,7 +205,7 @@ export default function ProfileForm({ onSave, onCancel, initialData = [], showFo
       // Manufacturing Domain field mappings
       if (profileData.production_area) mappedFields.mf_production_area = convertFromApiFormat(profileData.production_area);
       if (profileData.machine_handling) mappedFields.mf_machine_handling = convertFromApiFormat(profileData.machine_handling);
-      if (profileData.shift_preference) mappedFields.mf_shift_preference = profileData.shift_preference; // Single value
+      if (profileData.mf1_shift_preference) mappedFields.mf_shift_preference = convertFromApiFormat(profileData.mf1_shift_preference, 'shift_preference');
       if (profileData.safety_training) mappedFields.mf_safety_cert = convertFromApiFormat(profileData.safety_training);
       if (profileData.engineering_domain) mappedFields.mf_engineering_domain = convertFromApiFormat(profileData.engineering_domain);
       if (profileData.design_tools) mappedFields.mf_design_tools = convertFromApiFormat(profileData.design_tools);
@@ -226,8 +259,8 @@ export default function ProfileForm({ onSave, onCancel, initialData = [], showFo
       // Pharma & Healthcare Domain field mappings
       if (profileData.compliance_standards) mappedFields.ph_compliance = convertFromApiFormat(profileData.compliance_standards);
       if (profileData.equipment_handling) mappedFields.ph_equipment_handling = convertFromApiFormat(profileData.equipment_handling);
-      if (profileData.ph1_shift_preference) mappedFields.ph_shift_preference = profileData.ph1_shift_preference;
-      if (profileData.ph4_shift_preference) mappedFields.ph_shift_preference = profileData.ph4_shift_preference;
+      if (profileData.ph1_shift_preference) mappedFields.ph_shift_preference = convertFromApiFormat(profileData.ph1_shift_preference, 'shift_preference');
+      if (profileData.ph4_shift_preference) mappedFields.ph_shift_preference = convertFromApiFormat(profileData.ph4_shift_preference, 'shift_preference');
       if (profileData.quality_tools_used) mappedFields.ph_quality_tools = convertFromApiFormat(profileData.quality_tools_used);
       if (profileData.supply_chain_focus) mappedFields.ph_supply_chain_area = convertFromApiFormat(profileData.supply_chain_focus);
       if (profileData.regulatory_knowledge) mappedFields.ph_regulatory_knowledge = convertFromApiFormat(profileData.regulatory_knowledge);
@@ -259,8 +292,8 @@ export default function ProfileForm({ onSave, onCancel, initialData = [], showFo
       totalExperience: existingProfile.total_experience_years || '',
       relevantExperience: existingProfile.relevant_experience?.toString() || '',
       workEligibility: existingProfile.work_eligibility || '',
-      primarySkills: existingProfile.primary_skills ? existingProfile.primary_skills.map((s: {skill: string; canonical_name?: string}) => ({ name: s.skill, canonical_name: s.canonical_name || s.skill })) : [],
-      secondarySkills: existingProfile.secondary_skills ? existingProfile.secondary_skills.map((s: {skill: string; canonical_name?: string}) => ({ name: s.skill, canonical_name: s.canonical_name || s.skill })) : [],
+      primarySkills: existingProfile.primary_skills ? existingProfile.primary_skills.map((s: {skill: string; skill_name?: string; canonical_name?: string}) => ({ name: s.skill, canonical_name: s.skill_name || s.canonical_name || s.skill })) : [],
+      secondarySkills: existingProfile.secondary_skills ? existingProfile.secondary_skills.map((s: {skill: string; skill_name?: string; canonical_name?: string}) => ({ name: s.skill, canonical_name: s.skill_name || s.canonical_name || s.skill })) : [],
       resume: null,
       
       // Add mapped domain-specific fields
@@ -710,8 +743,7 @@ export default function ProfileForm({ onSave, onCancel, initialData = [], showFo
       };
     }
     
-    const finalEntry = ensureDomainFieldsFormat(entryToEdit);
-    setEditingEntry(finalEntry);
+    setEditingEntry(entryToEdit);
     setShowEditForm(true);
   };
 
@@ -798,7 +830,8 @@ export default function ProfileForm({ onSave, onCancel, initialData = [], showFo
         template_id: selectedTemplate?.id,
         
         // Add domain-specific fields based on profileType and subDomain
-        ...mapDomainSpecificFields(editingEntry)
+        // Ensure the entry is properly normalized before mapping to prevent double nesting
+        ...mapDomainSpecificFields(ensureDomainFieldsFormat(editingEntry))
       };
 
       // Determine if this is an edit or create operation
@@ -889,7 +922,7 @@ export default function ProfileForm({ onSave, onCancel, initialData = [], showFo
       if (entry.it_portfolio) fields.github__portfolio = entry.it_portfolio;
       if (entry.it_dev_method) fields.development_methodology = convertToApiFormat(Array.isArray(entry.it_dev_method) ? entry.it_dev_method : [entry.it_dev_method], 'development_methodology');
       if (entry.it_domain_exp) fields.domain_expertise = convertToApiFormat(entry.it_domain_exp, 'domain_expertise');
-      if (entry.it_tools_used) fields.tools_platforms = convertToApiFormat(entry.it_tools_used, 'tools_and_platforms');
+      if (entry.it_tools_used) fields.tools_platforms = convertToApiFormat(entry.it_tools_used, 'tools_platforms');
       if (entry.it_tools) fields.tools_used = convertToApiFormat(entry.it_tools, 'tools_used');
       if (entry.it_research) fields.research__papers = entry.it_research;
       if (entry.it_data_domain_exp) fields.data_domain_focus = convertToApiFormat(entry.it_data_domain_exp, 'data_domain_focus');
@@ -910,7 +943,7 @@ export default function ProfileForm({ onSave, onCancel, initialData = [], showFo
     if (entry.profileType === 'Manufacturing') {
       if ((entry as any).mf_production_area) fields.production_area = convertToApiFormat((entry as any).mf_production_area, 'production_area');
       if ((entry as any).mf_machine_handling) fields.machine_handling = convertToApiFormat((entry as any).mf_machine_handling, 'machine_handling');
-      if ((entry as any).mf_shift_preference) fields.shift_preference = (entry as any).mf_shift_preference; // Single value, not array
+      if ((entry as any).mf_shift_preference) fields.mf1_shift_preference = convertToApiFormat(Array.isArray((entry as any).mf_shift_preference) ? (entry as any).mf_shift_preference : [(entry as any).mf_shift_preference], 'shift_preference');
       if ((entry as any).mf_safety_cert) fields.safety_training = convertToApiFormat((entry as any).mf_safety_cert, 'safety_training');
       if ((entry as any).mf_engineering_domain) fields.engineering_domain = convertToApiFormat((entry as any).mf_engineering_domain, 'engineering_domain');
       if ((entry as any).mf_design_tools) fields.design_tools = convertToApiFormat((entry as any).mf_design_tools, 'design_tools');
@@ -933,7 +966,7 @@ export default function ProfileForm({ onSave, onCancel, initialData = [], showFo
       if ((entry as any).bf_regulatory_exp) fields.regulatory_exposure = convertToApiFormat((entry as any).bf_regulatory_exp, 'regulatory_exposure');
       if ((entry as any).bf_compliance_knowledge) fields.compliance_knowledge = convertToApiFormat((entry as any).bf_compliance_knowledge, 'compliance_knowledge');
       if ((entry as any).bf_finance_area) fields.finance_focus_area = convertToApiFormat((entry as any).bf_finance_area, 'finance_focus_area');
-      if ((entry as any).bf_erp_tools) fields.erp__financial_tools = convertToApiFormat((entry as any).bf_erp_tools, 'erp_financial_tools');
+      if ((entry as any).bf_erp_tools) fields.erp__financial_tools = convertToApiFormat((entry as any).bf_erp_tools, 'erp__financial_tools');
       if ((entry as any).bf_reporting_standards) fields.reporting_standards = convertToApiFormat((entry as any).bf_reporting_standards, 'reporting_standards');
       if ((entry as any).bf_industry_experience) fields.industry_finance_exp = convertToApiFormat((entry as any).bf_industry_experience, 'industry_finance_exp');
       if ((entry as any).bf_insurance_domain) fields.insurance_domain = convertToApiFormat((entry as any).bf_insurance_domain, 'insurance_domain');
@@ -951,7 +984,7 @@ export default function ProfileForm({ onSave, onCancel, initialData = [], showFo
       if ((entry as any).hs_department) fields.department = convertToApiFormat((entry as any).hs_department, 'department');
       if ((entry as any).hs_property_type) fields.property_type = convertToApiFormat((entry as any).hs_property_type, 'property_type');
       if ((entry as any).hs_guest_mgmt_system) fields.guest_mgmt_system = convertToApiFormat((entry as any).hs_guest_mgmt_system, 'guest_mgmt_system');
-      if ((entry as any).hs_languages_known) fields.hs1_languages_known = convertToApiFormat((entry as any).hs_languages_known, 'hs_languages_known');
+      if ((entry as any).hs_languages_known) fields.hs1_languages_known = convertToApiFormat((entry as any).hs_languages_known, 'hs1_languages_known');
       if ((entry as any).hs_fnb_specialization) fields.fb_specialization = convertToApiFormat((entry as any).hs_fnb_specialization, 'fb_specialization');
       if ((entry as any).hs_service_type) fields.service_type = convertToApiFormat((entry as any).hs_service_type, 'service_type');
       if ((entry as any).hs_fnb_certifications) fields.fb_certifications = convertToApiFormat((entry as any).hs_fnb_certifications, 'fb_certifications');
@@ -970,7 +1003,7 @@ export default function ProfileForm({ onSave, onCancel, initialData = [], showFo
     if (entry.profileType === 'Pharma & Healthcare') {
       if (entry.ph_compliance) fields.compliance_standards = convertToApiFormat(entry.ph_compliance, 'compliance');
       if (entry.ph_equipment_handling) fields.equipment_handling = convertToApiFormat(entry.ph_equipment_handling, 'equipment_handling');
-      if (entry.ph_shift_preference) fields.ph1_shift_preference = entry.ph_shift_preference;
+      if (entry.ph_shift_preference) fields.ph1_shift_preference = convertToApiFormat(Array.isArray(entry.ph_shift_preference) ? entry.ph_shift_preference : [entry.ph_shift_preference], 'shift_preference');
       if (entry.ph_quality_tools) fields.quality_tools_used = convertToApiFormat(entry.ph_quality_tools, 'quality_tools_used');
       if (entry.ph_supply_chain_area) fields.supply_chain_focus = convertToApiFormat(entry.ph_supply_chain_area, 'supply_chain_focus');
       if (entry.ph_regulatory_knowledge) fields.regulatory_knowledge = convertToApiFormat(entry.ph_regulatory_knowledge, 'regulatory_knowledge');
@@ -978,12 +1011,12 @@ export default function ProfileForm({ onSave, onCancel, initialData = [], showFo
       if (entry.ph_trial_phase_exp) fields.clinical_trial_phases = convertToApiFormat(entry.ph_trial_phase_exp, 'clinical_trial_phases');
       if (entry.ph_regulatory_docs) fields.regulatory_documents = convertToApiFormat(entry.ph_regulatory_docs, 'regulatory_documents');
       if (entry.ph_publications) fields.publications__papers = entry.ph_publications;
-      if (entry.ph_lab_tools) fields.lab_tools__platforms = convertToApiFormat(entry.ph_lab_tools, 'lab_tools_platforms');
+      if (entry.ph_lab_tools) fields.lab_tools__platforms = convertToApiFormat(entry.ph_lab_tools, 'lab_tools__platforms');
       if (entry.ph_department) fields.department = entry.ph_department;
       if (entry.ph_licenses) fields.medical_licenses = convertToApiFormat(entry.ph_licenses, 'medical_licenses');
-      if (entry.ph_languages) fields.languages_known = convertToApiFormat(entry.ph_languages, 'ph_languages_known');
-      // Note: ph4_shift_preference uses the same field as ph1_shift_preference in the API
-      if (entry.ph_shift_preference) fields.ph4_shift_preference = entry.ph_shift_preference;
+      if (entry.ph_languages) fields.languages_known = convertToApiFormat(entry.ph_languages, 'languages_known');
+      // Note: ph4_shift_preference uses different field name for Healthcare Services subdomain
+      if (entry.ph_shift_preference) fields.ph4_shift_preference = convertToApiFormat(Array.isArray(entry.ph_shift_preference) ? entry.ph_shift_preference : [entry.ph_shift_preference], 'shift_preference');
     }
     
     return fields;
@@ -1012,14 +1045,17 @@ export default function ProfileForm({ onSave, onCancel, initialData = [], showFo
       
       // If we have initial data and no editing entry yet, set it
       if (initialData.length > 0 && !editingEntry) {
-        // Workaround: Fetch missing certifications from rawProfiles if available
+        // Workaround: Fetch missing fields from rawProfiles if available
         let enhancedInitialData = initialData[0];
         if (rawProfiles && initialData[0].id) {
           const rawProfile = rawProfiles.find(p => p.name === initialData[0].id);
-          if (rawProfile && rawProfile.certifications) {
+          if (rawProfile) {
             enhancedInitialData = {
               ...initialData[0],
-              certifications: rawProfile.certifications
+              ...(rawProfile.certifications && { certifications: rawProfile.certifications }),
+              ...(rawProfile.mf1_shift_preference && { mf1_shift_preference: rawProfile.mf1_shift_preference }),
+              ...(rawProfile.ph1_shift_preference && { ph1_shift_preference: rawProfile.ph1_shift_preference }),
+              ...(rawProfile.ph4_shift_preference && { ph4_shift_preference: rawProfile.ph4_shift_preference })
             };
           }
         }
@@ -1044,6 +1080,32 @@ export default function ProfileForm({ onSave, onCancel, initialData = [], showFo
           const rawProfile = rawProfiles.find(p => p.name === initialData[0].id);
           if (rawProfile && rawProfile.work_eligibility) {
             processedEntry.workEligibility = rawProfile.work_eligibility;
+          }
+        }
+        
+        // Ensure shift preference fields are properly mapped from API response
+        if (rawProfiles && initialData[0].id) {
+          const rawProfile = rawProfiles.find(p => p.name === initialData[0].id);
+          if (rawProfile) {
+            // Manufacturing shift preference
+            if (!processedEntry.mf_shift_preference && rawProfile.mf1_shift_preference) {
+              processedEntry.mf_shift_preference = Array.isArray(rawProfile.mf1_shift_preference) 
+                ? rawProfile.mf1_shift_preference.map((item: any) => Object.values(item)[0] as string)
+                : [];
+            }
+            
+            // Pharma & Healthcare shift preference (both ph1 and ph4 map to the same UI field)
+            if (!processedEntry.ph_shift_preference) {
+              if (rawProfile.ph1_shift_preference) {
+                processedEntry.ph_shift_preference = Array.isArray(rawProfile.ph1_shift_preference) 
+                  ? rawProfile.ph1_shift_preference.map((item: any) => Object.values(item)[0] as string)
+                  : [];
+              } else if (rawProfile.ph4_shift_preference) {
+                processedEntry.ph_shift_preference = Array.isArray(rawProfile.ph4_shift_preference) 
+                  ? rawProfile.ph4_shift_preference.map((item: any) => Object.values(item)[0] as string)
+                  : [];
+              }
+            }
           }
         }
         

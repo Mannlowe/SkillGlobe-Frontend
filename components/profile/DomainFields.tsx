@@ -1100,28 +1100,28 @@ const DomainFields: React.FC<DomainFieldsProps> = ({ profileType, subDomain, edi
             {renderEnhancedMultiValueInput(
               'ph_compliance',
               'Compliance Standards',
-              'Enter compliance standard and press Enter (e.g., GMP, FDA, ICH)',
+              'Enter GMP, GLP, FDA...',
               'bg-blue-100 text-blue-800'
             )}
 
             {renderEnhancedMultiValueInput(
               'ph_equipment_handling',
               'Equipment Handling',
-              'Enter equipment and press Enter (e.g., Bioreactors, HPLC, Tablet Press)',
+              'Enter Bioreactors, HPLC, Chromatography...',
               'bg-green-100 text-green-800'
             )}
 
             {renderEnhancedMultiValueInput(
               'ph_quality_tools',
               'Quality Tools Used',
-              'Enter tool and press Enter (e.g., SPC, CAPA, Validation)',
+              'Enter tools like SPC, CAPA, Validation...',
               'bg-yellow-100 text-yellow-800'
             )}
 
             {renderEnhancedMultiValueInput(
               'ph_shift_preference',
               'Shift Preference',
-              'Enter preference and press Enter (e.g., Day Shift, Night Shift, Rotational)',
+              'Enter shift like Day, Night, Rotational...',
               'bg-purple-100 text-purple-800'
             )}
           </div>
@@ -1134,21 +1134,21 @@ const DomainFields: React.FC<DomainFieldsProps> = ({ profileType, subDomain, edi
             {renderEnhancedMultiValueInput(
               'ph_supply_chain_area',
               'Supply Chain Focus',
-              'Enter area and press Enter (e.g., Procurement, Distribution, Logistics)',
+              'Enter areas like Procurement, Distribution...',
               'bg-purple-100 text-purple-800'
             )}
 
             {renderEnhancedMultiValueInput(
               'ph_regulatory_knowledge',
               'Regulatory Knowledge',
-              'Enter knowledge and press Enter (e.g., GDP, Cold Chain, Import/Export)',
+              'Enter knowledge like Cold Chain, Import/Export...',
               'bg-indigo-100 text-indigo-800'
             )}
 
             {renderEnhancedMultiValueInput(
               'ph_tools_used',
               'SCM Tools Used',
-              'Enter tool and press Enter (e.g., SAP, Oracle WMS, TraceLink)',
+              'Enter tools like SAP, Oracle WMS, TraceLink...',
               'bg-teal-100 text-teal-800'
             )}
           </div>
@@ -1161,21 +1161,21 @@ const DomainFields: React.FC<DomainFieldsProps> = ({ profileType, subDomain, edi
             {renderEnhancedMultiValueInput(
               'ph_trial_phase_exp',
               'Clinical Trial Phases',
-              'Enter phase and press Enter (e.g., Phase I, Phase II, Phase III)',
+              'Enter phases like Phase I, Phase II, Phase III...',
               'bg-red-100 text-red-800'
             )}
 
             {renderEnhancedMultiValueInput(
               'ph_regulatory_docs',
               'Regulatory Documents',
-              'Enter document and press Enter (e.g., IND, NDA, CTD)',
+              'Enter document like IND, NDA, CTD...',
               'bg-orange-100 text-orange-800'
             )}
 
             {renderEnhancedMultiValueInput(
               'ph_lab_tools',
               'Lab Tools / Platforms',
-              'Enter tool and press Enter (e.g., LIMS, EDC, Statistical Software)',
+              'Enter tools like LIMS, EDC, Statistical Software...',
               'bg-emerald-100 text-emerald-800'
             )}
 
@@ -1198,21 +1198,21 @@ const DomainFields: React.FC<DomainFieldsProps> = ({ profileType, subDomain, edi
             {renderEnhancedMultiValueInput(
               'ph_shift_preference',
               'Shift Preference',
-              'Enter preference and press Enter (e.g., Day Shift, Night Shift, Rotational)',
+              'Enter preference like Day, Night, Rotational...',
               'bg-indigo-100 text-indigo-800'
             )}
 
             {renderEnhancedMultiValueInput(
               'ph_licenses',
               'Medical Licenses',
-              'Enter license and press Enter (e.g., MD, RN, PharmD)',
+              'Enter license like MD, RN, PharmD...',
               'bg-pink-100 text-pink-800'
             )}
 
             {renderEnhancedMultiValueInput(
               'ph_languages',
               'Languages Known',
-              'Enter language and press Enter (e.g., English, Spanish, French)',
+              'Enter languages like English, Hindi, Marathi...',
               'bg-cyan-100 text-cyan-800'
             )}
           </div>

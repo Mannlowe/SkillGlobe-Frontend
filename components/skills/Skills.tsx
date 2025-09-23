@@ -617,7 +617,6 @@ export default function Skills({
                 </div>
 
                 {/* AI Result Display */}
-
                 <div className="max-h-60 overflow-y-auto">
                   {aiResultMsg !== "" && <div>{aiResultMsg}</div>}
                   {aiResult?.length > 0 && (

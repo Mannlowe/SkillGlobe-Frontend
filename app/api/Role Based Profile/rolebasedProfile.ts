@@ -26,6 +26,7 @@ export interface CreateUpdateRoleBasedProfileRequest {
   relevant_experience?: string;
   total_experience_years?: string;
   work_eligibility?: string;
+  other_space?: string; // Custom subdomain field for "Others" domain
   primary_skills?: Array<{skill: string}>;
   secondary_skills?: Array<{skill: string}>;
   template_id?: string; // ID of the selected resume template

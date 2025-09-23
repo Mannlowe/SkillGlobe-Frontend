@@ -78,6 +78,7 @@ export interface Skill {
 
 // Interface for portfolio data
 export interface Portfolio {
+  website_url(website_url: any): unknown;
   name: string;
   first_name: string;
   last_name: string;

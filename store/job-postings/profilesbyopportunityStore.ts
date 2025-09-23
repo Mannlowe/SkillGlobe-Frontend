@@ -14,7 +14,7 @@ export interface Applicant {
   email: string;
   phone: string;
   location: string;
-  appliedDate: string;
+  shown_interest_timestamp: string;
   status: "pending" | "shortlisted" | "rejected" | "hired" | "interested";
   backendStatus?: string; // Original status from backend
   experience: string;
@@ -77,14 +77,11 @@ const mapProfileDataToApplicant = (profile: ProfileData): Applicant => {
   // Determine status based on API data
   let status: Applicant["status"] = "pending";
 
-  // Check if profile has shown interest - this means it should be shortlisted
-  const hasShownInterest = profile.profile_owner_shown_interest === 1;
+  // Debug logging for status mapping
+  console.log(`Profile ${profile.full_name} - fe_status: ${profile.fe_status}, is_preferred: ${profile.is_preferred}`);
 
-  if (hasShownInterest) {
-    // If profile owner has shown interest, set status to shortlisted
-    status = "shortlisted";
-  } else if (profile.fe_status && typeof profile.fe_status === "string") {
-    // Use fe_status from the API response
+  // First check fe_status (higher priority for actual workflow statuses)
+  if (profile.fe_status && typeof profile.fe_status === "string") {
     const lowerStatus = profile.fe_status.toLowerCase();
     if (lowerStatus === "shortlisted") {
       status = "shortlisted";
@@ -92,8 +89,25 @@ const mapProfileDataToApplicant = (profile: ProfileData): Applicant => {
       status = "rejected";
     } else if (lowerStatus === "hired") {
       status = "hired";
+    } else if (lowerStatus === "interested") {
+      status = "interested";
+    } else {
+      // If fe_status exists but doesn't match above statuses, check is_preferred
+      const isPreferred = profile.is_preferred === 1;
+      if (isPreferred) {
+        status = "interested";
+      }
+    }
+  } else {
+    // If no fe_status, check if profile is marked as preferred by the business (this means "interested")
+    const isPreferred = profile.is_preferred === 1;
+    if (isPreferred) {
+      status = "interested";
     }
   }
+
+  // Debug logging for final status
+  console.log(`Profile ${profile.full_name} - Final status: ${status}`);
 
   // Store the original backend status for filtering
   const backendStatus = profile.fe_status?.toLowerCase() || "";
@@ -120,7 +134,7 @@ const mapProfileDataToApplicant = (profile: ProfileData): Applicant => {
     email: profile.email,
     phone: phoneNumber,
     location: location,
-    appliedDate: profile.creation.split(" ")[0], // Extract date part
+    shown_interest_timestamp: profile.shown_interest_timestamp ? profile.shown_interest_timestamp.split(" ")[0] : profile.creation.split(" ")[0], // Extract date part
     status: status,
     experience: `${profile.rbp_relevant_experience} years`,
     skills: allSkills,

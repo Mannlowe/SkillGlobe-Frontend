@@ -97,6 +97,11 @@ export default function JobAppliedUsersPage() {
     }
   };
 
+  // Helper function to check if a field has a valid value
+  const hasValidValue = (value: any): boolean => {
+    return value !== null && value !== undefined && value !== "" && value.toString().trim() !== "";
+  };
+
   const handleViewProfile = async (applicant: Applicant) => {
     setSelectedApplicant(applicant);
     setShowProfileModal(true);
@@ -172,14 +177,16 @@ export default function JobAppliedUsersPage() {
       );
 
     const matchesStatus =
-      statusFilter === "all" || applicant.status === statusFilter;
+      statusFilter === "all" || 
+      applicant.status === statusFilter ||
+      (statusFilter === "pending" && applicant.status === "interested");
 
     return matchesSearch && matchesStatus;
   });
 
   const statusCounts = {
     all: applicants?.length || 0,
-    pending: applicants?.filter((a) => a.status === "pending").length || 0,
+    pending: applicants?.filter((a) => a.status === "pending" || a.status === "interested").length || 0,
     shortlisted:
       applicants?.filter((a) => a.status === "shortlisted").length || 0,
     rejected: applicants?.filter((a) => a.status === "rejected").length || 0,
@@ -394,8 +401,7 @@ export default function JobAppliedUsersPage() {
                           </span>
 
                           <div className="flex gap-2">
-                            {applicant.status !== "pending" &&
-                              applicant.status !== "interested" && (
+                            {applicant.status !== "pending" && (
                                 <button
                                   onClick={() => handleViewProfile(applicant)}
                                   className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
@@ -431,7 +437,7 @@ export default function JobAppliedUsersPage() {
                               </>
                             )}
 
-                            {applicant.status === "shortlisted" && (
+                            {/* {applicant.status === "shortlisted" && (
                               <button
                                 onClick={() =>
                                   handleStatusChange(applicant.id, "hired")
@@ -440,7 +446,7 @@ export default function JobAppliedUsersPage() {
                               >
                                 Hire
                               </button>
-                            )}
+                            )} */}
                           </div>
                         </div>
                       </div>
@@ -448,7 +454,7 @@ export default function JobAppliedUsersPage() {
                       <div className="mt-3 ml-4 flex items-center gap-3 text-sm text-gray-600">
                         {applicant.status !== "pending" && (
                           <span>
-                            Applied On: {formatDate(applicant.appliedDate)}
+                            Applied On: {formatDate(applicant.shown_interest_timestamp)}
                           </span>
                         )}
 
@@ -505,41 +511,46 @@ export default function JobAppliedUsersPage() {
                     Personal Information
                   </h4>
                   <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="text-sm font-medium text-gray-700">
-                        Email
-                      </label>
-                      <p className="text-gray-900">
-                        {detailedProfile.portfolio.email || "-"}
-                      </p>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-gray-700">
-                        Mobile
-                      </label>
-                      <p className="text-gray-900">
-                        {detailedProfile.portfolio.mobile_no || "-"}
-                      </p>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-gray-700">
-                        Location
-                      </label>
-                      <p className="text-gray-900">
-                        {detailedProfile.portfolio.city &&
-                        detailedProfile.portfolio.country
-                          ? `${detailedProfile.portfolio.city}, ${detailedProfile.portfolio.country}`
-                          : detailedProfile.portfolio.city ||
-                            detailedProfile.portfolio.country ||
-                            "-"}
-                      </p>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-gray-700">
-                        LinkedIn
-                      </label>
-                      <p className="text-gray-900">
-                        {detailedProfile.portfolio.linkedin_profile ? (
+                    {hasValidValue(detailedProfile.portfolio.email) && (
+                      <div>
+                        <label className="text-sm font-medium text-gray-700">
+                          Email
+                        </label>
+                        <p className="text-gray-900">
+                          {detailedProfile.portfolio.email}
+                        </p>
+                      </div>
+                    )}
+                    {hasValidValue(detailedProfile.portfolio.mobile_no) && (
+                      <div>
+                        <label className="text-sm font-medium text-gray-700">
+                          Mobile
+                        </label>
+                        <p className="text-gray-900">
+                          {detailedProfile.portfolio.mobile_no}
+                        </p>
+                      </div>
+                    )}
+                    {(hasValidValue(detailedProfile.portfolio.city) || hasValidValue(detailedProfile.portfolio.country)) && (
+                      <div>
+                        <label className="text-sm font-medium text-gray-700">
+                          Location
+                        </label>
+                        <p className="text-gray-900">
+                          {detailedProfile.portfolio.city &&
+                          detailedProfile.portfolio.country
+                            ? `${detailedProfile.portfolio.city}, ${detailedProfile.portfolio.country}`
+                            : detailedProfile.portfolio.city ||
+                              detailedProfile.portfolio.country}
+                        </p>
+                      </div>
+                    )}
+                    {hasValidValue(detailedProfile.portfolio.linkedin_profile) && (
+                      <div>
+                        <label className="text-sm font-medium text-gray-700">
+                          LinkedIn
+                        </label>
+                        <p className="text-gray-900">
                           <a
                             href={detailedProfile.portfolio.linkedin_profile}
                             target="_blank"
@@ -548,17 +559,15 @@ export default function JobAppliedUsersPage() {
                           >
                             {detailedProfile.portfolio.linkedin_profile}
                           </a>
-                        ) : (
-                          "-"
-                        )}
-                      </p>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-gray-700">
-                        GitHub
-                      </label>
-                      <p className="text-gray-900">
-                        {detailedProfile.portfolio.github_profile ? (
+                        </p>
+                      </div>
+                    )}
+                    {hasValidValue(detailedProfile.portfolio.github_profile) && (
+                      <div>
+                        <label className="text-sm font-medium text-gray-700">
+                          GitHub
+                        </label>
+                        <p className="text-gray-900">
                           <a
                             href={detailedProfile.portfolio.github_profile}
                             target="_blank"
@@ -567,17 +576,15 @@ export default function JobAppliedUsersPage() {
                           >
                             {detailedProfile.portfolio.github_profile}
                           </a>
-                        ) : (
-                          "-"
-                        )}
-                      </p>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-gray-700">
-                        Website
-                      </label>
-                      <p className="text-gray-900">
-                        {detailedProfile.portfolio.website ? (
+                        </p>
+                      </div>
+                    )}
+                    {hasValidValue(detailedProfile.portfolio.website) && (
+                      <div>
+                        <label className="text-sm font-medium text-gray-700">
+                          Website
+                        </label>
+                        <p className="text-gray-900">
                           <a
                             href={detailedProfile.portfolio.website}
                             target="_blank"
@@ -586,23 +593,23 @@ export default function JobAppliedUsersPage() {
                           >
                             {detailedProfile.portfolio.website}
                           </a>
-                        ) : (
-                          "-"
-                        )}
-                      </p>
-                    </div>
+                        </p>
+                      </div>
+                    )}
                   </div>
                 </div>
 
                 {/* Professional Summary */}
-                <div>
-                  <h4 className="text-lg font-semibold text-gray-900 mb-3">
-                    Professional Summary
-                  </h4>
-                  <p className="text-gray-700 p-3 bg-gray-50 rounded-lg">
-                    {detailedProfile.portfolio.professional_summary || "-"}
-                  </p>
-                </div>
+                {hasValidValue(detailedProfile.portfolio.professional_summary) && (
+                  <div>
+                    <h4 className="text-lg font-semibold text-gray-900 mb-3">
+                      Professional Summary
+                    </h4>
+                    <p className="text-gray-700 p-3 bg-gray-50 rounded-lg">
+                      {detailedProfile.portfolio.professional_summary}
+                    </p>
+                  </div>
+                )}
 
                 {/* Role Information */}
                 <div className="bg-blue-50 p-4 rounded-lg">
@@ -610,61 +617,66 @@ export default function JobAppliedUsersPage() {
                     Role Information
                   </h4>
                   <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="text-sm font-medium text-gray-700">
-                        Role
-                      </label>
-                      <p className="text-gray-900">
-                        {detailedProfile.role_based_profile.role || "-"}
-                      </p>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-gray-700">
-                        Space/Domain
-                      </label>
-                      <p className="text-gray-900">
-                        {detailedProfile.role_based_profile.space || "-"}
-                      </p>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-gray-700">
-                        Employment Type
-                      </label>
-                      <p className="text-gray-900">
-                        {detailedProfile.role_based_profile.employment_type ||
-                          "-"}
-                      </p>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-gray-700">
-                        Work Mode
-                      </label>
-                      <p className="text-gray-900">
-                        {detailedProfile.role_based_profile.work_mode || "-"}
-                      </p>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-gray-700">
-                        Relevant Experience
-                      </label>
-                      <p className="text-gray-900">
-                        {detailedProfile.role_based_profile
-                          .relevant_experience > 0
-                          ? `${detailedProfile.role_based_profile.relevant_experience} years`
-                          : "-"}
-                      </p>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-gray-700">
-                        Total Experience
-                      </label>
-                      <p className="text-gray-900">
-                        {detailedProfile.role_based_profile
-                          .total_experience_years
-                          ? `${detailedProfile.role_based_profile.total_experience_years} years`
-                          : "-"}
-                      </p>
-                    </div>
+                    {hasValidValue(detailedProfile.role_based_profile.role) && (
+                      <div>
+                        <label className="text-sm font-medium text-gray-700">
+                          Role
+                        </label>
+                        <p className="text-gray-900">
+                          {detailedProfile.role_based_profile.role}
+                        </p>
+                      </div>
+                    )}
+                    {hasValidValue(detailedProfile.role_based_profile.space) && (
+                      <div>
+                        <label className="text-sm font-medium text-gray-700">
+                          Space/Domain
+                        </label>
+                        <p className="text-gray-900">
+                          {detailedProfile.role_based_profile.space}
+                        </p>
+                      </div>
+                    )}
+                    {hasValidValue(detailedProfile.role_based_profile.employment_type) && (
+                      <div>
+                        <label className="text-sm font-medium text-gray-700">
+                          Employment Type
+                        </label>
+                        <p className="text-gray-900">
+                          {detailedProfile.role_based_profile.employment_type}
+                        </p>
+                      </div>
+                    )}
+                    {hasValidValue(detailedProfile.role_based_profile.work_mode) && (
+                      <div>
+                        <label className="text-sm font-medium text-gray-700">
+                          Work Mode
+                        </label>
+                        <p className="text-gray-900">
+                          {detailedProfile.role_based_profile.work_mode}
+                        </p>
+                      </div>
+                    )}
+                    {(detailedProfile.role_based_profile.relevant_experience > 0) && (
+                      <div>
+                        <label className="text-sm font-medium text-gray-700">
+                          Relevant Experience
+                        </label>
+                        <p className="text-gray-900">
+                          {detailedProfile.role_based_profile.relevant_experience} years
+                        </p>
+                      </div>
+                    )}
+                    {hasValidValue(detailedProfile.role_based_profile.total_experience_years) && (
+                      <div>
+                        <label className="text-sm font-medium text-gray-700">
+                          Total Experience
+                        </label>
+                        <p className="text-gray-900">
+                          {detailedProfile.role_based_profile.total_experience_years} years
+                        </p>
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -735,13 +747,13 @@ export default function JobAppliedUsersPage() {
                             className="p-3 bg-gray-50 rounded-lg"
                           >
                             <p className="font-medium text-gray-900">
-                              {exp.designation || "-"}
+                              <span>Designation :</span> {exp.designation || "-"}
                             </p>
                             <p className="text-gray-600">
-                              {exp.company || "-"}
+                              <span>Company :</span> {exp.company || "-"}
                             </p>
                             <p className="text-sm text-gray-500 mt-1">
-                              {exp.duration || "-"} Years
+                              <span>Duration :</span> {exp.duration || "-"} Years
                             </p>
                           </div>
                         )
@@ -762,13 +774,13 @@ export default function JobAppliedUsersPage() {
                       detailedProfile.portfolio.education.map((edu, index) => (
                         <div key={index} className="p-3 bg-gray-50 rounded-lg">
                           <p className="font-medium text-gray-900">
-                            {edu.education_level || "-"}
+                          <span>Education Level :</span>  {edu.education_level || "-"}
                           </p>
                           <p className="text-sm text-gray-500 mt-1">
-                            {edu.stream || "-"}
+                          <span>Stream :</span>  {edu.stream || "-"}
                           </p>
                           <p className="text-gray-600">
-                            {`${edu.university_board || ""} - ${
+                          <span>Year of Completion :</span>  {`${edu.university_board || ""} - ${
                               edu.year_of_completion || "-"
                             }`}
                           </p>

@@ -125,7 +125,7 @@ export const getSkills = async (
     const authHeader = `token ${apiKey}:${apiSecret}`;
     
     // Build URL with search parameter if provided
-    let url = `${API_BASE_URL}/api/method/skillglobe_be.api.portfolio.skill.global_skills?limit_start=0&limit_page_length=5000`;
+    let url = `${API_BASE_URL}/api/method/skillglobe_be.api.portfolio.skill.global_skills?limit_start=0&limit_page_length=6000`;
     if (searchTerm.trim()) {
       url += `&search=${encodeURIComponent(searchTerm.trim())}`;
     }

@@ -1,5 +1,5 @@
 import axios from "axios";
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://skillglobedev.m.frappe.cloud';
 export interface CreateSkillResponse {
   message: {
     status: string;
@@ -68,10 +68,7 @@ export const createGlobalSkillAPI = async (
   }
 };
 
-/**
- * Get authentication data from local storage
- * @returns Object containing entity ID, API key, and API secret
- */
+
 export const getAuthData = () => {
   if (typeof window !== "undefined") {
     try {

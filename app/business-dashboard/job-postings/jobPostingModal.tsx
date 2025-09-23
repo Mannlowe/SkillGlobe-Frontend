@@ -5,6 +5,7 @@ import { X } from 'lucide-react';
 import { useJobPostingStore, JobPostingFormData } from '@/store/job-postings/addjobpostingStore';
 import { getSkills, getApplyOpportunities, getCityList, getAuthData, type Skill, type City } from '@/app/api/job postings/addjobPosting';
 import { getProfileCount } from '@/app/api/job postings/jobfilterElasticSearch';
+import { createGlobalSkillAPI, type CreateSkillPayload, type CreateSkillResponse } from '@/app/api/Individual Skills/groqSkillsAPI';
 
 // Define document type interface
 export interface DocumentFile {
@@ -109,13 +110,29 @@ export default function JobPostingModal({ showModal, setShowModal, onSubmit, edi
   const [profileCount, setProfileCount] = useState<number>(0);
   const [isLoadingCount, setIsLoadingCount] = useState<boolean>(false);
   
+  // AI Search state for primary skills
+  const [primaryAiSearch, setPrimaryAiSearch] = useState<string>('');
+  const [primaryAiSearchLoading, setPrimaryAiSearchLoading] = useState<boolean>(false);
+  const [primaryAiAliases, setPrimaryAiAliases] = useState<string[]>([]);
+  const [primaryAiDropdownOpen, setPrimaryAiDropdownOpen] = useState<boolean>(false);
+  const [primaryAiCanonicalName, setPrimaryAiCanonicalName] = useState<string>('');
+  const [primaryAiSkillId, setPrimaryAiSkillId] = useState<string>('');
+  
+  // AI Search state for secondary skills
+  const [secondaryAiSearch, setSecondaryAiSearch] = useState<string>('');
+  const [secondaryAiSearchLoading, setSecondaryAiSearchLoading] = useState<boolean>(false);
+  const [secondaryAiAliases, setSecondaryAiAliases] = useState<string[]>([]);
+  const [secondaryAiDropdownOpen, setSecondaryAiDropdownOpen] = useState<boolean>(false);
+  const [secondaryAiCanonicalName, setSecondaryAiCanonicalName] = useState<string>('');
+  const [secondaryAiSkillId, setSecondaryAiSkillId] = useState<string>('');
+  
   const [newJob, setNewJob] = useState<JobFormState>({
     title: '',
     skillCategory: '',
     opportunityType: 'Permanent',
     employmentType: 'Full-Time',
     workMode: '',
-    experienceRequired: '0-2 years',
+    experienceRequired: '0',
     minRemuneration: '',
     applicationDeadline: '',
     opportunityClosed: false,
@@ -193,6 +210,100 @@ export default function JobPostingModal({ showModal, setShowModal, onSubmit, edi
     }
   }, []);
   
+  // Function to handle AI skill search for primary skills
+  const handlePrimaryAiSearch = async () => {
+    if (!primaryAiSearch.trim()) return;
+    
+    setPrimaryAiSearchLoading(true);
+    try {
+      const payload: CreateSkillPayload = {
+        gr: 1,
+        skill: primaryAiSearch.trim()
+      };
+      
+      const response: CreateSkillResponse = await createGlobalSkillAPI(payload);
+      
+      if (response.message.status === 'success' && response.message.data) {
+        setPrimaryAiAliases(response.message.data.aliases);
+        setPrimaryAiCanonicalName(response.message.data.canonical_name);
+        setPrimaryAiSkillId(response.message.data.skill_id);
+        setPrimaryAiDropdownOpen(true);
+      }
+    } catch (error) {
+      console.error('Error in AI skill search:', error);
+      setPrimaryAiAliases([]);
+    } finally {
+      setPrimaryAiSearchLoading(false);
+    }
+  };
+  
+  // Function to handle AI skill search for secondary skills
+  const handleSecondaryAiSearch = async () => {
+    if (!secondaryAiSearch.trim()) return;
+    
+    setSecondaryAiSearchLoading(true);
+    try {
+      const payload: CreateSkillPayload = {
+        gr: 1,
+        skill: secondaryAiSearch.trim()
+      };
+      
+      const response: CreateSkillResponse = await createGlobalSkillAPI(payload);
+      
+      if (response.message.status === 'success' && response.message.data) {
+        setSecondaryAiAliases(response.message.data.aliases);
+        setSecondaryAiCanonicalName(response.message.data.canonical_name);
+        setSecondaryAiSkillId(response.message.data.skill_id);
+        setSecondaryAiDropdownOpen(true);
+      }
+    } catch (error) {
+      console.error('Error in AI skill search:', error);
+      setSecondaryAiAliases([]);
+    } finally {
+      setSecondaryAiSearchLoading(false);
+    }
+  };
+  
+  // Function to select AI alias for primary skills
+  const selectPrimaryAiAlias = (alias: string) => {
+    // Create a skill object with the canonical name as the name (to match existing structure)
+    const skillToAdd = primaryAiCanonicalName;
+    
+    if (!newJob.primarySkills.includes(skillToAdd)) {
+      setNewJob(prev => ({
+        ...prev,
+        primarySkills: [...prev.primarySkills, skillToAdd]
+      }));
+    }
+    
+    // Reset AI search state
+    setPrimaryAiSearch('');
+    setPrimaryAiAliases([]);
+    setPrimaryAiDropdownOpen(false);
+    setPrimaryAiCanonicalName('');
+    setPrimaryAiSkillId('');
+  };
+  
+  // Function to select AI alias for secondary skills
+  const selectSecondaryAiAlias = (alias: string) => {
+    // Create a skill object with the canonical name as the name (to match existing structure)
+    const skillToAdd = secondaryAiCanonicalName;
+    
+    if (!newJob.secondarySkills.includes(skillToAdd)) {
+      setNewJob(prev => ({
+        ...prev,
+        secondarySkills: [...prev.secondarySkills, skillToAdd]
+      }));
+    }
+    
+    // Reset AI search state
+    setSecondaryAiSearch('');
+    setSecondaryAiAliases([]);
+    setSecondaryAiDropdownOpen(false);
+    setSecondaryAiCanonicalName('');
+    setSecondaryAiSkillId('');
+  };
+  
   // Function to fetch profile count based on current filters
   const fetchProfileCount = useCallback(async () => {
     // Prevent overlapping API calls
@@ -226,7 +337,7 @@ export default function JobPostingModal({ showModal, setShowModal, onSubmit, edi
       }
       
       // Handle experienceRequired - extract numeric value
-      if (newJob.experienceRequired && newJob.experienceRequired !== '0-2 years') {
+      if (newJob.experienceRequired && newJob.experienceRequired !== '0') {
         let min_experience;
         if (typeof newJob.experienceRequired === 'string') {
           // Check if it's in the format '0-2 years' or just a number
@@ -253,8 +364,9 @@ export default function JobPostingModal({ showModal, setShowModal, onSubmit, edi
       // Add primary skills with canonical names
       if (newJob.primarySkills.length > 0) {
         const primarySkillCanonicalNames = newJob.primarySkills.map(skillName => {
+          // Check if it's already a canonical name (from AI search) or needs to be mapped
           const skill = availableSkills.find(s => s.name === skillName);
-          return skill?.canonical_name || skillName;
+          return skill?.canonical_name || skillName; // If not found in availableSkills, it's likely from AI search
         });
         allSelectedSkills.push(...primarySkillCanonicalNames);
         console.log('Adding primary skills with canonical names:', primarySkillCanonicalNames);
@@ -263,8 +375,9 @@ export default function JobPostingModal({ showModal, setShowModal, onSubmit, edi
       // Add secondary skills with canonical names
       if (newJob.secondarySkills.length > 0) {
         const secondarySkillCanonicalNames = newJob.secondarySkills.map(skillName => {
+          // Check if it's already a canonical name (from AI search) or needs to be mapped
           const skill = availableSkills.find(s => s.name === skillName);
-          return skill?.canonical_name || skillName;
+          return skill?.canonical_name || skillName; // If not found in availableSkills, it's likely from AI search
         });
         allSelectedSkills.push(...secondarySkillCanonicalNames);
         console.log('Adding secondary skills with canonical names:', secondarySkillCanonicalNames);
@@ -511,7 +624,7 @@ export default function JobPostingModal({ showModal, setShowModal, onSubmit, edi
         opportunityType: 'Permanent', // Default value if not in editData
         employmentType: editData.employmentType || 'Full-Time',
         workMode: editData.workMode || '',
-        experienceRequired: editData.experienceRequired || '0-2 years',
+        experienceRequired: editData.experienceRequired || '0',
         minRemuneration: editData.salary || '',
         applicationDeadline: formattedDeadline,
         opportunityClosed: false,
@@ -688,7 +801,7 @@ export default function JobPostingModal({ showModal, setShowModal, onSubmit, edi
           opportunityType: 'Permanent',
           employmentType: 'Full-Time',
           workMode: '',
-          experienceRequired: '0-2 years',
+          experienceRequired: '0',
           minRemuneration: '',
           applicationDeadline: '',
           opportunityClosed: false,
@@ -1185,9 +1298,14 @@ export default function JobPostingModal({ showModal, setShowModal, onSubmit, edi
           {newJob.primarySkills.length > 0 ? (
             newJob.primarySkills.map((skillId) => {
               const skill = availableSkills.find(s => s.name === skillId);
+              // If skill is not found in availableSkills, it's likely from AI search (already canonical name)
+              const displayName = skill?.canonical_name || skillId;
               return (
                 <div key={skillId} className="inline-flex items-center bg-blue-100 text-blue-800 rounded-full px-3 py-1 text-sm mr-2 mb-2">
-                  {skill?.canonical_name || skillId}
+                  {displayName}
+                  {!skill && (
+                    <span className="ml-1 text-xs bg-purple-200 text-purple-700 px-1 rounded">AI</span>
+                  )}
                   <button 
                     type="button"
                     className="ml-1 text-blue-600 hover:text-blue-800"
@@ -1206,6 +1324,64 @@ export default function JobPostingModal({ showModal, setShowModal, onSubmit, edi
       {primarySkillsError && (
         <p className="mt-1 text-sm text-red-600">{primarySkillsError}</p>
       )}
+      
+      {/* AI Search for Primary Skills */}
+      <div className="mt-3 p-4 bg-gradient-to-r from-purple-50 to-blue-50 rounded-lg border border-purple-200">
+        <label className="block text-sm font-medium text-purple-700 mb-2">
+          🤖 AI Skill Search - Primary Skills
+        </label>
+        <div className="flex gap-2">
+          <input
+            type="text"
+            placeholder="Enter skill to search with AI..."
+            value={primaryAiSearch}
+            onChange={(e) => setPrimaryAiSearch(e.target.value)}
+            className="flex-1 px-3 py-2 text-sm border border-purple-200 rounded-md focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+            onKeyPress={(e) => e.key === 'Enter' && handlePrimaryAiSearch()}
+          />
+          <button
+            type="button"
+            onClick={handlePrimaryAiSearch}
+            disabled={primaryAiSearchLoading || !primaryAiSearch.trim()}
+            className="px-4 py-2 bg-gradient-to-r from-purple-600 to-blue-600 text-white text-sm font-medium rounded-md hover:from-purple-700 hover:to-blue-700 focus:ring-2 focus:ring-purple-500 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+          >
+            {primaryAiSearchLoading ? (
+              <>
+                <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Searching...
+              </>
+            ) : (
+              <>
+                🤖 AI Search
+              </>
+            )}
+          </button>
+        </div>
+        
+        {/* AI Aliases Dropdown */}
+        {primaryAiDropdownOpen && primaryAiAliases.length > 0 && (
+          <div className="mt-2 bg-white border border-purple-200 rounded-lg shadow-lg max-h-40 overflow-auto">
+            <div className="p-2 border-b border-purple-100 bg-purple-50">
+              <p className="text-xs text-purple-700 font-medium">
+                Found: {primaryAiCanonicalName}
+              </p>
+            </div>
+            {primaryAiAliases.map((alias, index) => (
+              <div
+                key={index}
+                className="px-3 py-2 hover:bg-purple-50 cursor-pointer text-sm border-b border-gray-100 last:border-b-0"
+                onClick={() => selectPrimaryAiAlias(alias)}
+              >
+                <span className="text-gray-700">{alias}</span>
+                <span className="text-xs text-purple-600 ml-2">→ {primaryAiCanonicalName}</span>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
     
     {/* Secondary Skills */}
@@ -1270,9 +1446,14 @@ export default function JobPostingModal({ showModal, setShowModal, onSubmit, edi
           {newJob.secondarySkills.length > 0 ? (
             newJob.secondarySkills.map((skillId) => {
               const skill = availableSkills.find(s => s.name === skillId);
+              // If skill is not found in availableSkills, it's likely from AI search (already canonical name)
+              const displayName = skill?.canonical_name || skillId;
               return (
                 <div key={skillId} className="inline-flex items-center bg-green-100 text-green-800 rounded-full px-3 py-1 text-sm mr-2 mb-2">
-                  {skill?.canonical_name}
+                  {displayName}
+                  {!skill && (
+                    <span className="ml-1 text-xs bg-purple-200 text-purple-700 px-1 rounded">AI</span>
+                  )}
                   <button 
                     type="button"
                     className="ml-1 text-blue-600 hover:text-blue-800"
@@ -1287,6 +1468,64 @@ export default function JobPostingModal({ showModal, setShowModal, onSubmit, edi
             <p className="text-sm text-gray-500 italic">No secondary skills selected</p>
           )}
         </div>
+      </div>
+      
+      {/* AI Search for Secondary Skills */}
+      <div className="mt-3 p-4 bg-gradient-to-r from-green-50 to-teal-50 rounded-lg border border-green-200">
+        <label className="block text-sm font-medium text-green-700 mb-2">
+          🤖 AI Skill Search - Secondary Skills
+        </label>
+        <div className="flex gap-2">
+          <input
+            type="text"
+            placeholder="Enter skill to search with AI..."
+            value={secondaryAiSearch}
+            onChange={(e) => setSecondaryAiSearch(e.target.value)}
+            className="flex-1 px-3 py-2 text-sm border border-green-200 rounded-md focus:ring-2 focus:ring-green-500 focus:border-green-500"
+            onKeyPress={(e) => e.key === 'Enter' && handleSecondaryAiSearch()}
+          />
+          <button
+            type="button"
+            onClick={handleSecondaryAiSearch}
+            disabled={secondaryAiSearchLoading || !secondaryAiSearch.trim()}
+            className="px-4 py-2 bg-gradient-to-r from-green-600 to-teal-600 text-white text-sm font-medium rounded-md hover:from-green-700 hover:to-teal-700 focus:ring-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+          >
+            {secondaryAiSearchLoading ? (
+              <>
+                <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Searching...
+              </>
+            ) : (
+              <>
+                🤖 AI Search
+              </>
+            )}
+          </button>
+        </div>
+        
+        {/* AI Aliases Dropdown */}
+        {secondaryAiDropdownOpen && secondaryAiAliases.length > 0 && (
+          <div className="mt-2 bg-white border border-green-200 rounded-lg shadow-lg max-h-40 overflow-auto">
+            <div className="p-2 border-b border-green-100 bg-green-50">
+              <p className="text-xs text-green-700 font-medium">
+                Found: {secondaryAiCanonicalName}
+              </p>
+            </div>
+            {secondaryAiAliases.map((alias, index) => (
+              <div
+                key={index}
+                className="px-3 py-2 hover:bg-green-50 cursor-pointer text-sm border-b border-gray-100 last:border-b-0"
+                onClick={() => selectSecondaryAiAlias(alias)}
+              >
+                <span className="text-gray-700">{alias}</span>
+                <span className="text-xs text-green-600 ml-2">→ {secondaryAiCanonicalName}</span>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
     

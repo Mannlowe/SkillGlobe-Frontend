@@ -530,7 +530,6 @@ export default function Skills({
         <h1 className="text-2xl font-bold text-gray-900 mb-2">
           What are you good at?
         </h1>
-        <div className="py-2">len {aiResult.length}</div>
         <p className="text-gray-600">
           Help us match you with the right opportunities by selecting your
           skills

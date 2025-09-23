@@ -25,6 +25,10 @@ export interface RoleBasedProfileData {
   preferred_country: string;
   relevant_experience: number;
   work_eligibility: string;
+  other_space?: string; // Custom subdomain field for "Others" domain
+  mf1_shift_preference?: any; // Manufacturing shift preference field
+  ph1_shift_preference?: any; // Pharma Manufacturing & Quality shift preference field
+  ph4_shift_preference?: any; // Healthcare Services shift preference field
   career_level: string | null;
   willing_to_relocate: string | null;
   certifications: string | null;
@@ -229,6 +233,7 @@ const mapRoleBasedProfileToProfile = (profile: RoleBasedProfileData, index: numb
     preferredCountry: profile.preferred_country || '',
     totalExperience: profile.total_experience_years?.toString() || '',
     relevantExperience: profile.relevant_experience?.toString() || '',
+    other_space: profile.other_space || '',
     resume: profile.resume,
     primarySkills: profile.primary_skills ? profile.primary_skills.map((s: {skill: string; canonical_name?: string}) => ({ name: s.skill, canonical_name: s.canonical_name || s.skill })) : [],
     secondarySkills: profile.secondary_skills ? profile.secondary_skills.map((s: {skill: string; canonical_name?: string}) => ({ name: s.skill, canonical_name: s.canonical_name || s.skill })) : [],

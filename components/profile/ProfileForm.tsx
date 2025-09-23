@@ -79,6 +79,7 @@ export interface ProfileEntry {
   ph_languages?: string[];
   workEligibility?: string;
   customWorkEligibility?: string;
+  other_space?: string; // Custom subdomain field for "Others" domain
   [key: string]: any; // Allow for dynamic fields for Manufacturing, Banking, and Hospitality domains
 }
 
@@ -292,6 +293,7 @@ export default function ProfileForm({ onSave, onCancel, initialData = [], showFo
       totalExperience: existingProfile.total_experience_years || '',
       relevantExperience: existingProfile.relevant_experience?.toString() || '',
       workEligibility: existingProfile.work_eligibility || '',
+      other_space: existingProfile.other_space || '',
       primarySkills: existingProfile.primary_skills ? existingProfile.primary_skills.map((s: {skill: string; skill_name?: string; canonical_name?: string}) => ({ name: s.skill, canonical_name: s.skill_name || s.canonical_name || s.skill })) : [],
       secondarySkills: existingProfile.secondary_skills ? existingProfile.secondary_skills.map((s: {skill: string; skill_name?: string; canonical_name?: string}) => ({ name: s.skill, canonical_name: s.skill_name || s.canonical_name || s.skill })) : [],
       resume: null,
@@ -823,6 +825,7 @@ export default function ProfileForm({ onSave, onCancel, initialData = [], showFo
         relevant_experience: editingEntry.relevantExperience || '',
         total_experience_years: editingEntry.totalExperience || '',
         work_eligibility: editingEntry.workEligibility || '',
+        other_space: editingEntry.other_space || '',
         primary_skills: editingEntry.primarySkills?.map(skill => ({ skill: skill.name })) || [],
         secondary_skills: editingEntry.secondarySkills?.map(skill => ({ skill: skill.name })) || [],
         
@@ -1055,7 +1058,8 @@ export default function ProfileForm({ onSave, onCancel, initialData = [], showFo
               ...(rawProfile.certifications && { certifications: rawProfile.certifications }),
               ...(rawProfile.mf1_shift_preference && { mf1_shift_preference: rawProfile.mf1_shift_preference }),
               ...(rawProfile.ph1_shift_preference && { ph1_shift_preference: rawProfile.ph1_shift_preference }),
-              ...(rawProfile.ph4_shift_preference && { ph4_shift_preference: rawProfile.ph4_shift_preference })
+              ...(rawProfile.ph4_shift_preference && { ph4_shift_preference: rawProfile.ph4_shift_preference }),
+              ...(rawProfile.other_space && { other_space: rawProfile.other_space })
             };
           }
         }
@@ -1106,6 +1110,14 @@ export default function ProfileForm({ onSave, onCancel, initialData = [], showFo
                   : [];
               }
             }
+          }
+        }
+        
+        // Ensure other_space field is properly mapped from API response
+        if (!processedEntry.other_space && rawProfiles && initialData[0].id) {
+          const rawProfile = rawProfiles.find(p => p.name === initialData[0].id);
+          if (rawProfile && rawProfile.other_space) {
+            processedEntry.other_space = rawProfile.other_space;
           }
         }
         
@@ -1359,6 +1371,19 @@ export default function ProfileForm({ onSave, onCancel, initialData = [], showFo
                         <option key={subdomain.value} value={subdomain.value}>{subdomain.label}</option>
                       ))}
                     </select>
+                  </div>
+                )}
+                
+                {/* Custom input field for "Others" domain */}
+                {editingEntry?.profileType === 'Others' && (
+                  <div className="relative">
+                    <input
+                      type="text"
+                      value={editingEntry?.other_space || ''}
+                      onChange={(e) => setEditingEntry(prev => prev ? {...prev, other_space: e.target.value} : null)}
+                      placeholder="Enter your domain/subdomain"
+                      className="block w-56 pl-3 pr-3 py-1.5 text-base border border-gray-500 focus:outline-none focus:ring-gray-500 focus:border-gray-500 sm:text-sm rounded-md"
+                    />
                   </div>
                 )}
               </div>

@@ -88,9 +88,9 @@ const DomainFields: React.FC<DomainFieldsProps> = ({ profileType, subDomain, edi
       if (trimmedValue) {
         const currentValues = (editingEntry as any)?.[fieldName] || [];
         if (!currentValues.includes(trimmedValue)) {
-          updateEditingEntry(prev => prev ? { 
-            ...prev, 
-            [fieldName]: [...currentValues, trimmedValue] 
+          updateEditingEntry(prev => prev ? {
+            ...prev,
+            [fieldName]: [...currentValues, trimmedValue]
           } : null);
         }
         // Clear the input for this specific field
@@ -144,7 +144,7 @@ const DomainFields: React.FC<DomainFieldsProps> = ({ profileType, subDomain, edi
               // Handle both old string format and new object format from API
               const displayValue = typeof value === 'string' ? value : (typeof value === 'object' && value ? Object.values(value)[0] : value);
               const keyValue = typeof displayValue === 'string' ? displayValue : `${fieldName}-${index}`;
-              
+
               return (
                 <span key={keyValue} className={`inline-flex items-center px-3 py-1 rounded-full text-sm ${colorClass}`}>
                   {displayValue}
@@ -459,7 +459,7 @@ const DomainFields: React.FC<DomainFieldsProps> = ({ profileType, subDomain, edi
                   value={editingEntry?.it_portfolio || ''}
                   onChange={(e) => updateEditingEntry(prev => prev ? { ...prev, it_portfolio: e.target.value } : null)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="https://github.com/username or portfolio URL"
+                  placeholder="Enter your GitHub/Portfolio link"
                 />
               </div>
 
@@ -468,7 +468,7 @@ const DomainFields: React.FC<DomainFieldsProps> = ({ profileType, subDomain, edi
             {renderEnhancedMultiValueInput(
               'it_dev_method',
               'Development Methodology',
-              'Enter methodology and press Enter (e.g., Agile, Scrum, DevOps)',
+              'Type Agile, Scrum, Waterfall...',
               'bg-blue-100 text-blue-800',
               true
             )}
@@ -476,14 +476,14 @@ const DomainFields: React.FC<DomainFieldsProps> = ({ profileType, subDomain, edi
             {renderEnhancedMultiValueInput(
               'it_domain_exp',
               'Domain Expertise',
-              'Enter domain and press Enter (e.g., FinTech, HealthTech, EdTech)',
+              'Domains like FinTech, HealthTech, SaaS',
               'bg-purple-100 text-purple-800'
             )}
 
             {renderEnhancedMultiValueInput(
               'it_tools_used',
               'Tools & Platforms',
-              'Enter tool/platform and press Enter (e.g., Jira, Confluence, Docker)',
+              'List tools like Jira, Docker, Kubernetes...',
               'bg-green-100 text-green-800'
             )}
           </div>
@@ -496,14 +496,14 @@ const DomainFields: React.FC<DomainFieldsProps> = ({ profileType, subDomain, edi
             {renderEnhancedMultiValueInput(
               'it_tools',
               'Tools Used',
-              'Enter tool and press Enter (e.g., Tableau, PowerBI, Hadoop, Spark)',
+              'Enter tools like Tableau, Hadoop, Spark...',
               'bg-purple-100 text-purple-800'
             )}
 
             {renderEnhancedMultiValueInput(
               'it_data_domain_exp',
               'Data Domain Focus',
-              'Enter domain and press Enter (e.g., Healthcare, Finance, Retail, IoT)',
+              'Enter domains like Healthcare, Retail, IoT...',
               'bg-indigo-100 text-indigo-800'
             )}
 
@@ -517,7 +517,7 @@ const DomainFields: React.FC<DomainFieldsProps> = ({ profileType, subDomain, edi
                   value={editingEntry?.it_research || ''}
                   onChange={(e) => updateEditingEntry(prev => prev ? { ...prev, it_research: e.target.value } : null)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="Link to research papers or publications"
+                  placeholder="Paste link to research papers or publications"
                 />
               </div>
 
@@ -530,7 +530,7 @@ const DomainFields: React.FC<DomainFieldsProps> = ({ profileType, subDomain, edi
                   onChange={(e) => updateEditingEntry(prev => prev ? { ...prev, it_data_projects: e.target.value } : null)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   rows={3}
-                  placeholder="Describe your major data projects or provide links"
+                  placeholder="Mention key data projects with links"
                 />
               </div>
             </div>
@@ -546,33 +546,33 @@ const DomainFields: React.FC<DomainFieldsProps> = ({ profileType, subDomain, edi
             {renderEnhancedMultiValueInput(
               'it_compliance',
               'Compliance',
-              'Enter compliance standard and press Enter (e.g., ISO27001, GDPR, HIPAA)',
+              'Enter standards like ISO27001, GDPR...',
               'bg-red-100 text-red-800'
             )}
 
             {renderEnhancedMultiValueInput(
               'it_security_tools',
               'Security Tools Used',
-              'Enter security tool and press Enter (e.g., SIEM, IDS, Firewalls, Splunk)',
+              'Enter tools like SIEM, IDS, Firewalls, Splunk...',
               'bg-orange-100 text-orange-800'
             )}
 
             {renderEnhancedMultiValueInput(
               'it_incident_exp',
               'Incident Handling',
-              'Enter experience and press Enter (e.g., SOC, Threat Hunting)',
+              'Enter SOC, Threat Hunting, Incident Response...',
               'bg-yellow-100 text-yellow-800'
             )}
 
-            
+
             {renderEnhancedMultiValueInput(
               'it_network_exp',
               'Network Expertise',
-              'Enter expertise and press Enter (e.g., Routing, Switching, VPNs, SD-WAN)',
+              'Enter Routing, Switching, VPNs, SD-WAN...',
               'bg-teal-100 text-teal-800'
             )}
 
-<div>
+            <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Security Clearance
               </label>
@@ -1233,7 +1233,7 @@ const DomainFields: React.FC<DomainFieldsProps> = ({ profileType, subDomain, edi
             {renderEnhancedMultiValueInput(
               'itCertifications',
               'Certifications',
-              'Enter certification and press Enter (e.g., AWS Certified, Azure Fundamentals, Google Cloud)',
+              'Certifications like AWS, Azure, Google Cloud',
               'bg-blue-100 text-blue-800'
             )}
             {/*

@@ -19,6 +19,7 @@ export interface Applicant {
   backendStatus?: string; // Original status from backend
   experience: string;
   skills: string[];
+  creation: string;
   resumeUrl?: string;
   profileImage?: string;
   rating?: number;
@@ -150,11 +151,13 @@ const mapProfileDataToApplicant = (profile: ProfileData): Applicant => {
     workModePreference: profile.rbp_work_mode || undefined,
     primarySkills: primarySkills,
     higherEducation: profile.latest_education_level || undefined,
+    creation: profile.creation || "",
   };
 };
 
 // Interface for job details
 export interface JobDetails {
+  creation: string | number | Date;
   id: string;
   title: string;
   skillCategory: string;
@@ -255,6 +258,7 @@ export const useProfilesByOpportunityStore = create<ProfilesByOpportunityState>(
               location: firstProfile.rbp_preferred_country,
               postedDate: new Date(firstProfile.creation).toLocaleDateString(),
               totalApplicants: response.message.total_count,
+              creation: firstProfile.creation,
             };
           }
 

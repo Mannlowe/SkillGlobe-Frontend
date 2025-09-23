@@ -205,7 +205,7 @@ export default function ProfileForm({ onSave, onCancel, initialData = [], showFo
       // Manufacturing Domain field mappings
       if (profileData.production_area) mappedFields.mf_production_area = convertFromApiFormat(profileData.production_area);
       if (profileData.machine_handling) mappedFields.mf_machine_handling = convertFromApiFormat(profileData.machine_handling);
-      if (profileData.shift_preference) mappedFields.mf_shift_preference = profileData.shift_preference; // Single value
+      if (profileData.mf1_shift_preference) mappedFields.mf_shift_preference = convertFromApiFormat(profileData.mf1_shift_preference, 'shift_preference');
       if (profileData.safety_training) mappedFields.mf_safety_cert = convertFromApiFormat(profileData.safety_training);
       if (profileData.engineering_domain) mappedFields.mf_engineering_domain = convertFromApiFormat(profileData.engineering_domain);
       if (profileData.design_tools) mappedFields.mf_design_tools = convertFromApiFormat(profileData.design_tools);
@@ -259,8 +259,8 @@ export default function ProfileForm({ onSave, onCancel, initialData = [], showFo
       // Pharma & Healthcare Domain field mappings
       if (profileData.compliance_standards) mappedFields.ph_compliance = convertFromApiFormat(profileData.compliance_standards);
       if (profileData.equipment_handling) mappedFields.ph_equipment_handling = convertFromApiFormat(profileData.equipment_handling);
-      if (profileData.ph1_shift_preference) mappedFields.ph_shift_preference = profileData.ph1_shift_preference;
-      if (profileData.ph4_shift_preference) mappedFields.ph_shift_preference = profileData.ph4_shift_preference;
+      if (profileData.ph1_shift_preference) mappedFields.ph_shift_preference = convertFromApiFormat(profileData.ph1_shift_preference, 'shift_preference');
+      if (profileData.ph4_shift_preference) mappedFields.ph_shift_preference = convertFromApiFormat(profileData.ph4_shift_preference, 'shift_preference');
       if (profileData.quality_tools_used) mappedFields.ph_quality_tools = convertFromApiFormat(profileData.quality_tools_used);
       if (profileData.supply_chain_focus) mappedFields.ph_supply_chain_area = convertFromApiFormat(profileData.supply_chain_focus);
       if (profileData.regulatory_knowledge) mappedFields.ph_regulatory_knowledge = convertFromApiFormat(profileData.regulatory_knowledge);
@@ -943,7 +943,7 @@ export default function ProfileForm({ onSave, onCancel, initialData = [], showFo
     if (entry.profileType === 'Manufacturing') {
       if ((entry as any).mf_production_area) fields.production_area = convertToApiFormat((entry as any).mf_production_area, 'production_area');
       if ((entry as any).mf_machine_handling) fields.machine_handling = convertToApiFormat((entry as any).mf_machine_handling, 'machine_handling');
-      if ((entry as any).mf_shift_preference) fields.shift_preference = (entry as any).mf_shift_preference; // Single value, not array
+      if ((entry as any).mf_shift_preference) fields.mf1_shift_preference = convertToApiFormat(Array.isArray((entry as any).mf_shift_preference) ? (entry as any).mf_shift_preference : [(entry as any).mf_shift_preference], 'shift_preference');
       if ((entry as any).mf_safety_cert) fields.safety_training = convertToApiFormat((entry as any).mf_safety_cert, 'safety_training');
       if ((entry as any).mf_engineering_domain) fields.engineering_domain = convertToApiFormat((entry as any).mf_engineering_domain, 'engineering_domain');
       if ((entry as any).mf_design_tools) fields.design_tools = convertToApiFormat((entry as any).mf_design_tools, 'design_tools');
@@ -1003,7 +1003,7 @@ export default function ProfileForm({ onSave, onCancel, initialData = [], showFo
     if (entry.profileType === 'Pharma & Healthcare') {
       if (entry.ph_compliance) fields.compliance_standards = convertToApiFormat(entry.ph_compliance, 'compliance');
       if (entry.ph_equipment_handling) fields.equipment_handling = convertToApiFormat(entry.ph_equipment_handling, 'equipment_handling');
-      if (entry.ph_shift_preference) fields.ph1_shift_preference = entry.ph_shift_preference;
+      if (entry.ph_shift_preference) fields.ph1_shift_preference = convertToApiFormat(Array.isArray(entry.ph_shift_preference) ? entry.ph_shift_preference : [entry.ph_shift_preference], 'shift_preference');
       if (entry.ph_quality_tools) fields.quality_tools_used = convertToApiFormat(entry.ph_quality_tools, 'quality_tools_used');
       if (entry.ph_supply_chain_area) fields.supply_chain_focus = convertToApiFormat(entry.ph_supply_chain_area, 'supply_chain_focus');
       if (entry.ph_regulatory_knowledge) fields.regulatory_knowledge = convertToApiFormat(entry.ph_regulatory_knowledge, 'regulatory_knowledge');
@@ -1015,8 +1015,8 @@ export default function ProfileForm({ onSave, onCancel, initialData = [], showFo
       if (entry.ph_department) fields.department = entry.ph_department;
       if (entry.ph_licenses) fields.medical_licenses = convertToApiFormat(entry.ph_licenses, 'medical_licenses');
       if (entry.ph_languages) fields.languages_known = convertToApiFormat(entry.ph_languages, 'languages_known');
-      // Note: ph4_shift_preference uses the same field as ph1_shift_preference in the API
-      if (entry.ph_shift_preference) fields.ph4_shift_preference = entry.ph_shift_preference;
+      // Note: ph4_shift_preference uses different field name for Healthcare Services subdomain
+      if (entry.ph_shift_preference) fields.ph4_shift_preference = convertToApiFormat(Array.isArray(entry.ph_shift_preference) ? entry.ph_shift_preference : [entry.ph_shift_preference], 'shift_preference');
     }
     
     return fields;
@@ -1045,14 +1045,17 @@ export default function ProfileForm({ onSave, onCancel, initialData = [], showFo
       
       // If we have initial data and no editing entry yet, set it
       if (initialData.length > 0 && !editingEntry) {
-        // Workaround: Fetch missing certifications from rawProfiles if available
+        // Workaround: Fetch missing fields from rawProfiles if available
         let enhancedInitialData = initialData[0];
         if (rawProfiles && initialData[0].id) {
           const rawProfile = rawProfiles.find(p => p.name === initialData[0].id);
-          if (rawProfile && rawProfile.certifications) {
+          if (rawProfile) {
             enhancedInitialData = {
               ...initialData[0],
-              certifications: rawProfile.certifications
+              ...(rawProfile.certifications && { certifications: rawProfile.certifications }),
+              ...(rawProfile.mf1_shift_preference && { mf1_shift_preference: rawProfile.mf1_shift_preference }),
+              ...(rawProfile.ph1_shift_preference && { ph1_shift_preference: rawProfile.ph1_shift_preference }),
+              ...(rawProfile.ph4_shift_preference && { ph4_shift_preference: rawProfile.ph4_shift_preference })
             };
           }
         }
@@ -1077,6 +1080,32 @@ export default function ProfileForm({ onSave, onCancel, initialData = [], showFo
           const rawProfile = rawProfiles.find(p => p.name === initialData[0].id);
           if (rawProfile && rawProfile.work_eligibility) {
             processedEntry.workEligibility = rawProfile.work_eligibility;
+          }
+        }
+        
+        // Ensure shift preference fields are properly mapped from API response
+        if (rawProfiles && initialData[0].id) {
+          const rawProfile = rawProfiles.find(p => p.name === initialData[0].id);
+          if (rawProfile) {
+            // Manufacturing shift preference
+            if (!processedEntry.mf_shift_preference && rawProfile.mf1_shift_preference) {
+              processedEntry.mf_shift_preference = Array.isArray(rawProfile.mf1_shift_preference) 
+                ? rawProfile.mf1_shift_preference.map((item: any) => Object.values(item)[0] as string)
+                : [];
+            }
+            
+            // Pharma & Healthcare shift preference (both ph1 and ph4 map to the same UI field)
+            if (!processedEntry.ph_shift_preference) {
+              if (rawProfile.ph1_shift_preference) {
+                processedEntry.ph_shift_preference = Array.isArray(rawProfile.ph1_shift_preference) 
+                  ? rawProfile.ph1_shift_preference.map((item: any) => Object.values(item)[0] as string)
+                  : [];
+              } else if (rawProfile.ph4_shift_preference) {
+                processedEntry.ph_shift_preference = Array.isArray(rawProfile.ph4_shift_preference) 
+                  ? rawProfile.ph4_shift_preference.map((item: any) => Object.values(item)[0] as string)
+                  : [];
+              }
+            }
           }
         }
         

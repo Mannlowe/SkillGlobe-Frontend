@@ -1,12 +1,19 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { Search, Plus, X, Star, Trash2 } from 'lucide-react';
-import SkillsSuccessModal from '../modal/SkillsSuccessModal';
-import { getSkills, Skill } from '@/app/api/job postings/addjobPosting';
-import { addSkills, AddSkillsRequest, SkillData as APISkillData, getSkillsList, SkillListResponse } from '@/app/api/Individual Skills/addSkills';
-import { getAuthData } from '@/utils/auth';
-import { toast } from 'react-hot-toast';
+import { useState, useEffect } from "react";
+import { Search, Plus, X, Star, Trash2 } from "lucide-react";
+import SkillsSuccessModal from "../modal/SkillsSuccessModal";
+import { getSkills, Skill } from "@/app/api/job postings/addjobPosting";
+import {
+  addSkills,
+  AddSkillsRequest,
+  SkillData as APISkillData,
+  getSkillsList,
+  SkillListResponse,
+} from "@/app/api/Individual Skills/addSkills";
+import { getAuthData } from "@/utils/auth";
+import { toast } from "react-hot-toast";
+import { createGlobalSkillAPI } from "@/app/api/Individual Skills/groqSkillsAPI";
 
 interface SkillsProps {
   onSkillsComplete?: () => void;
@@ -20,18 +27,24 @@ interface SkillData {
   skill_id?: string;
 }
 
-export default function Skills({ onSkillsComplete, onSkip, className = '' }: SkillsProps) {
+export default function Skills({
+  onSkillsComplete,
+  onSkip,
+  className = "",
+}: SkillsProps) {
   const [selectedSkills, setSelectedSkills] = useState<SkillData[]>([]);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedSkills2, setSelectedSkills2] = useState<SkillData[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<Skill[]>([]);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
   const [searchError, setSearchError] = useState<string | null>(null);
+  const [searchError2, setSearchError2] = useState<string | null>(null);
   const [showDropdown, setShowDropdown] = useState(false);
   const [allSkills, setAllSkills] = useState<Skill[]>([]);
-  const [aiSearchQuery, setAiSearchQuery] = useState('');
+  const [aiSearchQuery, setAiSearchQuery] = useState("");
   const [isAiSearching, setIsAiSearching] = useState(false);
-  const [aiResult, setAiResult] = useState<{ enteredValue: string; canonicalName: string; aliases: string[] } | null>(null);
+  const [aiResult, setAiResult] = useState<Skill[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoadingUserSkills, setIsLoadingUserSkills] = useState(false);
   const [existingSkills, setExistingSkills] = useState<SkillData[]>([]);
@@ -39,17 +52,30 @@ export default function Skills({ onSkillsComplete, onSkip, className = '' }: Ski
 
   // Add a skill
   const addSkill = (skill: string | Skill) => {
-    const skillName = typeof skill === 'string' ? skill : skill.name;
-    if (!selectedSkills.some((s) => s.name.toLowerCase() === skillName.toLowerCase())) {
-      const skillData: SkillData = typeof skill === 'string' 
-        ? { name: skill }
-        : { name: skill.name, canonical_name: skill.canonical_name, skill_id: skill.skill_id };
-      
+    const skillName = typeof skill === "string" ? skill : skill.name;
+    if (
+      !selectedSkills.some(
+        (s) => s.name.toLowerCase() === skillName.toLowerCase()
+      )
+    ) {
+      const skillData: SkillData =
+        typeof skill === "string"
+          ? { name: skill }
+          : {
+              name: skill.name,
+              canonical_name: skill.canonical_name,
+              skill_id: skill.skill_id,
+            };
+
       // Add to selected skills
       setSelectedSkills([...selectedSkills, skillData]);
-      
+
       // Add to new skills if it's not already in existing skills
-      if (!existingSkills.some((s) => s.name.toLowerCase() === skillName.toLowerCase())) {
+      if (
+        !existingSkills.some(
+          (s) => s.name.toLowerCase() === skillName.toLowerCase()
+        )
+      ) {
         setNewSkills([...newSkills, skillData]);
       }
     }
@@ -65,43 +91,58 @@ export default function Skills({ onSkillsComplete, onSkip, className = '' }: Ski
   // Continue → call API to save skills and then open modal
   const handleContinue = async () => {
     if (newSkills.length === 0) return;
-    
+
     try {
       setIsSubmitting(true);
-      
+
       // Get authentication data
       const authData = getAuthData();
-      if (!authData || !authData.apiKey || !authData.apiSecret || !authData.entityId) {
-        throw new Error('Authentication data not found');
+      if (
+        !authData ||
+        !authData.apiKey ||
+        !authData.apiSecret ||
+        !authData.entityId
+      ) {
+        throw new Error("Authentication data not found");
       }
-      
+
       // Prepare the API payload with only new skills
       const skillsPayload: AddSkillsRequest = {
         entity_id: authData.entityId,
-        skill: newSkills.map(skill => ({
+        skill: newSkills.map((skill) => ({
           skill: skill.skill_id || skill.name, // Use skill_id if available, otherwise use name
-          skill_name: skill.canonical_name || skill.name // Use canonical_name if available, otherwise use name
-        }))
+          skill_name: skill.canonical_name || skill.name, // Use canonical_name if available, otherwise use name
+        })),
       };
-      
-      console.log('Submitting skills payload:', skillsPayload);
-      
+
+      console.log("Submitting skills payload:", skillsPayload);
+
       // Call the API
-      const response = await addSkills(skillsPayload, authData.apiKey, authData.apiSecret);
-      
-      if (response.message.status === 'success') {
-        toast.success(`Successfully added ${newSkills.length} new skill${newSkills.length !== 1 ? 's' : ''}!`);
+      const response = await addSkills(
+        skillsPayload,
+        authData.apiKey,
+        authData.apiSecret
+      );
+
+      if (response.message.status === "success") {
+        toast.success(
+          `Successfully added ${newSkills.length} new skill${
+            newSkills.length !== 1 ? "s" : ""
+          }!`
+        );
         // Clear new skills since they've been saved
         setNewSkills([]);
         // Refresh the skills list to show the updated skills from the server
         await fetchUserSkills();
         setShowSuccessModal(true);
       } else {
-        throw new Error(response.message.data?.message || 'Failed to add skills');
+        throw new Error(
+          response.message.data?.message || "Failed to add skills"
+        );
       }
     } catch (error: any) {
-      console.error('Error adding skills:', error);
-      toast.error(error.message || 'Failed to add skills. Please try again.');
+      console.error("Error adding skills:", error);
+      toast.error(error.message || "Failed to add skills. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
@@ -122,31 +163,45 @@ export default function Skills({ onSkillsComplete, onSkip, className = '' }: Ski
   const fetchUserSkills = async () => {
     try {
       setIsLoadingUserSkills(true);
-      
+
       // Get authentication data
       const authData = getAuthData();
-      if (!authData || !authData.apiKey || !authData.apiSecret || !authData.entityId) {
-        console.log('Authentication data not found, skipping skills fetch');
+      if (
+        !authData ||
+        !authData.apiKey ||
+        !authData.apiSecret ||
+        !authData.entityId
+      ) {
+        console.log("Authentication data not found, skipping skills fetch");
         return;
       }
-      
+
       // Call the API to get user's skills
-      const response = await getSkillsList(authData.entityId, authData.apiKey, authData.apiSecret);
-      
-      if (response.message?.status === 'success' && response.message.data?.skills_list) {
+      const response = await getSkillsList(
+        authData.entityId,
+        authData.apiKey,
+        authData.apiSecret
+      );
+
+      if (
+        response.message?.status === "success" &&
+        response.message.data?.skills_list
+      ) {
         // Convert API response to SkillData format
-        const userSkills: SkillData[] = response.message.data.skills_list.map(skill => ({
-          name: skill.skill_name || skill.skill || '',
-          canonical_name: skill.skill_name || '',
-          skill_id: skill.skill || ''
-        })).filter(skill => skill.name); // Filter out empty skills
-        
-        console.log('Fetched user skills:', userSkills);
+        const userSkills: SkillData[] = response.message.data.skills_list
+          .map((skill) => ({
+            name: skill.skill_name || skill.skill || "",
+            canonical_name: skill.skill_name || "",
+            skill_id: skill.skill || "",
+          }))
+          .filter((skill) => skill.name); // Filter out empty skills
+
+        console.log("Fetched user skills:", userSkills);
         setExistingSkills(userSkills);
         setSelectedSkills(userSkills);
       }
     } catch (error: any) {
-      console.error('Error fetching user skills:', error);
+      console.error("Error fetching user skills:", error);
       // Don't show error toast for this as it's not critical
     } finally {
       setIsLoadingUserSkills(false);
@@ -156,151 +211,198 @@ export default function Skills({ onSkillsComplete, onSkip, className = '' }: Ski
   // Mock AI classification function (for static export compatibility)
   const mockClassifySkill = async (query: string) => {
     // Wait for a realistic delay
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+
     // Common skills with their canonical names and aliases
     const skillDatabase = [
       {
-        keywords: ['react', 'reactjs', 'react.js'],
-        canonical: 'React.js',
-        aliases: ['React', 'ReactJS', 'React Framework']
+        keywords: ["react", "reactjs", "react.js"],
+        canonical: "React.js",
+        aliases: ["React", "ReactJS", "React Framework"],
       },
       {
-        keywords: ['node', 'nodejs', 'node.js'],
-        canonical: 'Node.js',
-        aliases: ['NodeJS', 'Node Runtime', 'Node Framework']
+        keywords: ["node", "nodejs", "node.js"],
+        canonical: "Node.js",
+        aliases: ["NodeJS", "Node Runtime", "Node Framework"],
       },
       {
-        keywords: ['js', 'javascript'],
-        canonical: 'JavaScript',
-        aliases: ['JS', 'ECMAScript', 'ES6']
+        keywords: ["js", "javascript"],
+        canonical: "JavaScript",
+        aliases: ["JS", "ECMAScript", "ES6"],
       },
       {
-        keywords: ['ts', 'typescript'],
-        canonical: 'TypeScript',
-        aliases: ['TS', 'Typed JavaScript']
+        keywords: ["ts", "typescript"],
+        canonical: "TypeScript",
+        aliases: ["TS", "Typed JavaScript"],
       },
       {
-        keywords: ['py', 'python'],
-        canonical: 'Python',
-        aliases: ['Python Programming', 'Python Language']
+        keywords: ["py", "python"],
+        canonical: "Python",
+        aliases: ["Python Programming", "Python Language"],
       },
       {
-        keywords: ['java'],
-        canonical: 'Java',
-        aliases: ['Java Programming', 'JDK']
+        keywords: ["java"],
+        canonical: "Java",
+        aliases: ["Java Programming", "JDK"],
       },
       {
-        keywords: ['c#', 'csharp', 'dotnet', '.net'],
-        canonical: 'C#',
-        aliases: ['.NET', 'C Sharp', 'Microsoft C#']
+        keywords: ["c#", "csharp", "dotnet", ".net"],
+        canonical: "C#",
+        aliases: [".NET", "C Sharp", "Microsoft C#"],
       },
     ];
-    
+
     const queryLower = query.toLowerCase();
-    
+
     // Find matching skill
     for (const skill of skillDatabase) {
-      if (skill.keywords.some(keyword => queryLower.includes(keyword))) {
+      if (skill.keywords.some((keyword) => queryLower.includes(keyword))) {
         return {
           success: true,
           result: {
-            'entered value': query,
-            'recognised canonical Name': skill.canonical,
-            'aliases': skill.aliases
-          }
+            "entered value": query,
+            "recognised canonical Name": skill.canonical,
+            aliases: skill.aliases,
+          },
         };
       }
     }
-    
+
     // Default response for unknown skills
     return {
       success: true,
       result: {
-        'entered value': query,
-        'recognised canonical Name': query.charAt(0).toUpperCase() + query.slice(1),
-        'aliases': []
-      }
+        "entered value": query,
+        "recognised canonical Name":
+          query.charAt(0).toUpperCase() + query.slice(1),
+        aliases: [],
+      },
     };
   };
 
   // Handle AI search
-  const handleAiSearch = async () => {
-    if (!aiSearchQuery.trim()) return;
-    
+  const handleAiSearch2 = async () => {
+    if (!searchQuery.trim()) return;
+
     try {
       setIsAiSearching(true);
-      setAiResult(null); // Clear previous results
-      
-      // Use mock implementation for static export compatibility
-      const data = await mockClassifySkill(aiSearchQuery.trim());
-      
-      
-      if (data.success && data.result) {
-        const result = data.result;
-        const enteredValue = result['entered value'];
-        const canonicalName = result['recognised canonical Name'];
-        const aliases = result.aliases || [];
-        
-        // Store the result for display
-        setAiResult({
-          enteredValue,
-          canonicalName,
-          aliases
-        });
-        
-        if (canonicalName) {
-          // Create skill data object
-          const skillData: SkillData = {
-            name: canonicalName,
-            canonical_name: canonicalName
-          };
-          
-          // Add the skill if it doesn't already exist
-          if (!selectedSkills.some(s => s.name.toLowerCase() === canonicalName.toLowerCase())) {
-            setSelectedSkills(prev => [...prev, skillData]);
-            toast.success(`Added skill: ${canonicalName}`);
-          } else {
-            toast.success(`Skill "${canonicalName}" is already in your list`);
-          }
-          
-          // Don't clear the search query so user can see what they entered
-          // setAiSearchQuery('');
-        } else {
-          toast.error('Could not identify a specific skill from your description');
-        }
+      setAiResult([]); // Clear previous results
+
+      const result = await createGlobalSkillAPI({
+        gr: 1,
+        skill: searchQuery.trim(),
+      });
+
+      if (result.message.status === "success") {
+        setAiResult([
+          {
+            canonical_name: result.message.data?.canonical_name ?? "",
+            name: result.message.data?.skill_id ?? "",
+          },
+        ]);
+        toast.success(`Found skills`);
+        console.log([
+          {
+            canonical_name: result.message.data?.canonical_name ?? "",
+            name: result.message.data?.skill_id ?? "",
+          },
+        ]);
+        console.log("✅ Skill created:", result.message.data);
       } else {
-        toast.error('Could not process your skill description');
+        console.warn("⚠️ Info:", result.message.message);
+        toast.success(`This skill is already in your list`);
       }
-    } catch (error: any) {
-      console.error('AI search error:', error);
-      toast.error('AI search failed. Please try again.');
-      setAiResult(null);
+    } catch (err) {
+      console.error("❌ Error creating skill:", err);
+      toast.error("AI search failed. Please try again.");
+      setAiResult([]);
     } finally {
       setIsAiSearching(false);
     }
   };
+
+  // const handleAiSearch = async () => {
+  //   if (!aiSearchQuery.trim()) return;
+
+  //   try {
+  //     setIsAiSearching(true);
+  //     // setAiResult(null); // Clear previous results
+
+  //     // Use mock implementation for static export compatibility
+  //     const data = await mockClassifySkill(aiSearchQuery.trim());
+
+  //     if (data.success && data.result) {
+  //       const result = data.result;
+  //       const enteredValue = result["entered value"];
+  //       const canonicalName = result["recognised canonical Name"];
+  //       const aliases = result.aliases || [];
+
+  //       // Store the result for display
+  //       // setAiResult({
+  //       //   enteredValue,
+  //       //   canonicalName,
+  //       //   aliases,
+  //       // });
+
+  //       if (canonicalName) {
+  //         // Create skill data object
+  //         const skillData: SkillData = {
+  //           name: canonicalName,
+  //           canonical_name: canonicalName,
+  //         };
+
+  //         // Add the skill if it doesn't already exist
+  //         if (
+  //           !selectedSkills.some(
+  //             (s) => s.name.toLowerCase() === canonicalName.toLowerCase()
+  //           )
+  //         ) {
+  //           setSelectedSkills((prev) => [...prev, skillData]);
+  //           toast.success(`Added skill: ${canonicalName}`);
+  //         } else {
+  //           toast.success(`Skill "${canonicalName}" is already in your list`);
+  //         }
+
+  //         // Don't clear the search query so user can see what they entered
+  //         // setAiSearchQuery('');
+  //       } else {
+  //         toast.error(
+  //           "Could not identify a specific skill from your description"
+  //         );
+  //       }
+  //     } else {
+  //       toast.error("Could not process your skill description");
+  //     }
+  //   } catch (error: any) {
+  //     console.error("AI search error:", error);
+  //     toast.error("AI search failed. Please try again.");
+  //     // setAiResult(null);
+  //   } finally {
+  //     setIsAiSearching(false);
+  //   }
+  // };
 
   // Fetch all skills when input is clicked
   const fetchAllSkills = async () => {
     try {
       setIsSearching(true);
       setSearchError(null);
+      // setAiResult([]);
 
       // Get authentication data
       const authData = getAuthData();
       if (!authData || !authData.apiKey || !authData.apiSecret) {
-        throw new Error('Authentication data not found');
+        throw new Error("Authentication data not found");
       }
 
       // Call the API with empty search to get all skills
-      const skills = await getSkills('', authData.apiKey, authData.apiSecret);
+      const skills = await getSkills("", authData.apiKey, authData.apiSecret);
       setAllSkills(skills);
       setSearchResults(skills);
     } catch (error: any) {
-      console.error('Error fetching skills:', error);
-      setSearchError(error.message || 'Failed to fetch skills');
-      toast.error('Failed to fetch skills. Please try again.');
+      console.error("Error fetching skills:", error);
+      setSearchError(error.message || "Failed to fetch skills");
+      toast.error("Failed to fetch skills. Please try again.");
     } finally {
       setIsSearching(false);
     }
@@ -311,7 +413,7 @@ export default function Skills({ onSkillsComplete, onSkip, className = '' }: Ski
     setShowDropdown(true);
     if (allSkills.length === 0 && !isSearching) {
       fetchAllSkills();
-    } else if (searchQuery.trim() === '') {
+    } else if (searchQuery.trim() === "") {
       setSearchResults(allSkills);
     }
   };
@@ -320,10 +422,10 @@ export default function Skills({ onSkillsComplete, onSkip, className = '' }: Ski
   const handleInputBlur = (e: React.FocusEvent) => {
     // Don't close if focus is moving to dropdown
     const relatedTarget = e.relatedTarget as HTMLElement;
-    if (relatedTarget && relatedTarget.closest('.skills-dropdown')) {
+    if (relatedTarget && relatedTarget.closest(".skills-dropdown")) {
       return;
     }
-    
+
     // Delay hiding to allow clicking on dropdown items
     setTimeout(() => {
       setShowDropdown(false);
@@ -333,7 +435,7 @@ export default function Skills({ onSkillsComplete, onSkip, className = '' }: Ski
   // API-based search functionality
   useEffect(() => {
     const searchSkills = async () => {
-      if (searchQuery.trim() === '') {
+      if (searchQuery.trim() === "") {
         // If search is empty and we have all skills, show them
         if (allSkills.length > 0) {
           setSearchResults(allSkills);
@@ -347,11 +449,13 @@ export default function Skills({ onSkillsComplete, onSkip, className = '' }: Ski
       // First try to filter from existing skills
       if (allSkills.length > 0) {
         const searchTerm = searchQuery.trim().toLowerCase();
-        const filtered = allSkills.filter(skill => 
-          skill.name.toLowerCase().includes(searchTerm) || 
-          (skill.canonical_name && skill.canonical_name.toLowerCase().includes(searchTerm))
+        const filtered = allSkills.filter(
+          (skill) =>
+            skill.name.toLowerCase().includes(searchTerm) ||
+            (skill.canonical_name &&
+              skill.canonical_name.toLowerCase().includes(searchTerm))
         );
-        
+
         // If we found matches locally, use them
         if (filtered.length > 0) {
           setSearchResults(filtered);
@@ -368,16 +472,20 @@ export default function Skills({ onSkillsComplete, onSkip, className = '' }: Ski
         // Get authentication data
         const authData = getAuthData();
         if (!authData || !authData.apiKey || !authData.apiSecret) {
-          throw new Error('Authentication data not found');
+          throw new Error("Authentication data not found");
         }
 
         // Call the API
-        const skills = await getSkills(searchQuery.trim(), authData.apiKey, authData.apiSecret);
+        const skills = await getSkills(
+          searchQuery.trim(),
+          authData.apiKey,
+          authData.apiSecret
+        );
         setSearchResults(skills);
       } catch (error: any) {
-        console.error('Error searching skills:', error);
-        setSearchError(error.message || 'Failed to search skills');
-        toast.error('Failed to search skills. Please try again.');
+        console.error("Error searching skills:", error);
+        setSearchError(error.message || "Failed to search skills");
+        toast.error("Failed to search skills. Please try again.");
       } finally {
         setIsSearching(false);
       }
@@ -392,17 +500,20 @@ export default function Skills({ onSkillsComplete, onSkip, className = '' }: Ski
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as HTMLElement;
-      if (!target.closest('.skills-dropdown') && !target.closest('input[placeholder="Search for skills..."]')) {
+      if (
+        !target.closest(".skills-dropdown") &&
+        !target.closest('input[placeholder="Search for skills..."]')
+      ) {
         setShowDropdown(false);
       }
     };
 
     if (showDropdown) {
-      document.addEventListener('mousedown', handleClickOutside);
+      document.addEventListener("mousedown", handleClickOutside);
     }
 
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [showDropdown]);
 
@@ -416,9 +527,13 @@ export default function Skills({ onSkillsComplete, onSkip, className = '' }: Ski
       className={`bg-white rounded-xl shadow-sm p-3 space-y-6 w-full font-rubik ${className}`}
     >
       <div className="text-center">
-        <h1 className="text-2xl font-bold text-gray-900 mb-2">What are you good at?</h1>
+        <h1 className="text-2xl font-bold text-gray-900 mb-2">
+          What are you good at?
+        </h1>
+        <div className="py-2">len {aiResult.length}</div>
         <p className="text-gray-600">
-          Help us match you with the right opportunities by selecting your skills
+          Help us match you with the right opportunities by selecting your
+          skills
         </p>
       </div>
 
@@ -445,17 +560,15 @@ export default function Skills({ onSkillsComplete, onSkip, className = '' }: Ski
             <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500"></div>
           </div>
         )}
-        
+
         {/* Skills Dropdown */}
         {showDropdown && (
           <div className="skills-dropdown w-1/2 absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-xl shadow-lg z-50 max-h-80 overflow-hidden">
-          
-            
             <div className="max-h-60 overflow-y-auto">
               {searchError ? (
                 <div className="p-4 text-center">
                   <p className="text-red-500 text-sm">{searchError}</p>
-                  <button 
+                  <button
                     onClick={fetchAllSkills}
                     className="mt-2 text-blue-500 underline text-sm"
                   >
@@ -465,12 +578,16 @@ export default function Skills({ onSkillsComplete, onSkip, className = '' }: Ski
               ) : isSearching ? (
                 <div className="flex justify-center items-center py-8">
                   <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500"></div>
-                  <span className="ml-2 text-gray-600 text-sm">Loading skills...</span>
+                  <span className="ml-2 text-gray-600 text-sm">
+                    Loading skills...
+                  </span>
                 </div>
               ) : searchResults.length > 0 ? (
                 <div className="py-2">
                   {searchResults.map((skill) => {
-                    const isSelected = selectedSkills.some((s) => s.name.toLowerCase() === skill.name.toLowerCase());
+                    const isSelected = selectedSkills.some(
+                      (s) => s.name.toLowerCase() === skill.name.toLowerCase()
+                    );
                     return (
                       <button
                         key={skill.skill_id || skill.name}
@@ -484,21 +601,29 @@ export default function Skills({ onSkillsComplete, onSkip, className = '' }: Ski
                           // setShowDropdown(false);
                         }}
                         className={`w-full px-4 py-2 text-left hover:bg-gray-50 transition-colors flex items-center justify-between ${
-                          isSelected ? 'bg-blue-50 text-blue-700' : 'text-gray-900'
+                          isSelected
+                            ? "bg-blue-50 text-blue-700"
+                            : "text-gray-900"
                         }`}
                       >
                         <div className="flex-1 min-w-0">
                           {/* <span className="text-sm font-medium block truncate">{skill.name}</span> */}
-                          {skill.canonical_name && skill.canonical_name !== skill.name && (
-                            <span className="text-md text-black block truncate">{skill.canonical_name}</span>
-                          )}
+                          {skill.canonical_name &&
+                            skill.canonical_name !== skill.name && (
+                              <span className="text-md text-black block truncate">
+                                {skill.canonical_name}
+                              </span>
+                            )}
                         </div>
                         {isSelected ? (
                           <div className="w-4 h-4 bg-blue-500 rounded-full flex items-center justify-center ml-2 flex-shrink-0">
                             <X className="text-white" size={10} />
                           </div>
                         ) : (
-                          <Plus className="text-gray-400 ml-2 flex-shrink-0" size={14} />
+                          <Plus
+                            className="text-gray-400 ml-2 flex-shrink-0"
+                            size={14}
+                          />
                         )}
                       </button>
                     );
@@ -507,17 +632,19 @@ export default function Skills({ onSkillsComplete, onSkip, className = '' }: Ski
               ) : (
                 <div className="p-4 text-center">
                   <p className="text-gray-500 text-sm">
-                    {searchQuery.trim() ? 'No skills found matching your search' : 'No skills available'}
+                    {searchQuery.trim()
+                      ? "No skills found matching your search"
+                      : "No skills available"}
                   </p>
                 </div>
               )}
             </div>
-            
+
             {/* AI Search Bar inside dropdown */}
             <div className="border-t border-gray-200 p-4">
               <div className="flex flex-col space-y-2">
                 <div className="flex items-center bg-gray-50 rounded-full border border-gray-200 p-2 focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-blue-500 transition-all">
-                  <input
+                  {/* <input
                     type="text"
                     value={aiSearchQuery}
                     onChange={(e) => setAiSearchQuery(e.target.value)}
@@ -527,46 +654,83 @@ export default function Skills({ onSkillsComplete, onSkip, className = '' }: Ski
                       }
                     }}
                     className="flex-1 bg-transparent px-4 py-2 text-gray-900 placeholder-gray-500 focus:outline-none text-sm"
-                    placeholder="Describe your skills in natural language..."
-                  />
+                    placeholder="Describe your skills..."
+                  /> */}
                   <button
-                    onClick={handleAiSearch}
+                    onClick={handleAiSearch2}
                     disabled={isAiSearching}
                     className="bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-700 text-white font-semibold px-4 py-1.5 rounded-full border border-gray-300 hover:opacity-90 transition-all duration-200 shadow-sm text-sm disabled:opacity-70 flex items-center justify-center min-w-[40px]"
                   >
                     {isAiSearching ? (
-                      <div className="animate-spin rounded-full h-4 w-4 border-2 border-t-transparent border-white"></div>
+                      <div className="animate-spin rounded-full h-auto w-auto border-2 border-t-transparent border-white"></div>
                     ) : (
-                      'AI'
+                      "Search AI Suggestions"
                     )}
                   </button>
                 </div>
-                
+
                 {/* AI Result Display */}
-                {aiResult && (
-                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-sm">
-                    <div className="flex flex-col space-y-1">
-                      <div className="flex items-center">
-                        <span className="text-gray-500">Entered value:</span>
-                        <span className="ml-2 font-medium text-gray-700">"{aiResult.enteredValue}"</span>
-                      </div>
-                      <div className="flex items-center">
-                        <span className="text-gray-500">Recognised canonical name:</span>
-                        <span className="ml-2 font-medium text-blue-700">"{aiResult.canonicalName}"</span>
-                      </div>
-                      {aiResult.aliases.length > 0 && (
-                        <div className="flex items-start">
-                          <span className="text-gray-500">Aliases:</span>
-                          <div className="ml-2">
-                            {aiResult.aliases.map((alias, index) => (
-                              <span key={index} className="font-medium text-gray-700 block">"{alias}"</span>
-                            ))}
-                          </div>
-                        </div>
-                      )}
+
+                <div className="max-h-60 overflow-y-auto">
+                  {aiResult?.length > 0 && (
+                    <div className="py-2">
+                      {aiResult?.map((skill) => {
+                        const isSelected2 = selectedSkills.some(
+                          (s) =>
+                            s.name.toLowerCase() === skill.name.toLowerCase()
+                        );
+                        return (
+                          <button
+                            key={skill.name}
+                            onClick={() => {
+                              if (isSelected2) {
+                                removeSkill(skill.name);
+                              } else {
+                                addSkill(skill);
+                              }
+                              // Don't close dropdown for multiple selection
+                              // setShowDropdown(false);
+                            }}
+                            className={`w-full px-4 py-2 text-left hover:bg-gray-50 transition-colors flex items-center justify-between ${
+                              isSelected2
+                                ? "bg-blue-50 text-blue-700"
+                                : "text-gray-900"
+                            }`}
+                          >
+                            <div className="flex-1 min-w-0">
+                              {/* <span className="text-sm font-medium block truncate">{skill.name}</span> */}
+                              {skill.canonical_name &&
+                                skill.canonical_name !== skill.name && (
+                                  <span className="text-md text-black block truncate">
+                                    {skill.canonical_name}
+                                  </span>
+                                )}
+                            </div>
+                            {isSelected2 ? (
+                              <div className="w-4 h-4 bg-blue-500 rounded-full flex items-center justify-center ml-2 flex-shrink-0">
+                                <X className="text-white" size={10} />
+                              </div>
+                            ) : (
+                              <Plus
+                                className="text-gray-400 ml-2 flex-shrink-0"
+                                size={14}
+                              />
+                            )}
+                          </button>
+                        );
+                        // return (
+                        //   <div
+                        //     key={skill.name}
+                        //     className="px-3 py-2 hover:bg-gray-100 cursor-pointer"
+                        //     // onClick={() => handleSelectSkill(skill)}
+                        //   >
+                        //     {skill.canonical_name}
+                        //   </div>
+                        // );
+                      })}
                     </div>
-                  </div>
-                )}
+                  )}
+                </div>
               </div>
             </div>
           </div>
@@ -579,7 +743,9 @@ export default function Skills({ onSkillsComplete, onSkip, className = '' }: Ski
         {isLoadingUserSkills ? (
           <div className="flex justify-center items-center py-8">
             <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500"></div>
-            <span className="ml-2 text-gray-600 text-sm">Loading your skills...</span>
+            <span className="ml-2 text-gray-600 text-sm">
+              Loading your skills...
+            </span>
           </div>
         ) : selectedSkills.length > 0 ? (
           <div className="grid grid-cols-3 gap-3">
@@ -603,7 +769,9 @@ export default function Skills({ onSkillsComplete, onSkip, className = '' }: Ski
           </div>
         ) : (
           <p className="text-gray-500 text-center py-4">
-            {searchQuery ? 'Search for skills to add them here' : 'No skills selected yet'}
+            {searchQuery
+              ? "Search for skills to add them here"
+              : "No skills selected yet"}
           </p>
         )}
       </div>
@@ -615,8 +783,8 @@ export default function Skills({ onSkillsComplete, onSkip, className = '' }: Ski
           <div className="text-sm">
             <p className="text-blue-900 font-medium mb-1">Pro Tip</p>
             <p className="text-blue-700">
-              Select 5-10 skills that best represent your expertise. You can always add more later
-              in your profile.
+              Select 5-10 skills that best represent your expertise. You can
+              always add more later in your profile.
             </p>
           </div>
         </div>
@@ -635,7 +803,7 @@ export default function Skills({ onSkillsComplete, onSkip, className = '' }: Ski
               Saving...
             </>
           ) : (
-            'Continue'
+            "Continue"
           )}
         </button>
       </div>

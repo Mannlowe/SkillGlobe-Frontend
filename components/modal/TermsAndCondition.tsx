@@ -35,7 +35,7 @@ export default function TermsAndCondition({ isOpen, onClose }: TermsAndCondition
                 SkillGlobe.com is intended only to serve as a preliminary medium of contact and exchange of information for its users / members / visitors who have a bona fide intention to contact and/or be contacted for the purposes related to genuine existing job vacancies and for other career enhancement services.
               </p>
             </section>
-            
+             
             <section className="space-y-3">
               <h3 className="text-lg font-semibold text-gray-800">USE TO BE IN CONFORMITY WITH THE PURPOSE</h3>
               <p className="text-gray-600">

@@ -655,17 +655,22 @@ export default function ProfilesPage() {
     return `
       <div class="resume-container">
         <!-- Header Section -->
-        <div class="header">
-          <h1 style="margin: 0; font-size: 24px;">${portfolio.first_name || ''} ${portfolio.last_name || ''}</h1>
-          <h2 style="margin: 5px 0; font-size: 18px; color: #444;">${role_based_profile.role || ''}</h2>
-          <div style="display: flex; flex-wrap: wrap; gap: 15px; margin-top: 10px; font-size: 14px; color: #666;">
-            ${portfolio.email ? `<div>${portfolio.email}</div>` : ''}
-            ${portfolio.mobile_no ? `<div>${portfolio.mobile_no}</div>` : ''}
-            ${(portfolio.city || portfolio.country) ? `<div>${[portfolio.city, portfolio.country].filter(Boolean).join(', ')}</div>` : ''}
-            ${portfolio.linkedin_profile ? `<div>LinkedIn: ${portfolio.linkedin_profile}</div>` : ''}
-            ${portfolio.facebook_profile ? `<div>Facebook: ${portfolio.facebook_profile}</div>` : ''}
-            ${portfolio.twitter_handle ? `<div>Twitter: ${portfolio.twitter_handle}</div>` : ''}
-            ${portfolio.instagram_handle ? `<div>Instagram: ${portfolio.instagram_handle}</div>` : ''}
+        <div class="header" style="display: flex; justify-content: space-between; align-items: flex-start;">
+          <div style="flex: 1;">
+            <h1 style="margin: 0; font-size: 24px;">${portfolio.first_name || ''} ${portfolio.last_name || ''}</h1>
+            <h2 style="margin: 5px 0; font-size: 18px; color: #444;">${role_based_profile.role || ''}</h2>
+            <div style="display: flex; flex-wrap: wrap; gap: 15px; margin-top: 10px; font-size: 14px; color: #666;">
+              ${portfolio.email ? `<div>${portfolio.email}</div>` : ''}
+              ${portfolio.mobile_no ? `<div>${portfolio.mobile_no}</div>` : ''}
+              ${(portfolio.city || portfolio.country) ? `<div>${[portfolio.city, portfolio.country].filter(Boolean).join(', ')}</div>` : ''}
+              ${portfolio.linkedin_profile ? `<div>LinkedIn: ${portfolio.linkedin_profile}</div>` : ''}
+              ${portfolio.facebook_profile ? `<div>Facebook: ${portfolio.facebook_profile}</div>` : ''}
+              ${portfolio.twitter_handle ? `<div>Twitter: ${portfolio.twitter_handle}</div>` : ''}
+              ${portfolio.instagram_handle ? `<div>Instagram: ${portfolio.instagram_handle}</div>` : ''}
+            </div>
+          </div>
+          <div style="flex-shrink: 0; margin-left: 20px;">
+            <img src="/Images/logo_image.jpg" alt="SkillGlobe Logo" style="width: 80px; height: auto; max-height: 80px; object-fit: contain;" />
           </div>
         </div>
         
@@ -704,6 +709,25 @@ export default function ProfilesPage() {
           </div>
           ` : ''}
         </div>
+
+            <!-- Education Section -->
+        ${portfolio.education && portfolio.education.length > 0 ? `
+        <div class="section">
+          <div class="section-title">Education</div>
+          <div style="margin-top: 10px;">
+            ${portfolio.education.map((edu: any) => `
+              <div style="border-left: 2px solid #22c55e; padding-left: 15px; margin-bottom: 15px;">
+               <p style="margin: 3px 0;">Education Level: ${edu.education_level || 'Education Level'}</p>
+                <p style="margin: 3px 0; font-weight: 500;">Stream: ${edu.stream || 'Degree'}</p>
+                <p style="margin: 3px 0;">University: ${edu.university_board || 'Institution'}</p>
+                <p style="margin: 3px 0;">Year of Completion: ${edu.year_of_completion || 'Year'}</p>
+               
+                ${edu.grade ? `<p style="margin: 3px 0;">Grade: ${edu.grade}</p>` : ''}
+              </div>
+            `).join('')}
+          </div>
+        </div>
+        ` : ''}
         
         <!-- Skills Section -->
         <div class="section">
@@ -715,7 +739,7 @@ export default function ProfilesPage() {
             <h3 style="font-size: 16px; margin-bottom: 8px;">Primary Skills</h3>
             <div style="display: flex; flex-wrap: wrap; gap: 8px;">
               ${role_based_profile.primary_skills.map((skill: any) => `
-                <span style="background: #dbeafe; color: #1e40af; padding: 4px 10px; border-radius: 15px; font-size: 13px;">
+                <span style="background: #dbeafe; color: #1e40af; padding: 4px 10px; border: 1px solid #1e40af; border-radius: 15px; font-size: 13px;">
                   ${typeof skill === 'string' ? skill : skill.skill_name || skill.canonical_name || skill.skill || ''}
                 </span>
               `).join('')}
@@ -729,7 +753,7 @@ export default function ProfilesPage() {
             <h3 style="font-size: 16px; margin-bottom: 8px;">Secondary Skills</h3>
             <div style="display: flex; flex-wrap: wrap; gap: 8px;">
               ${role_based_profile.secondary_skills.map((skill: any) => `
-                <span style="background: #f3f4f6; color: #4b5563; padding: 4px 10px; border-radius: 15px; font-size: 13px;">
+                <span style="background: #f3f4f6; color: #4b5563; padding: 4px 10px; border: 1px solid #4b5563; border-radius: 15px; font-size: 13px;">
                   ${typeof skill === 'string' ? skill : skill.skill_name || skill.canonical_name || skill.skill || ''}
                 </span>
               `).join('')}
@@ -737,23 +761,6 @@ export default function ProfilesPage() {
           </div>
           ` : ''}
         </div>
-        
-        <!-- Education Section -->
-        ${portfolio.education && portfolio.education.length > 0 ? `
-        <div class="section">
-          <div class="section-title">Education</div>
-          <div style="margin-top: 10px;">
-            ${portfolio.education.map((edu: any) => `
-              <div style="border-left: 2px solid #22c55e; padding-left: 15px; margin-bottom: 15px;">
-                <p style="margin: 3px 0; font-weight: 500;">Stream: ${edu.stream || 'Degree'}</p>
-                <p style="margin: 3px 0;">University: ${edu.university_board || 'Institution'}</p>
-                <p style="margin: 3px 0;">Year of Completion: ${edu.year_of_completion || 'Year'}</p>
-                ${edu.grade ? `<p style="margin: 3px 0;">Grade: ${edu.grade}</p>` : ''}
-              </div>
-            `).join('')}
-          </div>
-        </div>
-        ` : ''}
         
         <!-- Certifications -->
         ${role_based_profile.certifications ? `
@@ -1030,28 +1037,28 @@ export default function ProfilesPage() {
 
               {/* Experience Section */}
               <div className="mb-6">
-                <h2 className="text-lg font-bold mb-3 uppercase">Experience</h2>
+                <h2 className="text-lg font-bold mb-3 uppercase underline">Experience</h2>
                 <div className="space-y-2">
-                  {role_based_profile.total_experience_years !== null && (
+                  {role_based_profile.total_experience_years && (
                     <p>
-                      <strong>Total Experience:</strong> {role_based_profile.total_experience_years} years
+                      <strong>Total Experience : </strong> {role_based_profile.total_experience_years} years
                     </p>
                   )}
-                  {role_based_profile.relevant_experience !== null && (
+                  {role_based_profile.relevant_experience && (
                     <p>
-                      <strong>Relevant Experience:</strong> {role_based_profile.relevant_experience} years
+                      <strong>Relevant Experience : </strong> {role_based_profile.relevant_experience} years
                     </p>
                   )}
 
-                  <p><strong>Employment Type:</strong> {role_based_profile.employment_type}</p>
-                  <p><strong>Work Mode:</strong> {role_based_profile.work_mode}</p>
-                  <p><strong>Nature of Work:</strong> {role_based_profile.nature_of_work}</p>
+                  <p><strong>Employment Type : </strong> {role_based_profile.employment_type}</p>
+                  <p><strong>Work Mode : </strong> {role_based_profile.work_mode}</p>
+                  <p><strong>Nature of Work : </strong> {role_based_profile.nature_of_work}</p>
                 </div>
 
                 {/* Work Experience Details */}
                 {portfolio.work_experience && portfolio.work_experience.length > 0 && (
                   <div className="mt-4">
-                    <h3 className="font-semibold mb-2">Work History</h3>
+                    <h2 className="text-lg font-bold mb-3 uppercase underline">Work History</h2>
                     <div className="space-y-3">
                       {portfolio.work_experience.map((exp: any, index: number) => (
                         <div key={index} className="border-l-2 border-blue-500 pl-4">
@@ -1068,14 +1075,15 @@ export default function ProfilesPage() {
 
               {portfolio.education && portfolio.education.length > 0 && (
                 <div className="mb-6 font-nunito">
-                  <h2 className="text-lg font-bold mb-3 uppercase">Education</h2>
+                  <h2 className="text-lg font-bold mb-3 uppercase underline">Education</h2>
                   <div className="space-y-3">
                     {portfolio.education.map((edu: any, index: number) => (
                       <div key={index} className="border-l-2 border-green-500 pl-4">
-                        <p className="font-medium text-md">Stream: {edu.stream || 'Degree'}</p>
-                        <p className="text-md">University: {edu.university_board || 'Institution'}</p>
-                        <p className="text-md">Year of Completion: {edu.year_of_completion || 'Year'}</p>
-                        {edu.grade && <p className="text-md">Grade: {edu.grade}</p>}
+                        <p className="text-md">Education Level : {edu.education_level}</p>
+                        <p className="font-medium text-md">Stream : {edu.stream || 'Degree'}</p>
+                        <p className="text-md">University : {edu.university_board || 'Institution'}</p>
+                        <p className="text-md">Year of Completion : {edu.year_of_completion || 'Year'}</p>
+                      
                       </div>
                     ))}
                   </div>
@@ -1084,14 +1092,14 @@ export default function ProfilesPage() {
 
               {/* Skills Section */}
               <div className="mb-6">
-                <h2 className="text-lg font-bold mb-3 uppercase">Skills</h2>
+                <h2 className="text-lg font-bold mb-3 uppercase underline">Skills</h2>
                 <div className="space-y-3">
                   {role_based_profile.primary_skills && role_based_profile.primary_skills.length > 0 && (
                     <div>
                       <h3 className="font-semibold mb-2">Primary Skills</h3>
                       <div className="flex flex-wrap gap-2">
                         {role_based_profile.primary_skills.map((skill: any, index: number) => (
-                          <span key={index} className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm">
+                          <span key={index} className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full border border-black text-sm">
                             {typeof skill === 'string' ? skill : skill.skill_name || skill.skill_name}
                           </span>
                         ))}
@@ -1120,14 +1128,14 @@ export default function ProfilesPage() {
               {/* Certifications */}
               {role_based_profile.certifications && (
                 <div className="mb-6">
-                  <h2 className="text-lg font-bold mb-3 uppercase">Certifications</h2>
+                  <h2 className="text-lg font-bold mb-3 uppercase underline">Certifications</h2>
                   <p className="text-gray-700">{role_based_profile.certifications}</p>
                 </div>
               )}
 
               {/* Additional Information */}
               <div className="mb-6">
-                <h2 className="text-lg font-bold mb-3 uppercase">Additional Information</h2>
+                <h2 className="text-lg font-bold mb-3 uppercase underline">Additional Information</h2>
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   <div>
                     <p><strong>Space:</strong> {role_based_profile.space}</p>

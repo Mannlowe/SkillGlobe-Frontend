@@ -39,10 +39,10 @@ export default function TermsAndCondition({ isOpen, onClose }: TermsAndCondition
             <section className="space-y-3">
               <h3 className="text-lg font-semibold text-gray-800">USE TO BE IN CONFORMITY WITH THE PURPOSE</h3>
               <p className="text-gray-600">
-                SkillGlobe.com (and related products) or service or product that is subscribe to or used (whether the same is paid for by you or not) is meant for the Purpose and only the exclusive use of the subscriber/registered user. Copying or downloading or recreating or sharing passwords or sublicensing or sharing in any manner which is not in accordance with these terms, is a misuse of the platform or service or product and Delphi Computech Pvt Ltd reserves its rights to act in such manner as to protect its loss of revenue or reputation or claim damages including stopping your service or access and reporting to relevant authorities. In the event you are found to be copying or misusing or transmitting or crawling any data or photographs or graphics or any information available on SkillGlobe.com for any purpose other than that being a bonafide Purpose, we reserve the right to take such action that we deem fit including stopping access and claiming damages.
+                SkillGlobe.com (and related products) or service or product that is subscribe to or used (whether the same is paid for by you or not) is meant for the Purpose and only the exclusive use of the subscriber/registered user. Copying or downloading or recreating or sharing passwords or sublicensing or sharing in any manner which is not in accordance with these terms, is a misuse of the platform or service or product and SKILLGLOBE PRIVATE LIMITED reserves its rights to act in such manner as to protect its loss of revenue or reputation or claim damages including stopping your service or access and reporting to relevant authorities. In the event you are found to be copying or misusing or transmitting or crawling any data or photographs or graphics or any information available on SkillGlobe.com for any purpose other than that being a bonafide Purpose, we reserve the right to take such action that we deem fit including stopping access and claiming damages.
               </p>
               <p className="text-gray-600">
-                The site is a public site with free access and Delphi Computech Pvt Ltd assumes no liability for the quality and genuineness of responses. Delphi Computech Pvt Ltd. cannot monitor the responses that a person may receive in response to information he/she has displayed on the site. The individual/company would have to conduct its own background checks on the bonafide nature of all response(s).
+                The site is a public site with free access and SKILLGLOBE PRIVATE LIMITED assumes no liability for the quality and genuineness of responses. SKILLGLOBE PRIVATE LIMITED. cannot monitor the responses that a person may receive in response to information he/she has displayed on the site. The individual/company would have to conduct its own background checks on the bonafide nature of all response(s).
               </p>
               <p className="text-gray-600">
                 You give us permission to use the information about actions that you have taken on SkillGlobe.com in connection with ads, offers and other content (whether sponsored or not) that we display across our services, without any compensation to you. We use data and information about you to make relevant suggestions and recommendation to you and others.
@@ -53,7 +53,7 @@ export default function TermsAndCondition({ isOpen, onClose }: TermsAndCondition
             </section>
             
             <section className="space-y-3">
-              <h3 className="text-lg font-semibold text-gray-800">THE USER REPRESENTS, WARRANTS AND COVENANTS THAT ITS USE OF SKILLGLOBE.COM SHALL NOT BE DONE IN A MANNER SO AS TO:</h3>
+              <h3 className="text-lg font-semibold text-gray-800">THE USER REPRESENTS, WA9RRANTS AND COVENANTS THAT ITS USE OF SKILLGLOBE.COM SHALL NOT BE DONE IN A MANNER SO AS TO:</h3>
               <ul className="list-disc pl-6 text-gray-600 space-y-2">
                 <li>Access the Platform for purposes of extracting content to be used for training a machine learning or AI model, without the express prior written permission.</li>
                 <li>Violate any applicable local, provincial, state, national or international law, statute, ordinance, rule or regulation;</li>
@@ -63,10 +63,10 @@ export default function TermsAndCondition({ isOpen, onClose }: TermsAndCondition
                 <li>Interfere with or disrupt the use of SkillGlobe.com by any other user, nor "stalk", threaten, or in any manner harass another user;</li>
                 <li>Use SkillGlobe.com in such a manner as to gain unauthorized entry or access to the computer systems of others;</li>
                 <li>Reproduce, copy, modify, sell, store, distribute or otherwise exploit for any commercial purposes SkillGlobe.com, or any component thereof (including, but not limited to any materials or information accessible through SkillGlobe.com);</li>
-                <li>Use content from the Site for derivative works with a commercial motive without prior written consent of the Delphi Computech Pvt Ltd.</li>
+                <li>Use content from the Site for derivative works with a commercial motive without prior written consent of the SKILLGLOBE PRIVATE LIMITED.</li>
                 <li>Use any device, software or routine to interfere or attempt to interfere with the proper working of SkillGlobe.com; or</li>
                 <li>Impose an unreasonable or disproportionately large load on SkillGlobe.com infrastructure.</li>
-                <li>Spam SkillGlobe.com/Delphi Computech Pvt Ltd by indiscriminately and repeatedly posting content or forwarding mail that may be considered spam etc.</li>
+                <li>Spam SkillGlobe.com/SKILLGLOBE PRIVATE LIMITED by indiscriminately and repeatedly posting content or forwarding mail that may be considered spam etc.</li>
                 <li>Access data not intended for you or log into server or account that you are not authorized to access;</li>
                 <li>Constitute an act of reverse engineering, decompiling, disassembling, deciphering or otherwise attempting to derive the source code for the Site or any related technology or any part thereof</li>
                 <li>Engage in "framing," "mirroring," or otherwise simulating the appearance or function of the Site</li>
@@ -96,7 +96,7 @@ export default function TermsAndCondition({ isOpen, onClose }: TermsAndCondition
             <section className="space-y-3">
               <h3 className="text-lg font-semibold text-gray-800">Payments and Refunds</h3>
               <p className="text-gray-600">
-                Payments for the services offered by SkillGlobe.com shall be on a 100% advance basis. Refund if any will be at the sole discretion of Delphi Computech Pvt Ltd. Delphi Computech Pvt Ltd offers no guarantees whatsoever for the accuracy or timeliness of the refunds reaching the Customers card/bank accounts. Delphi Computech Pvt Ltd gives no guarantees of server uptime or applications working properly. All is on a best effort basis and liability is limited to refund of amount only. Delphi Computech Pvt Ltd undertakes no liability for free services. Delphi Computech Pvt Ltd reserves its right to amend / alter or change all or any disclaimers or terms of agreements at any time without any prior notice. All terms / disclaimers whether specifically mentioned or not shall be deemed to be included if any reference is made to them.
+                Payments for the services offered by SkillGlobe.com shall be on a 100% advance basis. Refund if any will be at the sole discretion of SKILLGLOBE PRIVATE LIMITED. SKILLGLOBE PRIVATE LIMITED offers no guarantees whatsoever for the accuracy or timeliness of the refunds reaching the Customers card/bank accounts. SKILLGLOBE PRIVATE LIMITED gives no guarantees of server uptime or applications working properly. All is on a best effort basis and liability is limited to refund of amount only. SKILLGLOBE PRIVATE LIMITED undertakes no liability for free services. SKILLGLOBE PRIVATE LIMITED reserves its right to amend / alter or change all or any disclaimers or terms of agreements at any time without any prior notice. All terms / disclaimers whether specifically mentioned or not shall be deemed to be included if any reference is made to them.
               </p>
             </section>
           </div>

@@ -103,6 +103,7 @@ export interface Skill {
   name: string;
   canonical_name: string;
   skill_id?: string;
+  skill_UID?: string;
 }
 // Interface for skills API response
 export interface SkillsResponse {

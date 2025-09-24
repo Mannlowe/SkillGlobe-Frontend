@@ -8,6 +8,7 @@ import {
   addSkills,
   AddSkillsRequest,
   SkillData as APISkillData,
+  deleteSkill2,
   getSkillsList,
   SkillListResponse,
 } from "@/app/api/Individual Skills/addSkills";
@@ -25,6 +26,7 @@ interface SkillData {
   name: string;
   canonical_name?: string;
   skill_id?: string;
+  skill_UID?: string;
 }
 
 export default function Skills({
@@ -65,6 +67,7 @@ export default function Skills({
               name: skill.name,
               canonical_name: skill.canonical_name,
               skill_id: skill.skill_id,
+              skill_UID: skill.skill_UID,
             };
 
       // Add to selected skills
@@ -86,6 +89,27 @@ export default function Skills({
     setSelectedSkills(selectedSkills.filter((s) => s.name !== skillName));
     // Also remove from new skills if it exists there
     setNewSkills(newSkills.filter((s) => s.name !== skillName));
+  };
+  const removeSkill2 = async (skillName: string) => {
+    try {
+      const entityDataStr = localStorage.getItem("entity_data");
+      const entityData = entityDataStr ? JSON.parse(entityDataStr) : {};
+      const entityId = entityData.details?.entity_id;
+      console.log("Entity ID from parsed data:", entityId);
+
+      // if (!entityId) {
+      let response = await deleteSkill2({
+        entity_id: entityId,
+        name: skillName,
+      });
+      console.log("delete skill response", response);
+      if (response.message.status === "success") {
+        toast.success(`Successfully deleted the skill: ${skillName}`);
+      }
+      // }
+    } catch (error) {
+      console.log("error delete skill response", error);
+    }
   };
 
   // Continue → call API to save skills and then open modal
@@ -182,7 +206,7 @@ export default function Skills({
         authData.apiKey,
         authData.apiSecret
       );
-
+      console.log(response, "user skills list response");
       if (
         response.message?.status === "success" &&
         response.message.data?.skills_list
@@ -193,6 +217,7 @@ export default function Skills({
             name: skill.skill_name || skill.skill || "",
             canonical_name: skill.skill_name || "",
             skill_id: skill.skill || "",
+            skill_UID: skill.name || "",
           }))
           .filter((skill) => skill.name); // Filter out empty skills
 
@@ -696,7 +721,10 @@ export default function Skills({
                   {skill.canonical_name || skill.name}
                 </span>
                 <button
-                  onClick={() => removeSkill(skill.name)}
+                  onClick={() => {
+                    removeSkill(skill.name),
+                      removeSkill2(skill.skill_UID!);
+                  }}
                   className="text-red-500 hover:text-red-700 transition-colors"
                   aria-label={`Remove ${skill.name}`}
                 >

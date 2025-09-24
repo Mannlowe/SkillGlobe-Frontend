@@ -30,7 +30,7 @@ export const createGlobalSkillAPI = async (
     if (!authData) {
       throw new Error("Authentication data not found. Please log in again.");
     }
-    console.log(payload);
+
     const response = await axios.post<CreateSkillResponse>(
       `${API_BASE_URL}/api/method/skillglobe_be.api.portfolio.skill.create_global_skill`,
       payload,

@@ -70,6 +70,7 @@ export default function Portfolio({
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [showReminderModal, setShowReminderModal] = useState(false);
   const [flag1resume, setFlag1resume] = useState<boolean>(false);
+  const [resumeUrl, setResumeUrl] = useState<string>("");
 
   // Use props if provided, otherwise use local state
   const activeSection = propActiveSection || localActiveSection;
@@ -174,6 +175,7 @@ export default function Portfolio({
                 portfolioData.resume.toString().trim() !== ""
               ) {
                 setFlag1resume(true);
+                setResumeUrl(portfolioData?.resume);
                 console.log("✅ Resume found in API:", portfolioData.resume);
                 setLocalResumeUploaded(true);
                 if (propSetResumeUploaded) propSetResumeUploaded(true);
@@ -732,6 +734,19 @@ export default function Portfolio({
                     <p className="text-sm text-gray-600">
                       Your resume data has been loaded from your portfolio.
                     </p>
+                    {/* Open Resume Button */}
+                    <button
+                      onClick={() =>
+                        window.open(
+                          `${process.env.NEXT_PUBLIC_API_BASE_URL}${resumeUrl}`,
+                          "_blank",
+                          "noopener,noreferrer"
+                        )
+                      }
+                      className="mt-2 px-4 py-2 text-sm font-medium text-white bg-green-600 hover:bg-green-700 rounded-lg shadow-sm"
+                    >
+                      Preview
+                    </button>
                   </div>
                 </div>
               </div>

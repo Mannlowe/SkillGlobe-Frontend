@@ -88,9 +88,9 @@ const DomainFields: React.FC<DomainFieldsProps> = ({ profileType, subDomain, edi
       if (trimmedValue) {
         const currentValues = (editingEntry as any)?.[fieldName] || [];
         if (!currentValues.includes(trimmedValue)) {
-          updateEditingEntry(prev => prev ? { 
-            ...prev, 
-            [fieldName]: [...currentValues, trimmedValue] 
+          updateEditingEntry(prev => prev ? {
+            ...prev,
+            [fieldName]: [...currentValues, trimmedValue]
           } : null);
         }
         // Clear the input for this specific field
@@ -144,7 +144,7 @@ const DomainFields: React.FC<DomainFieldsProps> = ({ profileType, subDomain, edi
               // Handle both old string format and new object format from API
               const displayValue = typeof value === 'string' ? value : (typeof value === 'object' && value ? Object.values(value)[0] : value);
               const keyValue = typeof displayValue === 'string' ? displayValue : `${fieldName}-${index}`;
-              
+
               return (
                 <span key={keyValue} className={`inline-flex items-center px-3 py-1 rounded-full text-sm ${colorClass}`}>
                   {displayValue}
@@ -459,7 +459,7 @@ const DomainFields: React.FC<DomainFieldsProps> = ({ profileType, subDomain, edi
                   value={editingEntry?.it_portfolio || ''}
                   onChange={(e) => updateEditingEntry(prev => prev ? { ...prev, it_portfolio: e.target.value } : null)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="https://github.com/username or portfolio URL"
+                  placeholder="Enter your GitHub/Portfolio link"
                 />
               </div>
 
@@ -468,7 +468,7 @@ const DomainFields: React.FC<DomainFieldsProps> = ({ profileType, subDomain, edi
             {renderEnhancedMultiValueInput(
               'it_dev_method',
               'Development Methodology',
-              'Enter methodology and press Enter (e.g., Agile, Scrum, DevOps)',
+              'Type Agile, Scrum, Waterfall...',
               'bg-blue-100 text-blue-800',
               true
             )}
@@ -476,14 +476,14 @@ const DomainFields: React.FC<DomainFieldsProps> = ({ profileType, subDomain, edi
             {renderEnhancedMultiValueInput(
               'it_domain_exp',
               'Domain Expertise',
-              'Enter domain and press Enter (e.g., FinTech, HealthTech, EdTech)',
+              'Domains like FinTech, HealthTech, SaaS',
               'bg-purple-100 text-purple-800'
             )}
 
             {renderEnhancedMultiValueInput(
               'it_tools_used',
               'Tools & Platforms',
-              'Enter tool/platform and press Enter (e.g., Jira, Confluence, Docker)',
+              'List tools like Jira, Docker, Kubernetes...',
               'bg-green-100 text-green-800'
             )}
           </div>
@@ -496,14 +496,14 @@ const DomainFields: React.FC<DomainFieldsProps> = ({ profileType, subDomain, edi
             {renderEnhancedMultiValueInput(
               'it_tools',
               'Tools Used',
-              'Enter tool and press Enter (e.g., Tableau, PowerBI, Hadoop, Spark)',
+              'Enter tools like Tableau, Hadoop, Spark...',
               'bg-purple-100 text-purple-800'
             )}
 
             {renderEnhancedMultiValueInput(
               'it_data_domain_exp',
               'Data Domain Focus',
-              'Enter domain and press Enter (e.g., Healthcare, Finance, Retail, IoT)',
+              'Enter domains like Healthcare, Retail, IoT...',
               'bg-indigo-100 text-indigo-800'
             )}
 
@@ -517,7 +517,7 @@ const DomainFields: React.FC<DomainFieldsProps> = ({ profileType, subDomain, edi
                   value={editingEntry?.it_research || ''}
                   onChange={(e) => updateEditingEntry(prev => prev ? { ...prev, it_research: e.target.value } : null)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="Link to research papers or publications"
+                  placeholder="Paste link to research papers or publications"
                 />
               </div>
 
@@ -530,7 +530,7 @@ const DomainFields: React.FC<DomainFieldsProps> = ({ profileType, subDomain, edi
                   onChange={(e) => updateEditingEntry(prev => prev ? { ...prev, it_data_projects: e.target.value } : null)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   rows={3}
-                  placeholder="Describe your major data projects or provide links"
+                  placeholder="Mention key data projects with links"
                 />
               </div>
             </div>
@@ -546,33 +546,33 @@ const DomainFields: React.FC<DomainFieldsProps> = ({ profileType, subDomain, edi
             {renderEnhancedMultiValueInput(
               'it_compliance',
               'Compliance',
-              'Enter compliance standard and press Enter (e.g., ISO27001, GDPR, HIPAA)',
+              'Enter standards like ISO27001, GDPR...',
               'bg-red-100 text-red-800'
             )}
 
             {renderEnhancedMultiValueInput(
               'it_security_tools',
               'Security Tools Used',
-              'Enter security tool and press Enter (e.g., SIEM, IDS, Firewalls, Splunk)',
+              'Enter tools like SIEM, IDS, Firewalls, Splunk...',
               'bg-orange-100 text-orange-800'
             )}
 
             {renderEnhancedMultiValueInput(
               'it_incident_exp',
               'Incident Handling',
-              'Enter experience and press Enter (e.g., SOC, Threat Hunting)',
+              'Enter SOC, Threat Hunting, Incident Response...',
               'bg-yellow-100 text-yellow-800'
             )}
 
-            
+
             {renderEnhancedMultiValueInput(
               'it_network_exp',
               'Network Expertise',
-              'Enter expertise and press Enter (e.g., Routing, Switching, VPNs, SD-WAN)',
+              'Enter Routing, Switching, VPNs, SD-WAN...',
               'bg-teal-100 text-teal-800'
             )}
 
-<div>
+            <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Security Clearance
               </label>
@@ -1100,28 +1100,28 @@ const DomainFields: React.FC<DomainFieldsProps> = ({ profileType, subDomain, edi
             {renderEnhancedMultiValueInput(
               'ph_compliance',
               'Compliance Standards',
-              'Enter compliance standard and press Enter (e.g., GMP, FDA, ICH)',
+              'Enter GMP, GLP, FDA...',
               'bg-blue-100 text-blue-800'
             )}
 
             {renderEnhancedMultiValueInput(
               'ph_equipment_handling',
               'Equipment Handling',
-              'Enter equipment and press Enter (e.g., Bioreactors, HPLC, Tablet Press)',
+              'Enter Bioreactors, HPLC, Chromatography...',
               'bg-green-100 text-green-800'
             )}
 
             {renderEnhancedMultiValueInput(
               'ph_quality_tools',
               'Quality Tools Used',
-              'Enter tool and press Enter (e.g., SPC, CAPA, Validation)',
+              'Enter tools like SPC, CAPA, Validation...',
               'bg-yellow-100 text-yellow-800'
             )}
 
             {renderEnhancedMultiValueInput(
               'ph_shift_preference',
               'Shift Preference',
-              'Enter preference and press Enter (e.g., Day Shift, Night Shift, Rotational)',
+              'Enter shift like Day, Night, Rotational...',
               'bg-purple-100 text-purple-800'
             )}
           </div>
@@ -1134,21 +1134,21 @@ const DomainFields: React.FC<DomainFieldsProps> = ({ profileType, subDomain, edi
             {renderEnhancedMultiValueInput(
               'ph_supply_chain_area',
               'Supply Chain Focus',
-              'Enter area and press Enter (e.g., Procurement, Distribution, Logistics)',
+              'Enter areas like Procurement, Distribution...',
               'bg-purple-100 text-purple-800'
             )}
 
             {renderEnhancedMultiValueInput(
               'ph_regulatory_knowledge',
               'Regulatory Knowledge',
-              'Enter knowledge and press Enter (e.g., GDP, Cold Chain, Import/Export)',
+              'Enter knowledge like Cold Chain, Import/Export...',
               'bg-indigo-100 text-indigo-800'
             )}
 
             {renderEnhancedMultiValueInput(
               'ph_tools_used',
               'SCM Tools Used',
-              'Enter tool and press Enter (e.g., SAP, Oracle WMS, TraceLink)',
+              'Enter tools like SAP, Oracle WMS, TraceLink...',
               'bg-teal-100 text-teal-800'
             )}
           </div>
@@ -1161,21 +1161,21 @@ const DomainFields: React.FC<DomainFieldsProps> = ({ profileType, subDomain, edi
             {renderEnhancedMultiValueInput(
               'ph_trial_phase_exp',
               'Clinical Trial Phases',
-              'Enter phase and press Enter (e.g., Phase I, Phase II, Phase III)',
+              'Enter phases like Phase I, Phase II, Phase III...',
               'bg-red-100 text-red-800'
             )}
 
             {renderEnhancedMultiValueInput(
               'ph_regulatory_docs',
               'Regulatory Documents',
-              'Enter document and press Enter (e.g., IND, NDA, CTD)',
+              'Enter document like IND, NDA, CTD...',
               'bg-orange-100 text-orange-800'
             )}
 
             {renderEnhancedMultiValueInput(
               'ph_lab_tools',
               'Lab Tools / Platforms',
-              'Enter tool and press Enter (e.g., LIMS, EDC, Statistical Software)',
+              'Enter tools like LIMS, EDC, Statistical Software...',
               'bg-emerald-100 text-emerald-800'
             )}
 
@@ -1198,21 +1198,21 @@ const DomainFields: React.FC<DomainFieldsProps> = ({ profileType, subDomain, edi
             {renderEnhancedMultiValueInput(
               'ph_shift_preference',
               'Shift Preference',
-              'Enter preference and press Enter (e.g., Day Shift, Night Shift, Rotational)',
+              'Enter preference like Day, Night, Rotational...',
               'bg-indigo-100 text-indigo-800'
             )}
 
             {renderEnhancedMultiValueInput(
               'ph_licenses',
               'Medical Licenses',
-              'Enter license and press Enter (e.g., MD, RN, PharmD)',
+              'Enter license like MD, RN, PharmD...',
               'bg-pink-100 text-pink-800'
             )}
 
             {renderEnhancedMultiValueInput(
               'ph_languages',
               'Languages Known',
-              'Enter language and press Enter (e.g., English, Spanish, French)',
+              'Enter languages like English, Hindi, Marathi...',
               'bg-cyan-100 text-cyan-800'
             )}
           </div>
@@ -1233,7 +1233,7 @@ const DomainFields: React.FC<DomainFieldsProps> = ({ profileType, subDomain, edi
             {renderEnhancedMultiValueInput(
               'itCertifications',
               'Certifications',
-              'Enter certification and press Enter (e.g., AWS Certified, Azure Fundamentals, Google Cloud)',
+              'Certifications like AWS, Azure, Google Cloud',
               'bg-blue-100 text-blue-800'
             )}
             {/*

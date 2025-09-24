@@ -430,3 +430,86 @@ export const createOrUpdateRoleBasedProfile = async (
     throw error;
   }
 };
+
+// Interface for skill data
+export interface Skill {
+  name: string;
+  canonical_name: string;
+  skill_id?: string;
+}
+
+// Interface for API skill item (matches actual API response)
+export interface ApiSkillItem {
+  name: string;
+  skill: string;
+  skill_name: string;
+}
+
+// Interface for skills API response
+export interface SkillsResponse {
+  message: {
+    status: string;
+    message?: string;
+    data?: {
+      portfolio: string;
+      entity_id: string;
+      skills_list: ApiSkillItem[];
+    };
+    timestamp?: string;
+  };
+}
+
+// Function to fetch skills from API with search functionality
+export const getSkills = async (
+  searchTerm: string = '',
+  apiKey: string,
+  apiSecret: string
+): Promise<Skill[]> => {
+  try {
+    console.log('Fetching skills with search term:', searchTerm);
+
+    let entityId = '';
+    const entityDataStr = localStorage.getItem('entity_data');
+    if (entityDataStr) {
+      const entityData = JSON.parse(entityDataStr);
+      if (entityData && entityData.details && entityData.details.entity_id) {
+        entityId = entityData.details.entity_id;
+      }
+    }
+    
+    // Create authorization header
+    const authHeader = `token ${apiKey}:${apiSecret}`;
+    
+    // Build URL with search parameter if provided
+    let url = `${API_BASE_URL}/api/method/skillglobe_be.api.portfolio.skill.get_skills_list?entity_id=${entityId}`;
+    if (searchTerm.trim()) {
+      url += `&search=${encodeURIComponent(searchTerm.trim())}`;
+    }
+    
+    const response = await axios.get<SkillsResponse>(url, {
+      headers: {
+        'Authorization': authHeader,
+        'Accept': 'application/json',
+        'Content-Type': 'application/json'
+      }
+    });
+    
+    console.log('Skills API response:', response.data);
+    
+    if (response.data.message.status === 'success' && response.data.message.data?.skills_list) {
+      // Transform API response to match Skill interface
+      const skills: Skill[] = response.data.message.data.skills_list.map((apiSkill: ApiSkillItem) => ({
+        name: apiSkill.skill, // Use skill ID as name (e.g., "SK-0000005866")
+        canonical_name: apiSkill.skill_name, // Use skill_name as canonical_name (e.g., "21 CFR Part 11")
+        skill_id: apiSkill.skill // Store skill ID separately if needed
+      }));
+      
+      return skills;
+    }
+    
+    return [];
+  } catch (error: any) {
+    console.error('Skills API error details:');
+    return [];
+  }
+};

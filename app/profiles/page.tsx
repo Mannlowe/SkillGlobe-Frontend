@@ -1096,7 +1096,7 @@ export default function ProfilesPage() {
                 <div className="space-y-3">
                   {role_based_profile.primary_skills && role_based_profile.primary_skills.length > 0 && (
                     <div>
-                      <h3 className="font-semibold mb-2">Primary Skills</h3>
+                      <h3 className="font-semibold mb-2">Primary Skills :</h3>
                       <div className="flex flex-wrap gap-2">
                         {role_based_profile.primary_skills.map((skill: any, index: number) => (
                           <span key={index} className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full border border-black text-sm">
@@ -1109,10 +1109,10 @@ export default function ProfilesPage() {
 
                   {role_based_profile.secondary_skills && role_based_profile.secondary_skills.length > 0 && (
                     <div>
-                      <h3 className="font-semibold mb-2">Secondary Skills</h3>
+                      <h3 className="font-semibold mb-2">Secondary Skills :</h3>
                       <div className="flex flex-wrap gap-2">
                         {role_based_profile.secondary_skills.map((skill: any, index: number) => (
-                          <span key={index} className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm">
+                          <span key={index} className="px-3 py-1 bg-gray-100 text-gray-700 border border-black rounded-full text-sm">
                             {typeof skill === 'string' ? skill : skill.skill_name || skill.skill_name}
                           </span>
                         ))}

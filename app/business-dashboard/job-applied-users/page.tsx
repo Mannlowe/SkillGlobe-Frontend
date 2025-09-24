@@ -223,7 +223,7 @@ export default function JobAppliedUsersPage() {
                       </span>
                       <span className="flex items-center gap-1">
                         <Calendar size={16} /> Posted{" "}
-                        {formatDate(jobDetails.postedDate)}
+                        {formatDate(jobDetails.creation)}
                       </span>
                       <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs">
                         {jobDetails.employmentType}
@@ -452,7 +452,7 @@ export default function JobAppliedUsersPage() {
                       </div>
 
                       <div className="mt-3 ml-4 flex items-center gap-3 text-sm text-gray-600">
-                        {applicant.status !== "pending" && (
+                        {(applicant.status === "shortlisted" || applicant.status === "rejected" || applicant.status === "hired") && (
                           <span>
                             Applied On: {formatDate(applicant.shown_interest_timestamp)}
                           </span>

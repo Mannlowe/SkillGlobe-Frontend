@@ -747,6 +747,14 @@ export default function Portfolio({
                     >
                       Preview
                     </button>
+                    {/* Download Button */}
+                    {/* <a
+                      href={`${process.env.NEXT_PUBLIC_API_BASE_URL}${resumeUrl}`}
+                      download
+                      className="px-4 py-2 text-sm font-medium text-green-700 bg-green-100 hover:bg-green-200 rounded-lg shadow-sm"
+                    >
+                      Download
+                    </a> */}
                   </div>
                 </div>
               </div>

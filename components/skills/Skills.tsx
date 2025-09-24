@@ -722,8 +722,10 @@ export default function Skills({
                 </span>
                 <button
                   onClick={() => {
-                    removeSkill(skill.name),
-                      removeSkill2(skill.skill_UID!);
+                    removeSkill(skill.name);
+                    if (skill.skill_UID) {
+                      removeSkill2(skill.skill_UID);
+                    }
                   }}
                   className="text-red-500 hover:text-red-700 transition-colors"
                   aria-label={`Remove ${skill.name}`}

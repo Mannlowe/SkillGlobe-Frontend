@@ -18,7 +18,8 @@ import {
 import DomainFields from './DomainFields';
 import { useRoleBasedProfileStore } from '@/store/role-based-profile/rolebasedprofileStore';
 import { CreateUpdateRoleBasedProfileRequest } from '@/app/api/Role Based Profile/rolebasedProfile';
-import { getSkills, getAuthData, getCityList, type Skill, type City } from '@/app/api/job postings/addjobPosting';
+import { getAuthData, getCityList, type Skill, type City } from '@/app/api/job postings/addjobPosting';
+import { getSkills } from '@/app/api/Role Based Profile/rolebasedProfile';
 import { ResumeTemplate } from './ResumeTemplateSelector';
 
 interface ProfileFormProps {

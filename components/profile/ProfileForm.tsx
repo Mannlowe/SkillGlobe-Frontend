@@ -371,6 +371,8 @@ export default function ProfileForm({ onSave, onCancel, initialData = [], showFo
   // Cities API state
   const [availableCities, setAvailableCities] = useState<City[]>([]);
   const [cityListLoading, setCityListLoading] = useState(false);
+  const [citySearch, setCitySearch] = useState('');
+  const [filteredCities, setFilteredCities] = useState<City[]>([]);
   
   // Refs for click outside handling
   const primarySkillsDropdownRef = useRef<HTMLDivElement>(null);
@@ -389,6 +391,7 @@ export default function ProfileForm({ onSave, onCancel, initialData = [], showFo
     try {
       const cities = await getCityList(authData.apiKey, authData.apiSecret);
       setAvailableCities(cities);
+      setFilteredCities(cities);
       return cities;
     } catch (error) {
       console.error('Error fetching city list:', error);
@@ -443,6 +446,18 @@ export default function ProfileForm({ onSave, onCancel, initialData = [], showFo
       setFilteredSecondarySkills(availableSkills);
     }
   }, [secondarySkillsSearch, availableSkills]);
+
+  // Filter cities based on search
+  useEffect(() => {
+    if (citySearch.trim()) {
+      const filtered = availableCities.filter(city => 
+        city.name.toLowerCase().includes(citySearch.toLowerCase())
+      );
+      setFilteredCities(filtered);
+    } else {
+      setFilteredCities(availableCities);
+    }
+  }, [citySearch, availableCities]);
 
   // Click outside handlers for dropdowns
   useEffect(() => {
@@ -1642,6 +1657,16 @@ export default function ProfileForm({ onSave, onCancel, initialData = [], showFo
                   
                   {cityDropdownOpen && !cityListLoading && (
                     <div className="absolute z-10 mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-auto">
+                      <div className="p-2 border-b border-gray-200">
+                        <input
+                          type="text"
+                          placeholder="Search cities..."
+                          value={citySearch}
+                          onChange={(e) => setCitySearch(e.target.value)}
+                          className="w-full px-3 py-2 text-sm border border-gray-200 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          onClick={(e) => e.stopPropagation()}
+                        />
+                      </div>
                       <div 
                         className="px-4 py-2 hover:bg-gray-100 cursor-pointer text-gray-500"
                         onClick={() => {
@@ -1653,20 +1678,26 @@ export default function ProfileForm({ onSave, onCancel, initialData = [], showFo
                       >
                         Select a city
                       </div>
-                      {availableCities.map((city) => (
-                        <div
-                          key={city.name}
-                          className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
-                          onClick={() => {
-                            if (editingEntry) {
-                              setEditingEntry({ ...editingEntry, preferredCity: city.name });
-                            }
-                            setCityDropdownOpen(false);
-                          }}
-                        >
-                          {city.name}
+                      {filteredCities.length > 0 ? (
+                        filteredCities.map((city) => (
+                          <div
+                            key={city.name}
+                            className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
+                            onClick={() => {
+                              if (editingEntry) {
+                                setEditingEntry({ ...editingEntry, preferredCity: city.name });
+                              }
+                              setCityDropdownOpen(false);
+                            }}
+                          >
+                            {city.name}
+                          </div>
+                        ))
+                      ) : (
+                        <div className="px-4 py-2 text-center text-gray-500">
+                          No cities found
                         </div>
-                      ))}
+                      )}
                     </div>
                   )}
                 </div>

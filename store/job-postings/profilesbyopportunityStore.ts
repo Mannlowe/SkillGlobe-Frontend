@@ -78,9 +78,6 @@ const mapProfileDataToApplicant = (profile: ProfileData): Applicant => {
   // Determine status based on API data
   let status: Applicant["status"] = "pending";
 
-  // Debug logging for status mapping
-  console.log(`Profile ${profile.full_name} - fe_status: ${profile.fe_status}, is_preferred: ${profile.is_preferred}`);
-
   // First check fe_status (higher priority for actual workflow statuses)
   if (profile.fe_status && typeof profile.fe_status === "string") {
     const lowerStatus = profile.fe_status.toLowerCase();
@@ -92,7 +89,15 @@ const mapProfileDataToApplicant = (profile: ProfileData): Applicant => {
       status = "hired";
     } else if (lowerStatus === "interested") {
       status = "interested";
-    } else {
+    } else if (lowerStatus === "pending") {
+      // For pending status, check if business has shown interest (is_preferred = 1)
+      const isPreferred = profile.is_preferred === 1;
+      if (isPreferred) {
+        status = "interested";
+      } else {
+        status = "pending";
+      }
+     } else {
       // If fe_status exists but doesn't match above statuses, check is_preferred
       const isPreferred = profile.is_preferred === 1;
       if (isPreferred) {
@@ -107,8 +112,6 @@ const mapProfileDataToApplicant = (profile: ProfileData): Applicant => {
     }
   }
 
-  // Debug logging for final status
-  console.log(`Profile ${profile.full_name} - Final status: ${status}`);
 
   // Store the original backend status for filtering
   const backendStatus = profile.fe_status?.toLowerCase() || "";

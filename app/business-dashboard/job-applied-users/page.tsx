@@ -401,7 +401,7 @@ export default function JobAppliedUsersPage() {
                           </span>
 
                           <div className="flex gap-2">
-                            {applicant.status !== "pending" && (
+                            {applicant.status !== "pending" && applicant.status !== "interested" && (
                                 <button
                                   onClick={() => handleViewProfile(applicant)}
                                   className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"

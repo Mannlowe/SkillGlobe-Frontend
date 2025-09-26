@@ -5,7 +5,7 @@ on:
     branches:
       - dev
   pull_request:
-    types: [opened, synchronize, reopened, closed]
+    types: [closed]
     branches:
       - dev
 
@@ -45,5 +45,6 @@ jobs:
         with:
           azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_GRAY_TREE_09AD7D410 }}
           action: "close"
+
 
 

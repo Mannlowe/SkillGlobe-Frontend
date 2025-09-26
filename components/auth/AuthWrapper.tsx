@@ -82,11 +82,11 @@ export default function AuthWrapper({ children }: AuthWrapperProps) {
       // Check authentication for protected routes
       if (isProtectedRoute(pathname)) {
         if (!isAuthenticated || !token) {
-          // Store the current URL to redirect back after login
+          // Store the current URL in sessionStorage instead of query params
           const currentUrl = pathname + (searchParams.toString() ? `?${searchParams.toString()}` : '');
-          const loginUrl = `/auth/login?redirect=${encodeURIComponent(currentUrl)}`;
+          sessionStorage.setItem('auth_redirect', currentUrl);
           
-          router.replace(loginUrl);
+          router.replace('/auth/login');
           return;
         }
       }
@@ -104,8 +104,9 @@ export default function AuthWrapper({ children }: AuthWrapperProps) {
   // Handle redirect after successful login
   useEffect(() => {
     if (isAuthenticated && pathname === '/auth/login') {
-      const redirectUrl = searchParams.get('redirect');
+      const redirectUrl = sessionStorage.getItem('auth_redirect');
       if (redirectUrl) {
+        sessionStorage.removeItem('auth_redirect'); // Clear after use
         router.replace(redirectUrl);
       } else {
         // Default redirect based on user type

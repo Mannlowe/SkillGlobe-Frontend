@@ -364,14 +364,14 @@ export default function JobPostingsPage() {
           
           <div className="bg-white rounded-xl shadow-sm mb-6">
             <div className="p-4 border-b border-gray-200">
-              {/* <div className="relative">
+              <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
                 <input
                   type="text"
                   placeholder="Search job postings..."
                   className="w-1/3 pl-10 pr-4 py-2 bg-gray-50 rounded-lg border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all"
                 />
-              </div> */}
+              </div>
             </div>
             
             <div className="flex-1 overflow-y-auto p-6">
